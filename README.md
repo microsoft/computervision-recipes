@@ -1,14 +1,22 @@
 
-# Contributing
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.microsoft.com.
+# Computer Vision Best Practices
 
-When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+This repository will provide examples and best practices for building Computer Vision systems, provided as Jupyter notebooks, and using PyTorch as Deep Learning library. Image classification will be covered first, followed by object detection and image similarity.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+## Planning etc documents
+
+Currently all planning documents, etc are in the [CV Best-practices OneNote](https://microsoft.sharepoint.com/teams/VisionTextGladiators/_layouts/OneNote.aspx?id=%2Fteams%2FVisionTextGladiators%2FShared%20Documents%2FGeneral%2FCV%20best-practices
+onenote:https://microsoft.sharepoint.com/teams/VisionTextGladiators/Shared%20Documents/General/CV%20best-practices/) Notebook. Furthermore, the [AI Best Practices Repositories team channels](https://teams.microsoft.com/l/team/19%3a9f9b6e1f750b4f769953b3a8e33a5fc3%40thread.skype/conversations?groupId=1feb1708-59d1-4112-a293-2147a40eba2e&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47) is used for discussions.
+
+In the near future, Github will be used for feature planning, etc.
+
+
+## Getting Started
+
+Instructions to get started are provided in the [image classification README.md](image_classification/README.md) file.
+
+
+## Contributing
+This project welcomes contributions and suggestions. Before contributing, please see our [contribution guidelines](CONTRIBUTING.md).
