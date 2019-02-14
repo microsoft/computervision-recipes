@@ -2,7 +2,9 @@
 
 # Image classification
 
-This directory provides examples and best practices for building image classification systems. We use [fast.ai](https://github.com/fastai/fastai) heavily, since it has rich feature support and ...
+This directory provides examples and best practices for building image classification systems. We use [fast.ai](https://github.com/fastai/fastai) heavily, since it has rich feature support and ... .
+
+See also fast.ai's [documentation](https://docs.fast.ai/) and most recent [course](https://github.com/fastai/course-v3) for more explanations and code examples.
 
 
 ## Getting Started
