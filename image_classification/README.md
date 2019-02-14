@@ -28,7 +28,7 @@ To setup on your local machine:
 
 ## Coding guidelines
 
-Variable naming should be consistent, i.e. an image should always be called "img" and not "i", "im", "img", "imag", "image", etc. Since for image classification we take on a heavy dependency on fast.ai, variable naming should follow the standards of fast.ai which are described in this [abbreviation guide](https://docs.fast.ai/dev/abbr.html).
+Variable naming should be consistent, i.e. an image should always be called "im" and not "i", "img", "imag", "image", etc. Since we take a strong dependency on fast.ai, variable naming should follow the standards of fast.ai which are described in this [abbreviation guide](https://docs.fast.ai/dev/abbr.html).
 
 The one exception to this guide is that variable names should be as self-explanatory as possible. For example, the meaning of the variable "batch_size" is clear, compared to using "bs" to refer to batch size.
 
@@ -36,19 +36,19 @@ The main variables and abbreviations are given in the table below:
 
 | Abbreviation | Description |
 | ------------ | ----------- |
-| im                     | image
-| fig                    | figure
+| im                     | Image
+| fig                    | Figure
 | pt                     | 2D point (column,row)
-| rect                   | rectangle (order: left, top, right, bottom)
-| width,height (or w/h)  | image dimensions
-| angle                  | rotation angle in degree
-| scale                  | image up/downscaling factor
+| rect                   | Rectangle (order: left, top, right, bottom)
+| width,height (or w/h)  | Image dimensions
+| scale                  | Image up/downscaling factor
+| angle                  | Rotation angle in degree
 | table                  | 2D row/column matrix implemented using a list of lists
-| row,list1D             | single row in a table, i.e. single 1D-list
-| rowItem                | single item in a row
-| line,string            | single string
-| lines,strings          | list of strings
-| list1D                 | list of items, not necessarily strings
+| row,list1D             | Single row in a table, i.e. single 1D-list
+| rowItem                | Single item in a row
+| line,string            | Single string
+| lines,strings          | List of strings
+| list1D                 | List of items, not necessarily strings
 | -s    | Multiple of something (plural) should be indicated by appending an "s" to an abbreviation.
 
 ## Notebooks
