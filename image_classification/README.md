@@ -70,7 +70,19 @@ The main variables and abbreviations are given in the table below:
 
 We provide several notebooks to show how image classification algorithms can be designed, evaluated and operationalized.
 
-- [work in progress]
+1. [Hello World](.00_Hello_World.ipynb)
+
+   An introduction to image classification.
+
+1. [Image Classification](.01_Image_Classification.ipynb)
+
+   Use fast.ai to solve a multiclass, single-label image classification problem. 
+
+1. [Multi-label Classification](.02_Multilabel_Classification.ipynb)
+
+   Use fast.ai to solve a multiclass, multi-label image classification problem.
+
+1. TODO
 
 ## Appendix 
 
