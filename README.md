@@ -39,16 +39,21 @@ Another approach is to determine the degree of customizability and fine tuning y
 One consideration is that more customizability also translates to more responsibility. When using Azure Machine Learning, you get the most flexibility, but you will be responsible for making sure the models are performant and deploying them on Azure. 
 
 
-# Contributing
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.microsoft.com.
+# Computer Vision Best Practices
 
-When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+This repository will provide examples and best practices for building Computer Vision systems, provided as Jupyter notebooks, and using PyTorch as Deep Learning library. Image classification will be covered first, followed by object detection and image similarity.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
+## Planning etc documents
+
+In the near future, Github will be used for feature planning, etc.
+
+
+## Getting Started
+
+Instructions to get started are provided in the [image classification README.md](image_classification/README.md) file.
+
+
+## Contributing
+This project welcomes contributions and suggestions. Before contributing, please see our [contribution guidelines](CONTRIBUTING.md).
