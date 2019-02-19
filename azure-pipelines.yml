@@ -7,7 +7,8 @@ trigger:
 - master
 
 pool:
-  vmImage: 'Ubuntu-16.04'
+  name: dsvmbuildagent-gpu
+  vmImage: 'cvbp-linuxbuildagent'
 
 steps:
 - script: echo Hello, world!
