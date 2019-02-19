@@ -23,12 +23,12 @@ To setup on your local machine:
 2. Clone the repository
     ```
     git clone https://github.com/Microsoft/ComputerVisionBestPractices
+    cd ComputerVisionBestPractices
     ```
-3. Enter the image classification directory and install the conda environment
-   ```
-   cd ComputerVisionBestPractices/image_classification
-   conda env create -f environment.yml
-   ```
+3. Install the conda environment
+    ```
+    conda env create -f environment.yml
+    ```
 4. Activate the conda environment and register it with Jupyter:
     ```
     conda activate cvbp
