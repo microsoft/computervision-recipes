@@ -8,7 +8,7 @@ trigger:
 
 pool:
   name: dsvmbuildagent-gpu
-  vmImage: 'cvbp-linuxbuildagent'
+  vmImage: 'cvbp-windowsbuildagent'
 
 steps:
 - script: echo Hello, world!
