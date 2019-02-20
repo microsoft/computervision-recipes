@@ -8,7 +8,7 @@ trigger:
 
 pool:
   name: dsvmbuildagent-gpu
-  vmImage: 'cvbp-windowsbuildagent'
+  vmImage: 'cvbp-linuxbuildagent'
 
 steps:
 - script: 'pytest image_classfication/tests/unit/test_notebooks.py'
