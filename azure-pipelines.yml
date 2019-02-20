@@ -11,5 +11,5 @@ pool:
   vmImage: 'cvbp-linuxbuildagent'
 
 steps:
-- script: 'pytest image_classfication/tests/unit/test_notebooks.py'
+- script: 'pwd & ls & pytest image_classfication/tests/unit/test_notebooks.py'
   displayName: 'Run Unit Test'
