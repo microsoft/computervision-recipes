@@ -15,7 +15,11 @@ To setup on your local machine:
     ```
     git clone https://github.com/Microsoft/ComputerVisionBestPractices
     ```
-3. [work in progress]
+3. Create a conda environment:
+    ```
+    cd ComputerVisionBestPractices
+    conda env create -f cvbp_env.yaml  
+    ```
 4. Activate the conda environment and register it with Jupyter:
     ```
     conda activate cvbp
