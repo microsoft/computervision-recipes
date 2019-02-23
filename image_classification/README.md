@@ -17,8 +17,8 @@ To setup on your local machine:
     ```
 3. Create a conda environment:
     ```
-    cd ComputerVisionBestPractices
-    conda env create -f cvbp_env.yaml  
+    cd ComputerVisionBestPractices/image_classification
+    conda env create -f scripts/cvbp_env.yaml
     ```
 4. Activate the conda environment and register it with Jupyter:
     ```
@@ -30,7 +30,7 @@ To setup on your local machine:
     cd notebooks
     jupyter notebook
     ```
-5. Run the [SAR Python CPU Movielens](notebooks/00_quick_start/sar_python_cpu_movielens.ipynb) notebook under the 00_quick_start folder. Make sure to change the kernel to "Python (reco)".
+6. Run an example [notebooks](notebooks)
 
 ## Coding guidelines
 
