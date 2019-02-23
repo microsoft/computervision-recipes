@@ -15,5 +15,5 @@ dependencies:
     - azure-cli==2.0.55
     - torch==0.4.1
     - torchvision==0.2.1
-    - fastai==1.0.42
+    - fastai==1.0.45
 
