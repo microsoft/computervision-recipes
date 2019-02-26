@@ -1,9 +1,9 @@
 # 
 # To create the conda environment:
-# $ conda env create -f cvbp_env.yaml
+# $ conda env create -f environment.yaml
 # 
 # To update the conda environment:
-# $ conda env update -f cvbp_env.yaml
+# $ conda env update -f environment.yaml
 # 
 # To register the conda environment in Jupyter:
 # $ conda activate cvbp
@@ -16,8 +16,7 @@ channels:
 - pytorch
 - fastai
 dependencies:
-- dask>=0.17.1
-- fastai>=1.0.40
+- fastai>=1.0.42
 - fastparquet>=0.1.6
 - gitpython>=2.1.8
 - ipykernel>=4.6.1
@@ -28,9 +27,8 @@ dependencies:
 - pymongo>=3.6.1
 - python==3.6.8
 - pytest>=3.6.4
-- pytorch>=1.0.0
+- pytorch==1.0.0
 - seaborn>=0.8.1
-- scikit-learn==0.19.1
 - scipy>=1.0.0
 - tensorflow-gpu==1.12.0
 - numba>=0.38.1
@@ -38,13 +36,9 @@ dependencies:
   - azureml-sdk[notebooks,contrib]==1.0.10
   - azure-storage>=0.36.0
   - black>=18.6b4
-  - dataclasses>=0.6
   - torchvision
-  - idna==2.7
   - memory-profiler>=0.54.0
   - nvidia-ml-py3>=7.352.0
   - papermill>=0.15.0
-  - pydocumentdb>=2.3.3
-  - opencv-python
   - pillow
   - ipywebrtc

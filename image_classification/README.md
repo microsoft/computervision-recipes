@@ -18,7 +18,7 @@ To setup on your local machine:
 3. Create a conda environment:
     ```
     cd ComputerVisionBestPractices/image_classification
-    conda env create -f scripts/cvbp_env.yaml
+    conda env create -f environment.yaml
     ```
 4. Activate the conda environment and register it with Jupyter:
     ```
