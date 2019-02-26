@@ -24,7 +24,6 @@ dependencies:
 - matplotlib>=2.2.2
 - numpy>=1.13.3
 - pandas>=0.23.4
-- pymongo>=3.6.1
 - python==3.6.8
 - pytest>=3.6.4
 - pytorch==1.0.0
