@@ -11,12 +11,20 @@ pool:
   vmImage: 'cvbp-linuxbuildagent'
 
 steps:
+
+- script: |
+    . /data/anaconda/etc/profile.d/conda.sh
+    conda env remove -n cvbp
+    conda env create --quiet -f image_classification/environment.yaml 2> log
+  displayName: 'Create cvbp conda environment'
+
 - script: |
     . /data/anaconda/etc/profile.d/conda.sh
     conda activate cvbp
   displayName: 'Activate cvbp conda environment'
 
 - script: |
+    . /data/anaconda/etc/profile.d/conda.sh
     echo "Unit Tests"
     pytest image_classification/tests/unit
     conda deactivate
