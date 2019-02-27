@@ -11,7 +11,8 @@ pool:
   vmImage: 'cvbp-linuxbuildagent'
 
 steps:
-- script: 'conda activate cvbp'
+- script: '. /anaconda/etc/profile.d/conda.sh && \
+conda activate cvbp'
   displayName: 'Activate cvbp conda environment'
 
 - script: 'echo "Unit Tests" && \
