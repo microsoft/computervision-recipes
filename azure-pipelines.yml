@@ -11,5 +11,10 @@ pool:
   vmImage: 'cvbp-linuxbuildagent'
 
 steps:
-- script: 'pwd & ls & pytest image_classification/tests/unit/test_notebooks.py'
+- script: 'conda activate cvbp'
+  displayName: 'Activate cvbp conda environment'
+
+- script: 'echo "Unit Tests" && \
+pytest image_classification/tests/unit &&\
+conda deactivate'
   displayName: 'Run Unit Test'
