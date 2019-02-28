@@ -11,6 +11,16 @@ import papermill as pm
 KERNEL_NAME = "python3"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
+
+def test_quickstart_notebook_run(notebooks):
+    notebook_path = notebooks["quickstart"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(PM_VERSION=pm.__version__),
+        kernel_name=KERNEL_NAME,
+    )
+
 def test_simple_notebook_run(notebooks):
     notebook_path = notebooks["simple"]
     pm.execute_notebook(
