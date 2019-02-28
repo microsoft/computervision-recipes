@@ -31,10 +31,10 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 import sys
 sys.path.append("../")
-from fastai.vision import *
-from fastai.metrics import error_rate, accuracy
 from pathlib import Path
 from utils_ic.datasets import Urls, unzip_url, data_path
+from fastai.vision import *
+from fastai.metrics import error_rate, accuracy
 
 
 # Set some parameters. We'll use the `unzip_url` helper function to download and unzip our data.
@@ -48,6 +48,12 @@ LEARNING_RATE = 1e-4
 IMAGE_SIZE    = 299
 BATCH_SIZE    = 16
 ARCHITECTURE  = models.resnet50
+
+
+# In[5]:
+
+
+Urls.fridge_objects_path
 
 
 # ---
