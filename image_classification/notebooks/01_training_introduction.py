@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Image Classification
+# # Introduction to Training Image Classification Models
 
 # In this notebook, we will classify different kinds of beverages you might find in the fridge.
 
@@ -34,7 +34,7 @@ sys.path.append("../")
 from fastai.vision import *
 from fastai.metrics import error_rate, accuracy
 from pathlib import Path
-from ic_utils.datasets import Urls, unzip_url, data_path
+from utils_ic.datasets import Urls, unzip_url, data_path
 
 
 # Set some parameters. We'll use the `unzip_url` helper function to download and unzip our data.
@@ -42,7 +42,7 @@ from ic_utils.datasets import Urls, unzip_url, data_path
 # In[4]:
 
 
-DATA_PATH     = unzip_url(Urls.fridge_objects, overwrite=True)
+DATA_PATH     = unzip_url(Urls.fridge_objects_path, overwrite=True)
 EPOCHS        = 5
 LEARNING_RATE = 1e-4
 IMAGE_SIZE    = 299
@@ -115,6 +115,18 @@ data.show_batch(rows=3, figsize=(15,11))
 print(f'number of classes: {data.c}')
 print(data.classes)
 
+
+# We can also see how many images we have in our training and validation set.
+
+# In[10]:
+
+
+data.batch_stats
+
+
+# Above, you'll notice that the validation set is 20% of the total images. 
+# 
+# You'll also notice that the test set will be set to `None`. This is because we treat it as a second holdout set that is only used right at the end of a project.
 
 # ## Training
 

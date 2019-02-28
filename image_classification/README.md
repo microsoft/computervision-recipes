@@ -58,13 +58,13 @@ The main variables and abbreviations are given in the table below:
 
 We provide several notebooks to show how image classification algorithms can be designed, evaluated and operationalized.
 
-1. [Webcam](.notebooks/00_Webcam.ipynb)
+1. [Webcam](.notebooks/00_webcam.ipynb)
 
    An introduction to image classification.
 
-1. [Image Classification](.notebooks/01_Image_Classification.ipynb)
+1. [Intro to training image classification models](.notebooks/01_training_introduction.ipynb)
 
-   Training an Image classification model 101. 
+   Introduction to training an Image classification model.
 
 1. TODO
 

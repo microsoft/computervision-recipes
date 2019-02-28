@@ -1,10 +1,10 @@
-import pytest
-from ic_utils.datasets import Urls, unzip_url
 import os
-from pathlib import Path
-import unittest
+import pytest
 import shutil
+import unittest
+from pathlib import Path
 from typing import Union
+from utils_ic.datasets import Urls, unzip_url
 
 
 class TestUnzipUrl(unittest.TestCase):
@@ -35,13 +35,13 @@ class TestUnzipUrl(unittest.TestCase):
     def test_unzip_url_rel_path(self):
         """ Test unzip with relative path. """
         rel_path = Path(self.TEMP_DIR)
-        self._test_url_data(Urls.lettuce, rel_path, "lettuce")
-        self._test_url_data(Urls.fridge_objects, rel_path, "fridgeObjects")
-        self._test_url_data(Urls.recycle, rel_path, "recycle_v3")
+        self._test_url_data(Urls.lettuce_path, rel_path, "lettuce")
+        self._test_url_data(Urls.fridge_objects_path, rel_path, "fridgeObjects")
+        self._test_url_data(Urls.recycle_path, rel_path, "recycle_v3")
 
     def test_unzip_url_abs_path(self):
         """ Test unzip with absolute path. """
         abs_path = Path(os.path.abspath(self.TEMP_DIR))
-        self._test_url_data(Urls.lettuce, abs_path, "lettuce")
-        self._test_url_data(Urls.fridge_objects, abs_path, "fridgeObjects")
-        self._test_url_data(Urls.recycle, abs_path, "recycle_v3")
+        self._test_url_data(Urls.lettuce_path, abs_path, "lettuce")
+        self._test_url_data(Urls.fridge_objects_path, abs_path, "fridgeObjects")
+        self._test_url_data(Urls.recycle_path, abs_path, "recycle_v3")

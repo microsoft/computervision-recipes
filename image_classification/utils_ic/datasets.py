@@ -1,10 +1,10 @@
+import os
+import requests
+import shutil
 from pathlib import Path
-from zipfile import ZipFile
 from typing import Union
 from urllib.parse import urlparse
-import requests
-import os
-import shutil
+from zipfile import ZipFile
 
 
 class Urls:
@@ -12,11 +12,11 @@ class Urls:
     base = "https://cvbp.blob.core.windows.net/public/datasets/image_classification"
 
     # datasets
-    fridge_objects = f"{base}/fridgeObjects.zip"
-    food_101_subset = f"{base}/food101Subset.zip"
-    flickr_logos_32_subset = f"{base}/flickrLogos32Subset.zip"
-    lettuce = f"{base}/lettuce.zip"
-    recycle = f"{base}/recycle_v3.zip"
+    fridge_objects_path = f"{base}/fridgeObjects.zip"
+    food_101_subset_path = f"{base}/food101Subset.zip"
+    flickr_logos_32_subset_path = f"{base}/flickrLogos32Subset.zip"
+    lettuce_path = f"{base}/lettuce.zip"
+    recycle_path = f"{base}/recycle_v3.zip"
 
 
 def data_path() -> Path:
