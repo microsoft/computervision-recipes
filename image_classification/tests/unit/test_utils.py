@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import unittest
 import shutil
+from typing import Union
 
 
 class TestUnzipUrl(unittest.TestCase):
@@ -20,28 +21,27 @@ class TestUnzipUrl(unittest.TestCase):
         if os.path.exists(self.TEMP_DIR):
             shutil.rmtree(self.TEMP_DIR)
 
+    def _test_url_data(self, url: str, path: Union[Path, str], dir_name: str):
+        data_path = unzip_url(url, fpath=path, dest=path, overwrite=True)
+        # assert zip file exists
+        self.assertTrue(os.path.exists(os.path.join(path, f"{dir_name}.zip")))
+        # assert unzipped file (titled {dir_name}) exists
+        self.assertTrue(os.path.exists(os.path.join(path, dir_name)))
+        # assert unzipped file equals the returned {data_path}
+        self.assertEqual(
+            os.path.realpath(os.path.join(path, dir_name)), os.path.realpath(data_path)
+        )
+
     def test_unzip_url_rel_path(self):
         """ Test unzip with relative path. """
         rel_path = Path(self.TEMP_DIR)
-        data_path = unzip_url(
-            Urls.lettuce, fpath=rel_path, dest=rel_path, overwrite=True
-        )
-        self.assertTrue(os.path.exists(os.path.join(rel_path, "lettuce.zip")))
-        self.assertTrue(os.path.exists(os.path.join(rel_path, "lettuce")))
-        self.assertEqual(
-            os.path.realpath(os.path.join(rel_path, "lettuce")),
-            os.path.realpath(data_path),
-        )
+        self._test_url_data(Urls.lettuce, rel_path, "lettuce")
+        self._test_url_data(Urls.fridge_objects, rel_path, "fridgeObjects")
+        self._test_url_data(Urls.recycle, rel_path, "recycle_v3")
 
     def test_unzip_url_abs_path(self):
         """ Test unzip with absolute path. """
         abs_path = Path(os.path.abspath(self.TEMP_DIR))
-        data_path = unzip_url(
-            Urls.lettuce, fpath=abs_path, dest=abs_path, overwrite=True
-        )
-        self.assertTrue(os.path.exists(os.path.join(abs_path, "lettuce.zip")))
-        self.assertTrue(os.path.exists(os.path.join(abs_path, "lettuce")))
-        self.assertEqual(
-            os.path.realpath(os.path.join(abs_path, "lettuce")),
-            os.path.realpath(data_path),
-        )
+        self._test_url_data(Urls.lettuce, abs_path, "lettuce")
+        self._test_url_data(Urls.fridge_objects, abs_path, "fridgeObjects")
+        self._test_url_data(Urls.recycle, abs_path, "recycle_v3")
