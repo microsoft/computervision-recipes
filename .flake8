@@ -1,0 +1,4 @@
+[flake8]
+ignore =
+    # something may be undefined, or defined from a star import
+    F405

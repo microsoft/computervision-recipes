@@ -102,3 +102,12 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ycm config
+.ycm_extra_conf.py
+
+# papermill outputs
+output.ipynb
+
+# don't save any data
+image_classification/data/*
