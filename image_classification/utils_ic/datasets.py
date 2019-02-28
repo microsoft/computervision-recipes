@@ -9,7 +9,7 @@ from zipfile import ZipFile
 
 class Urls:
     # for now hardcoding base url into Urls class
-    base = "https://cvbp.blob.core.windows.net/public/datasets/image_classification"
+    base = "https://cvbp.blob.core.windows.net/public/datasets/image_classification/"
 
     # datasets
     fridge_objects_path = urljoin(base, "fridgeObjects.zip")
