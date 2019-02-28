@@ -4,42 +4,30 @@ This directory provides examples and best practices for building image classific
 
 See also fast.ai's [documentation](https://docs.fast.ai/) and most recent [course](https://github.com/fastai/course-v3) for more explanations and code examples.
 
-In this directory, we will cover the following:
-
-__Model development__
-1. Preparing the data (getting images and labels into the correct format)
-1. Create data loaders
-1. Explore your data
-1. Data augmentation
-1. Building and iterating on the model (architecture selection, hyperparameter tuning, evaluating results, etc)
-
-__Model deployment__
-1. Deploying the model
-
 ## Getting Started
 
 To setup on your local machine:
 1. Install Anaconda with Python >= 3.6. [Miniconda](https://conda.io/miniconda.html) is a quick way to get started.
-2. Clone the repository
+1. Clone the repository
     ```
     git clone https://github.com/Microsoft/ComputerVisionBestPractices
     cd ComputerVisionBestPractices
     ```
-3. Install the conda environment
+1. Install the conda environment
     ```
     conda env create -f environment.yml
     ```
-4. Activate the conda environment and register it with Jupyter:
+1. Activate the conda environment and register it with Jupyter:
     ```
     conda activate cvbp
     python -m ipykernel install --user --name cvbp --display-name "Python (cvbp)"
     ```
-5. Start the Jupyter notebook server
+1. Start the Jupyter notebook server
     ```
     cd notebooks
     jupyter notebook
     ```
-5. [TODO] Run the [SAR Python CPU Movielens](notebooks/00_quick_start/sar_python_cpu_movielens.ipynb) notebook under the 00_quick_start folder. Make sure to change the kernel to "Python (reco)".
+1. Run the [SAR Python CPU Movielens](notebooks/00_quick_start/sar_python_cpu_movielens.ipynb) notebook under the 00_quick_start folder. Make sure to change the kernel to "Python (reco)".
 
 ## Coding guidelines
 
@@ -70,17 +58,13 @@ The main variables and abbreviations are given in the table below:
 
 We provide several notebooks to show how image classification algorithms can be designed, evaluated and operationalized.
 
-1. [Hello World](.00_Hello_World.ipynb)
+1. [Webcam](.notebooks/00_Webcam.ipynb)
 
    An introduction to image classification.
 
-1. [Image Classification](.01_Image_Classification.ipynb)
+1. [Image Classification](.notebooks/01_Image_Classification.ipynb)
 
-   Use fast.ai to solve a multiclass, single-label image classification problem. 
-
-1. [Multi-label Classification](.02_Multilabel_Classification.ipynb)
-
-   Use fast.ai to solve a multiclass, multi-label image classification problem.
+   Training an Image classification model 101. 
 
 1. TODO
 
