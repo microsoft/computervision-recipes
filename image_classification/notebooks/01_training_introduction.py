@@ -3,7 +3,7 @@
 
 # # Introduction to Training Image Classification Models
 
-# In this notebook, we will classify different kinds of beverages you might find in the fridge.
+# In this notebook, we will give an introduction to using fast.ai for image classification. We will use a small dataset of four differenet beverages to train and evaluate a model. We'll also cover one of the most common ways to store your data in your file system for image classification modelling.
 
 # Check out fastai version.
 
@@ -42,7 +42,7 @@ from utils_ic.datasets import Urls, unzip_url, data_path
 # In[4]:
 
 
-DATA_PATH     = unzip_url(Urls.fridge_objects_path, overwrite=True)
+DATA_PATH     = unzip_url(Urls.fridge_objects_path)
 EPOCHS        = 5
 LEARNING_RATE = 1e-4
 IMAGE_SIZE    = 299
@@ -150,7 +150,7 @@ learn = create_cnn(data, ARCHITECTURE, metrics=accuracy)
 learn.unfreeze()
 
 
-# We can call the `fit` function to train the last layer of the dnn.
+# We can call the `fit` function to train the dnn.
 
 # In[11]:
 
