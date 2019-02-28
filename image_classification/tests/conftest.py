@@ -1,4 +1,3 @@
-
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
@@ -8,16 +7,16 @@
 # you can move it to a conftest.py file. You don’t need to import the fixture you want to use in a test, it
 # automatically gets discovered by pytest."
 
-import calendar
-import datetime
 import os
 import pytest
+
 
 def path_notebooks():
     """Returns the path of the notebooks folder"""
     return os.path.abspath(
         os.path.join(os.path.dirname(__file__), os.path.pardir, "notebooks")
     )
+
 
 @pytest.fixture(scope="module")
 def notebooks():
@@ -26,6 +25,9 @@ def notebooks():
     # Path for the notebooks
     paths = {
         "mnist": os.path.join(folder_notebooks, "mnist.ipynb"),
-        "simple": os.path.join(folder_notebooks, "simple.ipynb")
+        "simple": os.path.join(folder_notebooks, "simple.ipynb"),
+        "01_training_introduction": os.path.join(
+            folder_notebooks, "01_training_introduction.ipynb"
+        ),
     }
     return paths
