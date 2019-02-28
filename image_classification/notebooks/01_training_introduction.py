@@ -7,7 +7,7 @@
 
 # Check out fastai version.
 
-# In[1]:
+# In[10]:
 
 
 import fastai
@@ -16,7 +16,7 @@ fastai.__version__
 
 # Ensure edits to libraries are loaded and plotting is shown in the notebook.
 
-# In[2]:
+# In[11]:
 
 
 get_ipython().run_line_magic('reload_ext', 'autoreload')
@@ -26,7 +26,7 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 # Import fastai. For now, we'll import all (`import *`) so that we can easily use different utilies provided by the fastai library.
 
-# In[3]:
+# In[12]:
 
 
 import sys
@@ -39,7 +39,7 @@ from fastai.metrics import error_rate, accuracy
 
 # Set some parameters. We'll use the `unzip_url` helper function to download and unzip our data.
 
-# In[4]:
+# In[13]:
 
 
 DATA_PATH     = unzip_url(Urls.fridge_objects_path)
@@ -50,7 +50,7 @@ BATCH_SIZE    = 16
 ARCHITECTURE  = models.resnet50
 
 
-# In[5]:
+# In[14]:
 
 
 Urls.fridge_objects_path
@@ -64,7 +64,7 @@ Urls.fridge_objects_path
 # 
 # Lets set that directory to our `path` variable, which we'll use throughout the notebook, and checkout what's inside:
 
-# In[5]:
+# In[15]:
 
 
 path = Path(DATA_PATH)
@@ -98,7 +98,7 @@ path.ls()
 
 # To use fastai, we want to create an ImageDataBunch so that the library can easily use multiple images (mini-batches) during training time. We create an ImageDataBunch by using fastai's [data_block apis](https://docs.fast.ai/data_block.html).
 
-# In[6]:
+# In[16]:
 
 
 np.random.seed(42)
@@ -107,7 +107,7 @@ data = ImageItemList     .from_folder(path)     .random_split_by_pct(valid_pct=0
 
 # Lets take a look at our data using the databunch we created.
 
-# In[7]:
+# In[17]:
 
 
 data.show_batch(rows=3, figsize=(15,11))
@@ -115,7 +115,7 @@ data.show_batch(rows=3, figsize=(15,11))
 
 # Lets see all available classes:
 
-# In[8]:
+# In[18]:
 
 
 print(f'number of classes: {data.c}')
@@ -124,7 +124,7 @@ print(data.classes)
 
 # We can also see how many images we have in our training and validation set.
 
-# In[10]:
+# In[19]:
 
 
 data.batch_stats
@@ -142,7 +142,7 @@ data.batch_stats
 # 
 # With fastai, we can use the `create_cnn` function that allows us to specify the model architecture and a performance indicator (metric). At this point, we already benefit from transfer learning since we download the parameters used to train imagenet. 
 
-# In[9]:
+# In[20]:
 
 
 learn = create_cnn(data, ARCHITECTURE, metrics=accuracy)
@@ -150,7 +150,7 @@ learn = create_cnn(data, ARCHITECTURE, metrics=accuracy)
 
 # Unfreeze our CNN so that we're training all the layers.
 
-# In[10]:
+# In[21]:
 
 
 learn.unfreeze()
@@ -158,7 +158,7 @@ learn.unfreeze()
 
 # We can call the `fit` function to train the dnn.
 
-# In[11]:
+# In[22]:
 
 
 learn.fit(EPOCHS, LEARNING_RATE)
@@ -168,7 +168,7 @@ learn.fit(EPOCHS, LEARNING_RATE)
 
 # To evaluate our model, lets take a look at the accuracy on the validation set.
 
-# In[12]:
+# In[23]:
 
 
 _, metric = learn.validate(learn.data.valid_dl, metrics=[accuracy])
@@ -177,19 +177,19 @@ print(f'Accuracy on validation set: {float(metric)}')
 
 # When evaluating our results, we want to see where the model messes up, and whether or not we can do better. So we're interested in seeing images where the model predicted the image incorrectly but with high confidence (images with the highest loss).
 
-# In[13]:
+# In[24]:
 
 
 interp = ClassificationInterpretation.from_learner(learn)
 
 
-# In[14]:
+# In[25]:
 
 
 interp.plot_confusion_matrix()
 
 
-# In[15]:
+# In[26]:
 
 
 interp.plot_top_losses(9, figsize=(15,11))
