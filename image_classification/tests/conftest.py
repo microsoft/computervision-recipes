@@ -25,6 +25,7 @@ def notebooks():
 
     # Path for the notebooks
     paths = {
+        "quickstart": os.path.join(folder_notebooks, "00_webcam_quickstart.ipynb"),
         "mnist": os.path.join(folder_notebooks, "mnist.ipynb"),
         "simple": os.path.join(folder_notebooks, "simple.ipynb")
     }
