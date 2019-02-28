@@ -3,9 +3,9 @@
 
 
 import os
-import pytest
 import papermill as pm
-from ic_utils.datasets import Urls, unzip_url
+import pytest
+from utils_ic.datasets import Urls, unzip_url
 from tests.conftest import path_notebooks
 
 # Unless manually modified, python3 should be the name of the current jupyter kernel
@@ -35,8 +35,8 @@ def test_mnist_notebook_run(notebooks):
 
 
 def test_01_notebook_run(notebooks):
-    notebook_path = notebooks["01_image_classification"]
-    data_path = unzip_url(Urls.recycle, overwrite=True)
+    notebook_path = notebooks["01_training_introduction"]
+    data_path = unzip_url(Urls.recycle_path, overwrite=True)
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,

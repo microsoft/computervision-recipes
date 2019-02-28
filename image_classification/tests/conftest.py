@@ -28,8 +28,8 @@ def notebooks():
     paths = {
         "mnist": os.path.join(folder_notebooks, "mnist.ipynb"),
         "simple": os.path.join(folder_notebooks, "simple.ipynb"),
-        "01_image_classification": os.path.join(
-            folder_notebooks, "01_Image_Classification.ipynb"
+        "01_training_introduction": os.path.join(
+            folder_notebooks, "01_training_introduction.ipynb"
         ),
     }
     return paths
