@@ -1,4 +1,3 @@
-
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
@@ -13,11 +12,13 @@ import datetime
 import os
 import pytest
 
+
 def path_notebooks():
     """Returns the path of the notebooks folder"""
     return os.path.abspath(
         os.path.join(os.path.dirname(__file__), os.path.pardir, "notebooks")
     )
+
 
 @pytest.fixture(scope="module")
 def notebooks():
@@ -26,6 +27,9 @@ def notebooks():
     # Path for the notebooks
     paths = {
         "mnist": os.path.join(folder_notebooks, "mnist.ipynb"),
-        "simple": os.path.join(folder_notebooks, "simple.ipynb")
+        "simple": os.path.join(folder_notebooks, "simple.ipynb"),
+        "01_image_classification": os.path.join(
+            folder_notebooks, "01_Image_Classification.ipynb"
+        ),
     }
     return paths
