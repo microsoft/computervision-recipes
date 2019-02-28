@@ -21,7 +21,9 @@ class Urls:
 
 def data_path() -> Path:
     """Get the data path"""
-    return os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir, "data"))
+    return os.path.realpath(
+        os.path.join(os.path.dirname(__file__), os.pardir, "data")
+    )
 
 
 def _get_file_name(url: str) -> str:
@@ -36,7 +38,7 @@ def unzip_url(
     overwrite: bool = False,
 ) -> Path:
     """
-    Download file from URL to {fpath} and unzip to {dest}. 
+    Download file from URL to {fpath} and unzip to {dest}.
     {fpath} and {dest} must be directories
     Returns path of {dest}
     """
@@ -55,7 +57,9 @@ def unzip_url(
         if overwrite:
             shutil.rmtree(os.path.join(fpath, fname_without_extension))
         else:
-            raise Exception(f"{fname_without_extension} already exists in {fpath}.")
+            raise Exception(
+                f"{fname_without_extension} already exists in {fpath}."
+            )
 
     r = requests.get(url)
     f = open(os.path.join(fpath, fname), "wb")

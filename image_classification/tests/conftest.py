@@ -7,8 +7,6 @@
 # you can move it to a conftest.py file. You don’t need to import the fixture you want to use in a test, it
 # automatically gets discovered by pytest."
 
-import calendar
-import datetime
 import os
 import pytest
 
