@@ -31,7 +31,7 @@ steps:
 - bash:
     'which conda &&
      source ~/.bashrc &&
-     source activate cvbp
+     source activate cvbp &&
      pytest image_classification/tests/unit'
   displayName: 'Activate cvbp conda environment'
 
