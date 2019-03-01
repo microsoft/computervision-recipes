@@ -31,6 +31,7 @@ steps:
 
 - bash: |
     echo "##vso[task.prependpath]/data/anaconda/bin"
+    condition: eq(variables['Agent.OS'], 'Linux')
   displayName: Add conda to PATH (Linux)
 
 - bash: |
