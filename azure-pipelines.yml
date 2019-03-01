@@ -14,10 +14,14 @@ steps:
 
 - bash:
     'which conda &&
+    echo ONE &&
+    env | sort &&
     source ~/.bashrc &&
     yes | conda env remove -n cvbp && 
     conda env create --quiet -f image_classification/environment.yaml &&
     conda env list &&
+    echo TWO &&
+    env | sort &&
     source activate cvbp &&
     which conda' 
   displayName: 'Create cvbp conda environment'
