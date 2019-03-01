@@ -13,8 +13,7 @@ pool:
 steps:
 
 - bash:
-    'whoami && \
-    which conda && \
+    'which conda && \
     yes | conda env remove -n cvbp && \
     conda env create --quiet -f image_classification/environment.yaml && \
     conda env list && \
