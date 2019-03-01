@@ -17,7 +17,7 @@ steps:
     echo ONE &&
     env | sort > env11.txt &&
     cat env11.txt &&
-    source ~/.bashrc &&
+    source /data/anaconda/etc/profile.d/conda.sh &&
     yes | conda env remove -n cvbp && 
     conda env create --quiet -f image_classification/environment.yaml &&
     conda env list &&
@@ -31,11 +31,7 @@ steps:
 - bash:
     'which conda &&
      source ~/.bashrc &&
-     source activate cvbp'
+     source activate cvbp
+     pytest image_classification/tests/unit'
   displayName: 'Activate cvbp conda environment'
 
-- script: 
-    'echo "Unit Tests" && \
-    pytest image_classification/tests/unit && \
-    source deactivate'
-  displayName: 'Run Unit Test'
