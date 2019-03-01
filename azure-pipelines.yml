@@ -17,14 +17,14 @@ steps:
     yes | conda env remove -n cvbp && 
     conda env create --quiet -f image_classification/environment.yaml &&
     conda env list &&
-    conda activate cvbp &&
+    source activate cvbp &&
     which conda' 
   displayName: 'Create cvbp conda environment'
 
 - bash:
     'which conda &&
      source /data/anaconda/etc/profile.d/conda.sh &&
-     conda activate cvbp &&
+     source activate cvbp &&
      pytest image_classification/tests/unit'
   displayName: 'Activate cvbp conda environment'
 
