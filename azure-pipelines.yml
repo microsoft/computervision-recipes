@@ -31,7 +31,6 @@ steps:
 
 - bash: |
     echo "##vso[task.prependpath]/data/anaconda/bin"
-    condition: eq(variables['Agent.OS'], 'Linux')
   displayName: Add conda to PATH (Linux)
 
 - bash: |
@@ -43,5 +42,9 @@ steps:
     source activate cvbp
     pytest image_classification/tests/unit --junitxml=junit/test-unitttest.xml
   displayName: 'tests'
+
+- bash: |
+    pytest image_classification/tests/unit --junitxml=junit/test-unitttest.xml
+  displayName: 'tests again without explicitly activating environment'
 
 
