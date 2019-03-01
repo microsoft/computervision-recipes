@@ -18,16 +18,16 @@ steps:
     yes | conda env remove -n cvbp && 
     conda env create --quiet -f image_classification/environment.yaml &&
     conda env list &&
-    conda activate cvbp' 
+    source activate cvbp' 
   displayName: 'Create cvbp conda environment'
 
 - bash:
     'which conda && \
-    conda activate cvbp'
+    source activate cvbp'
   displayName: 'Activate cvbp conda environment'
 
 - bash: 
     'echo "Unit Tests" && \
     pytest image_classification/tests/unit && \
-    conda deactivate'
+    source deactivate'
   displayName: 'Run Unit Test'
