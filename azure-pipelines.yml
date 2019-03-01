@@ -16,9 +16,12 @@ steps:
     which conda
     yes | conda env remove -n cvbp
     conda env create --quiet -f image_classification/environment.yaml
+    conda activate cvbp
+
   displayName: 'Create cvbp conda environment'
 
 - script: |
+    which conda
     conda activate cvbp
   displayName: 'Activate cvbp conda environment'
 
