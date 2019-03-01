@@ -13,16 +13,17 @@ pool:
 steps:
 
 - script: |
-    yes | /data/anaconda/envs/py35/bin/conda env remove -n cvbp
-    /data/anaconda/envs/py35/bin/conda env create --quiet -f image_classification/environment.yaml 2> log
+    which conda
+    yes | conda env remove -n cvbp
+    conda env create --quiet -f image_classification/environment.yaml
   displayName: 'Create cvbp conda environment'
 
 - script: |
-    /data/anaconda/envs/py35/bin/conda activate cvbp
+    conda activate cvbp
   displayName: 'Activate cvbp conda environment'
 
 - script: |
     echo "Unit Tests"
     pytest image_classification/tests/unit
-    /data/anaconda/envs/py35/bin/conda deactivate
+    conda deactivate
   displayName: 'Run Unit Test'
