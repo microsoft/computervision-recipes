@@ -14,24 +14,17 @@ steps:
 
 - bash:
     'which conda &&
-    echo ONE &&
-    env | sort > env11.txt &&
-    cat env11.txt &&
-    source /data/anaconda/etc/profile.d/conda.sh &&
     yes | conda env remove -n cvbp && 
     conda env create --quiet -f image_classification/environment.yaml &&
     conda env list &&
-    echo TWO &&
-    env | sort > env22.txt &&
-    cat env22.txt &&
-    source activate cvbp &&
+    conda activate cvbp &&
     which conda' 
   displayName: 'Create cvbp conda environment'
 
 - bash:
     'which conda &&
-     source ~/.bashrc &&
-     source activate cvbp &&
+     source /data/anaconda/etc/profile.d/conda.sh &&
+     conda activate cvbp &&
      pytest image_classification/tests/unit'
   displayName: 'Activate cvbp conda environment'
 
