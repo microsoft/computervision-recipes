@@ -13,7 +13,6 @@ pool:
 steps:
 
 - bash:
-  script:
     'which conda && \
     yes | conda env remove -n cvbp && \
     conda env create --quiet -f image_classification/environment.yaml && \
@@ -21,13 +20,11 @@ steps:
   displayName: 'Create cvbp conda environment'
 
 - bash:
-  script: |
     'which conda && \
     conda activate cvbp'
   displayName: 'Activate cvbp conda environment'
 
 - bash: 
-  script:
     'echo "Unit Tests" && \
     pytest image_classification/tests/unit && \
     conda deactivate'
