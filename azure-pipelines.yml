@@ -28,7 +28,7 @@ steps:
      source activate cvbp'
   displayName: 'Activate cvbp conda environment'
 
-- bash: 
+- script: 
     'echo "Unit Tests" && \
     pytest image_classification/tests/unit && \
     source deactivate'
