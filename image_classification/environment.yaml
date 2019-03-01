@@ -41,3 +41,4 @@ dependencies:
   - papermill>=0.15.0
   - pillow
   - ipywebrtc
+  - pytest
