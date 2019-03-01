@@ -14,6 +14,8 @@ steps:
 
 - bash:
     'which conda &&
+    source ~/.bashrc &&
+    yes | conda env remove -n cvbp && 
     conda env create --quiet -f image_classification/environment.yaml &&
     conda env list &&
     conda activate cvbp' 
