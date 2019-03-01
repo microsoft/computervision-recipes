@@ -14,7 +14,7 @@ KERNEL_NAME = "cvbp"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
 
-def test_quickstart_notebook_run(notebooks):
+def test_webcam_notebook_run(notebooks):
     notebook_path = notebooks["00_webcam"]
     pm.execute_notebook(
         notebook_path,
