@@ -13,10 +13,10 @@ pool:
 steps:
 
 - bash:
-    which conda \
-    conda env create --quiet -f image_classification/environment.yaml \
-    conda env list \
-    conda activate cvbp 
+    'which conda &&
+    conda env create --quiet -f image_classification/environment.yaml &&
+    conda env list &&
+    conda activate cvbp' 
   displayName: 'Create cvbp conda environment'
 
 - bash:
