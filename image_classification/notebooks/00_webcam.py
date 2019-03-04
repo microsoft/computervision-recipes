@@ -9,7 +9,7 @@
 # 
 # <br>
 # 
-# Image classification is a classical problem in computer vision that determining whether or not the image data contains some specific object, feature, or activity. It is regarded as a mature research area
+# Image classification is a classical problem in computer vision that of determining whether or not the image data contains some specific object, feature, or activity. It is regarded as a mature research area
 # and currently the best models are based on [convolutional neural networks (CNNs)](https://en.wikipedia.org/wiki/Convolutional_neural_network). Such models with weights trained on millions of images and hundreds of object classes in [ImageNet dataset](http://www.image-net.org/) are available from major deep neural network frameworks such as [CNTK](https://www.microsoft.com/en-us/cognitive-toolkit/features/model-gallery/), [fast.ai](https://docs.fast.ai/vision.models.html#Computer-Vision-models-zoo), [Keras](https://keras.io/applications/), [PyTorch](https://pytorch.org/docs/stable/torchvision/models.html), and [TensorFlow](https://tfhub.dev/s?module-type=image-classification).
 # 
 # 
@@ -30,29 +30,17 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 import sys
 sys.path.append("../")
-
-import io, logging, shutil, time
-from utils_ic.datasets import imagenet_labels
-
+import io, time
 import fastai
 from fastai.vision import *
-from pynvml import nvmlDeviceGetHandleByIndex, nvmlDeviceGetName, nvmlInit
-
 from ipywebrtc import CameraStream, ImageRecorder
 import ipywidgets as widgets
+from torch.cuda import get_device_name
+from utils_ic.datasets import imagenet_labels
 
 
-logging.basicConfig()
-logging.getLogger().setLevel(logging.INFO)
-
-print("Fast.ai:", fastai.__version__)
-
-nvmlInit()
-try: 
-    handle = nvmlDeviceGetHandleByIndex(0)
-    print("Device 0:", nvmlDeviceGetName(handle))
-except NVMLError as error:
-    print(error)
+print(f"Fast.ai: {fastai.__version__}")
+print(get_device_name(0))
 
 
 # In[3]:
@@ -75,8 +63,8 @@ IMAGE_SIZE = 224
 
 
 labels = imagenet_labels()
-print("Num labels =", len(labels))
-print(", ".join(labels[:5]), "...")
+print(f"Num labels = {len(labels)}")
+print(f"{', '.join(labels[:5])}, ...")
 
 
 # In[5]:
@@ -116,13 +104,13 @@ print(labels[ind])
 # 
 # We use `ipywebrtc` to start a webcam and get the video stream to the notebook's widget. For details about `ipywebrtc`, see [this link](https://ipywebrtc.readthedocs.io/en/latest/). 
 
-# In[8]:
+# In[9]:
 
 
 run_model = True
 
 # Webcam
-cam = CameraStream(
+w_cam = CameraStream(
     constraints={
         'facing_mode': 'user',
         'audio': False,
@@ -130,56 +118,53 @@ cam = CameraStream(
     }
 )
 # Image recorder for taking a snapshot
-im_recorder = ImageRecorder(stream=cam, layout=widgets.Layout(margin='0 0 0 50px'))
+w_imrecorder = ImageRecorder(stream=w_cam, layout=widgets.Layout(margin='0 0 0 50px'))
 # Text label widget to show our classification results
-label = widgets.Label("result label") 
+w_label = widgets.Label("result label") 
 
-# For every snapshot, we run the pretrained model
+
 def classify_frame(_):
-    im_recorder.recording = True
-    
+    """ Classify an image snapshot by using a pretrained model
+    """
     try:
-        im = open_image(io.BytesIO(im_recorder.image.value), convert_mode='RGB')
+        im = open_image(io.BytesIO(w_imrecorder.image.value), convert_mode='RGB')
         _, ind, _ = learn.predict(im)
-        label.value = labels[ind]
+        # Show results to the label widget 
+        w_label.value = labels[ind]
     except OSError:
+        # If im_recorder doesn't have valid image data, skip it. 
         pass
 
     if run_model:
-        im_recorder.recording = True
-        
-im_recorder.image.observe(classify_frame, 'value')
+        # Taking the next snapshot programmatically
+        w_imrecorder.recording = True
 
+# Register classify_frame as a callback. Will be called whenever image.value changes. 
+w_imrecorder.image.observe(classify_frame, 'value')
 
-# In[9]:
-
-
-# Show widgets
-widgets.HBox([cam, im_recorder, label])
-
-
-# Now, click the **capture button** of the image recorder widget to start classification. Labels show the most probable class predicted by the model for an image snapshot.
-
-# <img src="../docs/media/webcam.png" style="width: 400px;"/>
-# 
-# The results maybe not very accurate because the model was not trained on the webcam images. To make the model perform better on new image classification problem, we usually fine-tune the model with new data. Examples about this transfer learning can be found from our [training introduction notebook](01_training_introduction.ipynb).
 
 # In[10]:
 
 
-stop_process = True
+# Show widgets
+widgets.HBox([w_cam, w_imrecorder, w_label])
+
+
+# Now, click the **capture button** of the image recorder widget to start classification. Labels show the most probable class predicted by the model for an image snapshot.
+
+# <center>
+# <img src="../docs/media/webcam.png" style="width: 400px;"/>
+# <i>Webcam image classification example</i>
+# </center>
+# 
+# <br>
+# 
+# In this notebook, we have shown a quickstart example of using a pretrained model to classify images. The model, however, is not able to predict the object labels that are not part of ImageNet. From our [training introduction notebook](01_training_introduction.ipynb), you can find how to fine-tune the model to address such problems.
+
+# In[11]:
+
+
+# Stop the model and webcam 
+run_model = False
 widgets.Widget.close_all()
-
-
-# In[ ]:
-
-
-# Cleanup
-shutil.rmtree(path, ignore_errors=True)
-
-
-# In[ ]:
-
-
-
 
