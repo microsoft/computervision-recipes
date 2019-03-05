@@ -28,8 +28,8 @@ def imagenet_labels() -> list:
     Returns:
          list: ImageNet labels
     """
-    json_dict = requests.get(Urls.imagenet_labels_json).json()
-    return [json_dict[str(k)][1] for k in range(len(json_dict))]
+    labels = requests.get(Urls.imagenet_labels_json).json()
+    return [labels[str(k)][1] for k in range(len(labels))]
 
 
 def data_path() -> Path:

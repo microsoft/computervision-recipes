@@ -30,23 +30,17 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 import sys
 sys.path.append("../")
-import io, time
+import io, time, urllib.request
 import fastai
 from fastai.vision import *
 from ipywebrtc import CameraStream, ImageRecorder
 import ipywidgets as widgets
 from torch.cuda import get_device_name
 from utils_ic.datasets import imagenet_labels
-
+from utils_ic.imagenet_models import IM_SIZE, load_learner
 
 print(f"Fast.ai: {fastai.__version__}")
 print(get_device_name(0))
-
-
-# In[3]:
-
-
-IMAGE_SIZE = 224
 
 
 # ## 1. Load Pretrained Model
@@ -59,7 +53,7 @@ IMAGE_SIZE = 224
 # 
 # > \* top-n: *n* labels considered most probable by the mode
 
-# In[4]:
+# In[3]:
 
 
 labels = imagenet_labels()
@@ -67,44 +61,42 @@ print(f"Num labels = {len(labels)}")
 print(f"{', '.join(labels[:5])}, ...")
 
 
-# In[5]:
+# In[4]:
 
 
-empty_data = ImageDataBunch.single_from_classes(
-    "", classes=labels, size=IMAGE_SIZE
-).normalize(imagenet_stats)
-
-learn = Learner(empty_data, models.resnet18(pretrained=True))
+# Load pretrained model learner for prediction. 
+learn = load_learner(models.resnet18(pretrained=True))
 
 
 # ## 2. Classify Images
 # 
-# 
 # ### 2.1 Image file
-# We use a sample image from `COCO_TINY` in `fastai.vision` just because it is a very small size and easy to download by calling a simple function, `untar_data(URLs.COCO_TINY)`.
-# 
-# > Original [COCO dataset](http://cocodataset.org/) is a large-scale object detection, segmentation, and captioning dataset.
+# First, we prepare a coffee mug image to show an example of how to score a single image by using the model.
 
 # In[6]:
 
 
-path = untar_data(URLs.COCO_TINY)
-im = open_image(path/"train"/"000000564902.jpg", convert_mode='RGB')
+# Download an example image
+IM_URL = "https://recodatasets.blob.core.windows.net/images/cvbp_cup.jpg"
+urllib.request.urlretrieve(IM_URL, "example.jpg")
+
+im = open_image("example.jpg", convert_mode='RGB')
 im
 
 
 # In[7]:
 
 
+# Use the model to predict the class label
 _, ind, _ = learn.predict(im)
 print(labels[ind])
 
 
 # ### 2.2 WebCam Stream
 # 
-# We use `ipywebrtc` to start a webcam and get the video stream to the notebook's widget. For details about `ipywebrtc`, see [this link](https://ipywebrtc.readthedocs.io/en/latest/). 
+# Now, let's use WebCam stream for image classification. We use `ipywebrtc` to start a webcam and get the video stream to the notebook's widget. For details about `ipywebrtc`, see [this link](https://ipywebrtc.readthedocs.io/en/latest/). 
 
-# In[9]:
+# In[8]:
 
 
 run_model = True
@@ -114,7 +106,7 @@ w_cam = CameraStream(
     constraints={
         'facing_mode': 'user',
         'audio': False,
-        'video': { 'width': IMAGE_SIZE, 'height': IMAGE_SIZE }
+        'video': { 'width': IM_SIZE, 'height': IM_SIZE }
     }
 )
 # Image recorder for taking a snapshot
@@ -143,7 +135,7 @@ def classify_frame(_):
 w_imrecorder.image.observe(classify_frame, 'value')
 
 
-# In[10]:
+# In[9]:
 
 
 # Show widgets
@@ -153,7 +145,7 @@ widgets.HBox([w_cam, w_imrecorder, w_label])
 # Now, click the **capture button** of the image recorder widget to start classification. Labels show the most probable class predicted by the model for an image snapshot.
 
 # <center>
-# <img src="../docs/media/webcam.png" style="width: 400px;"/>
+# <img src="https://recodatasets.blob.core.windows.net/images/cvbp_webcam.png" style="width: 400px;"/>
 # <i>Webcam image classification example</i>
 # </center>
 # 
@@ -161,10 +153,16 @@ widgets.HBox([w_cam, w_imrecorder, w_label])
 # 
 # In this notebook, we have shown a quickstart example of using a pretrained model to classify images. The model, however, is not able to predict the object labels that are not part of ImageNet. From our [training introduction notebook](01_training_introduction.ipynb), you can find how to fine-tune the model to address such problems.
 
-# In[11]:
+# In[10]:
 
 
 # Stop the model and webcam 
 run_model = False
 widgets.Widget.close_all()
+
+
+# In[ ]:
+
+
+
 
