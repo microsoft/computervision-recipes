@@ -37,7 +37,8 @@ from ipywebrtc import CameraStream, ImageRecorder
 import ipywidgets as widgets
 from torch.cuda import get_device_name
 from utils_ic.datasets import imagenet_labels
-from utils_ic.imagenet_models import IM_SIZE, load_learner
+import utils_ic.imagenet_models as imagenet_models
+
 
 print(f"Fast.ai: {fastai.__version__}")
 print(get_device_name(0))
@@ -65,7 +66,7 @@ print(f"{', '.join(labels[:5])}, ...")
 
 
 # Load pretrained model learner for prediction. 
-learn = load_learner(models.resnet18(pretrained=True))
+learn = imagenet_models.load_learner(models.resnet18(pretrained=True))
 
 
 # ## 2. Classify Images
@@ -73,18 +74,18 @@ learn = load_learner(models.resnet18(pretrained=True))
 # ### 2.1 Image file
 # First, we prepare a coffee mug image to show an example of how to score a single image by using the model.
 
-# In[6]:
+# In[7]:
 
 
 # Download an example image
-IM_URL = "https://recodatasets.blob.core.windows.net/images/cvbp_cup.jpg"
+IM_URL = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup.jpg"
 urllib.request.urlretrieve(IM_URL, "example.jpg")
 
 im = open_image("example.jpg", convert_mode='RGB')
 im
 
 
-# In[7]:
+# In[8]:
 
 
 # Use the model to predict the class label
@@ -96,7 +97,7 @@ print(labels[ind])
 # 
 # Now, let's use WebCam stream for image classification. We use `ipywebrtc` to start a webcam and get the video stream to the notebook's widget. For details about `ipywebrtc`, see [this link](https://ipywebrtc.readthedocs.io/en/latest/). 
 
-# In[8]:
+# In[9]:
 
 
 run_model = True
@@ -106,7 +107,7 @@ w_cam = CameraStream(
     constraints={
         'facing_mode': 'user',
         'audio': False,
-        'video': { 'width': IM_SIZE, 'height': IM_SIZE }
+        'video': { 'width': imagenet_models.IM_SIZE, 'height': imagenet_models.IM_SIZE }
     }
 )
 # Image recorder for taking a snapshot
@@ -135,7 +136,7 @@ def classify_frame(_):
 w_imrecorder.image.observe(classify_frame, 'value')
 
 
-# In[9]:
+# In[10]:
 
 
 # Show widgets
@@ -145,7 +146,7 @@ widgets.HBox([w_cam, w_imrecorder, w_label])
 # Now, click the **capture button** of the image recorder widget to start classification. Labels show the most probable class predicted by the model for an image snapshot.
 
 # <center>
-# <img src="https://recodatasets.blob.core.windows.net/images/cvbp_webcam.png" style="width: 400px;"/>
+# <img src="https://cvbp.blob.core.windows.net/public/images/cvbp_webcam.png" style="width: 400px;"/>
 # <i>Webcam image classification example</i>
 # </center>
 # 
@@ -153,7 +154,7 @@ widgets.HBox([w_cam, w_imrecorder, w_label])
 # 
 # In this notebook, we have shown a quickstart example of using a pretrained model to classify images. The model, however, is not able to predict the object labels that are not part of ImageNet. From our [training introduction notebook](01_training_introduction.ipynb), you can find how to fine-tune the model to address such problems.
 
-# In[10]:
+# In[11]:
 
 
 # Stop the model and webcam 
