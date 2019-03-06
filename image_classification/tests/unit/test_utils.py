@@ -6,7 +6,7 @@ from typing import Union
 from utils_ic.datasets import Urls, unzip_url
 
 # temporarily putting this constant here until we add a way to manage constants in tests
-TEMP_DIR = "../tmp_data"
+TEMP_DIR = Path("../tmp_data")
 
 
 @pytest.fixture(scope="function")
@@ -34,7 +34,7 @@ def _test_url_data(url: str, path: Union[Path, str], dir_name: str):
 
 def test_unzip_url_rel_path(make_temp_data_dir):
     """ Test unzip with relative path. """
-    rel_path = Path(TEMP_DIR)
+    rel_path = TEMP_DIR
     _test_url_data(Urls.lettuce_path, rel_path, "lettuce")
     _test_url_data(Urls.fridge_objects_path, rel_path, "fridgeObjects")
     _test_url_data(Urls.recycle_path, rel_path, "recycle_v3")
@@ -46,3 +46,37 @@ def test_unzip_url_abs_path(make_temp_data_dir):
     _test_url_data(Urls.lettuce_path, abs_path, "lettuce")
     _test_url_data(Urls.fridge_objects_path, abs_path, "fridgeObjects")
     _test_url_data(Urls.recycle_path, abs_path, "recycle_v3")
+
+
+def text_unzip_url_overwrite(make_temp_data_dir):
+    """ Test if overwrite is true and file exists """
+    os.makedirs(TEMP_DIR/"fridgeObjects")
+    fridge_objects_path = unzip_url(Urls.fridge_objects_path, overwrite=True)
+    assert len(os.listdir(fridge_objects_path)) >= 0
+    os.makedirs(TEMP_DIR/"lettuce")
+    lettuce_path = unzip_url(Urls.lettuce_path, overwrite=False)
+    assert len(os.listdir(lettuce_path)) == 0
+
+
+def test_unzip_url_exist_ok(make_temp_data_dir):
+    """
+    Test if exist_ok is true and (file exists, file does not exist)
+    """
+    os.makedirs(TEMP_DIR/"fridgeObjects")
+    fridge_objects_path = unzip_url(Urls.fridge_objects_path, exist_ok=True)
+    assert len(os.listdir(fridge_objects_path)) == 0
+    lettuce_path = unzip_url(Urls.lettuce_path, exist_ok=True)
+    assert len(os.listdir(lettuce_path)) >= 0
+
+
+def test_unzip_url_not_exist_ok(make_temp_data_dir):
+    """
+    Test if exist_ok is false and (file exists, file does not exist)
+    """
+    os.makedirs(TEMP_DIR/"fridgeObjects")
+    with pytest.raises(FileExistsError):
+        unzip_url(Urls.fridge_objects_path, exist_ok=False)
+
+    open(TEMP_DIR/"lettuce.zip", 'a').close()
+    with pytest.raises(FileExistsError):
+        unzip_url(Urls.lettuce_path, exist_ok=False)
