@@ -10,7 +10,7 @@ from tests.conftest import path_notebooks
 
 # Unless manually modified, python3 should be the name of the current jupyter kernel
 # that runs on the activated conda environment
-KERNEL_NAME = "cvbp"
+KERNEL_NAME = "python3"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
 
