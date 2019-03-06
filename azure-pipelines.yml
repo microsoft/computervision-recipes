@@ -4,34 +4,17 @@
 # https://aka.ms/yaml
 
 trigger:
-- master
+- staging
 
 pool:
-  name: dsvmbuildagent-gpu
-  vmImage: 'cvbp-linuxbuildagent'
+  name: cvbpbuildagents
+  vmImage: 'linuxagent-gpu'
 
 steps:
 
-# - bash: |
-#     which conda &&
-#     yes | conda env remove -n cvbp && 
-#     conda env create --quiet -f image_classification/environment.yaml &&
-#     conda env list &&
-#     source activate cvbp &&
-#     which conda
-#   displayName: 'Create cvbp conda environment'
-
-# - bash: |
-#     'which conda &&
-#      source /data/anaconda/etc/profile.d/conda.sh &&
-#      source activate cvbp &&
-#      pytest image_classification/tests/unit'
-#   displayName: 'Activate cvbp conda environment'
-
-
 - bash: |
     echo "##vso[task.prependpath]/data/anaconda/bin"
-  displayName: Add conda to PATH (Linux)
+  displayName: Add Conda to PATH
 
 - bash: |
     conda create -q -n cvbp python=3.5 -y
@@ -42,9 +25,3 @@ steps:
     source activate cvbp
     pytest image_classification/tests/unit --junitxml=junit/test-unitttest.xml
   displayName: 'tests'
-
-# - bash: |
-#     pytest image_classification/tests/unit --junitxml=junit/test-unitttest.xml
-#   displayName: 'tests again without explicitly activating environment'
-
-
