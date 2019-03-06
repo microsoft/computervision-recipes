@@ -36,8 +36,9 @@ from fastai.vision import *
 from ipywebrtc import CameraStream, ImageRecorder
 import ipywidgets as widgets
 from torch.cuda import get_device_name
+from utils_ic.constants import IMAGENET_IM_SIZE
 from utils_ic.datasets import imagenet_labels
-import utils_ic.imagenet_models as imagenet_models
+from utils_ic.imagenet_models import model_to_learner
 
 
 print(f"Fast.ai: {fastai.__version__}")
@@ -65,8 +66,8 @@ print(f"{', '.join(labels[:5])}, ...")
 # In[4]:
 
 
-# Load pretrained model learner for prediction. 
-learn = imagenet_models.load_learner(models.resnet18(pretrained=True))
+# Convert a pretrained imagenet model into Learner for prediction. 
+learn = model_to_learner(models.resnet18(pretrained=True), IMAGENET_IM_SIZE)
 
 
 # ## 2. Classify Images
@@ -74,7 +75,7 @@ learn = imagenet_models.load_learner(models.resnet18(pretrained=True))
 # ### 2.1 Image file
 # First, we prepare a coffee mug image to show an example of how to score a single image by using the model.
 
-# In[7]:
+# In[5]:
 
 
 # Download an example image
@@ -85,29 +86,27 @@ im = open_image("example.jpg", convert_mode='RGB')
 im
 
 
-# In[8]:
+# In[7]:
 
 
 # Use the model to predict the class label
 _, ind, _ = learn.predict(im)
-print(labels[ind])
+print(f"Predicted label: {labels[ind]}")
 
 
 # ### 2.2 WebCam Stream
 # 
 # Now, let's use WebCam stream for image classification. We use `ipywebrtc` to start a webcam and get the video stream to the notebook's widget. For details about `ipywebrtc`, see [this link](https://ipywebrtc.readthedocs.io/en/latest/). 
 
-# In[9]:
+# In[8]:
 
-
-run_model = True
 
 # Webcam
 w_cam = CameraStream(
     constraints={
         'facing_mode': 'user',
         'audio': False,
-        'video': { 'width': imagenet_models.IM_SIZE, 'height': imagenet_models.IM_SIZE }
+        'video': { 'width': IMAGENET_IM_SIZE, 'height': IMAGENET_IM_SIZE }
     }
 )
 # Image recorder for taking a snapshot
@@ -115,7 +114,7 @@ w_imrecorder = ImageRecorder(stream=w_cam, layout=widgets.Layout(margin='0 0 0 5
 # Text label widget to show our classification results
 w_label = widgets.Label("result label") 
 
-
+run_model = True
 def classify_frame(_):
     """ Classify an image snapshot by using a pretrained model
     """
@@ -136,7 +135,7 @@ def classify_frame(_):
 w_imrecorder.image.observe(classify_frame, 'value')
 
 
-# In[10]:
+# In[9]:
 
 
 # Show widgets
@@ -154,7 +153,7 @@ widgets.HBox([w_cam, w_imrecorder, w_label])
 # 
 # In this notebook, we have shown a quickstart example of using a pretrained model to classify images. The model, however, is not able to predict the object labels that are not part of ImageNet. From our [training introduction notebook](01_training_introduction.ipynb), you can find how to fine-tune the model to address such problems.
 
-# In[11]:
+# In[10]:
 
 
 # Stop the model and webcam 
