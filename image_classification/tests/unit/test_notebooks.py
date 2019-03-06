@@ -2,11 +2,8 @@
 # https://github.com/Microsoft/Recommenders/tree/master/tests
 
 
-import os
 import papermill as pm
-import shutil
 from utils_ic.datasets import Urls, unzip_url
-from tests.conftest import path_notebooks
 
 # Unless manually modified, python3 should be the name of the current jupyter kernel
 # that runs on the activated conda environment
@@ -49,7 +46,9 @@ def test_01_notebook_run(notebooks):
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__,
-            DATA_PATH=unzip_url(Urls.recycle_path, exist_ok=True)),
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            DATA_PATH=unzip_url(Urls.recycle_path, exist_ok=True),
+        ),
         kernel_name=KERNEL_NAME,
     )

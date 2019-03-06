@@ -26,7 +26,7 @@ class Urls:
 
     @classmethod
     def all(cls) -> List[Url]:
-        return [v for k, v in cls.__dict__.items() if k.endswith('_path')]
+        return [v for k, v in cls.__dict__.items() if k.endswith("_path")]
 
 
 def imagenet_labels() -> list:
@@ -99,6 +99,7 @@ def unzip_url(
             z.extractall(fpath)
             z.close()
     except FileExistsError:
-        if not exist_ok: raise
+        if not exist_ok:
+            raise
 
     return os.path.realpath(os.path.join(fpath, fname_without_extension))

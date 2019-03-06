@@ -4,8 +4,7 @@ from utils_ic.constants import IMAGENET_IM_SIZE
 
 
 def model_to_learner(
-    model: nn.Module,
-    im_size: int=IMAGENET_IM_SIZE
+    model: nn.Module, im_size: int = IMAGENET_IM_SIZE
 ) -> Learner:
     """Create Learner based on pyTorch ImageNet model.
 
