@@ -10,8 +10,18 @@ from tests.conftest import path_notebooks
 
 # Unless manually modified, python3 should be the name of the current jupyter kernel
 # that runs on the activated conda environment
-KERNEL_NAME = "cvbp"
+KERNEL_NAME = "python3"
 OUTPUT_NOTEBOOK = "output.ipynb"
+
+
+def test_webcam_notebook_run(notebooks):
+    notebook_path = notebooks["00_webcam"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(PM_VERSION=pm.__version__),
+        kernel_name=KERNEL_NAME,
+    )
 
 
 def test_simple_notebook_run(notebooks):

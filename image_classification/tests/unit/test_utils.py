@@ -3,7 +3,7 @@ import pytest
 import shutil
 from pathlib import Path
 from typing import Union
-from utils_ic.datasets import Urls, unzip_url
+from utils_ic.datasets import Urls, unzip_url, imagenet_labels
 
 # temporarily putting this constant here until we add a way to manage constants in tests
 TEMP_DIR = Path("../tmp_data")
@@ -80,3 +80,12 @@ def test_unzip_url_not_exist_ok(make_temp_data_dir):
     open(TEMP_DIR/"lettuce.zip", 'a').close()
     with pytest.raises(FileExistsError):
         unzip_url(Urls.lettuce_path, exist_ok=False)
+
+
+def test_imagenet_labels():
+    # Compare first five labels for quick check
+    IMAGENET_LABELS_FIRST_FIVE = ("tench", "goldfish", "great_white_shark", "tiger_shark", "hammerhead")
+
+    labels = imagenet_labels()
+    for i in range(5):
+        assert labels[i] == IMAGENET_LABELS_FIRST_FIVE[i]
