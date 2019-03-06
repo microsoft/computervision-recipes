@@ -18,6 +18,19 @@ class Urls:
     lettuce_path = urljoin(base, "lettuce.zip")
     recycle_path = urljoin(base, "recycle_v3.zip")
 
+    # Same link Keras is using
+    imagenet_labels_json = "https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json"
+
+
+def imagenet_labels() -> list:
+    """List of ImageNet labels with the original index.
+
+    Returns:
+         list: ImageNet labels
+    """
+    labels = requests.get(Urls.imagenet_labels_json).json()
+    return [labels[str(k)][1] for k in range(len(labels))]
+
 
 def data_path() -> Path:
     """Get the data path"""

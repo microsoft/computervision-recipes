@@ -3,7 +3,7 @@ import pytest
 import shutil
 from pathlib import Path
 from typing import Union
-from utils_ic.datasets import Urls, unzip_url
+from utils_ic.datasets import Urls, unzip_url, imagenet_labels
 
 # temporarily putting this constant here until we add a way to manage constants in tests
 TEMP_DIR = "../tmp_data"
@@ -46,3 +46,12 @@ def test_unzip_url_abs_path(make_temp_data_dir):
     _test_url_data(Urls.lettuce_path, abs_path, "lettuce")
     _test_url_data(Urls.fridge_objects_path, abs_path, "fridgeObjects")
     _test_url_data(Urls.recycle_path, abs_path, "recycle_v3")
+
+
+def test_imagenet_labels():
+    # Compare first five labels for quick check
+    IMAGENET_LABELS_FIRST_FIVE = ("tench", "goldfish", "great_white_shark", "tiger_shark", "hammerhead")
+
+    labels = imagenet_labels()
+    for i in range(5):
+        assert labels[i] == IMAGENET_LABELS_FIRST_FIVE[i]
