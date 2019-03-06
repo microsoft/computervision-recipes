@@ -50,10 +50,12 @@ def test_unzip_url_abs_path(make_temp_data_dir):
 
 def text_unzip_url_overwrite(make_temp_data_dir):
     """ Test if overwrite is true and file exists """
-    os.makedirs(TEMP_DIR/"fridgeObjects")
-    fridge_objects_path = unzip_url(Urls.fridge_objects_path, TEMP_DIR, overwrite=True)
+    os.makedirs(TEMP_DIR / "fridgeObjects")
+    fridge_objects_path = unzip_url(
+        Urls.fridge_objects_path, TEMP_DIR, overwrite=True
+    )
     assert len(os.listdir(fridge_objects_path)) >= 0
-    os.makedirs(TEMP_DIR/"lettuce")
+    os.makedirs(TEMP_DIR / "lettuce")
     lettuce_path = unzip_url(Urls.lettuce_path, TEMP_DIR, overwrite=False)
     assert len(os.listdir(lettuce_path)) == 0
 
@@ -62,7 +64,7 @@ def test_unzip_url_exist_ok(make_temp_data_dir):
     """
     Test if exist_ok is true and (file exists, file does not exist)
     """
-    os.makedirs(TEMP_DIR/"recycle_v3")
+    os.makedirs(TEMP_DIR / "recycle_v3")
     recycle_path = unzip_url(Urls.recycle_path, TEMP_DIR, exist_ok=True)
     assert len(os.listdir(recycle_path)) == 0
     lettuce_path = unzip_url(Urls.lettuce_path, TEMP_DIR, exist_ok=True)
@@ -73,18 +75,24 @@ def test_unzip_url_not_exist_ok(make_temp_data_dir):
     """
     Test if exist_ok is false and (file exists, file does not exist)
     """
-    os.makedirs(TEMP_DIR/"fridgeObjects")
+    os.makedirs(TEMP_DIR / "fridgeObjects")
     with pytest.raises(FileExistsError):
         unzip_url(Urls.fridge_objects_path, TEMP_DIR, exist_ok=False)
 
-    open(TEMP_DIR/"lettuce.zip", 'a').close()
+    open(TEMP_DIR / "lettuce.zip", "a").close()
     with pytest.raises(FileExistsError):
         unzip_url(Urls.lettuce_path, TEMP_DIR, exist_ok=False)
 
 
 def test_imagenet_labels():
     # Compare first five labels for quick check
-    IMAGENET_LABELS_FIRST_FIVE = ("tench", "goldfish", "great_white_shark", "tiger_shark", "hammerhead")
+    IMAGENET_LABELS_FIRST_FIVE = (
+        "tench",
+        "goldfish",
+        "great_white_shark",
+        "tiger_shark",
+        "hammerhead",
+    )
 
     labels = imagenet_labels()
     for i in range(5):
