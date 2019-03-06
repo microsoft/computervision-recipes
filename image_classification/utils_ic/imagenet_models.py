@@ -1,26 +1,28 @@
 from fastai.vision import *
 from utils_ic.datasets import imagenet_labels
+from utils_ic.constants import IMAGENET_IM_SIZE
 
 
-# desired input image size for the ImageNet models
-IM_SIZE = 224
+def model_to_learner(
+    model: nn.Module,
+    im_size: int=IMAGENET_IM_SIZE
+) -> Learner:
+    """Create Learner based on pyTorch ImageNet model.
 
-
-def load_learner(model: nn.Module) -> Learner:
-    """Load an ImageNet model trainer for prediction
     Args:
-        model (nn.Module): Base model. E.g. models.resnet18()
+        model (nn.Module): Base ImageNet model. E.g. models.resnet18()
+        im_size (int): Image size the model will expect to have.
 
     Returns:
-         Learner: a model trainer
+         Learner: a model trainer for prediction
     """
-    labels = imagenet_labels()
 
     # Currently, fast.ai api requires to pass a DataBunch to create a model trainer (learner).
     # To use the learner for prediction tasks without retraining, we have to pass an empty DataBunch.
     # single_from_classes is deprecated, but this is the easiest go-around method.
+    # Create ImageNet data spec as an empty DataBunch.
     empty_data = ImageDataBunch.single_from_classes(
-        "", classes=labels, size=IM_SIZE
+        "", classes=imagenet_labels(), size=im_size
     ).normalize(imagenet_stats)
 
     return Learner(empty_data, model)
