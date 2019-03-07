@@ -2,10 +2,9 @@ import os
 import requests
 import shutil
 from pathlib import Path
-from typing import Union
-from urllib.parse import urlparse, urljoin
+from typing import List, Union
+from urllib.parse import urljoin, urlparse
 from zipfile import ZipFile
-from typing import List
 
 Url = str
 
@@ -103,6 +102,7 @@ def unzip_url(
             z.close()
     except FileExistsError:
         if not exist_ok:
+            print("File already exists. Use param {exist_ok} to ignore.")
             raise
 
     return os.path.realpath(os.path.join(fpath, fname_without_extension))
