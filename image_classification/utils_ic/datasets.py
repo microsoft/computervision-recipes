@@ -77,8 +77,11 @@ def unzip_url(
     if overwrite:
         try:
             os.remove(zip_file)
+        except OSError as e:
+            pass
+        try:
             shutil.rmtree(unzipped_dir)
-        except OSError:
+        except OSError as e:
             pass
 
     try:
