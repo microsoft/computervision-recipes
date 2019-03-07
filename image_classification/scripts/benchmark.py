@@ -203,8 +203,8 @@ def _get_data_bunch(
     path = path if type(path) is Path else Path(path)
     tfms = get_transforms() if transform else None
     return (
-        ImageItemList.from_folder(path)
-        .random_split_by_pct(valid_pct=0.33, seed=10)
+        ImageList.from_folder(path)
+        .split_by_rand_pct(valid_pct=0.33, seed=10)
         .label_from_folder()
         .transform(tfms=tfms, size=im_size)
         .databunch(bs=bs)
@@ -238,7 +238,7 @@ def _learn(
         )
 
     # create learner
-    learn = create_cnn(
+    learn = cnn_learner(
         data, arch, metrics=accuracy, ps=p, callback_fns=callbacks
     )
     learn.unfreeze()
