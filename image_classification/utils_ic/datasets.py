@@ -100,9 +100,9 @@ def unzip_url(
             z = ZipFile(zip_file, "r")
             z.extractall(fpath)
             z.close()
-    except FileExistsError:
+    except FileExistsError as e:
         if not exist_ok:
-            print("File already exists. Use param {exist_ok} to ignore.")
+            print(f"File {e} already exists. Use param {{exist_ok}} to ignore.")
             raise
 
     return os.path.realpath(os.path.join(fpath, fname_without_extension))
