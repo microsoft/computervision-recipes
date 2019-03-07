@@ -2,10 +2,9 @@ import os
 import requests
 import shutil
 from pathlib import Path
-from typing import Union
-from urllib.parse import urlparse, urljoin
+from typing import List, Union
+from urllib.parse import urljoin, urlparse
 from zipfile import ZipFile
-from typing import List
 
 Url = str
 
@@ -66,6 +65,11 @@ def unzip_url(
         overwrite: if overwrite, remove zipped file and unziped dir
     Returns path of {dest}
     """
+
+    def _raise_file_exists_error(path: Union[Path, str]) -> None:
+        if not exist_ok:
+            raise FileExistsError(path, "Use param {{exist_ok}} to ignore.")
+
     assert os.path.exists(fpath)
     assert os.path.exists(dest)
 
@@ -77,29 +81,28 @@ def unzip_url(
     if overwrite:
         try:
             os.remove(zip_file)
+        except OSError as e:
+            pass
+        try:
             shutil.rmtree(unzipped_dir)
-        except OSError:
+        except OSError as e:
             pass
 
-    try:
-        # download zipfile if zipfile not exists
-        if zip_file.is_file():
-            raise FileExistsError(zip_file)
-        else:
-            r = requests.get(url)
-            f = open(zip_file, "wb")
-            f.write(r.content)
-            f.close()
+    # download zipfile if zipfile not exists
+    if zip_file.is_file():
+        _raise_file_exists_error(zip_file)
+    else:
+        r = requests.get(url)
+        f = open(zip_file, "wb")
+        f.write(r.content)
+        f.close()
 
-        # unzip downloaded zipfile if dir not exists
-        if unzipped_dir.is_dir():
-            raise FileExistsError(unzipped_dir)
-        else:
-            z = ZipFile(zip_file, "r")
-            z.extractall(fpath)
-            z.close()
-    except FileExistsError:
-        if not exist_ok:
-            raise
+    # unzip downloaded zipfile if dir not exists
+    if unzipped_dir.is_dir():
+        _raise_file_exists_error(unzipped_dir)
+    else:
+        z = ZipFile(zip_file, "r")
+        z.extractall(fpath)
+        z.close()
 
     return os.path.realpath(os.path.join(fpath, fname_without_extension))
