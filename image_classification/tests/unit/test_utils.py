@@ -48,16 +48,23 @@ def test_unzip_url_abs_path(make_temp_data_dir):
     _test_url_data(Urls.recycle_path, abs_path, "recycle_v3")
 
 
-def text_unzip_url_overwrite(make_temp_data_dir):
+def test_unzip_url_overwrite(make_temp_data_dir):
     """ Test if overwrite is true and file exists """
+
+    # test overwrite=True
     os.makedirs(TEMP_DIR / "fridgeObjects")
     fridge_objects_path = unzip_url(
         Urls.fridge_objects_path, TEMP_DIR, overwrite=True
     )
+    assert os.path.realpath(TEMP_DIR / "fridgeObjects") == os.path.realpath(
+        fridge_objects_path
+    )
     assert len(os.listdir(fridge_objects_path)) >= 0
+
+    # test file exists error when overwrite=False
     os.makedirs(TEMP_DIR / "lettuce")
-    lettuce_path = unzip_url(Urls.lettuce_path, TEMP_DIR, overwrite=False)
-    assert len(os.listdir(lettuce_path)) == 0
+    with pytest.raises(FileExistsError):
+        unzip_url(Urls.lettuce_path, TEMP_DIR, overwrite=False)
 
 
 def test_unzip_url_exist_ok(make_temp_data_dir):

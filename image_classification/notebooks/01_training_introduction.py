@@ -11,6 +11,7 @@
 
 
 import fastai
+
 fastai.__version__
 
 
@@ -19,9 +20,9 @@ fastai.__version__
 # In[2]:
 
 
-get_ipython().run_line_magic('reload_ext', 'autoreload')
-get_ipython().run_line_magic('autoreload', '2')
-get_ipython().run_line_magic('matplotlib', 'inline')
+get_ipython().run_line_magic("reload_ext", "autoreload")
+get_ipython().run_line_magic("autoreload", "2")
+get_ipython().run_line_magic("matplotlib", "inline")
 
 
 # Import fastai. For now, we'll import all (`import *`) so that we can easily use different utilies provided by the fastai library.
@@ -30,6 +31,7 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 
 import sys
+
 sys.path.append("../")
 from pathlib import Path
 from utils_ic.datasets import Urls, unzip_url, data_path
@@ -42,12 +44,12 @@ from fastai.metrics import error_rate, accuracy
 # In[4]:
 
 
-DATA_PATH     = unzip_url(Urls.fridge_objects_path, exist_ok=True)
-EPOCHS        = 5
+DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
+EPOCHS = 5
 LEARNING_RATE = 1e-4
-IMAGE_SIZE    = 299
-BATCH_SIZE    = 16
-ARCHITECTURE  = models.resnet50
+IMAGE_SIZE = 299
+BATCH_SIZE = 16
+ARCHITECTURE = models.resnet50
 
 
 # ---
@@ -55,7 +57,7 @@ ARCHITECTURE  = models.resnet50
 # ## File Structure for Image Classification
 
 # In this notebook, we'll use images from the `fridge_objects` dataset, which has been downloaded and unzip to  `image_classification/data`.
-# 
+#
 # Lets set that directory to our `path` variable, which we'll use throughout the notebook, and checkout what's inside:
 
 # In[5]:
@@ -72,7 +74,7 @@ path.ls()
 # - `/can`
 
 # The most common data format for multiclass image classification is to have a folder titled the label with the images inside:
-# 
+#
 # ```
 # /images
 # +-- can (class 1)
@@ -85,7 +87,7 @@ path.ls()
 # |   +-- ...
 # +-- ...
 # ```
-# 
+#
 # Good thing our data is already structured in that format!
 
 # ## Loading images with fast.ai
@@ -95,12 +97,14 @@ path.ls()
 # In[6]:
 
 
-data = (ImageList.from_folder(path) 
-        .split_by_rand_pct(valid_pct=0.2, seed=10) 
-        .label_from_folder() 
-        .transform(size=IMAGE_SIZE) 
-        .databunch(bs=BATCH_SIZE) 
-        .normalize(imagenet_stats))
+data = (
+    ImageList.from_folder(path)
+    .split_by_rand_pct(valid_pct=0.2, seed=10)
+    .label_from_folder()
+    .transform(size=IMAGE_SIZE)
+    .databunch(bs=BATCH_SIZE)
+    .normalize(imagenet_stats)
+)
 
 
 # Lets take a look at our data using the databunch we created.
@@ -108,7 +112,7 @@ data = (ImageList.from_folder(path)
 # In[7]:
 
 
-data.show_batch(rows=3, figsize=(15,11))
+data.show_batch(rows=3, figsize=(15, 11))
 
 
 # Lets see all available classes:
@@ -116,7 +120,7 @@ data.show_batch(rows=3, figsize=(15,11))
 # In[8]:
 
 
-print(f'number of classes: {data.c}')
+print(f"number of classes: {data.c}")
 print(data.classes)
 
 
@@ -128,17 +132,17 @@ print(data.classes)
 data.batch_stats
 
 
-# Above, you'll notice that the validation set is 20% of the total images. 
-# 
+# Above, you'll notice that the validation set is 20% of the total images.
+#
 # You'll also notice that the test set will be set to `None`. This is because we treat it as a second holdout set that is only used right at the end of a project.
 
 # ## Training
 
-# For the model, we use a concolutional neural network. 
-# 
-# When training a model, there are many hypter parameters to select, such as the learning rate, the model architecture, layers to tune, and many more. 
-# 
-# With fastai, we can use the `create_cnn` function that allows us to specify the model architecture and a performance indicator (metric). At this point, we already benefit from transfer learning since we download the parameters used to train imagenet. 
+# For the model, we use a concolutional neural network.
+#
+# When training a model, there are many hypter parameters to select, such as the learning rate, the model architecture, layers to tune, and many more.
+#
+# With fastai, we can use the `create_cnn` function that allows us to specify the model architecture and a performance indicator (metric). At this point, we already benefit from transfer learning since we download the parameters used to train imagenet.
 
 # In[10]:
 
@@ -170,7 +174,7 @@ learn.fit(EPOCHS, LEARNING_RATE)
 
 
 _, metric = learn.validate(learn.data.valid_dl, metrics=[accuracy])
-print(f'Accuracy on validation set: {float(metric)}')
+print(f"Accuracy on validation set: {float(metric)}")
 
 
 # When evaluating our results, we want to see where the model messes up, and whether or not we can do better. So we're interested in seeing images where the model predicted the image incorrectly but with high confidence (images with the highest loss).
@@ -190,5 +194,4 @@ interp.plot_confusion_matrix()
 # In[16]:
 
 
-interp.plot_top_losses(9, figsize=(15,11))
-
+interp.plot_top_losses(9, figsize=(15, 11))
