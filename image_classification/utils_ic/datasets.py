@@ -65,6 +65,11 @@ def unzip_url(
         overwrite: if overwrite, remove zipped file and unziped dir
     Returns path of {dest}
     """
+
+    def _raise_file_exists_error(path: Union[Path, str]) -> None:
+        if not exist_ok:
+            raise FileExistsError(path, "Use param {{exist_ok}} to ignore.")
+
     assert os.path.exists(fpath)
     assert os.path.exists(dest)
 
@@ -85,10 +90,7 @@ def unzip_url(
 
     # download zipfile if zipfile not exists
     if zip_file.is_file():
-        if not exist_ok:
-            raise FileExistsError(
-                zip_file, "Use param {{exist_ok}} to ignore."
-            )
+        _raise_file_exists_error(zip_file)
     else:
         r = requests.get(url)
         f = open(zip_file, "wb")
@@ -97,10 +99,7 @@ def unzip_url(
 
     # unzip downloaded zipfile if dir not exists
     if unzipped_dir.is_dir():
-        if not exist_ok:
-            raise FileExistsError(
-                unzipped_dir, "Use param {{exist_ok}} to ignore."
-            )
+        _raise_file_exists_error(unzipped_dir)
     else:
         z = ZipFile(zip_file, "r")
         z.extractall(fpath)
