@@ -83,26 +83,27 @@ def unzip_url(
         except OSError as e:
             pass
 
-    try:
-        # download zipfile if zipfile not exists
-        if zip_file.is_file():
-            raise FileExistsError(zip_file)
-        else:
-            r = requests.get(url)
-            f = open(zip_file, "wb")
-            f.write(r.content)
-            f.close()
-
-        # unzip downloaded zipfile if dir not exists
-        if unzipped_dir.is_dir():
-            raise FileExistsError(unzipped_dir)
-        else:
-            z = ZipFile(zip_file, "r")
-            z.extractall(fpath)
-            z.close()
-    except FileExistsError as e:
+    # download zipfile if zipfile not exists
+    if zip_file.is_file():
         if not exist_ok:
-            print(f"File {e} already exists. Use param {{exist_ok}} to ignore.")
-            raise
+            raise FileExistsError(
+                zip_file, "Use param {{exist_ok}} to ignore."
+            )
+    else:
+        r = requests.get(url)
+        f = open(zip_file, "wb")
+        f.write(r.content)
+        f.close()
+
+    # unzip downloaded zipfile if dir not exists
+    if unzipped_dir.is_dir():
+        if not exist_ok:
+            raise FileExistsError(
+                unzipped_dir, "Use param {{exist_ok}} to ignore."
+            )
+    else:
+        z = ZipFile(zip_file, "r")
+        z.extractall(fpath)
+        z.close()
 
     return os.path.realpath(os.path.join(fpath, fname_without_extension))
