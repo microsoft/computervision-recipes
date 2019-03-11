@@ -3,7 +3,6 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import logging
 import time
 import itertools
 import argparse
@@ -144,6 +143,7 @@ architecture_map = {
 }
 
 # ================================================ #
+
 
 def _str_to_bool(v: str) -> bool:
     if v.lower() in ("yes", "true", "t", "y", "1"):
@@ -329,7 +329,7 @@ def _get_permutations(args):
     """
     Returns a list of all permutations
     """
-    l = [
+    params = [
         args.lrs,
         args.epochs,
         args.batch_sizes,
@@ -343,7 +343,7 @@ def _get_permutations(args):
         args.one_cycle_policies,
         args.fine_tunes,
     ]
-    permutations = list(itertools.product(*l))
+    permutations = list(itertools.product(*params))
     print(f"Trying {len(permutations)} permutations...\n")
     return permutations
 
