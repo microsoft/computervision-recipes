@@ -13,7 +13,7 @@ from utils_ic.datasets import unzip_url, Urls
 from argparse import RawTextHelpFormatter
 from fastai.vision import *
 from fastai.callbacks import EarlyStoppingCallback
-from fastai.metrics import error_rate
+from fastai.metrics import accuracy
 from typing import Callable, Union, List
 from pathlib import Path
 
