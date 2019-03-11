@@ -11,6 +11,7 @@ import torch
 import shutil
 
 from utils_ic.datasets import unzip_url, Urls
+from argparse import RawTextHelpFormatter
 from fastai.vision import *
 from fastai.callbacks import EarlyStoppingCallback
 from fastai.metrics import error_rate
@@ -23,7 +24,7 @@ Time = float
 # Default parameters                               #
 # ================================================ #
 
-# DATA
+# DATA and OUTPUT
 DATA_DIR = "benchmark_data_dir"
 RESULTS_FILE = "results.txt"
 
@@ -42,11 +43,10 @@ ARCHITECTURES = ["resnet18"]
 TRANSFORMS = [True]
 DROPOUTS = [0.5]
 WEIGHT_DECAYS = [0.01]
-MOMEMTUMS = [0.9]  # TODO
+MOMEMTUMS = [0.9]  # TODO not implemented
 DISCRIMINATIVE_LRS = [False]
 ONE_CYCLE_POLICIES = [False]
 FINE_TUNES = [True]
-
 # TODO add precision (fp16, fp32)
 
 # ================================================ #
@@ -55,11 +55,46 @@ FINE_TUNES = [True]
 
 argparse_desc_msg = (
     lambda: f"""
-This script is used to benchmark
-the different hyperparameters when it
-comes to doing image classification.
-Use [-W ignore] to ignore warning
-messages when runnign the script.
+This script is used to benchmark the different hyperparameters when it comes to doing image classification.
+
+This script will run all permutations of the parameters that are passed in.
+
+This script will run these tests on datasets provided in this repo. It will
+create a temporary data directory, and delete it at the end.
+
+This script uses accuracy as the evaluation metric.
+
+Use [-W ignore] to ignore warning messages when running the script.
+"""
+)
+
+argparse_epilog_msg = (
+    lambda: f"""
+Default parameters are:
+
+LR:                {LRS[0]}
+EPOCH:             {EPOCHS[0]}
+IM_SIZE:           {IM_SIZES[0]}
+BATCH_SIZE:        {BATCH_SIZES[0]}
+ARCHITECTURE:      {ARCHITECTURES[0]}
+TRANSFORMS:        {TRANSFORMS[0]}
+DROPOUT:           {DROPOUTS[0]}
+WEIGHT_DECAY:      {WEIGHT_DECAYS[0]}
+MOMENTUM:          {MOMEMTUMS[0]} # TODO currently momentum is not implement
+DISCRIMINATIVE_LR: {DISCRIMINATIVE_LRS[0]}
+ONE_CYCLE_POLICY:  {ONE_CYCLE_POLICIES[0]}
+FINE_TUNE:         {FINE_TUNES[0]}
+
+Example usage:
+
+# Test the effect of 3 learning rates on 3 batch sizes
+$ python benchmark.py -l 1e-3 1e-4 1e-5 -bs 8 16 32 -o learning_rate_batch_size.txt
+
+# Test the effect of one cycle policy without using discriminative learning rates
+$ python benchmark.py -dl False -ocp True False
+
+# Test different architectures and image sizes
+$ python benchmark.py -a squeezenet1_1 resenet18 resnet50 -is 299 499
 """
 )
 
@@ -108,8 +143,9 @@ architecture_map = {
     "squeezenet1_1": models.squeezenet1_1,
 }
 
+# ================================================ #
 
-def str2bool(v: str) -> bool:
+def _str_to_bool(v: str) -> bool:
     if v.lower() in ("yes", "true", "t", "y", "1"):
         return True
     elif v.lower() in ("no", "false", "f", "n", "0"):
@@ -120,7 +156,11 @@ def str2bool(v: str) -> bool:
 
 def _get_parser():
 
-    parser = argparse.ArgumentParser(description=argparse_desc_msg())
+    parser = argparse.ArgumentParser(
+        description=argparse_desc_msg(),
+        epilog=argparse_epilog_msg(),
+        formatter_class=RawTextHelpFormatter,
+    )
     parser.add_argument(
         "--lr",
         "-l",
@@ -173,7 +213,7 @@ def _get_parser():
         nargs="+",
         help="tranform - options: [True, False]",
         default=TRANSFORMS,
-        type=str2bool,
+        type=_str_to_bool,
     )
     parser.add_argument(
         "--dropout",
@@ -207,9 +247,9 @@ def _get_parser():
         "-dl",
         dest="discriminative_lrs",
         nargs="+",
-        help="discriminative lr - options: [True, False]",
+        help="discriminative lr - options: [True, False]. To use discriminative learning rates, fine_tune must equal True",
         default=DISCRIMINATIVE_LRS,
-        type=str2bool,
+        type=_str_to_bool,
     )
     parser.add_argument(
         "--one-cycle-policy",
@@ -218,16 +258,16 @@ def _get_parser():
         nargs="+",
         help="one cycle policy - options: [True, False]",
         default=ONE_CYCLE_POLICIES,
-        type=str2bool,
+        type=_str_to_bool,
     )
     parser.add_argument(
         "--fine_tune",
         "-ft",
         dest="fine_tunes",
         nargs="+",
-        help="fine tune - options: [True, False]",
+        help="fine tune (unfreeze all layers) - options: [True, False]",
         default=FINE_TUNES,
-        type=str2bool,
+        type=_str_to_bool,
     )
     es_parser = parser.add_mutually_exclusive_group(required=False)
     es_parser.add_argument(
@@ -258,13 +298,6 @@ def _get_parser():
         help="the name of the output file",
         default=RESULTS_FILE,
     )
-    parser.add_argument(
-        "--estimate-only",
-        dest="estimate_only",
-        action="store_true",
-        help="If this flag is on, the application will only provide a time estimate for the given parameters",
-    )
-    parser.set_defaults(estimate_only=False)
     args = parser.parse_args()
 
     # check all input values are valid
@@ -356,7 +389,7 @@ def _learn(
             partial(
                 EarlyStoppingCallback,
                 monitor="accuracy",
-                min_delta=0.01, # conservative
+                min_delta=0.01,  # conservative
                 patience=3,
             )
         )
@@ -380,7 +413,7 @@ def _learn(
     # one cycle policy
     if one_cycle_policy:
         learn.fit_one_cycle(
-            cyc_len=epoch, max_lr=lr, wd=wd #, moms=moms TODO
+            cyc_len=epoch, max_lr=lr, wd=wd  # , moms=moms TODO
         )
     else:
         learn.fit(epochs=epoch, lr=lr, wd=wd)  # , moms=moms TODO
