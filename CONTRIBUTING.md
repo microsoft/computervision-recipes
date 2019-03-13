@@ -44,7 +44,7 @@ Here are the basic steps to get started with your first contribution. Please rea
    ```
    $ pre-commit run --all-files
    ```
-2. Create a pull request against <b>staging</b> branch.
+1. Create a pull request against <b>staging</b> branch.
 
 Note: We use the staging branch to land all new features, so please remember to create the Pull Request against staging. 
 
