@@ -2,10 +2,14 @@
 
 Contribution are welcome! Here's a few things to know:
 
-* [Microsoft Contributor License Agreement](#microsoft-contributor-license-agreement)
-* [Steps to Contributing](#steps-to-contributing)
-* [Coding Guidelines](#recommenders-team-contribution-guidelines)
-* [Code of Conduct](#code-of-conduct)
+- [Contribution Guidelines](#contribution-guidelines)
+  - [Microsoft Contributor License Agreement](#microsoft-contributor-license-agreement)
+  - [Steps to Contributing](#steps-to-contributing)
+  - [Coding Guidelines](#coding-guidelines)
+  - [Code of Conduct](#code-of-conduct)
+      - [Do not point fingers](#do-not-point-fingers)
+      - [Provide code feedback based on evidence](#provide-code-feedback-based-on-evidence)
+      - [Ask questions do not give answers](#ask-questions-do-not-give-answers)
 
 ## Microsoft Contributor License Agreement
 
@@ -22,7 +26,15 @@ Here are the basic steps to get started with your first contribution. Please rea
 4. Create a test that replicates the issue.
 5. Make code changes.
 6. Ensure unit tests pass and code style / formatting is consistent (see [wiki](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines#python-and-docstrings-style) for more details).
-7. Create a pull request against <b>staging</b> branch.
+7. We use [pre-commit](https://pre-commit.com/) package to run our pre-commit hooks. We use black formatter and flake8 linting on each commit. In order to set up 
+   pre-commit on your machine, follow the steps here
+   a. Update your conda environment, pre-commit is part of the yaml file or just do    $ pip install pre-commit.
+   b. Set up pre-commit by running following command, this will put pre-commit         under your .git/hooks directory. 
+      $ pre-commit install
+   c. $ git commit -m "message" 
+      It will run the pre-commits hooks (black and flake8 for now) on the files that are getting committed and are part of git index. To run pre-commit on all files just run
+      $ pre-commit run --all-files
+8. Create a pull request against <b>staging</b> branch.
 
 Note: We use the staging branch to land all new features, so please remember to create the Pull Request against staging. 
 
