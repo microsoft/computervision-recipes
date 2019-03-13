@@ -1,34 +1,17 @@
 import sys
 import os
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import argparse
-import itertools
-import pandas as pd
 import time
-import torch
 import shutil
-
-from utils_ic.datasets import unzip_urls
+from utils_ic.benchmark import TrainingSchedule, Architecture, benchmark
+from utils_ic.datasets import unzip_urls, data_path
 from argparse import RawTextHelpFormatter, Namespace
-from enum import Enum
-from fastai.vision import *
-from fastai.callbacks import EarlyStoppingCallback
-from fastai.metrics import accuracy
-from functools import partial
-from typing import Callable, Union, List, Any
 from pathlib import Path
 
-Time = float
-
-# ================================================ #
-# Default parameters                               #
-# ================================================ #
-
 # DATA and OUTPUT
-DATA_DIR = "tmp_data"
-RESULTS_FILE = "results.csv"
+DATA_DIR = Path(data_path()) / "tmp_data"
+RESULTS_FILE = Path(data_path()) / "results.csv"
 
 # NUMBER OF TIMES TO RUN ALL PERMUTATIONS
 REPEAT = 1
@@ -48,12 +31,7 @@ WEIGHT_DECAYS = [0.01]
 TRAINING_SCHEDULES = ["head_first_then_body"]
 DISCRIMINATIVE_LRS = [False]
 ONE_CYCLE_POLICIES = [False]
-
-# TODO add precision (fp16, fp32), add momentum
-
-# ================================================ #
-# Messages                                         #
-# ================================================ #
+# TODO add precision (fp16, fp32), add matasetsomentum
 
 argparse_desc_msg = (
     lambda: f"""
@@ -139,27 +117,11 @@ result_msg = (
 """
 )
 
-time_msg = (
-    lambda: f"""
-===================================================================
-Total Time elapsed: {end - start} seconds
-===================================================================
-"""
+time_msg = lambda: f"""Total Time elapsed: {round(end - start, 1)} seconds."""
+
+output_msg = (
+    lambda: f"""Output has been saved to '{os.path.realpath(args.output)}'."""
 )
-# ================================================ #
-
-
-class TrainingSchedule(Enum):
-    head_only = 0
-    body_only = 1
-    head_first_then_body = 2
-
-
-class Architecture(Enum):
-    resnet18 = partial(models.resnet18)
-    resnet34 = partial(models.resnet34)
-    resnet50 = partial(models.resnet50)
-    squeezenet1_1 = partial(models.squeezenet1_1)
 
 
 def _str_to_bool(v: str) -> bool:
@@ -277,6 +239,15 @@ def _get_parser() -> Namespace:
         default=ONE_CYCLE_POLICIES,
         type=_str_to_bool,
     )
+    parser.add_argument(
+        "--inputs",
+        "-i",
+        dest="inputs",
+        nargs="+",
+        help="A list of data paths to run the tests on. The datasets must be structured so that each class is in a separate folder.",
+        default=unzip_urls(DATA_DIR),
+        type=str,
+    )
     es_parser = parser.add_mutually_exclusive_group(required=False)
     es_parser.add_argument(
         "--early-stopping",
@@ -342,202 +313,13 @@ def _get_parser() -> Namespace:
     return args
 
 
-def _get_permutations(params: List[Any]) -> List[Tuple[Any]]:
-    """
-    Returns a list of all permutations
-    """
-    permutations = list(itertools.product(*params))
-    return permutations
-
-
-def _get_data_bunch(
-    path: Union[Path, str], transform: bool, im_size: int, bs: int
-) -> ImageDataBunch:
-    """
-    """
-    path = path if type(path) is Path else Path(path)
-    tfms = get_transforms() if transform else None
-    return (
-        ImageList.from_folder(path)
-        .split_by_rand_pct(valid_pct=0.33, seed=10)
-        .label_from_folder()
-        .transform(tfms=tfms, size=im_size)
-        .databunch(bs=bs)
-        .normalize(imagenet_stats)
-    )
-
-
-def _learn(
-    data_path: Path,
-    batch_size: int,
-    im_size: int,
-    arch: Callable,
-    transform: bool,
-    epoch: int,
-    lr: float,
-    p: float,
-    wd: float,
-    train_schedule: TrainingSchedule,
-    discriminative_lr: bool,
-    one_cycle_policy: bool,
-    stop_early: bool,
-) -> Tuple[Learner, Time]:
-    """
-    Create databunch, create learner with params
-    return metric, duration
-    """
-    start = time.time()
-
-    # get databunch
-    data = _get_data_bunch(data_path, transform, im_size, batch_size)
-
-    # callbacks to pass to learner
-    callbacks = list()
-    if stop_early:
-        callbacks.append(
-            partial(
-                EarlyStoppingCallback,
-                monitor="accuracy",
-                min_delta=0.01,  # conservative
-                patience=3,
-            )
-        )
-
-    # create learner
-    learn = cnn_learner(
-        data, arch, metrics=accuracy, ps=p, callback_fns=callbacks
-    )
-
-    # discriminative learning
-    original_lr = lr
-    lr = slice(lr, 3e-3) if discriminative_lr else lr
-
-    # create fitter function
-    def fitter(
-        one_cycle_policy: bool = one_cycle_policy,
-        epoch: int = epoch,
-        lr: Union[slice, int] = lr,
-        wd: int = wd,
-    ) -> Callable:
-        if one_cycle_policy:
-            return partial(learn.fit_one_cycle, cyc_len=epoch, lr=lr, wd=wd)
-        else:
-            return partial(learn.fit, epoch=epoch, lr=lr, wd=wd)
-
-    # one cycle policy & wd
-    fit = partial(fitter, one_cycle_policy=one_cycle_policy, wd=wd)
-
-    # training schedule
-    if train_schedule is TrainingSchedule.head_only:
-        if discriminative_lr:
-            raise Exception(
-                "Cannot run discriminative_lr if training schedule is head_only."
-            )
-        else:
-            fit(epoch=epoch, lr=lr)
-
-    elif train_schedule is TrainingSchedule.body_only:
-        learn.unfreeze()
-        fit(epoch=epoch, lr=lr)
-
-    elif train_schedule is TrainingSchedule.head_first_then_body:
-        head = epoch / 4
-        fit(epoch=head, lr=original_lr)  # train head on 25% of epochs
-        learn.unfreeze()
-        fit(epoch=epoch - head, lr=lr)  # train body on remaining 75% of epochs
-
-    end = time.time()
-    duration = end - start
-
-    return learn, duration
-
-
-def _serialize_permutations(p: Tuple[Any]) -> str:
-    p = iter(p)
-    return (
-        f"lr: {next(p)}, epochs: {next(p)}, batch_size: {next(p)}, "
-        f"im_size: {next(p)}, arch: {next(p)}, transforms: {next(p)}, "
-        f"dropout: {next(p)}, weight_decay: {next(p)}, "
-        f"training_schedule: {next(p)}, discriminative_lr: {next(p)}, "
-        f"one_cycle_policy: {next(p)}"
-    )
-
-
-def benchmark(
-    permutations: List[Tuple[Any]],
-    repeat: int,
-    early_stopping: bool,
-    datasets: List[Path],
-) -> pd.DataFrame:
-
-    results = dict()
-    for r in range(repeat):
-
-        results[r] = dict()
-        for i, p in enumerate(permutations):
-            print(
-                f"Running {i+1} of {len(permutations)} permutations. Repeat {r+1} of {repeat}."
-            )
-
-            LR, EPOCH, BATCH_SIZE, IM_SIZE, ARCHITECTURE, TRANSFORM, DROPOUT, WEIGHT_DECAY, TRAINING_SCHEDULE, DISCRIMINATIVE_LR, ONE_CYCLE_POLICY = (
-                p
-            )
-
-            serialized_permutations = _serialize_permutations(p)
-            results[r][serialized_permutations] = dict()
-            for d in datasets:
-
-                results[r][serialized_permutations][
-                    os.path.basename(d)
-                ] = dict()
-
-                torch.cuda.empty_cache()
-
-                learn, duration = _learn(
-                    d,
-                    BATCH_SIZE,
-                    IM_SIZE,
-                    ARCHITECTURE.value,
-                    TRANSFORM,
-                    EPOCH,
-                    LR,
-                    DROPOUT,
-                    WEIGHT_DECAY,
-                    TRAINING_SCHEDULE,
-                    DISCRIMINATIVE_LR,
-                    ONE_CYCLE_POLICY,
-                    early_stopping,
-                )
-
-                _, metric = learn.validate(
-                    learn.data.valid_dl, metrics=[accuracy]
-                )
-                results[r][serialized_permutations][os.path.basename(d)][
-                    "duration"
-                ] = duration
-                results[r][serialized_permutations][os.path.basename(d)][
-                    "accuracy"
-                ] = float(metric)
-
-    results_df = pd.DataFrame.from_dict(
-        {
-            (i, j, k): results[i][j][k]
-            for i in results.keys()
-            for j in results[i].keys()
-            for k in results[i][j].keys()
-        },
-        orient="index",
-    )
-    return results_df
-
-
 if __name__ == "__main__":
 
     start = time.time()
 
     args = _get_parser()
 
-    params = [
+    params = (
         args.lrs,
         args.epochs,
         args.batch_sizes,
@@ -549,19 +331,17 @@ if __name__ == "__main__":
         args.training_schedules,
         args.discriminative_lrs,
         args.one_cycle_policies,
-    ]
+    )
 
-    datasets = unzip_urls(DATA_DIR)
-    permutations = _get_permutations(params)
+    datasets = args.inputs
     repeat = args.repeat
     early_stopping = args.early_stopping
 
-    results_df = benchmark(permutations, repeat, early_stopping, datasets)
+    results_df = benchmark(datasets, params, repeat, early_stopping)
     results_df.to_csv(args.output)
 
     shutil.rmtree(DATA_DIR)
 
     end = time.time()
     print(time_msg())
-
-
+    print(output_msg())
