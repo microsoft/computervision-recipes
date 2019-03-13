@@ -7,11 +7,28 @@ from pathlib import Path
 from azureml.core import Workspace
 
 
-def create_dot_env_file(subscription_id: str = None,
-                        resource_gp: str = None,
-                        workspace_name: str = None,
-                        workspace_region: str = None,
-                        override: bool = False) -> str:
+def workspace_parameters_input() -> tuple:
+    """
+    Turns on the interactive mode for the user to enter
+    their subscription, resource group and workspace information
+
+    :return: Tuple of information entered by the user
+    """
+    subscription_id = input("  > Your subscription ID: ")
+    resource_gp = input("  > Your resource group: ")
+    workspace_name = input("  > The name of your workspace: ")
+    workspace_region = input("  > The region of your workspace\n"
+                             "(full list available at "
+                             "https://azure.microsoft.com/en-us/"
+                             "global-infrastructure/geographies/): ")
+    return subscription_id, resource_gp, workspace_name, workspace_region
+
+
+def get_or_create_dot_env_file(subscription_id: str = None,
+                               resource_gp: str = None,
+                               workspace_name: str = None,
+                               workspace_region: str = None,
+                               override: bool = False) -> str:
     """
     Creates a .env file if it cannot find any
     in the current directory's parent hierarchy
@@ -34,13 +51,8 @@ def create_dot_env_file(subscription_id: str = None,
             # if .env file not found, ask user to provide relevant information
             print("-- No *.env* file could be found - Let's create one --\n"
                   "-- Please provide (without quotes):")
-            subscription_id = input("  > Your subscription ID: ")
-            resource_gp = input("  > Your resource group: ")
-            workspace_name = input("  > The name of your workspace: ")
-            workspace_region = input("  > The region of your workspace\n"
-                                     "(full list available at "
-                                     "https://azure.microsoft.com/en-us/"
-                                     "global-infrastructure/geographies/): ")
+            subscription_id, resource_gp, workspace_name, workspace_region = \
+                workspace_parameters_input()
 
             # if .env file exists and needs to be overwritten,
             # use information from saved workspace
@@ -59,12 +71,12 @@ def create_dot_env_file(subscription_id: str = None,
             print("The *.env* file was created in {}".format(dotenv_path))
         else:
             print("The *.env* file could not be created "
-                  "- Please run this command again")
+                  "- Please run 'workspace_setup()' again")
 
     return dotenv_path
 
 
-def create_retrieve_workspace(dotenv_file_path: str) -> Workspace:
+def get_or_create_workspace(dotenv_file_path: str) -> Workspace:
     """
     Creates a new or retrieves an existing workspace
 
@@ -98,11 +110,12 @@ def create_retrieve_workspace(dotenv_file_path: str) -> Workspace:
                                "3: To create a new workspace\n"
                                .format(ws.name))
                 if choice == "1":
-                    create_dot_env_file(subscription_id=ws.subscription_id,
-                                        resource_gp=ws.resource_group,
-                                        workspace_name=ws.name,
-                                        workspace_region=ws.location,
-                                        override=True)
+                    get_or_create_dot_env_file(
+                        subscription_id=ws.subscription_id,
+                        resource_gp=ws.resource_group,
+                        workspace_name=ws.name,
+                        workspace_region=ws.location,
+                        override=True)
                 elif choice == "2":
                     ws = Workspace(subscription_id=subscription_id,
                                    resource_group=resource_group,
@@ -117,6 +130,9 @@ def create_retrieve_workspace(dotenv_file_path: str) -> Workspace:
                            resource_group=resource_group,
                            workspace_name=workspace_name)
             # And generate a local configuration file
+            if os.path.exists('./aml_config/config.json'):
+                print("Deleting the existing config.json file")
+                os.remove('./aml_config/config.json')
             ws.write_config()
         print("Workspace *{}* configuration was successfully retrieved"
               .format(workspace_name))
@@ -141,18 +157,15 @@ def workspace_setup() -> Workspace:
     """
     Retrieves the workspace parameters
     and creates/retrieves the workspace in question
-
     Note: Both .env and config.json can be useful,
     especially when notebooks get shared between users,
     who each have their own .env files
     but are working on different subscriptions
     and/or different workspaces
-
     :return: (string) Full path of the .env file
     """
 
-    path_to_dotenv_file = create_dot_env_file()
-
-    work_space = create_retrieve_workspace(path_to_dotenv_file)
+    path_to_dotenv_file = get_or_create_dot_env_file()
+    work_space = get_or_create_workspace(path_to_dotenv_file)
 
     return work_space
