@@ -27,7 +27,7 @@ Time = float
 # ================================================ #
 
 # DATA and OUTPUT
-DATA_DIR = "benchmark_data_dir"
+DATA_DIR = "tmp_data"
 RESULTS_FILE = "results.csv"
 
 # NUMBER OF TIMES TO RUN ALL PERMUTATIONS
@@ -342,23 +342,10 @@ def _get_parser() -> Namespace:
     return args
 
 
-def _get_permutations(args: Namespace) -> List[Tuple[Any]]:
+def _get_permutations(params: List[Any]) -> List[Tuple[Any]]:
     """
     Returns a list of all permutations
     """
-    params = [
-        args.lrs,
-        args.epochs,
-        args.batch_sizes,
-        args.im_sizes,
-        args.architectures,
-        args.transforms,
-        args.dropouts,
-        args.weight_decays,
-        args.training_schedules,
-        args.discriminative_lrs,
-        args.one_cycle_policies,
-    ]
     permutations = list(itertools.product(*params))
     return permutations
 
@@ -402,7 +389,7 @@ def _learn(
     start = time.time()
 
     # get databunch
-    data = _get_data_bunch(data_path, TRANSFORM, IM_SIZE, BATCH_SIZE)
+    data = _get_data_bunch(data_path, transform, im_size, batch_size)
 
     # callbacks to pass to learner
     callbacks = list()
@@ -468,28 +455,28 @@ def _learn(
 def _serialize_permutations(p: Tuple[Any]) -> str:
     p = iter(p)
     return (
-        f"LR: {next(p)}, EPOCHS: {next(p)}, BATCH_SIZE: {next(p)},"
-        f"IM_SIZE: {next(p)}, ARCHITECTURE: {next(p)}, TRANSFORM: {next(p)},"
-        f"DROPOUT: {next(p)}, WEIGHT_DECAY: {next(p)}"
-        f"TRAINING_SCHEDULE: {next(p)}, DISCRIMINATIVE_LR: {next(p)},"
-        f"ONE_CYCLE_POLICY: {next(p)}"
+        f"lr: {next(p)}, epochs: {next(p)}, batch_size: {next(p)}, "
+        f"im_size: {next(p)}, arch: {next(p)}, transforms: {next(p)}, "
+        f"dropout: {next(p)}, weight_decay: {next(p)}, "
+        f"training_schedule: {next(p)}, discriminative_lr: {next(p)}, "
+        f"one_cycle_policy: {next(p)}"
     )
 
 
-if __name__ == "__main__":
-
-    start = time.time()
-    args = _get_parser()
-    datasets = unzip_urls(DATA_DIR)
-    permutations = _get_permutations(args)
+def benchmark(
+    permutations: List[Tuple[Any]],
+    repeat: int,
+    early_stopping: bool,
+    datasets: List[Path],
+) -> pd.DataFrame:
 
     results = dict()
-    for r in range(args.repeat):
+    for r in range(repeat):
 
         results[r] = dict()
         for i, p in enumerate(permutations):
             print(
-                f"Running {i+1} of {len(permutations)} permutations. Repeat {r+1} of {args.repeat}."
+                f"Running {i+1} of {len(permutations)} permutations. Repeat {r+1} of {repeat}."
             )
 
             LR, EPOCH, BATCH_SIZE, IM_SIZE, ARCHITECTURE, TRANSFORM, DROPOUT, WEIGHT_DECAY, TRAINING_SCHEDULE, DISCRIMINATIVE_LR, ONE_CYCLE_POLICY = (
@@ -519,7 +506,7 @@ if __name__ == "__main__":
                     TRAINING_SCHEDULE,
                     DISCRIMINATIVE_LR,
                     ONE_CYCLE_POLICY,
-                    args.early_stopping,
+                    early_stopping,
                 )
 
                 _, metric = learn.validate(
@@ -541,8 +528,40 @@ if __name__ == "__main__":
         },
         orient="index",
     )
+    return results_df
+
+
+if __name__ == "__main__":
+
+    start = time.time()
+
+    args = _get_parser()
+
+    params = [
+        args.lrs,
+        args.epochs,
+        args.batch_sizes,
+        args.im_sizes,
+        args.architectures,
+        args.transforms,
+        args.dropouts,
+        args.weight_decays,
+        args.training_schedules,
+        args.discriminative_lrs,
+        args.one_cycle_policies,
+    ]
+
+    datasets = unzip_urls(DATA_DIR)
+    permutations = _get_permutations(params)
+    repeat = args.repeat
+    early_stopping = args.early_stopping
+
+    results_df = benchmark(permutations, repeat, early_stopping, datasets)
     results_df.to_csv(args.output)
+
     shutil.rmtree(DATA_DIR)
 
     end = time.time()
     print(time_msg())
+
+
