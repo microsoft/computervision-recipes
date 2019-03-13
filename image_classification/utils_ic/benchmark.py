@@ -151,9 +151,6 @@ def _learn(
         else:
             return partial(learn.fit, epochs=epochs, lr=lr, wd=wd)
 
-    # one cycle policy & wd
-    fit = partial(fitter, learn, one_cycle_policy=one_cycle_policy, wd=wd)
-
     # training schedule
     if train_schedule is TrainingSchedule.head_only:
         if discriminative_lr:
@@ -161,21 +158,17 @@ def _learn(
                 "Cannot run discriminative_lr if training schedule is head_only."
             )
         else:
-            fit(epochs=epoch, lr=lr)
-            # fitter(learn)(epochs=epoch, lr=lr)()
+            fitter(learn, epochs=epoch, lr=lr)()
 
     elif train_schedule is TrainingSchedule.body_only:
         learn.unfreeze()
-        fit(epochs=epoch, lr=lr)
-        # fitter(learn)(epochs=epoch, lr=lr)()
+        fitter(learn, epochs=epoch, lr=lr)()
 
     elif train_schedule is TrainingSchedule.head_first_then_body:
         head = epoch // 4
-        # fitter(learn)(epochs=head, lr=original_lr)()
-        fit(epochs=head, lr=original_lr) # train head on 25% of epochs
+        fitter(learn, epochs=head, lr=original_lr)()
         learn.unfreeze()
-        # fitter(learn)(epochs=epoch-head, lr=original_lr)()
-        fit(epochs=epoch - head, lr=lr) # train body on remaining 75% of epochs
+        fitter(learn, epochs=epoch-head, lr=original_lr)()
 
     end = time.time()
     duration = end - start
