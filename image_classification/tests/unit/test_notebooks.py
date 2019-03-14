@@ -21,26 +21,6 @@ def test_webcam_notebook_run(notebooks):
     )
 
 
-def test_simple_notebook_run(notebooks):
-    notebook_path = notebooks["simple"]
-    pm.execute_notebook(
-        notebook_path,
-        OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__),
-        kernel_name=KERNEL_NAME,
-    )
-
-
-def test_mnist_notebook_run(notebooks):
-    notebook_path = notebooks["mnist"]
-    pm.execute_notebook(
-        notebook_path,
-        OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__),
-        kernel_name=KERNEL_NAME,
-    )
-
-
 def test_01_notebook_run(notebooks):
     notebook_path = notebooks["01_training_introduction"]
     pm.execute_notebook(
