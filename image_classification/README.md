@@ -27,7 +27,7 @@ To setup on your local machine:
     cd notebooks
     jupyter notebook
     ```
-1. Run the [SAR Python CPU Movielens](notebooks/00_quick_start/sar_python_cpu_movielens.ipynb) notebook under the 00_quick_start folder. Make sure to change the kernel to "Python (reco)".
+2. Run the [Webcam Image Classification Notebook](notebooks/00_webcam.ipynb) notebook under the notebooks folder. Make sure to change the kernel to "Python (cvbp)".
 
 ## Coding guidelines
 

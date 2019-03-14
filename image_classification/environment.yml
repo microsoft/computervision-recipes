@@ -42,3 +42,4 @@ dependencies:
   - pillow
   - ipywebrtc
   - pytest
+  - pre-commit>=1.14.4
