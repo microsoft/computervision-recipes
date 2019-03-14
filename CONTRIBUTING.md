@@ -5,6 +5,7 @@ Contribution are welcome! Here's a few things to know:
 - [Contribution Guidelines](#contribution-guidelines)
   - [Microsoft Contributor License Agreement](#microsoft-contributor-license-agreement)
   - [Steps to Contributing](#steps-to-contributing)
+  - [Working with Notebooks](#working-with-notebooks)
   - [Coding Guidelines](#coding-guidelines)
   - [Code of Conduct](#code-of-conduct)
       - [Do not point fingers](#do-not-point-fingers)
@@ -49,6 +50,23 @@ Here are the basic steps to get started with your first contribution. Please rea
 Note: We use the staging branch to land all new features, so please remember to create the Pull Request against staging. 
 
 Once the features included in a milestone are complete we will merge staging into master and make a release. See the wiki for more detail about our [merge strategy](https://github.com/Microsoft/Recommenders/wiki/Strategy-to-merge-the-code-to-master-branch).
+
+## Working with Notebooks
+
+It's challenging to do code review for notebooks in GitHub. [reviewnb](https://www.reviewnb.com/) makes it easy to review notebooks in Github but only works with public repository. Since we are still in private mode, [jupytext](https://github.com/mwouts/jupytext) is another option that provides conversion of ipython notebooks to multiple formats and also work with pre-commit. However, it falls short of adding the converted files automatically as part of the git commit. An issue has been opened with jupytext for this. In the interim, as more reliable way is to manually convert the notebooks to python script using [nbconvert](https://github.com/jupyter/nbconvert) and manually add and commit them to your branch along with the notebook.nbconvert comes pre-installed as part of jupyter installation, run the following command to convert a notebook to python script and save it in python folder under image_classification folder.
+```
+$ jupyter nbconvert --output-dir=./image_classification/python --to python ./image_classification/notebooks/mnist.ipynb
+``` 
+
+When you pull updates from remote there might be merge conflicts at times, use [nbdime](https://nbdime.readthedocs.io/en/latest/) to fix them.
+* To install nbdime 
+```
+pip install ndime
+```
+* To do diff between notebooks
+```
+nbdiff notebook_1.ipynb notebook_2.ipynb
+```
 
 ## Coding Guidelines
 
