@@ -13,7 +13,7 @@ To setup on your local machine:
 1. Clone the repository
     ```
     git clone https://github.com/Microsoft/ComputerVisionBestPractices
-    cd ComputerVisionBestPractices
+    cd ComputerVisionBestPractices/image_classification
     ```
 1. Install the conda environment
     ```
