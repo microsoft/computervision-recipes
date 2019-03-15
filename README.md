@@ -6,7 +6,7 @@ This repository will provide examples and best practices for building Computer V
 
 ## Planning etc documents
 
-In the near future, Github will be used for feature planning, etc.
+All feature planning is done via projects, milestones, and issues in this Github repository.
 
 
 ## Getting Started
