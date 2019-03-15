@@ -109,7 +109,7 @@ def unzip_url(
     return os.path.realpath(os.path.join(fpath, fname_without_extension))
 
 
-def unzip_urls(dest:Union[Path, str] = data_path()) -> List[Path]:
+def unzip_urls(dest: Union[Path, str] = data_path()) -> List[Path]:
     """ Download and unzip all datasets in Urls to dest """
 
     # make dir if not exist
@@ -122,6 +122,3 @@ def unzip_urls(dest:Union[Path, str] = data_path()) -> List[Path]:
         paths.append(unzip_url(url, dest, exist_ok=True))
 
     return paths
-
-
-
