@@ -1,8 +1,10 @@
 # Image classification
 
-This directory provides examples and best practices for building image classification systems. We use [fast.ai](https://github.com/fastai/fastai) heavily, since it has rich feature support and ... .
+This directory provides examples and best practices for building image classification systems. We recommend to use PyTorch as Deep Learning library due to its ease of use, simple debugging, and popularity in the data science community. For Computer Vision functionality, we rely heavily on [fast.ai](https://github.com/fastai/fastai), one of the most well-known PyTorch data science libraries, which comes with rich feature support and extensive documentation. 
 
-See also fast.ai's [documentation](https://docs.fast.ai/) and most recent [course](https://github.com/fastai/course-v3) for more explanations and code examples.
+Our goal is enable the users to bring their own datasets and train a high-accuracy classifier easily and quickly. To this end, we provide example notebooks with pre-set default parameters shown to work well on a variety of datasets, and extensive documentation of commont pitfalls, best practices, etc. In addition, we show how to use the Azure cloud to e.g. deploy models as a webserivce, or to speed up training on large datasets using the power of the cloud.
+
+See also fast.ai's [documentation](https://docs.fast.ai/) and most recent [course](https://github.com/fastai/course-v3) for more explanations and code examples. 
 
 ## Getting Started
 
@@ -11,7 +13,7 @@ To setup on your local machine:
 1. Clone the repository
     ```
     git clone https://github.com/Microsoft/ComputerVisionBestPractices
-    cd ComputerVisionBestPractices
+    cd ComputerVisionBestPractices/image_classification
     ```
 1. Install the conda environment
     ```
@@ -27,7 +29,7 @@ To setup on your local machine:
     cd notebooks
     jupyter notebook
     ```
-1. Run the [SAR Python CPU Movielens](notebooks/00_quick_start/sar_python_cpu_movielens.ipynb) notebook under the 00_quick_start folder. Make sure to change the kernel to "Python (reco)".
+2. Run the [Webcam Image Classification Notebook](notebooks/00_webcam.ipynb) notebook under the notebooks folder. Make sure to change the kernel to "Python (cvbp)".
 
 ## Coding guidelines
 
