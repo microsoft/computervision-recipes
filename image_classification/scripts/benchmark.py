@@ -9,6 +9,7 @@ import shutil
 from utils_ic.experiment import *
 from utils_ic.datasets import data_path
 from argparse import RawTextHelpFormatter, Namespace
+from pathlib import Path
 
 argparse_desc_msg = (
     lambda: f"""
@@ -273,7 +274,7 @@ if __name__ == "__main__":
         args.inputs
         if args.inputs
         else Experiment.download_benchmark_datasets(
-            data_path() / "benchmark_data"
+            Path(data_path()) / "benchmark_data"
         )
     )
 
