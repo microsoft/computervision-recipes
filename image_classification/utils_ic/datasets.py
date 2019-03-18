@@ -82,11 +82,11 @@ def unzip_url(
     if overwrite:
         try:
             os.remove(zip_file)
-        except OSError as e:
+        except OSError:
             pass
         try:
             shutil.rmtree(unzipped_dir)
-        except OSError as e:
+        except OSError:
             pass
 
     # download zipfile if zipfile not exists
@@ -109,7 +109,9 @@ def unzip_url(
     return os.path.realpath(os.path.join(fpath, fname_without_extension))
 
 
-def unzip_urls(dest: Union[Path, str] = data_path()) -> List[Path]:
+def unzip_urls(
+    urls: List[Url], dest: Union[Path, str] = data_path()
+) -> List[Path]:
     """ Download and unzip all datasets in Urls to dest """
 
     # make dir if not exist
@@ -118,7 +120,7 @@ def unzip_urls(dest: Union[Path, str] = data_path()) -> List[Path]:
 
     # download all data urls
     paths = list()
-    for url in Urls.all():
+    for url in urls:
         paths.append(unzip_url(url, dest, exist_ok=True))
 
     return paths

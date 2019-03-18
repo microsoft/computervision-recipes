@@ -370,7 +370,7 @@ class Experiment:
 
             res[r] = dict()
             for i, p in enumerate(self.permutations):
-                display(
+                print(
                     f"Running {i+1} of {len(self.permutations)} permutations. "
                     f"Repeat {r+1} of {reps}."
                 )

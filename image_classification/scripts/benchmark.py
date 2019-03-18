@@ -5,12 +5,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import argparse
 import time
 import shutil
-from utils_ic.benchmark import *
-from utils_ic.datasets import unzip_urls, data_path
-from argparse import RawTextHelpFormatter, Namespace
-from pathlib import Path
 
-DATA_DIR = Path(data_path()) / "tmp_data"
+from utils_ic.experiment import *
+from utils_ic.datasets import data_path
+from argparse import RawTextHelpFormatter, Namespace
 
 argparse_desc_msg = (
     lambda: f"""
@@ -64,8 +62,7 @@ output_msg = (
 
 
 def _str_to_bool(v: str) -> bool:
-    """
-    """
+    """ Convert string to bool. """
     if v.lower() in ("yes", "true", "t", "y", "1"):
         return True
     elif v.lower() in ("no", "false", "f", "n", "0"):
@@ -75,8 +72,7 @@ def _str_to_bool(v: str) -> bool:
 
 
 def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
-    """
-    """
+    """ Get parser for this script. """
     parser = argparse.ArgumentParser(
         description=argparse_desc_msg(),
         epilog=argparse_epilog_msg(default_params),
@@ -255,11 +251,11 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    b = Benchmark()
+    exp = Experiment()
 
-    args = _get_parser(b.parameters)
+    args = _get_parser(exp.parameters)
 
-    b.update_parameters(
+    exp.update_parameters(
         learning_rate=args.learning_rates,
         epochs=args.epochs,
         batch_size=args.batch_sizes,
@@ -276,13 +272,13 @@ if __name__ == "__main__":
     data = (
         args.inputs
         if args.inputs
-        else unzip_urls(data_path() / "benchmark_data")
+        else Experiment.download_benchmark_datasets(
+            data_path() / "benchmark_data"
+        )
     )
 
-    df = b.run(
-        datasets=data,
-        reps=args.repeat,
-        early_stopping=args.early_stopping
+    df = exp.run(
+        datasets=data, reps=args.repeat, early_stopping=args.early_stopping
     )
     df.to_csv(args.output)
 
