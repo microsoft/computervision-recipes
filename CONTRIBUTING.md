@@ -79,6 +79,24 @@ We strive to maintain high quality code to make the utilities in the repository 
 
 Please review the [coding guidelines](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines) wiki page to see more details about the expectations for development approach and style.
 
+We follow the Google docstring guidlines outlined on this [styleguide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#38-comments-and-docstrings) page. For example:
+```python
+  def bite(n:int, animal:animal_object) -> bool:
+      """
+      This function will perform n bites on animal.
+
+      Args:
+          n (int): the number of bites to do
+          animal (Animal): the animal to bite
+
+      Raises:
+          Exception: biting animal has no teeth
+
+      Returns:
+          bool: whether or not bite was successful
+      """
+```
+
 ## Code of Conduct
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
