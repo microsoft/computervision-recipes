@@ -16,7 +16,8 @@ channels:
 - pytorch
 - fastai
 dependencies:
-- fastai>=1.0.47
+- bqplot
+- fastai==1.0.48
 - fastparquet>=0.1.6
 - gitpython>=2.1.8
 - ipykernel>=4.6.1
@@ -29,17 +30,16 @@ dependencies:
 - pytorch==1.0.0
 - seaborn>=0.8.1
 - scipy>=1.0.0
-- tensorflow-gpu==1.12.0
+- torchvision
 - numba>=0.38.1
 - pip:
   - azureml-sdk[notebooks,contrib]==1.0.10
   - azure-storage>=0.36.0
   - black>=18.6b4
-  - torchvision
+  - ipywebrtc
   - memory-profiler>=0.54.0
   - nvidia-ml-py3>=7.352.0
   - papermill>=0.15.0
   - pillow
-  - ipywebrtc
-  - pytest
   - pre-commit>=1.14.4
+  - pytest
