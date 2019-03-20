@@ -1,0 +1,376 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+"""
+Helper module for drawing widgets and plots
+"""
+import bqplot
+import bqplot.pyplot as bqpyplot
+import fastai.data_block
+from ipywidgets import widgets, Layout, IntSlider
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.metrics import (
+    precision_recall_curve,
+    average_precision_score,
+    roc_curve,
+    auc
+)
+from sklearn.preprocessing import label_binarize
+
+
+def plot_roc_curve(
+
+):
+    """Plots receiver operating characteristic (ROC) curves and ROC areas.
+    TODO implement
+    """
+    raise NotImplementedError
+
+
+def _plot_multi_roc_curve(y_true, y_score, classes):
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(classes):
+        fpr[i], tpr[i], _ = roc_curve(y_true[:, i], y_score[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    # Compute micro-average ROC curve and ROC area
+    fpr["avg"], tpr["avg"], _ = roc_curve(y_true.ravel(), y_score.ravel())
+    roc_auc["avg"] = auc(fpr["avg"], tpr["avg"])
+
+    # TODO implement
+    raise NotImplementedError
+
+
+def _plot_binary_roc_curve(y_true, y_score):
+    # TODO implement
+    raise NotImplementedError
+
+
+def plot_precision_recall_curve(
+    y_true: np.ndarray,
+    y_score: np.ndarray,
+    classes: iter
+):
+    """Plots precision-recall (PR) curves.
+
+    If the given class labels are multi-label, it binarizes the classes and plots each PR along with an averaged PR.
+    For the averaged PR, micro-average is used.
+    See details from: https://scikit-learn.org/stable/auto_examples/model_selection/plot_precision_recall.html
+
+    Args:
+        y_true (np.ndarray): True class indices.
+        y_score (np.ndarray): Estimated probabilities.
+        classes (iterable): Class labels
+    """
+    assert len(classes) == y_score.shape[1] if len(y_score.shape) == 2 else len(classes) == 2
+
+    # Set random colors seed for reproducibility.
+    np.random.seed(123)
+
+    plt.figure(figsize=(7, 8))
+
+    if len(y_score.shape) == 2:
+        _plot_multi_precision_recall_curve(y_true, y_score, classes)
+    else:
+        _plot_binary_precision_recall_curve(y_true, y_score)
+
+    fig = plt.gcf()
+    fig.subplots_adjust(bottom=0.25)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall Curves')
+    plt.legend(loc="lower left")
+
+    plt.show()
+
+
+def _plot_binary_precision_recall_curve(y_true, y_score):
+    precision, recall, _ = precision_recall_curve(y_true, y_score)
+    average_precision = average_precision_score(y_true, y_score)
+
+    plt.plot(
+        recall, precision,
+        color=_generate_color(),
+        label=f"Precision-recall (AP = {average_precision:0.2f})",
+        lw=2
+    )
+
+
+def _plot_multi_precision_recall_curve(y_true, y_score, classes):
+    y_true = label_binarize(y_true, classes=list(range(len(classes))))
+
+    average_precisions = dict()
+    precisions = dict()
+    recalls = dict()
+    for i in range(len(classes)):
+        precisions[i], recalls[i], _ = precision_recall_curve(y_true[:, i], y_score[:, i])
+        average_precisions[i] = average_precision_score(y_true[:, i], y_score[:, i])
+
+    # A "micro-average": quantifying score on all classes jointly
+    precisions["avg"], recalls["avg"], _ = precision_recall_curve(y_true.ravel(), y_score.ravel())
+    average_precisions["avg"] = average_precision_score(y_true, y_score, average="micro")
+
+    # Plot averaged PR
+    plt.plot(
+        recalls["avg"], precisions["avg"],
+        color=_generate_color(),
+        label=f"Averaged precision-recall (area = {average_precisions['avg']:0.2f})",
+        lw=2
+    )
+    # Plot PR for each class
+    for i, label in enumerate(classes):
+        plt.plot(
+            recalls[i], precisions[i],
+            color=_generate_color(),
+            label=f"Precision-recall for {classes[i]} (area = {average_precisions[i]:0.2f})",
+            lw=1
+        )
+
+
+def _generate_color():
+    return np.random.rand(3,)
+
+
+def _list_sort(list1d, reverse=False, comparison_fn=lambda x: x):
+    """Sorts list1f and returns (sorted list, list of indices)"""
+    indices = list(range(len(list1d)))
+    tmp = sorted(zip(list1d, indices), key=comparison_fn, reverse=reverse)
+    return list(map(list, list(zip(*tmp))))
+
+
+class ICResultsWidget(object):
+    # TODO maybe add close() to destruct widgets
+    def __init__(
+        self,
+        dataset: fastai.data_block.LabelList,
+        y_score: np.ndarray,
+        y_label: iter,
+    ):
+        """Helper class to draw and update Image classification results widgets.
+
+        Args:
+            dataset (LabelList): Data used for prediction.
+            y_score (np.ndarray): Predicted scores.
+            y_label (iterable): Predicted labels.
+        """
+        assert len(y_score) == len(y_label) == len(dataset)
+
+        self.dataset = dataset
+        self.pred_scores = y_score
+        self.pred_labels = y_label
+
+        # Init
+        self.vis_image_index = 0
+        self.labels = dataset.classes
+        self.label_to_id = {s: i for i, s in enumerate(self.labels)}
+
+        self._create_ui()
+
+    def show(self):
+        return self.ui
+
+    def update(self):
+        pred_label = self.pred_labels[self.vis_image_index]
+        scores = self.pred_scores[self.vis_image_index]
+        im = self.dataset.x[self.vis_image_index]  # fastai Image object
+
+        _, sort_order = _list_sort(scores, reverse=True)
+        pred_labels_str = ""
+        for (
+            i
+        ) in (
+            sort_order
+        ):  # or may use up to 20 items e.g. [:min(20, len(sort_order))]:
+            pred_labels_str += "{}({:3.1f}) \n".format(
+                self.labels[i], scores[i]
+            )
+        self.w_pred_labels.value = str(pred_labels_str)
+
+        self.w_image_header.value = "Image index: {}".format(
+            self.vis_image_index
+        )
+        self.w_img.value = im._repr_png_()
+        self.w_gt_label.value = str(self.dataset.y[self.vis_image_index])
+        self.w_pred_label.value = str(pred_label)
+        self.w_pred_score.value = str(
+            self.pred_scores[
+                self.vis_image_index, self.label_to_id[pred_label]
+            ]
+        )
+        self.w_index.value = str(self.vis_image_index)
+
+        self.w_filename.value = str(
+            self.dataset.items[self.vis_image_index].name
+        )
+        self.w_path.value = str(
+            self.dataset.items[self.vis_image_index].parent
+        )
+        bqpyplot.clear()
+        bqpyplot.bar(
+            self.labels,
+            scores,
+            align='center',
+            alpha=1.0,
+            color=np.abs(scores),
+            scales={'color': bqplot.ColorScale(scheme='Blues', min=0)},
+        )
+
+    def _create_ui(self):
+        """Create and initialize widgets"""
+        # ------------
+        # Callbacks + logic
+        # ------------
+        def image_passes_filters(image_index):
+            """Return if image should be shown."""
+            actual_label = str(self.dataset.y[image_index])
+            bo_pred_correct = actual_label == self.pred_labels[image_index]
+            if (bo_pred_correct and self.w_filter_correct.value) or (
+                not bo_pred_correct and self.w_filter_wrong.value
+            ):
+                return True
+            return False
+
+        def button_pressed(obj):
+            """Next / previous image button callback."""
+            step = int(obj.value)
+            self.vis_image_index += step
+            self.vis_image_index = min(
+                max(0, self.vis_image_index), int(len(self.pred_labels)) - 1
+            )
+            while not image_passes_filters(self.vis_image_index):
+                self.vis_image_index += step
+                if (
+                    self.vis_image_index <= 0
+                    or self.vis_image_index >= int(len(self.pred_labels)) - 1
+                ):
+                    break
+            self.vis_image_index = min(
+                max(0, self.vis_image_index), int(len(self.pred_labels)) - 1
+            )
+            self.w_image_slider.value = self.vis_image_index
+            self.update()
+
+        def slider_changed(obj):
+            """Image slider callback.
+            Need to wrap in try statement to avoid errors when slider value is not a number.
+            """
+            try:
+                self.vis_image_index = int(obj['new']['value'])
+                self.update()
+            except Exception:
+                pass
+
+        # ------------
+        # UI - image + controls (left side)
+        # ------------
+        self.w_pred_labels = widgets.Textarea(
+            value="", description="Predictions:"
+        )  # , width='400px')
+        self.w_pred_labels.layout.height = '300px'
+        self.w_pred_labels.layout.width = '400px'
+
+        w_next_image_button = widgets.Button(description="Image +1")
+        w_next_image_button.value = "1"
+        w_next_image_button.layout = Layout(width='80px')
+        w_next_image_button.on_click(button_pressed)
+        w_previous_image_button = widgets.Button(description="Image -1")
+        w_previous_image_button.value = "-1"
+        w_previous_image_button.layout = Layout(width='80px')
+        w_previous_image_button.on_click(button_pressed)
+
+        self.w_image_slider = IntSlider(
+            min=0,
+            max=len(self.pred_labels) - 1,
+            step=1,
+            value=self.vis_image_index,
+            continuous_update=False,
+        )
+        self.w_image_slider.observe(slider_changed)
+        self.w_image_header = widgets.Text("", layout=Layout(width="130px"))
+        self.w_img = widgets.Image()
+        self.w_img.layout.width = '500px'
+        w_image_with_header = widgets.VBox(
+            children=[
+                widgets.HBox(
+                    children=[
+                        w_previous_image_button,
+                        w_next_image_button,
+                        self.w_image_slider,
+                    ]
+                ),
+                self.w_img,
+                self.w_pred_labels,
+            ],
+            width=520,
+        )
+
+        # ------------
+        # UI - info (right side)
+        # ------------
+        w_filter_header = widgets.HTML(
+            value="Filters (use Image +1/-1 buttons for navigation):"
+        )
+        self.w_filter_correct = widgets.Checkbox(
+            value=True, description='Correct classifications'
+        )
+        self.w_filter_wrong = widgets.Checkbox(
+            value=True, description='Incorrect classifications'
+        )
+
+        w_gt_header = widgets.HTML(value="Ground truth:")
+        self.w_gt_label = widgets.Text(value="", description="Label:")
+
+        w_pred_header = widgets.HTML(value="Prediction:")
+        self.w_pred_label = widgets.Text(value="", description="Label:")
+        self.w_pred_score = widgets.Text(value="", description="Score:")
+
+        w_info_header = widgets.HTML(value="Image info:")
+        self.w_index = widgets.Text(value="", description="Index:")
+        self.w_filename = widgets.Text(value="", description="Name:")
+        self.w_path = widgets.Text(value="", description="StoragePath:")
+
+        w_scores_header = widgets.HTML(value="Classification scores:")
+        self.w_scores = bqpyplot.figure()
+        self.w_scores.layout.height = '250px'
+        self.w_scores.layout.width = '370px'
+        self.w_scores.fig_margin = {
+            "top": 5,
+            "bottom": 80,
+            "left": 30,
+            "right": 5,
+        }
+
+        # Combine UIs into tab widget
+        w_info = widgets.VBox(
+            children=[
+                w_filter_header,
+                self.w_filter_correct,
+                self.w_filter_wrong,
+                w_gt_header,
+                self.w_gt_label,
+                w_pred_header,
+                self.w_pred_label,
+                self.w_pred_score,
+                w_info_header,
+                self.w_index,
+                self.w_filename,
+                self.w_path,
+                w_scores_header,
+                self.w_scores,
+            ]
+        )
+        w_info.layout.padding = '20px'
+        self.ui = widgets.Tab(
+            children=[
+                widgets.HBox(children=[w_image_with_header, w_info])
+            ]
+        )
+        self.ui.set_title(0, 'Results viewer')
+
+        # Fill UI with content
+        self.update()
