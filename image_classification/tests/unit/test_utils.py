@@ -4,8 +4,14 @@ import shutil
 from pathlib import Path
 from typing import Union
 from utils_ic.datasets import Urls, unzip_url, imagenet_labels
+from utils_ic.windows_create_cnn import appropriate_nbr_features, \
+    custom_create_cnn
+from utils_ic.image_conversion import image2json, image2bytes
+from fastai.vision import ImageItemList, accuracy, imagenet_stats, \
+    Learner, models
 
-# temporarily putting this constant here until we add a way to manage constants in tests
+# temporarily putting this constant here until we add a way
+# to manage constants in tests
 TEMP_DIR = Path("../tmp_data")
 
 
@@ -104,3 +110,50 @@ def test_imagenet_labels():
     labels = imagenet_labels()
     for i in range(5):
         assert labels[i] == IMAGENET_LABELS_FIRST_FIVE[i]
+
+
+def test_image2json():
+    """ Tests extraction of image content and conversion into string"""
+    data_path = unzip_url(Urls.fridge_objects_path, exist_ok=True)
+    im_list = [os.path.join('can', 'im_1.jpg'),
+               os.path.join('carton', 'im_62.jpg')]
+    input_to_service = image2json(im_list, data_path)
+    assert isinstance(input_to_service, str)
+    assert input_to_service[0: 11] == '{"data": ["'
+
+
+def test_image2bytes():
+    """ Tests extraction of image content and conversion into bytes"""
+    data_path = unzip_url(Urls.fridge_objects_path, exist_ok=True)
+    im_list = [os.path.join('can', 'im_1.jpg'),
+               os.path.join('carton', 'im_62.jpg')]
+    input_to_service = image2bytes(im_list, data_path)
+    assert isinstance(input_to_service, bytes)
+
+
+def test_appropriate_nbr_features():
+    """ Checks that returns a dictionary of integers """
+    all_keys = ['alexnet', 'vgg16', 'vgg19', 'vgg16_bn',
+                'vgg19_bn', 'resnet18', 'resnet34',
+                'squeezenet1_0', 'squeezenet1_1',
+                'resnet50', 'resnet101', 'resnet152',
+                'densenet121', 'densenet169', 'densenet201']
+    assert isinstance(appropriate_nbr_features(), dict)
+    assert len(appropriate_nbr_features()) == 15
+    assert list(set(appropriate_nbr_features().keys()).
+                difference(set(all_keys))) == []
+
+
+def test_custom_create_cnn():
+    """ Trains a CNN model on Windows """
+    data_path = unzip_url(Urls.fridge_objects_path, exist_ok=True)
+    im_path = Path(data_path)
+    data = (ImageItemList
+            .from_folder(im_path)
+            .random_split_by_pct(valid_pct=0.2, seed=123)
+            .label_from_folder()
+            .transform(size=299)
+            .databunch(bs=16)
+            .normalize(imagenet_stats))
+    trained_model = custom_create_cnn(data, models.alexnet, metrics=accuracy)
+    assert isinstance(trained_model, Learner)
