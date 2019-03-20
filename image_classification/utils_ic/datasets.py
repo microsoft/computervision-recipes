@@ -1,6 +1,5 @@
 import os
 import requests
-import shutil
 from .common import data_path
 from pathlib import Path
 from typing import List, Union
@@ -50,15 +49,21 @@ def unzip_url(
     fpath: Union[Path, str] = data_path(),
     dest: Union[Path, str] = data_path(),
     exist_ok: bool = False,
-    overwrite: bool = False,
 ) -> Path:
     """ Download file from URL to {fpath} and unzip to {dest}.
     {fpath} and {dest} must be directories
+
     Args:
-        exist_ok: if exist_ok, then skip if exists, otherwise throw error
-        overwrite: if overwrite, remove zipped file and unziped dir and
-        re-dowload
-    Returns path of {dest}
+        url (str): url to download from
+        fpath (Union[Path, str]): The location to save the url zip file to
+        dest (Union[Path, str]): The destination to unzip {fpath}
+        exist_ok (bool): if exist_ok, then skip if exists, otherwise throw error
+
+    Raises:
+        FileExistsError: if file exists
+
+    Returns:
+        Path of {dest}
     """
 
     def _raise_file_exists_error(path: Union[Path, str]) -> None:
@@ -72,16 +77,6 @@ def unzip_url(
     fname_without_extension = fname.split(".")[0]
     zip_file = Path(os.path.join(fpath, fname))
     unzipped_dir = Path(os.path.join(fpath, fname_without_extension))
-
-    if overwrite:
-        try:
-            os.remove(zip_file)
-        except OSError:
-            pass
-        try:
-            shutil.rmtree(unzipped_dir)
-        except OSError:
-            pass
 
     # download zipfile if zipfile not exists
     if zip_file.is_file():

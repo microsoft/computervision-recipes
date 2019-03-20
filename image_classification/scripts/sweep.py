@@ -11,37 +11,36 @@ from utils_ic.datasets import data_path
 from argparse import RawTextHelpFormatter, Namespace
 from pathlib import Path
 
-argparse_desc_msg = (
-    lambda: f"""
+argparse_desc_msg = """
 This script is used to benchmark the different hyperparameters when it comes to doing image classification.
 
 This script will run all permutations of the parameters that are passed in.
 
-This script will run these tests on datasets provided in this repo. It will
-create a temporary data directory, and delete it at the end.
+This script will either run these tests on:
+- an input dataset defined by --input
+- a set of benchmarking datasets defined by --benchmark, which will create a
+  temporary data directory with all benchmarking datasets loaded into it, and delete it at the end.
 
 This script uses accuracy as the evaluation metric.
 
 Use [-W ignore] to ignore warning messages when running the script.
 """
-)
 
-argparse_epilog_msg = (
-    lambda default_params: f"""
+argparse_epilog_msg = """
 Example usage:
 {default_params}
 
 # Test the effect of 3 learning rates on 3 batch sizes
-$ python benchmark.py -lr 1e-3 1e-4 1e-5 -bs 8 16 32 -o learning_rate_batch_size.csv
+$ python sweep.py -lr 1e-3 1e-4 1e-5 -bs 8 16 32 -i <input_data> -o learning_rate_batch_size.csv
 
 # Test the effect of one cycle policy without using discriminative learning rates over 5 runs
-$ python benchmark.py -dl False -ocp True False -r 5 -o ocp_dl.csv
+$ python sweep.py -dl False -ocp True False -r 5 -i <input_data> -o ocp_dl.csv
 
 # Test different architectures and image sizes
-$ python benchmark.py -a squeezenet1_1 resenet18 resnet50 -is 299 499 -o arch_im_sizes.csv
+$ python sweep.py -a squeezenet1_1 resenet18 resnet50 -is 299 499 -i <input_data> -o arch_im_sizes.csv
 
-# Test different training schedules over 3 runs
-$ python benchmark.py -ts body_only head_first_then_body -r 3 -o training_schedule.csv
+# Test different training schedules over 3 runs on the benchmark dataset
+$ python sweep.py -ts body_only head_first_then_body -r 3 --benchmark -o training_schedule.csv
 
 ---
 
@@ -52,14 +51,11 @@ import pandas as pd
 df = pd.read_csv("results.csv", index_col=[0, 1, 2])
 ```
 
-"""
-)
+""".format
 
-time_msg = lambda: f"""Total Time elapsed: {round(end - start, 1)} seconds."""
+time_msg = """Total Time elapsed: {time} seconds.""".format
 
-output_msg = (
-    lambda: f"""Output has been saved to '{os.path.realpath(args.output)}'."""
-)
+output_msg = """Output has been saved to '{output_path}'.""".format
 
 
 def _str_to_bool(string: str) -> bool:
@@ -69,14 +65,14 @@ def _str_to_bool(string: str) -> bool:
     elif string.lower() in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError("Boolean value sweeperected.")
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
     """ Get parser for this script. """
     parser = argparse.ArgumentParser(
         description=argparse_desc_msg(),
-        epilog=argparse_epilog_msg(default_params),
+        epilog=argparse_epilog_msg(default_params=default_params),
         formatter_class=RawTextHelpFormatter,
     )
     parser.add_argument(
@@ -201,18 +197,8 @@ def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
     parser.add_argument(
         "--output", "-o", dest="output", help="The path of the output file."
     )
-    parser.add_argument(
-        "--clean-up",
-        dest="clean_up",
-        action="store_true",
-        help="Remove input data or temporary data after the run. WARNING: If this flag is set, it will permanently remove input data.",
-    )
     parser.set_defaults(
-        repeat=3,
-        early_stopping=False,
-        inputs=None,
-        benchmark=False,
-        clean_up=False,
+        repeat=3, early_stopping=False, inputs=None, benchmark=False
     )
     args = parser.parse_args()
 
@@ -267,10 +253,10 @@ if __name__ == "__main__":
     )
     df.to_csv(args.output)
 
-    if args.clean_up:
+    if args.benchmark:
         for path in args.inputs:
             shutil.rmtree(path)
 
     end = time.time()
-    print(time_msg())
-    print(output_msg())
+    print(time_msg(time=round(end - start, 1)))
+    print(output_msg(output_path=os.path.realpath(args.output)))
