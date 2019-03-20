@@ -5,7 +5,8 @@
 import papermill as pm
 from utils_ic.datasets import Urls, unzip_url
 
-# Unless manually modified, python3 should be the name of the current jupyter kernel
+# Unless manually modified, python3 should be
+# the name of the current jupyter kernel
 # that runs on the activated conda environment
 KERNEL_NAME = "python3"
 OUTPUT_NOTEBOOK = "output.ipynb"
@@ -30,5 +31,17 @@ def test_01_notebook_run(notebooks):
             PM_VERSION=pm.__version__,
             DATA_PATH=unzip_url(Urls.recycle_path, exist_ok=True),
         ),
+        kernel_name=KERNEL_NAME,
+    )
+
+
+def test_deploy_1_notebook_run(notebooks):
+    notebook_path = notebooks["deploy_on_ACI"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            DATA_PATH=unzip_url(Urls.fridge_objects_path, exist_ok=True)),
         kernel_name=KERNEL_NAME,
     )
