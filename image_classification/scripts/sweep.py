@@ -6,7 +6,7 @@ import argparse
 import time
 import shutil
 
-from utils_ic.experiment import *
+from utils_ic.parameter_sweeperer import *
 from utils_ic.datasets import data_path
 from argparse import RawTextHelpFormatter, Namespace
 from pathlib import Path
@@ -62,14 +62,14 @@ output_msg = (
 )
 
 
-def _str_to_bool(v: str) -> bool:
+def _str_to_bool(string: str) -> bool:
     """ Convert string to bool. """
-    if v.lower() in ("yes", "true", "t", "y", "1"):
+    if string.lower() in ("yes", "true", "t", "y", "1"):
         return True
-    elif v.lower() in ("no", "false", "f", "n", "0"):
+    elif string.lower() in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
+        raise argparse.ArgumentTypeError("Boolean value sweeperected.")
 
 
 def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
@@ -185,18 +185,11 @@ def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
         action="store_true",
         help="Whether or not to use curated benchmark datasets to test. <--input> must be empty",
     )
-    es_parser = parser.add_mutually_exclusive_group(required=False)
     es_parser.add_argument(
         "--early-stopping",
         dest="early_stopping",
         action="store_true",
         help="Stop training early if possible",
-    )
-    es_parser.add_argument(
-        "--no-early-stopping",
-        dest="early_stopping",
-        action="store_false",
-        help="Do not stop training early if possible",
     )
     parser.add_argument(
         "--repeat",
@@ -212,7 +205,7 @@ def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
         "--clean-up",
         dest="clean_up",
         action="store_true",
-        help="Remove input data or temporary data after the run.",
+        help="Remove input data or temporary data after the run. WARNING: If this flag is set, it will permanently remove input data.",
     )
     parser.set_defaults(
         repeat=3,
@@ -225,25 +218,20 @@ def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
 
     # if discriminative lr is on, we cannot have a 'head_only'
     # training_schedule
-    if args.discriminative_lrs is not None:
-        if True in args.discriminative_lrs:
-            assert "head_only" not in args.training_schedules
+    if args.discriminative_lrs is not None and True in args.discriminative_lrs:
+        assert "head_only" not in args.training_schedules
 
     # get mapping of architecture enum: ex. "resnet34" -->
     # Architecture.resnet34 -> models.resnet34
-    architecture_params = []
     if args.architectures is not None:
-        for a in args.architectures:
-            architecture_params.append(Architecture[a])
-        args.architectures = architecture_params
+        args.architectures = [Architecture[a] for a in args.architectures]
 
     # get mapping of training enum: ex. "head_only" -->
     # TrainingSchedule.head_only --> 0
-    training_schedule_params = []
     if args.training_schedules is not None:
-        for t in args.training_schedules:
-            training_schedule_params.append(TrainingSchedule[t])
-        args.training_schedules = training_schedule_params
+        args.training_schedules = [
+            TrainingSchedule[t] for t in args.training_schedules
+        ]
 
     return args
 
@@ -251,12 +239,10 @@ def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
 if __name__ == "__main__":
 
     start = time.time()
+    sweeper = ParameterSweeper()
+    args = _get_parser(sweeper.parameters)
 
-    exp = Experiment()
-
-    args = _get_parser(exp.parameters)
-
-    exp.update_parameters(
+    sweeper.update_parameters(
         learning_rate=args.learning_rates,
         epochs=args.epochs,
         batch_size=args.batch_sizes,
@@ -270,15 +256,13 @@ if __name__ == "__main__":
         one_cycle_policy=args.one_cycle_policies,
     )
 
-    data = (
-        args.inputs
-        if args.inputs
-        else Experiment.download_benchmark_datasets(
+    data = args.inputs
+    if not data:
+        data = Experiment.download_benchmark_datasets(
             Path(data_path()) / "benchmark_data"
         )
-    )
 
-    df = exp.run(
+    df = sweeper.run(
         datasets=data, reps=args.repeat, early_stopping=args.early_stopping
     )
     df.to_csv(args.output)
@@ -288,6 +272,5 @@ if __name__ == "__main__":
             shutil.rmtree(path)
 
     end = time.time()
-
     print(time_msg())
     print(output_msg())

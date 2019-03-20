@@ -1,6 +1,7 @@
 import os
 import requests
 import shutil
+from .common import data_path
 from pathlib import Path
 from typing import List, Union
 from urllib.parse import urljoin, urlparse
@@ -39,15 +40,8 @@ def imagenet_labels() -> list:
     return [labels[str(k)][1] for k in range(len(labels))]
 
 
-def data_path() -> Path:
-    """Get the data path"""
-    return os.path.realpath(
-        os.path.join(os.path.dirname(__file__), os.pardir, "data")
-    )
-
-
 def _get_file_name(url: str) -> str:
-    """Get a file name based on url"""
+    """ Get a file name based on url. """
     return urlparse(url).path.split("/")[-1]
 
 
@@ -58,12 +52,12 @@ def unzip_url(
     exist_ok: bool = False,
     overwrite: bool = False,
 ) -> Path:
-    """
-    Download file from URL to {fpath} and unzip to {dest}.
+    """ Download file from URL to {fpath} and unzip to {dest}.
     {fpath} and {dest} must be directories
-    Params:
+    Args:
         exist_ok: if exist_ok, then skip if exists, otherwise throw error
-        overwrite: if overwrite, remove zipped file and unziped dir
+        overwrite: if overwrite, remove zipped file and unziped dir and
+        re-dowload
     Returns path of {dest}
     """
 

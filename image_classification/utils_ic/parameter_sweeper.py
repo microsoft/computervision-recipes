@@ -17,9 +17,10 @@ Time = float
 parameter_flag = "PARAMETERS"
 
 
-TrainingSchedule = Enum(
-    "TrainingSchedule", ["head_only", "body_only", "head_first_then_body"]
-)
+class TrainingSchedule(Enum):
+    head_only = ("head_only",)
+    body_only = ("body_only",)
+    head_first_then_body = "head_first_then_body"
 
 
 class Architecture(Enum):
@@ -34,22 +35,21 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     Cleans up experiment paramter strings in {df} by removing all experiment
     parameters that held constant through each experiment. This method uses a
     variable <parameter_flag> to search for strings.
-    Params:
-        df: dataframe to clean up
-    Return df with renamed experiment parameter strings
+    Args:
+        df (pd.DataFrame): dataframe to clean up
+    Return:
+        pd.DataFrame: df with renamed experiment parameter strings
     """
     text = df.to_html()
     text = re.findall(fr">\s{{0,1}}{parameter_flag}\s{{0,1}}(.*?)</th>", text)
 
-    sets = []
-    for t in text:
-        sets.append(set(t.split("|")))
+    sets = [set(t.split("|")) for t in text]
     intersection = sets[0].intersection(*sets)
 
     html = df.to_html()
     for i in intersection:
         html = html.replace(i, "")
-    html = html.replace("PARAMETERS", "")
+    html = html.replace("PARAMETERS", "P:")
     html = html.replace("|", " ")
 
     return pd.read_html(html, index_col=[0, 1, 2])[0]
@@ -63,10 +63,12 @@ def plot_df(
     """
     Visuaize graph from {df}, which must contain columns "accuracy" and
     "duration".
-    Params:
-        df: the dataframe to visualize
-        sort_by: whether to sort visualization by accuracy or duration
-        figsize: as defined in matplotlib
+    Args:
+        df (pd.DataFrame): the dataframe to visualize.
+        sort_by (str): whether to sort visualization by accuracy or duration.
+        figsize (Tuple[int, int]): as defined in matplotlib.
+    Raises:
+        ValueError: if {sort_by} is an invalid value.
     """
     if sort_by not in ("accuracy", "duration"):
         raise ValueError("{sort_by} must equal 'accuracy' or 'duration'")
@@ -76,10 +78,10 @@ def plot_df(
     ) -> None:
         """
         Add labels to the end of each bar in a bar chart.
-        Params:
-            ax: The matplotlib object containing the axes of the plot to annotate.
-            spacing: The distance between the labels and the bars.
-            percentage: if y-value is a percentage
+        Args:
+            ax (Axes): The matplotlib object containing the axes of the plot to annotate.
+            spacing (int): The distance between the labels and the bars.
+            percentage (bool): if y-value is a percentage
         """
         for rect in ax.patches:
             y_value = rect.get_height()
@@ -115,11 +117,12 @@ def plot_df(
     add_value_labels(ax1)
 
 
-class Experiment:
-    """
+class ParameterSweeper:
+    """ Test different permutations of a set of parameters.
+
     Attributes:
-        param_seq <Tuple[str]>: A fixed ordering of parameters (to match the ordering of <params>)
-        default_params <Dict[str, Any]>: A dict of defualt parameters
+        param_order <Tuple[str]>: A fixed ordering of parameters (to match the ordering of <params>)
+        default_params <Dict[str, Any]>: A dict of default parameters
         params <Dict[str, List[Any]]>: The parameters to run experiments on
     """
 
@@ -156,7 +159,7 @@ class Experiment:
             one_cycle_policy=[self.default_params.get("one_cycle_policy")],
         )
 
-        self.param_seq = tuple(self.params.keys())
+        self.param_order = tuple(self.params.keys())
         self.update_parameters(**kwargs)
 
     @property
@@ -167,7 +170,7 @@ class Experiment:
     @property
     def permutations(self) -> List[Tuple[Any]]:
         """ Returns a list of all permutations, expressed in tuples. """
-        params = tuple([self.params[k] for k in self.param_seq])
+        params = tuple([self.params[k] for k in self.param_order])
         permutations = list(itertools.product(*params))
         return permutations
 
@@ -180,18 +183,19 @@ class Experiment:
         users to pass in their own image bunch or their own Transformation
         objects (instead of using fastai's <get_transforms>)
 
-        Params:
-            path: path to data to create databunch with
-            transform: a flag to set fastai default transformations (get_transforms())
-            im_size: image size of databunch
-            bs: batch size of databunch
-        Returns ImageDataBunch
+        Args:
+            path (Union[Path, str]): path to data to create databunch with
+            transform (bool): a flag to set fastai default transformations (get_transforms())
+            im_size (int): image size of databunch
+            bs (int): batch size of databunch
+        Returns:
+            ImageDataBunch
         """
         path = path if type(path) is Path else Path(path)
         tfms = get_transforms() if transform else None
         return (
             ImageList.from_folder(path)
-            .split_by_rand_pct(valid_pct=0.33, seed=10)
+            .split_by_rand_pct(valid_pct=0.33)
             .label_from_folder()
             .transform(tfms=tfms, size=im_size)
             .databunch(bs=bs)
@@ -238,6 +242,28 @@ class Experiment:
             orient="index",
         )
 
+    def param_tuple_to_dict(params: Tuple[Any]) -> Dict[str, Any]:
+        """ Converts a tuple of parameters to a Dict. """
+        return dict(
+            learning_rate=params[self.param_order.index("learning_rate")],
+            batch_size=params[self.param_order.index("batch_size")],
+            transform=params[self.param_order.index("transform")],
+            im_size=params[self.param_order.index("im_size")],
+            epochs=params[self.param_order.index("epochs")],
+            arch=params[self.param_order.index("architecture")],
+            dropout=params[self.param_order.index("dropout")],
+            weight_decay=params[self.param_order.index("weight_decay")],
+            discriminative_lr=params[
+                self.param_order.index("discriminative_lr")
+            ],
+            training_schedule=params[
+                self.param_order.index("training_schedule")
+            ],
+            one_cycle_policy=params[
+                self.param_order.index("one_cycle_policy")
+            ],
+        )
+
     @classmethod
     def download_benchmark_datasets(
         cls, dest: Union[Path, str] = data_path()
@@ -259,26 +285,29 @@ class Experiment:
         """
         Given a set of permutations, create a learner to train and validate on
         the dataset.
-        Params:
-            data_path: The location of the data to use
-            params: The set of parameters to train and validate on
-            stop_early: Whether or not to stop early if the evaluation metric
-            does not improve
-        Returns the Learner object from Fastai and the duration in seconds it took.
+        Args:
+            data_path (Path): The location of the data to use
+            params (Tuple[Any]): The set of parameters to train and validate on
+            stop_early (bool): Whether or not to stop early if the evaluation
+            metric does not improve
+        Returns:
+            Tuple[Learner, Time]: Learn object from Fastai and the duration in
+            seconds it took.
         """
         start = time.time()
+        params = param_tuple_to_dict(params)
 
-        transform = params[self.param_seq.index("transform")]
-        im_size = params[self.param_seq.index("im_size")]
-        epochs = params[self.param_seq.index("epochs")]
-        batch_size = params[self.param_seq.index("batch_size")]
-        arch = params[self.param_seq.index("architecture")]
-        dropout = params[self.param_seq.index("dropout")]
-        learning_rate = params[self.param_seq.index("learning_rate")]
-        discriminative_lr = params[self.param_seq.index("discriminative_lr")]
-        training_schedule = params[self.param_seq.index("training_schedule")]
-        one_cycle_policy = params[self.param_seq.index("one_cycle_policy")]
-        weight_decay = params[self.param_seq.index("weight_decay")]
+        transform = params["transform"]
+        im_size = params["im_size"]
+        epochs = params["epochs"]
+        batch_size = params["batch_size"]
+        archicture = params["architecture"]
+        dropout = params["dropout"]
+        learning_rate = params["learning_rate"]
+        discriminative_lr = params["discriminative_lr"]
+        training_schedule = params["training_schedule"]
+        one_cycle_policy = params["one_cycle_policy"]
+        weight_decay = params["weight_decay"]
 
         data = self._get_data_bunch(data_path, transform, im_size, batch_size)
 
@@ -288,14 +317,14 @@ class Experiment:
 
         learn = cnn_learner(
             data,
-            arch.value,
+            archicture.value,
             metrics=accuracy,
             ps=dropout,
             callback_fns=callbacks,
         )
 
-        original_learning_rate = learning_rate
-        learning_rate = (
+        head_learning_rate = learning_rate
+        body_learning_rate = (
             slice(learning_rate, 3e-3) if discriminative_lr else learning_rate
         )
 
@@ -316,17 +345,19 @@ class Experiment:
                     "Cannot run discriminative_lr if training schedule is head_only."
                 )
             else:
-                fit(learn, epochs, learning_rate, weight_decay)()
+                fit(learn, epochs, body_learning_rate, weight_decay)()
 
         elif training_schedule is TrainingSchedule.body_only:
             learn.unfreeze()
-            fit(learn, epochs, original_learning_rate, weight_decay)()
+            fit(learn, epochs, body_learning_rate, weight_decay)()
 
         elif training_schedule is TrainingSchedule.head_first_then_body:
-            head = epochs // 4
-            fit(learn, head, original_learning_rate, weight_decay)()
+            head_epochs = epochs // 4
+            fit(learn, head_epochs, head_learning_rate, weight_decay)()
             learn.unfreeze()
-            fit(learn, epochs - head, learning_rate, weight_decay)()
+            fit(
+                learn, epochs - head_epochs, body_learning_rate, weight_decay
+            )()
 
         end = time.time()
         duration = end - start
@@ -334,8 +365,7 @@ class Experiment:
         return learn, duration
 
     def update_parameters(self, **kwargs) -> None:
-        """
-        Update the class object's parameters.
+        """ Update the class object's parameters.
         If kwarg key is not in an existing param key, then raise exception.
         If the kwarg value is None, pass.
         Otherwise overwrite the corresponding self.params key.
@@ -350,46 +380,56 @@ class Experiment:
     def run(
         self, datasets: List[Path], reps: int = 3, early_stopping: bool = False
     ) -> pd.DataFrame:
-        """
-        Performs the experiment. Iterates through the number of specified
-        <reps>, the list permutations as defined in this class, and the
-        <datasets> to calculate evaluation metrics and duration for each run.
+        """ Performs the experiment.
+        Iterates through the number of specified <reps>, the list permutations
+        as defined in this class, and the <datasets> to calculate evaluation
+        metrics and duration for each run.
 
         WARNING: this method can take a long time depending on your experiment
         definition.
 
-        Params:
-            datasets: A list of datasets to iterate over.
-            reps: The number of runs to loop over.
-            early_stopping: Whether we want to perform early stopping.
-        Returns a multi-index dataframe with the results stored in it.
+        Args:
+            datasets (List[Path]): A list of datasets to iterate over.
+            reps (int): The number of runs to loop over.
+            early_stopping (bool): Whether we want to perform early stopping.
+        Returns:
+            pd.DataFrame: a multi-index dataframe with the results stored in it.
         """
 
         res = dict()
-        for r in range(reps):
+        for rep in range(reps):
 
-            res[r] = dict()
-            for i, p in enumerate(self.permutations):
+            res[rep] = dict()
+            for i, permutation in enumerate(self.permutations):
                 print(
                     f"Running {i+1} of {len(self.permutations)} permutations. "
-                    f"Repeat {r+1} of {reps}."
+                    f"Repeat {rep+1} of {reps}."
                 )
 
-                permutation = self._serialize_permutations(p)
-                res[r][permutation] = dict()
-                for d in datasets:
+                stringified_permutation = self._serialize_permutations(
+                    permutation
+                )
+                res[rep][stringified_permutation] = dict()
+                for dataset in datasets:
 
-                    res[r][permutation][os.path.basename(d)] = dict()
+                    data_name = os.path.basename(dataset)
 
-                    learn, duration = self._learn(d, p, early_stopping)
+                    res[rep][stringified_permutation][data_name] = dict()
+
+                    learn, duration = self._learn(
+                        dataset, permutation, early_stopping
+                    )
 
                     _, metric = learn.validate(
                         learn.data.valid_dl, metrics=[accuracy]
                     )
 
-                    data_name = os.path.basename(d)
-                    res[r][permutation][data_name]["duration"] = duration
-                    res[r][permutation][data_name]["accuracy"] = float(metric)
+                    res[rep][stringified_permutation][data_name][
+                        "duration"
+                    ] = duration
+                    res[rep][stringified_permutation][data_name][
+                        "accuracy"
+                    ] = float(metric)
 
                     learn.destroy()
 
