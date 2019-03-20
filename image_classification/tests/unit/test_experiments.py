@@ -71,7 +71,7 @@ def test_default_sweeper_benchmark_dataset(setup_all_datasets):
     assert df.mean(level=(2)).loc["fridgeObjects", "accuracy"] > 0.85
     assert df.mean(level=(2)).loc["food101Subset", "accuracy"] > 0.75
     assert df.mean(level=(2)).loc["fashionTexture", "accuracy"] > 0.70
-    assert df.mean(level=(2)).loc["flickrLogos32", "accuracy"] > 0.75
+    assert df.mean(level=(2)).loc["flickrLogos32Subset", "accuracy"] > 0.75
     assert df.mean(level=(2)).loc["lettuce", "accuracy"] > 0.70
     assert df.mean(level=(2)).loc["recycle_v3", "accuracy"] > 0.85
 
@@ -84,9 +84,16 @@ def test_update_parameters_01(setup_a_dataset):
     # at this point there should only be 1 permutation of the default params
     assert len(sweeper.permutations) == 1
     sweeper.update_parameters(
-        lr=[1e-3, 1e-4, 1e-5], im_size=[299, 499], epochs=[5]
+        learning_rate=[1e-3, 1e-4, 1e-5], im_size=[299, 499], epochs=[5]
     )
     # assert that there are not 6 permutations
     assert len(sweeper.permutations) == 6
     df = sweeper.run([fridge_objects_path])
     _test_sweeper_run(df, df_length=18)
+
+
+def test_update_parameters_02(setup_a_dataset):
+    """ Tests exception when updating parameters. """
+    sweeper = ParameterSweeper()
+    with pytest.raises(Exception):
+        sweeper.update_parameters(bad_key=[1e-3, 1e-4, 1e-5])

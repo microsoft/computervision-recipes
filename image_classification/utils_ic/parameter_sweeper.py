@@ -242,7 +242,7 @@ class ParameterSweeper:
             orient="index",
         )
 
-    def param_tuple_to_dict(params: Tuple[Any]) -> Dict[str, Any]:
+    def _param_tuple_to_dict(self, params: Tuple[Any]) -> Dict[str, Any]:
         """ Converts a tuple of parameters to a Dict. """
         return dict(
             learning_rate=params[self.param_order.index("learning_rate")],
@@ -250,7 +250,7 @@ class ParameterSweeper:
             transform=params[self.param_order.index("transform")],
             im_size=params[self.param_order.index("im_size")],
             epochs=params[self.param_order.index("epochs")],
-            arch=params[self.param_order.index("architecture")],
+            architecture=params[self.param_order.index("architecture")],
             dropout=params[self.param_order.index("dropout")],
             weight_decay=params[self.param_order.index("weight_decay")],
             discriminative_lr=params[
@@ -295,13 +295,13 @@ class ParameterSweeper:
             seconds it took.
         """
         start = time.time()
-        params = param_tuple_to_dict(params)
+        params = self._param_tuple_to_dict(params)
 
         transform = params["transform"]
         im_size = params["im_size"]
         epochs = params["epochs"]
         batch_size = params["batch_size"]
-        archicture = params["architecture"]
+        architecture = params["architecture"]
         dropout = params["dropout"]
         learning_rate = params["learning_rate"]
         discriminative_lr = params["discriminative_lr"]
@@ -317,7 +317,7 @@ class ParameterSweeper:
 
         learn = cnn_learner(
             data,
-            archicture.value,
+            architecture.value,
             metrics=accuracy,
             ps=dropout,
             callback_fns=callbacks,

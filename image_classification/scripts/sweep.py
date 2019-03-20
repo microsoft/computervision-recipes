@@ -6,7 +6,7 @@ import argparse
 import time
 import shutil
 
-from utils_ic.parameter_sweeperer import *
+from utils_ic.parameter_sweeper import *
 from utils_ic.datasets import data_path
 from argparse import RawTextHelpFormatter, Namespace
 from pathlib import Path
@@ -185,7 +185,7 @@ def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
         action="store_true",
         help="Whether or not to use curated benchmark datasets to test. <--input> must be empty",
     )
-    es_parser.add_argument(
+    parser.add_argument(
         "--early-stopping",
         dest="early_stopping",
         action="store_true",

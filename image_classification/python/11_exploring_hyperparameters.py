@@ -5,7 +5,7 @@
 
 # Lets say we want to learn more about __how different learning rates and different image sizes affect our model's accuracy when restricted to 10 epochs__, and we want to build an experiment to test out these hyperparameters.
 #
-# In this notebook, we'll walk through how we use out Experiment module with the following:
+# In this notebook, we'll walk through how we use out Parameter Sweeper module with the following:
 #
 # - use python to perform this experiment
 # - use the CLI to perform this experiment
@@ -21,12 +21,12 @@ import sys
 sys.path.append("../")
 import os
 
-from utils_ic import ic_root_path
+from utils_ic.common import ic_root_path
 from utils_ic.datasets import unzip_url, Urls
-from utils_ic.experiment import *
+from utils_ic.parameter_sweeper import *
 
 
-# Lets download some data that we want to test on. To use the experiments tool for single label classification, we'll need to make sure that the data is stored such that images are sorted into their classes inside of a subfolder. In this notebook, we'll use the Fridge Objects dataset provided in `utils_ic.datasets.Urls`, which is stored in the correct format.
+# Lets download some data that we want to test on. To use the Parameter Sweeper tool for single label classification, we'll need to make sure that the data is stored such that images are sorted into their classes inside of a subfolder. In this notebook, we'll use the Fridge Objects dataset provided in `utils_ic.datasets.Urls`, which is stored in the correct format.
 
 # In[2]:
 
@@ -36,20 +36,20 @@ input_data = unzip_url(Urls.fridge_objects_path, exist_ok=True)
 
 # ## Using Python
 
-# We start by creating the Benchmark object:
+# We start by creating the Parameter Sweeper object:
 
 # In[3]:
 
 
-exp = Experiment()
+sweeper = ParameterSweeper()
 
 
-# Before we start testing, it's a good idea to see what the default parameters. We can use a the property `parameters` to easily see those default values.
+# Before we start testing, it's a good idea to see what the default parameters Are. We can use a the property `parameters` to easily see those default values.
 
 # In[4]:
 
 
-exp.parameters
+sweeper.parameters
 
 
 # Now that we know the defaults, we can pass it the parameters we want to test.
@@ -57,22 +57,18 @@ exp.parameters
 # In this notebook, we want to see the effect of different learning rates across different image sizes using only 8 epochs (the default number of epochs is 15). To do so, I would run the `update_parameters` functions as follows:
 #
 # ```python
-# exp.update_parameters(
-#     learning_rate=[1e-3, 1e-4, 1e-5],
-#     im_size=[99, 299],
-#     epochs=[8]
-# )
+# sweeper.update_parameters(learning_rate=[1e-3, 1e-4, 1e-5], im_size=[299, 499], epochs=[10])
 # ```
 #
-# Notice that all parameters must be passed in as a list, including single values such as `epochs=[8]`.
+# Notice that all parameters must be passed in as a list, including single values such the number of epochs.
 #
-# These parameters will be used to calculate the number of permutations to run. In this case, we've passed in `learning_rate=[1e-3, 1e-4, 1e-5]`, `im_size=[99, 299]`, and `epochs=[8]`. This will result in 3 X 2 X 1 total permutations (in otherwords, 6 permutations).
+# These parameters will be used to calculate the number of permutations to run. In this case, we've pass in three options for learning rates, two for image sizes, and one for number of epochs. This will result in 3 X 2 X 1 total permutations (in otherwords, 6 permutations).
 
 # In[5]:
 
 
-exp.update_parameters(
-    learning_rate=[1e-3, 1e-4, 1e-5], im_size=[299, 499], epochs=[8]
+sweeper.update_parameters(
+    learning_rate=[1e-3, 1e-4, 1e-5], im_size=[299, 499], epochs=[10]
 )
 
 
@@ -87,7 +83,7 @@ exp.update_parameters(
 # In[6]:
 
 
-df = exp.run(datasets=[input_data], reps=3)
+df = sweeper.run(datasets=[input_data], reps=3)
 df
 
 
@@ -106,7 +102,7 @@ os.chdir(ic_root_path())
 # To reproduce the same test (different learning rates across different image sizes using only 8 epochs), and the same settings (3 repetitions, and no early_stopping) we can run the following:
 #
 # ```sh
-# python scripts/benchmark.py
+# python scripts/sweep.py
 #     --learning-rates 1e-3 1e-4 1e-5
 #     --im-size 99 299
 #     --epochs 5
@@ -121,17 +117,15 @@ os.chdir(ic_root_path())
 # To simplify the command, we can use the acryonyms of the params. We can also remove `--no-early-stopping` as that is the default behavior.
 #
 # ```sh
-# python scripts/benchmark.py -lr 1e-3 1e-4 1e-5 -is 99 299 -e 5 -i <my-data-dir> -o lr_bs_test.csv
+# python scripts/sweep.py -lr 1e-3 1e-4 1e-5 -is 99 299 -e 5 -i <my-data-dir> -o lr_bs_test.csv
 # ```
-#
-# HINT: You can learn more about how to use the script: `python script/benchmark.py --help`
 
-# In[ ]:
+# In[8]:
 
 
 # use {sys.executable} instead of just running `python` to ensure the command is executed using the environment cvbp
 get_ipython().system(
-    "{sys.executable} scripts/benchmark.py -lr 1e-3 1e-4 1e-5 -is 99 299 -e 5 -i {input_data} -o data/lr_bs_test.csv"
+    "{sys.executable} scripts/sweep.py -lr 1e-3 1e-4 1e-5 -is 99 299 -e 5 -i {input_data} -o data/lr_bs_test.csv"
 )
 
 
@@ -141,6 +135,14 @@ get_ipython().system(
 # df = pd.read_csv("data/lr_bs_test.csv", index_col=[0, 1, 2])
 # ```
 
+# HINT: You can learn more about how to use the script with the `--help` flag.
+
+# In[14]:
+
+
+get_ipython().system("{sys.executable} scripts/sweep.py --help")
+
+
 # ---
 
 # ## Visualizing our results
@@ -149,7 +151,7 @@ get_ipython().system(
 
 # To see the results, show the df using the `clean_df` helper function. This will display all the hyperparameters in a nice, readable way.
 
-# In[7]:
+# In[15]:
 
 
 df = clean_df(df)
@@ -158,7 +160,7 @@ df
 
 # Since we've run our benchmarking over 3 repetitions, we may want to just look at the averages across the different __run numbers__.
 
-# In[8]:
+# In[16]:
 
 
 df.mean(level=(1, 2)).T
@@ -166,18 +168,15 @@ df.mean(level=(1, 2)).T
 
 # Additionally, we may want simply to see which set of hyperparameters perform the best across the different __datasets__. We can do that by averaging the results of the different datasets. (The results of this step will look similar to the above since we're only passing in one dataset).
 
-# In[9]:
+# In[17]:
 
 
 df.mean(level=(1)).T
 
 
-# To make it easier to see which permutation did the best, we can plot the results using the `plot_df` helper function.
+# To make it easier to see which permutation did the best, we can plot the results using the `plot_df` helper function. This plot will help us easily see which parameters offer the highest accuracies.
 
-# In[10]:
+# In[18]:
 
 
 plot_df(df.mean(level=(1)), sort_by="accuracy")
-
-
-# Based on these results, we can see that with a learning rate of 1e-4 and with an image size of 299, we get the best results.
