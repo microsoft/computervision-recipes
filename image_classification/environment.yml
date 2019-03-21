@@ -16,7 +16,7 @@ channels:
 - pytorch
 - fastai
 dependencies:
-- fastai>=1.0.47
+- fastai==1.0.48
 - fastparquet>=0.1.6
 - gitpython>=2.1.8
 - ipykernel>=4.6.1
