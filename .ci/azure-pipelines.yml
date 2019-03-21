@@ -21,16 +21,16 @@ steps:
   displayName: Add Conda to PATH
 
 - bash: |
-    source deactivate mycvbp
-    conda remove -q -n mycvbp --all -y
+    source deactivate cvbp
+    conda remove -q -n cvbp --all -y
     conda env create -f image_classification/environment.yml
     conda env list  
-    source activate mycvbp
+    source activate cvbp
   displayName: 'Build Configuration'
 
 - bash: |
     cd image_classification
-    source activate mycvbp
+    source activate cvbp
     python -m ipykernel install --user --name cvbp --display-name "cvbp"
     pytest tests/unit --junitxml=junit/test-unitttest.xml
   displayName: 'Run Unit tests'
