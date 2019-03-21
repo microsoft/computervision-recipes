@@ -1,15 +1,24 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
 
 trigger:
-- master
+- staging
 
 pool:
-  name: dsvmbuildagent-gpu
-  vmImage: 'cvbp-linuxbuildagent'
+  name: cvbpbuildagents
+  vmImage: 'linuxagent-gpu'
 
 steps:
-- script: 'pwd & ls & pytest image_classification/tests/unit/test_notebooks.py'
-  displayName: 'Run Unit Test'
+
+- bash: |
+    echo "##vso[task.prependpath]/data/anaconda/bin"
+  displayName: Add Conda to PATH
+
+- bash: |
+    conda create -q -n cvbp python=3.5 -y
+    conda env update -q -n cvbp -f image_classification/environment.yml
+  displayName: 'Conda install dependencies'
+
+- bash: |
+    source activate cvbp
+    cd image_classification
+    pytest tests/unit --junitxml=junit/test-unitttest.xml
+  displayName: 'tests'

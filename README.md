@@ -1,9 +1,8 @@
-
-
 # Computer Vision Best Practices
 
 This repository will provide examples and best practices for building Computer Vision systems, provided as Jupyter notebooks, and using PyTorch as Deep Learning library. Image classification will be covered first, followed by object detection and image similarity.
 
+[![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/Build-UnitTest?branchName=staging)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=2&branchName=staging)
 
 ## Planning etc documents
 
