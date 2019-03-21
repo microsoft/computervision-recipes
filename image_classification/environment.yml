@@ -35,6 +35,7 @@ dependencies:
   - azureml-sdk[notebooks,contrib]==1.0.10
   - azure-storage>=0.36.0
   - black>=18.6b4
+  - lxml>=4.3.2
   - torchvision
   - memory-profiler>=0.54.0
   - nvidia-ml-py3>=7.352.0
