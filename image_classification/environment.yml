@@ -29,7 +29,7 @@ dependencies:
 - pytorch==1.0.0
 - seaborn>=0.8.1
 - scipy>=1.0.0
-- tensorflow-gpu==1.12.0
+#- tensorflow-gpu==1.12.0
 - numba>=0.38.1
 - pip:
   - azureml-sdk[notebooks,contrib]==1.0.10
