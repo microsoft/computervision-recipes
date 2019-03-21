@@ -20,39 +20,90 @@ from sklearn.preprocessing import label_binarize
 
 
 def plot_roc_curve(
-
+    y_true: np.ndarray,
+    y_score: np.ndarray,
+    classes: iter,
+    show: bool=True
 ):
     """Plots receiver operating characteristic (ROC) curves and ROC areas.
-    TODO implement
+
+    If the given class labels are multi-label, it binarizes the classes and plots each ROC along with an averaged ROC.
+    For the averaged ROC, micro-average is used.
+    See details from: https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
+
+    Args:
+        y_true (np.ndarray): True class indices.
+        y_score (np.ndarray): Estimated probabilities.
+        classes (iterable): Class labels.
+        show (bool): Show plot. Use False if want to manually show the plot later.
     """
-    raise NotImplementedError
+    assert len(classes) == y_score.shape[1] if len(y_score.shape) == 2 else len(classes) == 2
+
+    # Set random colors seed for reproducibility.
+    np.random.seed(123)
+
+    # Reference line
+    plt.plot([0, 1], [0, 1], color='gray', lw=1, linestyle='--')
+
+    # Plot ROC curve
+    if len(y_score.shape) == 2:
+        _plot_multi_roc_curve(y_true, y_score, classes)
+    else:
+        _plot_binary_roc_curve(y_true, y_score)
+
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("ROC Curves")
+    plt.legend(loc="lower right")
+
+    if show:
+        plt.show()
 
 
 def _plot_multi_roc_curve(y_true, y_score, classes):
-    fpr = dict()
-    tpr = dict()
-    roc_auc = dict()
-    for i in range(classes):
-        fpr[i], tpr[i], _ = roc_curve(y_true[:, i], y_score[:, i])
-        roc_auc[i] = auc(fpr[i], tpr[i])
+    y_true = label_binarize(y_true, classes=list(range(len(classes))))
+
+    # Plot ROC for each class
+    for i in range(len(classes)):
+        fpr, tpr, _ = roc_curve(y_true[:, i], y_score[:, i])
+        roc_auc = auc(fpr, tpr)
+        plt.plot(
+            fpr, tpr,
+            color=_generate_color(),
+            label=f"Precision-recall for {classes[i]} (area = {roc_auc:0.2f})",
+            lw=1
+        )
 
     # Compute micro-average ROC curve and ROC area
-    fpr["avg"], tpr["avg"], _ = roc_curve(y_true.ravel(), y_score.ravel())
-    roc_auc["avg"] = auc(fpr["avg"], tpr["avg"])
-
-    # TODO implement
-    raise NotImplementedError
+    fpr, tpr, _ = roc_curve(y_true.ravel(), y_score.ravel())
+    roc_auc = auc(fpr, tpr)
+    plt.plot(
+        fpr, tpr,
+        color=_generate_color(),
+        label=f"Averaged ROC (area = {roc_auc:0.2f})",
+        lw=2
+    )
 
 
 def _plot_binary_roc_curve(y_true, y_score):
-    # TODO implement
-    raise NotImplementedError
+    fpr, tpr, _ = roc_curve(y_true, y_score)
+    roc_auc = auc(fpr, tpr)
+
+    plt.plot(
+        fpr, tpr,
+        color=_generate_color(),
+        label=f"ROC (AUC = {roc_auc:0.2f})",
+        lw=1
+    )
 
 
 def plot_precision_recall_curve(
     y_true: np.ndarray,
     y_score: np.ndarray,
-    classes: iter
+    classes: iter,
+    show: bool=True
 ):
     """Plots precision-recall (PR) curves.
 
@@ -63,30 +114,28 @@ def plot_precision_recall_curve(
     Args:
         y_true (np.ndarray): True class indices.
         y_score (np.ndarray): Estimated probabilities.
-        classes (iterable): Class labels
+        classes (iterable): Class labels.
+        show (bool): Show plot. Use False if want to manually show the plot later.
     """
     assert len(classes) == y_score.shape[1] if len(y_score.shape) == 2 else len(classes) == 2
 
     # Set random colors seed for reproducibility.
     np.random.seed(123)
 
-    plt.figure(figsize=(7, 8))
-
     if len(y_score.shape) == 2:
         _plot_multi_precision_recall_curve(y_true, y_score, classes)
     else:
         _plot_binary_precision_recall_curve(y_true, y_score)
 
-    fig = plt.gcf()
-    fig.subplots_adjust(bottom=0.25)
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.xlabel('Recall')
-    plt.ylabel('Precision')
-    plt.title('Precision-Recall Curves')
-    plt.legend(loc="lower left")
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.title("Precision-Recall Curves")
+    plt.legend(loc='lower left')
 
-    plt.show()
+    if show:
+        plt.show()
 
 
 def _plot_binary_precision_recall_curve(y_true, y_score):
@@ -97,39 +146,33 @@ def _plot_binary_precision_recall_curve(y_true, y_score):
         recall, precision,
         color=_generate_color(),
         label=f"Precision-recall (AP = {average_precision:0.2f})",
-        lw=2
+        lw=1
     )
 
 
 def _plot_multi_precision_recall_curve(y_true, y_score, classes):
     y_true = label_binarize(y_true, classes=list(range(len(classes))))
 
-    average_precisions = dict()
-    precisions = dict()
-    recalls = dict()
-    for i in range(len(classes)):
-        precisions[i], recalls[i], _ = precision_recall_curve(y_true[:, i], y_score[:, i])
-        average_precisions[i] = average_precision_score(y_true[:, i], y_score[:, i])
-
-    # A "micro-average": quantifying score on all classes jointly
-    precisions["avg"], recalls["avg"], _ = precision_recall_curve(y_true.ravel(), y_score.ravel())
-    average_precisions["avg"] = average_precision_score(y_true, y_score, average="micro")
-
-    # Plot averaged PR
-    plt.plot(
-        recalls["avg"], precisions["avg"],
-        color=_generate_color(),
-        label=f"Averaged precision-recall (area = {average_precisions['avg']:0.2f})",
-        lw=2
-    )
     # Plot PR for each class
-    for i, label in enumerate(classes):
+    for i in range(len(classes)):
+        precision, recall, _ = precision_recall_curve(y_true[:, i], y_score[:, i])
+        average_precision = average_precision_score(y_true[:, i], y_score[:, i])
         plt.plot(
-            recalls[i], precisions[i],
+            recall, precision,
             color=_generate_color(),
-            label=f"Precision-recall for {classes[i]} (area = {average_precisions[i]:0.2f})",
+            label=f"Precision-recall for {classes[i]} (area = {average_precision:0.2f})",
             lw=1
         )
+
+    # Plot averaged PR. A micro-average is used
+    precision, recall, _ = precision_recall_curve(y_true.ravel(), y_score.ravel())
+    average_precision = average_precision_score(y_true, y_score, average='micro')
+    plt.plot(
+        recall, precision,
+        color=_generate_color(),
+        label=f"Averaged precision-recall (area = {average_precision:0.2f})",
+        lw=2
+    )
 
 
 def _generate_color():
