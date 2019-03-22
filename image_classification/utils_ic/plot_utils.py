@@ -49,14 +49,14 @@ def plot_roc_curve(
     if len(y_score.shape) == 2:
         _plot_multi_roc_curve(y_true, y_score, classes)
     else:
-        _plot_binary_roc_curve(y_true, y_score)
+        _plot_roc_curve(y_true, y_score)
 
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.title("ROC Curves")
-    plt.legend(loc="lower right")
+    plt.legend(loc="lower left")
 
     if show:
         plt.show()
@@ -67,35 +67,28 @@ def _plot_multi_roc_curve(y_true, y_score, classes):
 
     # Plot ROC for each class
     for i in range(len(classes)):
-        fpr, tpr, _ = roc_curve(y_true[:, i], y_score[:, i])
-        roc_auc = auc(fpr, tpr)
-        plt.plot(
-            fpr, tpr,
-            color=_generate_color(),
-            label=f"Precision-recall for {classes[i]} (area = {roc_auc:0.2f})",
-            lw=1
-        )
+        _plot_roc_curve(y_true[:, i], y_score[:, i], classes[i])
 
     # Compute micro-average ROC curve and ROC area
-    fpr, tpr, _ = roc_curve(y_true.ravel(), y_score.ravel())
-    roc_auc = auc(fpr, tpr)
-    plt.plot(
-        fpr, tpr,
-        color=_generate_color(),
-        label=f"Averaged ROC (area = {roc_auc:0.2f})",
-        lw=2
-    )
+    _plot_roc_curve(y_true.ravel(), y_score.ravel(), 'avg')
 
 
-def _plot_binary_roc_curve(y_true, y_score):
+def _plot_roc_curve(y_true, y_score, label=None):
     fpr, tpr, _ = roc_curve(y_true, y_score)
     roc_auc = auc(fpr, tpr)
 
+    if label == 'avg':
+        lw = 2
+        prefix = "Averaged ROC"
+    else:
+        lw = 1
+        prefix = "ROC" if label is None else f"ROC for {label}"
+
     plt.plot(
         fpr, tpr,
         color=_generate_color(),
-        label=f"ROC (AUC = {roc_auc:0.2f})",
-        lw=1
+        label=f"{prefix} (area = {roc_auc:0.2f})",
+        lw=lw
     )
 
 
@@ -125,7 +118,7 @@ def plot_precision_recall_curve(
     if len(y_score.shape) == 2:
         _plot_multi_precision_recall_curve(y_true, y_score, classes)
     else:
-        _plot_binary_precision_recall_curve(y_true, y_score)
+        _plot_precision_recall_curve(y_true, y_score, average_precision_score(y_true, y_score))
 
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -138,40 +131,42 @@ def plot_precision_recall_curve(
         plt.show()
 
 
-def _plot_binary_precision_recall_curve(y_true, y_score):
-    precision, recall, _ = precision_recall_curve(y_true, y_score)
-    average_precision = average_precision_score(y_true, y_score)
-
-    plt.plot(
-        recall, precision,
-        color=_generate_color(),
-        label=f"Precision-recall (AP = {average_precision:0.2f})",
-        lw=1
-    )
-
-
 def _plot_multi_precision_recall_curve(y_true, y_score, classes):
     y_true = label_binarize(y_true, classes=list(range(len(classes))))
 
     # Plot PR for each class
     for i in range(len(classes)):
-        precision, recall, _ = precision_recall_curve(y_true[:, i], y_score[:, i])
-        average_precision = average_precision_score(y_true[:, i], y_score[:, i])
-        plt.plot(
-            recall, precision,
-            color=_generate_color(),
-            label=f"Precision-recall for {classes[i]} (area = {average_precision:0.2f})",
-            lw=1
+        _plot_precision_recall_curve(
+            y_true[:, i],
+            y_score[:, i],
+            average_precision_score(y_true[:, i], y_score[:, i]),
+            classes[i]
         )
 
     # Plot averaged PR. A micro-average is used
-    precision, recall, _ = precision_recall_curve(y_true.ravel(), y_score.ravel())
-    average_precision = average_precision_score(y_true, y_score, average='micro')
+    _plot_precision_recall_curve(
+        y_true.ravel(),
+        y_score.ravel(),
+        average_precision_score(y_true, y_score, average='micro'),
+        'avg'
+    )
+
+
+def _plot_precision_recall_curve(y_true, y_score, ap, label=None):
+    precision, recall, _ = precision_recall_curve(y_true, y_score)
+
+    if label == 'avg':
+        lw = 2
+        prefix = "Averaged precision-recall"
+    else:
+        lw = 1
+        prefix = "Precision-recall" if label is None else f"Precision-recall for {label}"
+
     plt.plot(
         recall, precision,
         color=_generate_color(),
-        label=f"Averaged precision-recall (area = {average_precision:0.2f})",
-        lw=2
+        label=f"{prefix} (area = {ap:0.2f})",
+        lw=lw
     )
 
 
@@ -187,6 +182,8 @@ def _list_sort(list1d, reverse=False, comparison_fn=lambda x: x):
 
 
 class ICResultsWidget(object):
+    IM_WIDTH = 500  # pixels
+    
     # TODO maybe add close() to destruct widgets
     def __init__(
         self,
@@ -224,29 +221,17 @@ class ICResultsWidget(object):
 
         _, sort_order = _list_sort(scores, reverse=True)
         pred_labels_str = ""
-        for (
-            i
-        ) in (
-            sort_order
-        ):  # or may use up to 20 items e.g. [:min(20, len(sort_order))]:
-            pred_labels_str += "{}({:3.1f}) \n".format(
-                self.labels[i], scores[i]
-            )
+        for i in sort_order:
+            pred_labels_str += f"{self.labels[i]} ({scores[i]:3.2f})\n"
         self.w_pred_labels.value = str(pred_labels_str)
 
-        self.w_image_header.value = "Image index: {}".format(
-            self.vis_image_index
-        )
+        self.w_image_header.value = f"Image index: {self.vis_image_index}"
         self.w_img.value = im._repr_png_()
+        # Fix the width of the image widget and adjust the height
+        self.w_img.layout.height = f"{int(self.IM_WIDTH * (im.size[0]/im.size[1]))}px"
+        
         self.w_gt_label.value = str(self.dataset.y[self.vis_image_index])
-        self.w_pred_label.value = str(pred_label)
-        self.w_pred_score.value = str(
-            self.pred_scores[
-                self.vis_image_index, self.label_to_id[pred_label]
-            ]
-        )
-        self.w_index.value = str(self.vis_image_index)
-
+        
         self.w_filename.value = str(
             self.dataset.items[self.vis_image_index].name
         )
@@ -311,21 +296,18 @@ class ICResultsWidget(object):
         # ------------
         # UI - image + controls (left side)
         # ------------
-        self.w_pred_labels = widgets.Textarea(
-            value="", description="Predictions:"
-        )  # , width='400px')
-        self.w_pred_labels.layout.height = '300px'
-        self.w_pred_labels.layout.width = '400px'
-
-        w_next_image_button = widgets.Button(description="Image +1")
+        w_next_image_button = widgets.Button(description="Next")
         w_next_image_button.value = "1"
         w_next_image_button.layout = Layout(width='80px')
         w_next_image_button.on_click(button_pressed)
-        w_previous_image_button = widgets.Button(description="Image -1")
+        w_previous_image_button = widgets.Button(description="Previous")
         w_previous_image_button.value = "-1"
         w_previous_image_button.layout = Layout(width='80px')
         w_previous_image_button.on_click(button_pressed)
 
+        self.w_filename = widgets.Text(value="", description="Name:", layout=Layout(width='200px'))
+        self.w_path = widgets.Text(value="", description="Path:", layout=Layout(width='200px'))
+        
         self.w_image_slider = IntSlider(
             min=0,
             max=len(self.pred_labels) - 1,
@@ -336,22 +318,17 @@ class ICResultsWidget(object):
         self.w_image_slider.observe(slider_changed)
         self.w_image_header = widgets.Text("", layout=Layout(width="130px"))
         self.w_img = widgets.Image()
-        self.w_img.layout.width = '500px'
-        w_image_with_header = widgets.VBox(
+        self.w_img.layout.width = f"{self.IM_WIDTH}px"
+        w_header = widgets.HBox(
             children=[
-                widgets.HBox(
-                    children=[
-                        w_previous_image_button,
-                        w_next_image_button,
-                        self.w_image_slider,
-                    ]
-                ),
-                self.w_img,
-                self.w_pred_labels,
-            ],
-            width=520,
+                w_previous_image_button,
+                w_next_image_button,
+                self.w_image_slider,
+                self.w_filename,
+                self.w_path,
+            ]
         )
-
+        
         # ------------
         # UI - info (right side)
         # ------------
@@ -366,17 +343,14 @@ class ICResultsWidget(object):
         )
 
         w_gt_header = widgets.HTML(value="Ground truth:")
-        self.w_gt_label = widgets.Text(value="", description="Label:")
-
-        w_pred_header = widgets.HTML(value="Prediction:")
-        self.w_pred_label = widgets.Text(value="", description="Label:")
-        self.w_pred_score = widgets.Text(value="", description="Score:")
-
-        w_info_header = widgets.HTML(value="Image info:")
-        self.w_index = widgets.Text(value="", description="Index:")
-        self.w_filename = widgets.Text(value="", description="Name:")
-        self.w_path = widgets.Text(value="", description="StoragePath:")
-
+        self.w_gt_label = widgets.Text(value="")
+        self.w_gt_label.layout.width = '360px'
+        
+        w_pred_header = widgets.HTML(value="Predictions:")
+        self.w_pred_labels = widgets.Textarea(value="")
+        self.w_pred_labels.layout.height = '200px'
+        self.w_pred_labels.layout.width = '360px'
+        
         w_scores_header = widgets.HTML(value="Classification scores:")
         self.w_scores = bqpyplot.figure()
         self.w_scores.layout.height = '250px'
@@ -397,12 +371,7 @@ class ICResultsWidget(object):
                 w_gt_header,
                 self.w_gt_label,
                 w_pred_header,
-                self.w_pred_label,
-                self.w_pred_score,
-                w_info_header,
-                self.w_index,
-                self.w_filename,
-                self.w_path,
+                self.w_pred_labels,
                 w_scores_header,
                 self.w_scores,
             ]
@@ -410,7 +379,17 @@ class ICResultsWidget(object):
         w_info.layout.padding = '20px'
         self.ui = widgets.Tab(
             children=[
-                widgets.HBox(children=[w_image_with_header, w_info])
+                widgets.VBox(
+                    children=[
+                        w_header,
+                        widgets.HBox(
+                            children=[
+                                self.w_img,
+                                w_info,
+                            ]
+                        )
+                    ]
+                )
             ]
         )
         self.ui.set_title(0, 'Results viewer')
