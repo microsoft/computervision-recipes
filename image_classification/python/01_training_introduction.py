@@ -34,9 +34,9 @@ import sys
 
 sys.path.append("../")
 from pathlib import Path
-from utils_ic.datasets import Urls, unzip_url, data_path
+from utils_ic.datasets import Urls, unzip_url
 from fastai.vision import *
-from fastai.metrics import error_rate, accuracy
+from fastai.metrics import accuracy
 
 
 # Set some parameters. We'll use the `unzip_url` helper function to download and unzip our data.
