@@ -37,10 +37,11 @@ Here are the basic steps to get started with your first contribution. Please rea
    ```
    $ pre-commit install
    ```
-   * Each time you commit, it will run the pre-commit hooks (black and flake8 for now) on the files that are getting committed and are part of the git index. 
    ```
    $ git commit -m "message" 
    ```
+   * Each time you commit, git will run the pre-commit hooks (black and flake8 for now) on any python files that are getting committed and are part of the git index.  If black modifies/formats the file, or if flake8 finds any linting errors, the commit will not succeed. You will need to stage the file again if black changed the file, or fix the issues identified by flake8 and and stage it again.
+
    * To run pre-commit on all files just run
    ```
    $ pre-commit run --all-files
@@ -53,7 +54,7 @@ Once the features included in a milestone are complete we will merge staging int
 
 ## Working with Notebooks
 
-It's challenging to do code review for notebooks in GitHub. [reviewnb](https://www.reviewnb.com/) makes it easy to review notebooks in GitHub but only works with public repository. Since we are still in private mode, [jupytext](https://github.com/mwouts/jupytext) is another option that provides conversion of ipython notebooks to multiple formats and also work with pre-commit. However, it falls short of adding the converted files automatically as part of the git commit. An [issue](https://github.com/mwouts/jupytext/issues/142) has been opened with jupytext for this. In the interim, a more reliable way is to manually convert the notebooks to python script using [nbconvert](https://github.com/jupyter/nbconvert) and manually add and commit them to your branch along with the notebook. nbconvert comes pre-installed as part of jupyter installation, run the following command to convert a notebook to python script and save it in python folder under image_classification folder.
+It's challenging to do code review for notebooks in GitHub. [reviewnb](https://www.reviewnb.com/) makes it easy to review notebooks in GitHub but only works with public repository. Since we are still in private mode, [jupytext](https://github.com/mwouts/jupytext) is another option that provides conversion of ipython notebooks to multiple formats and also work with pre-commit. However, it falls short of adding the converted files automatically as part of the git commit. An [issue](https://github.com/mwouts/jupytext/issues/200) has been opened with jupytext for this. In the interim, a more reliable way is to manually convert the notebooks to python script using [nbconvert](https://github.com/jupyter/nbconvert) and manually add and commit them to your branch along with the notebook. nbconvert comes pre-installed as part of jupyter installation, run the following command to convert a notebook to python script and save it in python folder under image_classification folder.
 ```
 $ jupyter nbconvert --output-dir=./image_classification/python --to python ./image_classification/notebooks/mnist.ipynb
 ``` 
@@ -78,6 +79,24 @@ nbdiff notebook_1.ipynb notebook_2.ipynb
 We strive to maintain high quality code to make the utilities in the repository easy to understand, use, and extend. We also work hard to maintain a friendly and constructive environment. We've found that having clear expectations on the development process and consistent style helps to ensure everyone can contribute and collaborate effectively.
 
 Please review the [coding guidelines](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines) wiki page to see more details about the expectations for development approach and style.
+
+We follow the Google docstring guidlines outlined on this [styleguide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#38-comments-and-docstrings) page. For example:
+```python
+  def bite(n:int, animal:animal_object) -> bool:
+      """
+      This function will perform n bites on animal.
+
+      Args:
+          n (int): the number of bites to do
+          animal (Animal): the animal to bite
+
+      Raises:
+          Exception: biting animal has no teeth
+
+      Returns:
+          bool: whether or not bite was successful
+      """
+```
 
 ## Code of Conduct
 
