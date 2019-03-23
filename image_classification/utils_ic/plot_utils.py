@@ -181,7 +181,7 @@ def _list_sort(list1d, reverse=False, comparison_fn=lambda x: x):
     return list(map(list, list(zip(*tmp))))
 
 
-class ICResultsWidget(object):
+class ResultsWidget(object):
     IM_WIDTH = 500  # pixels
     
     # TODO maybe add close() to destruct widgets
