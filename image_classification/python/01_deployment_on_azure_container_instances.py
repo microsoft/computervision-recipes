@@ -445,7 +445,7 @@ aci_config = AciWebservice.deploy_configuration(
 # 
 # Azure Container Instances have no associated ComputeTarget, so we do not specify any here. Remember, we already provided information on the number of CPUs and the amount of memory needed in the service configuration file above.
 # 
-# > <i>Note: The web service creation can take several minutes.</i>
+# > <i>Note: The web service creation can take a few minutes.</i>
 
 # In[25]:
 
@@ -567,7 +567,7 @@ print(f"Prediction: {resp.text}")
 # In[32]:
 
 
-# service.delete()
+service.delete()
 
 
 # ### 7.2 Image deletion <a id="imdel"></a>
