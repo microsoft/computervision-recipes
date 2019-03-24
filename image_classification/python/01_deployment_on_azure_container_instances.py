@@ -340,7 +340,7 @@ scoring_script = "score.py"
 # In[18]:
 
 
-get_ipython().run_cell_magic('writefile', '$scoring_script', '# Copyright (c) Microsoft. All rights reserved.\n# Licensed under the MIT license.\n\nimport json\n\nfrom base64 import b64decode\nfrom io import BytesIO\n\nfrom azureml.core.model import Model\nfrom fastai.vision import *\n\ndef init():\n    global model\n    model_path = Model.get_model_path(model_name=\'im_classif_resnet18\')\n    # ! We cannot use MODEL_NAME here otherwise the execution on Azure will fail !\n    \n    actual_path, actual_file = os.path.split(model_path)\n    model = load_learner(path=actual_path, fname=actual_file)\n\n\ndef run(raw_data):\n\n    # Expects raw_data to be a list within a json file\n    result = []    \n    \n    for im_string in json.loads(raw_data)[\'data\']:\n        im_bytes = b64decode(im_string)\n        try:\n            im = open_image(BytesIO(im_bytes))\n            pred_class, pred_idx, outputs = model.predict(im)\n            result_dict = {"label": str(pred_class), "probability": str(float(outputs[pred_idx]))}\n            result.append(result_dict)\n        except Exception as e:\n            result_dict = {"label": str(e), "probability": \'\'}\n            result.append(result_dict)\n    return result')
+get_ipython().run_cell_magic('writefile', '$scoring_script', '# Copyright (c) Microsoft. All rights reserved.\n# Licensed under the MIT license.\n\nimport json\n\nfrom base64 import b64decode\nfrom io import BytesIO\n\nfrom azureml.core.model import Model\nfrom fastai.vision import *\n\ndef init():\n    global model\n    model_path = Model.get_model_path(model_name=\'im_classif_resnet18\')\n    # ! We cannot use MODEL_NAME here otherwise the execution on Azure will fail !\n    \n    model_dir_path, model_filename = os.path.split(model_path)\n    model = load_learner(path=model_dir_path, fname=model_filename)\n\n\ndef run(raw_data):\n\n    # Expects raw_data to be a list within a json file\n    result = []    \n    \n    for im_string in json.loads(raw_data)[\'data\']:\n        im_bytes = b64decode(im_string)\n        try:\n            im = open_image(BytesIO(im_bytes))\n            pred_class, pred_idx, outputs = model.predict(im)\n            result.append({"label": str(pred_class), "probability": str(float(outputs[pred_idx]))})\n        except Exception as e:\n            result.append({"label": str(e), "probability": \'\'})\n    return result')
 
 
 # ### 5.3 Environment setup <a id="env"></a>
@@ -530,7 +530,7 @@ result = service.run(test_samples)
 
 # Plot the results
 actual_labels = ['milk_bottle', 'water_bottle']
-for k in range(0, len(result)):
+for k in range(len(result)):
     title = "{}/{} - {}%".format(actual_labels[k], result[k]['label'], 
                                  round(100.*float(result[k]['probability']), 2))
     open_image(images_fname_list[k]).show(title=title)
