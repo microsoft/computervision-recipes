@@ -111,3 +111,9 @@ output.ipynb
 
 # don't save any data
 image_classification/data/*
+
+# don't save .swp files
+*.swp
+
+# don't save .csv files
+*.csv
