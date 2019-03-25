@@ -1,4 +1,5 @@
 import subprocess
+import warnings
 
 
 def gpu_info():
@@ -6,20 +7,26 @@ def gpu_info():
 
     Returns:
         list: List of gpu information dictionary {device_name, total_memory, used_memory}.
+              Returns an empty list if there is no cuda device available.
     """
-    output = subprocess.check_output(
-        ["nvidia-smi", "--query-gpu=name,memory.total,memory.used", "--format=csv,nounits,noheader"],
-        encoding='utf-8'
-    )
-
     gpus = []
-    for o in output.split('\n'):
-        info = o.split(',')
-        if len(info) == 3:
-            gpu = dict()
-            gpu['device_name'] = info[0].strip()
-            gpu['total_memory'] = info[1].strip()
-            gpu['used_memory'] = info[2].strip()
-            gpus.append(gpu)
+
+    try:
+        output = subprocess.check_output(
+            ["nvidia-smi", "--query-gpu=name,memory.total,memory.used", "--format=csv,nounits,noheader"],
+            encoding='utf-8'
+        )
+        for o in output.split('\n'):
+            info = o.split(',')
+            if len(info) == 3:
+                gpu = dict()
+                gpu['device_name'] = info[0].strip()
+                gpu['total_memory'] = info[1].strip()
+                gpu['used_memory'] = info[2].strip()
+                gpus.append(gpu)
+    except subprocess.CalledProcessError as e:
+        warnings.warn(e.stdout)
+    except FileNotFoundError:
+        warnings.warn("nvidia-smi is not available.")
 
     return gpus
