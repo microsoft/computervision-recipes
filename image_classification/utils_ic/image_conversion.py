@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 # python regular libraries
 import json
 import os
@@ -39,8 +42,8 @@ def ims2json(im_list: list, im_dir: str) -> json:
 
     im_string_list = []
     for im_name in im_list:
-        im_string_list.append(im2base64(im_name, im_dir).decode('utf-8'))
+        im_string_list.append(im2base64(im_name, im_dir).decode("utf-8"))
 
-    input_to_service = json.dumps({'data': im_string_list})
+    input_to_service = json.dumps({"data": im_string_list})
 
     return input_to_service
