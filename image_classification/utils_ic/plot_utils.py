@@ -7,6 +7,7 @@ Helper module for drawing widgets and plots
 import bqplot
 import bqplot.pyplot as bqpyplot
 import fastai.data_block
+from fastai.vision import Image
 from ipywidgets import widgets, Layout, IntSlider
 import matplotlib.pyplot as plt
 import numpy as np
@@ -183,8 +184,7 @@ def _list_sort(list1d, reverse=False, comparison_fn=lambda x: x):
 
 class ResultsWidget(object):
     IM_WIDTH = 500  # pixels
-    
-    # TODO maybe add close() to destruct widgets
+
     def __init__(
         self,
         dataset: fastai.data_block.LabelList,
@@ -194,9 +194,9 @@ class ResultsWidget(object):
         """Helper class to draw and update Image classification results widgets.
 
         Args:
-            dataset (LabelList): Data used for prediction.
+            dataset (LabelList): Data used for prediction, containing ImageList x and CategoryList y.
             y_score (np.ndarray): Predicted scores.
-            y_label (iterable): Predicted labels.
+            y_label (iterable): Predicted labels. Note, not a true label.
         """
         assert len(y_score) == len(y_label) == len(dataset)
 
@@ -215,7 +215,6 @@ class ResultsWidget(object):
         return self.ui
 
     def update(self):
-        pred_label = self.pred_labels[self.vis_image_index]
         scores = self.pred_scores[self.vis_image_index]
         im = self.dataset.x[self.vis_image_index]  # fastai Image object
 
@@ -226,6 +225,7 @@ class ResultsWidget(object):
         self.w_pred_labels.value = str(pred_labels_str)
 
         self.w_image_header.value = f"Image index: {self.vis_image_index}"
+
         self.w_img.value = im._repr_png_()
         # Fix the width of the image widget and adjust the height
         self.w_img.layout.height = f"{int(self.IM_WIDTH * (im.size[0]/im.size[1]))}px"
