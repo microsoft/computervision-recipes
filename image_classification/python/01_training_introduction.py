@@ -18,30 +18,47 @@ get_ipython().run_line_magic('autoreload', '2')
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 
+# In[2]:
+
+
+import numpy
+numpy.version.version
+
+
 # Import fastai. For now, we'll import all (`from fastai.vision import *`) so that we can easily use different utilies provided by the fastai library.
 
-# In[2]:
+# In[3]:
 
 
 import sys
 sys.path.append("../")
 import numpy as np
-import matplotlib.pyplot as plt
 from pathlib import Path
-from utils_ic.gpu_utils import gpu_info
-from utils_ic.plot_utils import ResultsWidget, plot_roc_curve, plot_precision_recall_curve
-from utils_ic.datasets import Urls, unzip_url
+# fastai and torch
 import fastai
 from fastai.vision import *
 from fastai.metrics import accuracy
+from torch.cuda import get_device_name
+# local modules
+from utils_ic.gpu_utils import gpu_info
+from utils_ic.plot_utils import ResultsWidget, plot_curves
+from utils_ic.datasets import Urls, unzip_url
 
-print(f"Fast.ai: {fastai.__version__}")
-print(f"GPU info: {gpu_info()} (memory unit = MiB)")
+print(f"Fast.ai version = {fastai.__version__}")
 
+
+# In[4]:
+
+
+print(f"Machine's GPU info = {gpu_info()} (memory unit = MiB)")
+print(f"Fast.ai/Torch is using {get_device_name(0)}")
+
+
+# This shows your machine's GPUs (if has any) and which computing device fastai/torch is using. Please note that this notebook will train a model and thus we recommend you to run on a GPU machine w/ GPU-memory > 10g. The output cells here show the run results on [Azure DSVM](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/) Standard NC6.
 
 # Set some parameters. We'll use the `unzip_url` helper function to download and unzip our data.
 
-# In[3]:
+# In[5]:
 
 
 DATA_PATH     = unzip_url(Urls.fridge_objects_path, exist_ok=True)
@@ -56,11 +73,11 @@ ARCHITECTURE  = models.resnet50
 
 # ## 1. Prepare Image Classification Dataset
 
-# In this notebook, we'll use a toy dataset called *Fridge Objects*, which consists of about a hundred images of milk bottle, carton, and water bottle photos taken with different backgrounds. With our helper function, the data set will be downloaded and unzip to `image_classification/data`.
+# In this notebook, we'll use a toy dataset called *Fridge Objects*, which consists of 134 images of can, carton, milk bottle and water bottle photos taken with different backgrounds. With our helper function, the data set will be downloaded and unzip to `image_classification/data`.
 # 
 # Let's set that directory to our `path` variable, which we'll use throughout the notebook, and checkout what's inside:
 
-# In[4]:
+# In[6]:
 
 
 path = Path(DATA_PATH)
@@ -96,7 +113,7 @@ path.ls()
 # 
 # For training and validation, we randomly split the data by 8:2, where 80% of the data is for training and the rest for validation. 
 
-# In[5]:
+# In[7]:
 
 
 data = (ImageList.from_folder(path) 
@@ -109,7 +126,7 @@ data = (ImageList.from_folder(path)
 
 # Lets take a look at our data using the databunch we created.
 
-# In[6]:
+# In[8]:
 
 
 data.show_batch(rows=3, figsize=(15,11))
@@ -117,7 +134,7 @@ data.show_batch(rows=3, figsize=(15,11))
 
 # Lets see all available classes:
 
-# In[7]:
+# In[9]:
 
 
 print(f'number of classes: {data.c}')
@@ -126,7 +143,7 @@ print(data.classes)
 
 # We can also see how many images we have in our training and validation set.
 
-# In[8]:
+# In[10]:
 
 
 data.batch_stats
@@ -140,7 +157,7 @@ data.batch_stats
 # 
 # When training a model, there are many hypter parameters to select, such as the learning rate, the model architecture, layers to tune, and many more. With fastai, we can use the `create_cnn` function that allows us to specify the model architecture and performance indicator (metric). At this point, we already benefit from transfer learning since we download the parameters used to train on [ImageNet](http://www.image-net.org/).
 
-# In[9]:
+# In[11]:
 
 
 learn = cnn_learner(data, ARCHITECTURE, metrics=accuracy)
@@ -148,7 +165,7 @@ learn = cnn_learner(data, ARCHITECTURE, metrics=accuracy)
 
 # Unfreeze our CNN since we're training all the layers.
 
-# In[10]:
+# In[12]:
 
 
 learn.unfreeze()
@@ -156,7 +173,7 @@ learn.unfreeze()
 
 # We can call the `fit` function to train the dnn.
 
-# In[11]:
+# In[13]:
 
 
 learn.fit(EPOCHS, LEARNING_RATE)
@@ -164,19 +181,21 @@ learn.fit(EPOCHS, LEARNING_RATE)
 
 # To see how our model has been trained, we can plot the accuracy and loss over the number of batches processed while training.
 
-# In[16]:
+# In[14]:
 
 
 # Plot the accuracy (metric) on validation set over the number of batches processed
 learn.recorder.plot_metrics()
 plt.gca().get_lines()[0].set_color("orange")
+plt.gca().get_lines()[0].set_label("Validation")
 plt.xlim([-1.0, 26.0])
 plt.ylim([0.0, 1.05])
 plt.xlabel("Batches processed")
 plt.ylabel("Accuracy")
+plt.legend()
 
 
-# In[14]:
+# In[15]:
 
 
 # Plot losses on train and validation sets
@@ -187,7 +206,7 @@ learn.recorder.plot_losses()
 
 # To evaluate our model, lets take a look at the accuracy on the validation set.
 
-# In[17]:
+# In[16]:
 
 
 _, metric = learn.validate(learn.data.valid_dl, metrics=[accuracy])
@@ -196,7 +215,7 @@ print(f'Accuracy on validation set: {100*float(metric):3.2f}')
 
 # Now, analyze the classification results by using `ClassificationInterpretation` module.
 
-# In[18]:
+# In[17]:
 
 
 interp = ClassificationInterpretation.from_learner(learn)
@@ -209,7 +228,7 @@ pred_scores = to_np(interp.probs)
 # <img src="https://cvbp.blob.core.windows.net/public/images/ic_widget.png" width="600"/>
 # <center><i>Image Classification Result Widget</i></center>
 
-# In[19]:
+# In[18]:
 
 
 w_results = ResultsWidget(
@@ -222,26 +241,17 @@ display(w_results.show())
 
 # We can plot precision-recall and ROC curves for each class as well. Please note that these plots are not too interesting here, since the dataset is easy and thus the accuracy is close to 100%.
 
-# In[20]:
+# In[19]:
 
 
 # True labels of the validation set. We convert to numpy array for plotting.
 true_labels = to_np(interp.y_true)
-
-plt.subplots(2, 2, figsize=(12,6))
-
-plt.subplot(1, 2, 1)
-plot_precision_recall_curve(true_labels, pred_scores, data.classes, False)
-
-plt.subplot(1, 2, 2)
-plot_roc_curve(true_labels, pred_scores, data.classes, False)
-
-plt.show()
+plot_curves(true_labels, pred_scores, data.classes)
 
 
 # Let's take a close look how our model confused some of the samples (if any). The most common way to do that is to use a confusion matrix.
 
-# In[21]:
+# In[20]:
 
 
 interp.plot_confusion_matrix()
@@ -249,7 +259,7 @@ interp.plot_confusion_matrix()
 
 # When evaluating our results, we want to see where the model messes up, and whether or not we can do better. So we're interested in seeing images where the model predicted the image incorrectly but with high confidence (images with the highest loss).
 
-# In[22]:
+# In[21]:
 
 
 interp.plot_top_losses(9, figsize=(15,11))

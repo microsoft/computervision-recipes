@@ -7,7 +7,6 @@ Helper module for drawing widgets and plots
 import bqplot
 import bqplot.pyplot as bqpyplot
 import fastai.data_block
-from fastai.vision import Image
 from ipywidgets import widgets, Layout, IntSlider
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,13 +19,43 @@ from sklearn.metrics import (
 from sklearn.preprocessing import label_binarize
 
 
+def plot_curves(
+    y_true: np.ndarray,
+    y_score: np.ndarray,
+    classes: iter,
+    show: bool=True,
+    figsize: tuple=(12, 6)
+):
+    """Plot prediction result curves.
+
+    Currently, plots precision-recall and ROC curves.
+
+    Args:
+        y_true (np.ndarray): True class indices.
+        y_score (np.ndarray): Estimated probabilities.
+        classes (iterable): Class labels.
+        show (bool): Show plot. Use False if want to manually show the plot later.
+        figsize (tuple): Figure size (w, h).
+    """
+    plt.subplots(2, 2, figsize=figsize)
+
+    plt.subplot(1, 2, 1)
+    plot_precision_recall_curve(y_true, y_score, classes, False)
+
+    plt.subplot(1, 2, 2)
+    plot_roc_curve(y_true, y_score, classes, False)
+
+    if show:
+        plt.show()
+
+
 def plot_roc_curve(
     y_true: np.ndarray,
     y_score: np.ndarray,
     classes: iter,
     show: bool=True
 ):
-    """Plots receiver operating characteristic (ROC) curves and ROC areas.
+    """Plot receiver operating characteristic (ROC) curves and ROC areas.
 
     If the given class labels are multi-label, it binarizes the classes and plots each ROC along with an averaged ROC.
     For the averaged ROC, micro-average is used.
@@ -99,7 +128,7 @@ def plot_precision_recall_curve(
     classes: iter,
     show: bool=True
 ):
-    """Plots precision-recall (PR) curves.
+    """Plot precision-recall (PR) curves.
 
     If the given class labels are multi-label, it binarizes the classes and plots each PR along with an averaged PR.
     For the averaged PR, micro-average is used.
