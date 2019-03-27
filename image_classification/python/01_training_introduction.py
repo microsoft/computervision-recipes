@@ -41,7 +41,7 @@ from fastai.metrics import accuracy
 from torch.cuda import get_device_name
 # local modules
 from utils_ic.gpu_utils import gpu_info
-from utils_ic.plot_utils import ResultsWidget, plot_curves
+from utils_ic.plot_utils import ResultsWidget, plot_pr_roc_curves
 from utils_ic.datasets import Urls, unzip_url
 
 print(f"Fast.ai version = {fastai.__version__}")
@@ -54,7 +54,7 @@ print(f"Machine's GPU info = {gpu_info()} (memory unit = MiB)")
 print(f"Fast.ai/Torch is using {get_device_name(0)}")
 
 
-# This shows your machine's GPUs (if has any) and which computing device fastai/torch is using. Please note that this notebook will train a model and thus we recommend you to run on a GPU machine w/ GPU-memory > 10g. The output cells here show the run results on [Azure DSVM](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/) Standard NC6.
+# This shows your machine's GPUs (if has any) and which computing device fastai/torch is using. The output cells here show the run results on [Azure DSVM](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/) Standard NC6.
 
 # Set some parameters. We'll use the `unzip_url` helper function to download and unzip our data.
 
@@ -246,7 +246,7 @@ display(w_results.show())
 
 # True labels of the validation set. We convert to numpy array for plotting.
 true_labels = to_np(interp.y_true)
-plot_curves(true_labels, pred_scores, data.classes)
+plot_pr_roc_curves(true_labels, pred_scores, data.classes)
 
 
 # Let's take a close look how our model confused some of the samples (if any). The most common way to do that is to use a confusion matrix.

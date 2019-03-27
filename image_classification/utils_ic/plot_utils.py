@@ -19,14 +19,14 @@ from sklearn.metrics import (
 from sklearn.preprocessing import label_binarize
 
 
-def plot_curves(
+def plot_pr_roc_curves(
     y_true: np.ndarray,
     y_score: np.ndarray,
     classes: iter,
     show: bool=True,
     figsize: tuple=(12, 6)
 ):
-    """Plot prediction result curves.
+    """Plot precision-recall and ROC curves .
 
     Currently, plots precision-recall and ROC curves.
 

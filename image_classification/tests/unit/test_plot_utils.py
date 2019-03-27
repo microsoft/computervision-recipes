@@ -3,7 +3,7 @@
 
 import pytest
 import numpy as np
-from utils_ic.plot_utils import plot_roc_curve, plot_precision_recall_curve, plot_curves
+from utils_ic.plot_utils import plot_roc_curve, plot_precision_recall_curve, plot_pr_roc_curves
 
 
 @pytest.fixture(scope="function")
@@ -49,10 +49,10 @@ def test_plot_precision_recall_curve(binaryclass_result, multiclass_result):
     plot_precision_recall_curve(y_true, y_score, classes, False)
 
 
-def test_plot_curves(binaryclass_result, multiclass_result):
+def test_plot_pr_roc_curves(binaryclass_result, multiclass_result):
     # Binary-class plot
     y_true, y_score, classes = binaryclass_result
-    plot_curves(y_true, y_score, classes, False, (1, 1))
+    plot_pr_roc_curves(y_true, y_score, classes, False, (1, 1))
     # Multi-class plot
     y_true, y_score, classes = multiclass_result
-    plot_curves(y_true, y_score, classes, False, (1, 1))
+    plot_pr_roc_curves(y_true, y_score, classes, False, (1, 1))
