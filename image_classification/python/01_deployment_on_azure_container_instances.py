@@ -42,7 +42,7 @@
 # - how to deploy a web service on [Azure Container Instances](https://azure.microsoft.com/en-us/services/container-instances/) using this Docker image
 # - how to test that our service works well, from within the notebook.
 #
-# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/ACI_diagram_2.jpg" style="width: 500px" align=left alt="Web service deployment workflow">
+# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/ACI_diagram_2.jpg" width="500" align=left alt="Web service deployment workflow">
 
 # ## 2. Pre-requisites
 # <a id="pre-reqs"></a>
@@ -288,8 +288,13 @@ model = run.register_model(
 
 # Now that the model is uploaded and registered, we can see it on the Azure platform, under `Outputs` and `Models`
 #
-# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/uploaded_model.jpg" width="800" alt="Azure portal view of the Outputs/ folder">
-# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/models.jpg" width="800" alt="Azure portal view of the Models section>
+# <div class="inline-block">
+#     <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/uploaded_model.jpg" width="800" alt="Azure portal view of the Outputs/ folder">
+# </div>
+#
+# <div class="inline-block">
+#     <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/models.jpg" width="800" alt="Azure portal view of the Models section>
+# </div>
 
 # We can also check that it is programatically accessible
 
@@ -490,7 +495,7 @@ service = Webservice.deploy_from_image(
 
 
 # An alternative way of deploying the service is to deploy from the model directly. In that case, we would need to provide the docker image configuration object (image_config), and our list of models (just one of them here).
-# The advantage of `deploy_from_image` over [deploy_from_model](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.webservice(class)?view=azure-ml-py#deploy-from-model-workspace--name--models--image-config--deployment-config-none--deployment-target-none-) is that the former allows us
+# The advantage of `deploy_from_image` over <a href="https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.webservice(class)?view=azure-ml-py#deploy-from-model-workspace--name--models--image-config--deployment-config-none--deployment-target-none-">deploy_from_model</a> is that the former allows us
 # to re-use the same Docker image in case the deployment of this service fails, or even for other
 # types of deployments, as we will see in the next notebook (to be pushlished).
 
