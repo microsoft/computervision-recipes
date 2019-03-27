@@ -42,7 +42,7 @@
 # - how to deploy a web service on [Azure Container Instances](https://azure.microsoft.com/en-us/services/container-instances/) using this Docker image
 # - how to test that our service works well, from within the notebook.
 #
-# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/ACI_diagram_2.jpg" width="500" align=left alt="Web service deployment workflow">
+# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/ACI_diagram_2.jpg" width="500" style="float: left;" alt="Web service deployment workflow">
 
 # ## 2. Pre-requisites
 # <a id="pre-reqs"></a>
@@ -293,7 +293,7 @@ model = run.register_model(
 # </div>
 #
 # <div class="inline-block">
-#     <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/models.jpg" width="800" alt="Azure portal view of the Models section>
+#     <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/models.jpg" width="800" alt="Azure portal view of the Models section">
 # </div>
 
 # We can also check that it is programatically accessible
