@@ -320,7 +320,7 @@ run.get_file_names()
 model.download()
 
 
-# > Note: If we ran the cells in both the "with an experiment" and "without experiment" sections, we got 2 iterations of the same model registered on Azure. This is not a problem as any operation that we perform on the `model` object, later on, will be associated with the latest version of the model that we registered. To clean things up, we can go to the portal, select the model we do not want and click the `Delete` button. In general, we would register the model using only one of these 2 methods.
+# <i><b>Note:</b> If we ran the cells in both the "with an experiment" and "without experiment" sections, we got 2 iterations of the same model registered on Azure. This is not a problem as any operation that we perform on the "model" object, later on, will be associated with the latest version of the model that we registered. To clean things up, we can go to the portal, select the model we do not want and click the "Delete" button. In general, we would register the model using only one of these 2 methods. </i>
 
 # We are all done with our model registration, so we can close our run.
 
@@ -344,7 +344,8 @@ run
 # This script must contain two required functions, `init()` and `run(input_data)`:
 # - In the `init()` function, we typically load the model into a global object. This function is executed only once when the Docker container is started.
 # - In the `run(input_data)` function, the model is used to predict a value based on the input data. The input and output of `run` typically use JSON as serialization and de-serialization format but we are not limited to that.
-# > Note: the `run()` function here is different from the `run` object we created in our experiment
+#
+# <i><b>Note:</b> The "run()" function here is different from the "run" object we created in our experiment</i>
 #
 # This file must also be stored in the current directory.
 
@@ -368,7 +369,7 @@ get_ipython().run_cell_magic(
 #
 # In order to make predictions on the Azure platform, it is important to create an environment as similar as possible to the one in which the model was trained. Here, we use a fast.ai pretrained model that also requires pytorch and a few other libraries. To re-create this environment, we use a [Docker container](https://www.docker.com/resources/what-container). We configure it via a yaml file that will contain all the conda dependencies needed by the model. This yaml file is a subset of  `image_classification/environment.yml`.
 #
-# > Note: If we had trained our model locally, we would have created a yaml file that contains the same libraries as what is installed on our local machine.
+# <i><b>Note:</b> If we had trained our model locally, we would have created a yaml file that contains the same libraries as what is installed on our local machine.</i>
 
 # In[19]:
 
@@ -448,7 +449,7 @@ print(ws.images["image-classif-resnet18-f48"].image_build_log_uri)
 #
 # To set them up properly, we need to indicate the number of CPU cores and the amount of memory we want to allocate to our web service. Optional tags and descriptions are also available for us to identify the instances in AzureML when looking at the `Compute` tab in the Azure Portal.
 #
-# > Note: For production workloads, it is better to use [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/) (AKS) instead. We will demonstrate how to do this in the next notebook (to be published).
+# <i><b>Note:</b> For production workloads, it is better to use [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/) (AKS) instead. We will demonstrate how to do this in the next notebook (to be published).<i>
 
 # In[24]:
 
@@ -479,7 +480,7 @@ aci_config = AciWebservice.deploy_configuration(
 #
 # Azure Container Instances have no associated ComputeTarget, so we do not specify any here. Remember, we already provided information on the number of CPUs and the amount of memory needed in the service configuration file above.
 #
-# > Note: The web service creation can take a few minutes
+# <i><b>Note:</b> The web service creation can take a few minutes</i>
 
 # In[25]:
 
@@ -626,7 +627,8 @@ service.delete()
 # ### 8.C Workspace deletion <a id="wsdel"></a>
 #
 # When we first created our workspace, 4 extra resources were automatically added to it: a [container registry](https://azure.microsoft.com/en-us/pricing/details/container-registry/), a [storage account](https://azure.microsoft.com/en-us/pricing/details/storage/blobs/), [Application Insights](https://azure.microsoft.com/en-us/pricing/details/monitor/) and a [key vault](https://azure.microsoft.com/en-us/pricing/details/key-vault/), each with its own cost. If our goal is to continue using our workspace, we should keep it available. On the contrary, if we plan on no longer using it and its associated resources, we can delete it.
-# > Note: Deleting the workspace will delete all the experiments, outputs, models, Docker images, deployments, etc. that we created in that workspace
+#
+# <i><b>Note:</b> Deleting the workspace will delete all the experiments, outputs, models, Docker images, deployments, etc. that we created in that workspace</i>
 
 # In[ ]:
 
