@@ -24,22 +24,10 @@ Pre-trained REST APIs which can be readily consumed to do e.g. image classificat
 
 
 - [Custom Vision Service](https://azure.microsoft.com/en-us/services/cognitive-services/custom-vision-service/)
-SaaS service for image upload, annotation, model training and deployment. All these steps can either be performed using a UI, or alternatively (but not required) a Python SDK. With the Custom Vision Service one can train image classification and object detection models with only minimal or no minimal machine learning knowledge.
+SaaS service to train a model and deploy a REST API given a user-specific training set. All steps from image upload, annotation, to model deployment can either be performed using a UI, or alternatively (but not necessary) a Python SDK. With the Custom Vision Service one can train image classification and object detection models with only minimal or no minimal machine learning knowledge. It hence offers more flexibility than using the pre-trained Cognitive Services APIs.
 
 - [Azure Machine Learning service (AzureML)](https://azure.microsoft.com/en-us/services/machine-learning-service/)
-is a scenario-agnostic machine learning service that will help users accelerate training and deploying machine learning models. While not specific for Computer Vision workloads, we show how AzureML can be used to deploy scalable and reliable web-services using e.g. Kubernetes, or how to train on a cloud-based GPU cluster. AzureML comes with Python SDK, which is the way we will use it.
-
----
-TO ADD ABOVE
-The Custom Vision Service provides flexibility insofar as being able to
-choose what kind of training data to use (it is also only limited so solving classification and object detection problems).
-
-Azure Machine Learning service provides complete flexibility, letting you set hyperparameters, select model architectures
-(or build your own), and perform any manipulation needed at the framework (pytorch, tensorflow, cntk, etc) level.
-
-One consideration is that more customizability also translates to more responsibility.
-When using Azure Machine Learning service, you get the most flexibility, but you will be responsible for making sure
-the models are performant and deploying them.
+is a scenario-agnostic machine learning service that will help users accelerate training and deploying machine learning models. While not specific for Computer Vision workloads, one can use AzureML to deploy scalable and reliable web-services using e.g. Kubernetes, or for heavily parallel training on a cloud-based GPU cluster. AzureML comes with Python SDK, which is the way we will use it. While AzureML offers significantly more flexibility than the other options above, it also requires significantly more machine learning and programming knowledge.
 
 
 ## Computer Vision Domains
