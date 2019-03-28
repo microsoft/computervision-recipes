@@ -15,9 +15,7 @@ def test_ims2strlist():
         os.path.join(data_path, "carton", "im_62.jpg"),
     ]
     im_string_list = ims2strlist(im_list)
-    # input_to_service = json.dumps({"data": im_string_list})
     assert isinstance(im_string_list, list)
-    # assert input_to_service[0:11] == '{"data": ["'
 
 
 def test_im2base64():
