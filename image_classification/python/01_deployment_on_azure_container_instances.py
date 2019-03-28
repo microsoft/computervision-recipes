@@ -87,13 +87,14 @@ from azureml.core.webservice import AciWebservice, Webservice
 from azureml.exceptions import ProjectSystemException, UserErrorException
 
 # Computer Vision repository
-sys.path.append("../../")
-from utils_ic.constants import IMAGENET_IM_SIZE
-from utils_ic.imagenet_models import model_to_learner
-from utils_ic.image_conversion import ims2json
-
-sys.path.append("../../../")
+sys.path.extend(["..", "../..", "../../.."])
+# This "sys.path.extend()" statement allows us to move up the directory hierarchy
+# and access the utils_ic and utils_cv packages
 from utils_cv.generate_deployment_env import generate_yaml
+from utils_ic.common import ic_root_path
+from utils_ic.constants import IMAGENET_IM_SIZE
+from utils_ic.image_conversion import ims2strlist
+from utils_ic.imagenet_models import model_to_learner
 
 
 # ## 4. Azure workspace <a id="workspace"></a>
@@ -253,7 +254,8 @@ print(
 
 
 # Initialize the run
-run = experiment.start_logging()
+run = experiment.start_logging(snapshot_directory=None)
+# "snapshot_directory=None" prevents a snapshot from being saved -- this helps keep the amount of storage used low
 
 
 # Now that we have launched our run, we can see our experiment on the Azure portal, under `Experiments` (in the left-hand side list).
@@ -374,9 +376,9 @@ get_ipython().run_cell_magic(
 # In[19]:
 
 
-# Create a deployment-specific yaml file from the image_classification/environment.yml
+# Create a deployment-specific yaml file from image_classification/environment.yml
 generate_yaml(
-    directory="../../",
+    directory=ic_root_path(),
     ref_filename="environment.yml",
     needed_libraries=["pytorch", "spacy", "fastai", "dataclasses"],
     conda_filename="myenv.yml",
@@ -544,17 +546,22 @@ print(
 
 # ### 7.A Using the `run` API <a id="api"></a>
 
-# A service typically expects input data to be in a JSON serializable format. Here, we use our own `ims2json()` function to transform our .jpg images into strings of bytes.
+# A service typically expects input data to be in a JSON serializable format. Here, we use our own `ims2jstrlist()` function to transform our .jpg images into strings of bytes.
 
 # In[28]:
 
 
 # Convert images to json object
 images_fname_list = [
-    os.path.join("test_images", "im_11.jpg"),
-    os.path.join("test_images", "im_97.jpg"),
+    os.path.join(
+        ic_root_path(), "notebooks", "deployment", "test_images", "im_11.jpg"
+    ),
+    os.path.join(
+        ic_root_path(), "notebooks", "deployment", "test_images", "im_97.jpg"
+    ),
 ]
-test_samples = ims2json(images_fname_list, current_directory)
+im_string_list = ims2strlist(images_fname_list)
+test_samples = json.dumps({"data": im_string_list})
 
 
 # In[29]:
@@ -584,9 +591,12 @@ for k in range(len(result)):
 
 
 # Send the same test data
-headers = {"Content-Type": "application/json"}
+payload = {"data": im_string_list}
+resp = requests.post(service.scoring_uri, json=payload)
 
-resp = requests.post(service.scoring_uri, test_samples, headers=headers)
+# Alternative way of sending the test data
+# headers = {'Content-Type':'application/json'}
+# resp = requests.post(service.scoring_uri, test_samples, headers=headers)
 
 print(f"POST to url: {service.scoring_uri}")
 print(f"Prediction: {resp.text}")
@@ -594,13 +604,19 @@ print(f"Prediction: {resp.text}")
 
 # ### 7.C Notes on web service deployment <a id="notes"></a>
 
-# As we discussed above, Azure Container Instances are typically used to develop and test deployments. They are typically configured with CPUs, which may be insufficient in a production environment, when many requests per second need to be served. They also require the user to [manage resources](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-container-groups#deployment), which may be complicated and time consuming.
+# As we discussed above, Azure Container Instances are typically used to develop and test deployments. They are typically configured with CPUs, which usually suffice when the number of requests per second is not too high. When working with several instances, we can configure them further by specifically [allocating CPU resources](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-container-groups#deployment) to each of them.
 #
-# For production requirements, we recommend deploying models to Azure Kubernetes Service (AKS). It is a convenient infrastructure as it manages hosted Kubernetes environments, and makes it easy to deploy and manage containerized applications without container orchestration expertise.
+# For production requirements, i.e. when &gt; 100 requests per second are expected, we recommend deploying models to Azure Kubernetes Service (AKS). It is a convenient infrastructure as it manages hosted Kubernetes environments, and makes it easy to deploy and manage containerized applications without container orchestration expertise.
 #
 # We will see an example of this in the next notebook (to be published).
 
 # ## 8. Clean up <a id="clean"></a>
+#
+# Throughout the notebook, we used a workspace and Azure container instances.
+#
+# When we first created our workspace, 4 extra resources were automatically added to it: a [container registry](https://azure.microsoft.com/en-us/pricing/details/container-registry/), a [storage account](https://azure.microsoft.com/en-us/pricing/details/storage/blobs/), [Application Insights](https://azure.microsoft.com/en-us/pricing/details/monitor/) and a [key vault](https://azure.microsoft.com/en-us/pricing/details/key-vault/), each with its own cost. In this notebook, we also hosted our web service on container instances. Overall, assuming it took us about 1 hour to go through this notebook, and assuming that our web service was up for 30 minutes (so we could have time to test it), this tutorial cost us a few dollars.
+#
+# In order not to incur extra costs, let's now delete the resources we no longer need.
 
 # ### 8.A Service termination <a id="svcterm"></a>
 #
@@ -626,7 +642,7 @@ service.delete()
 
 # ### 8.C Workspace deletion <a id="wsdel"></a>
 #
-# When we first created our workspace, 4 extra resources were automatically added to it: a [container registry](https://azure.microsoft.com/en-us/pricing/details/container-registry/), a [storage account](https://azure.microsoft.com/en-us/pricing/details/storage/blobs/), [Application Insights](https://azure.microsoft.com/en-us/pricing/details/monitor/) and a [key vault](https://azure.microsoft.com/en-us/pricing/details/key-vault/), each with its own cost. If our goal is to continue using our workspace, we should keep it available. On the contrary, if we plan on no longer using it and its associated resources, we can delete it.
+# If our goal is to continue using our workspace, we should keep it available. On the contrary, if we plan on no longer using it and its associated resources, we can delete it.
 #
 # <i><b>Note:</b> Deleting the workspace will delete all the experiments, outputs, models, Docker images, deployments, etc. that we created in that workspace</i>
 

@@ -23,7 +23,7 @@ dependencies:
 - jupyter>=1.0.0
 - pytest>=3.6.4
 - pip:
-  - azureml-sdk[notebooks,contrib]==1.0.10
+  - azureml-sdk[notebooks,contrib]==1.0.21
   - black>=18.6b4
   - papermill>=0.15.0
   - ipywebrtc
