@@ -45,11 +45,11 @@ from fastai.metrics import accuracy
 
 
 DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
-EPOCHS = 5
+EPOCHS = 15
 LEARNING_RATE = 1e-4
 IMAGE_SIZE = 299
 BATCH_SIZE = 16
-ARCHITECTURE = models.resnet50
+ARCHITECTURE = models.resnet18
 
 
 # ---
@@ -163,7 +163,7 @@ learn.unfreeze()
 # In[12]:
 
 
-learn.fit(EPOCHS, LEARNING_RATE)
+learn.fit_one_cyle(EPOCHS, LEARNING_RATE)
 
 
 # ## Evaluating
