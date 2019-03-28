@@ -17,11 +17,14 @@ channels:
 - fastai
 dependencies:
 - python==3.6.8
-- pytorch==1.0.0  
+- pytorch==1.0.0
+- torchvision  
 - fastai==1.0.48
 - ipykernel>=4.6.1
 - jupyter>=1.0.0
 - pytest>=3.6.4
+- bqplot
+- scikit-learn>=0.19.1
 - pip:
   - azureml-sdk[notebooks,contrib]==1.0.21
   - black>=18.6b4
