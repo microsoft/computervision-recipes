@@ -1,19 +1,5 @@
 (This document is up-to-date as of 3/27/2019)
 
-# Overview of Azure's Computer Vision Offerings
-[Microsoft Azure](https://azure.microsoft.com/en-us/) provides a variety of options when it comes to computer vision.
-The outline below provides an overview of such services, starting with the highest level service where you simply
-consume an API to the lowest level service where you develop the model and the infrastructure required to deploy it.
-
-This document covers following topics:
-
-* [What is Computer Vision](#What-is-Computer-Vision)
-* [Computer Vision and Machine Learning Services in Azure](#Computer-Vision-and-Machine-Learning-Services-in-Azure)
-    - [Cognitive Services](#Cognitive-Services)
-    - [Custom Vision Service](#Custom-Vision-Service)
-    - [Azure Machine Learning Service](#Azure-Machine-Learning-Service)
-* [What Should I Use?](#What-Should-I-Use?)
-
 
 ## What is Computer Vision
 Computer vision is one of the most popular disciplines in industry and academia nowadays that aims to train computers
@@ -27,14 +13,6 @@ Click on the following topics to see more details:
 
 <details>
 <summary><strong>Image Classification</strong></summary>
-
-A large number of problems in the computer vision domain can be solved using image classification approaches.
-These include building models which answer questions such as, *"Is an OBJECT present in the image?"*
-(where OBJECT could for example be "dog", "car", "ship", etc.) as well as more complex questions, like
-*"What class of eye disease severity is evinced by this patient's retinal scan?"*
-
-Image classification can be further categorized into **single-label** and **multi-label** classifications
-depending on whether a target image contains a single object class or multiple objects of different classes.
 
 
 <img src="https://cvbp.blob.core.windows.net/public/images/document_images/example_single_classification.png" width="600"/>
