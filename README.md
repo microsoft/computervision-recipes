@@ -46,8 +46,7 @@ the models are performant and deploying them.
 
 Most applications in Computer Vision fall into one of these 4 categories:
 
-- **Image classification**: Given an input image, predict what objects are present. This is typically the easiest CV problem to solve, however require objects to be reasonably large in the image.
-   <img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_ic_vis.jpg" height="150" alt="Image classification visualization"/>  
+- **Image classification**: Given an input image, predict what objects are present. This is typically the easiest CV problem to solve, however require objects to be reasonably large in the image. <img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_ic_vis.jpg" height="150" alt="Image classification visualization"/>  
 
 - **Object Detection**: Given an input image, predict what objects are present and where the objects are (using rectangular co-ordinates). Object detection approaches work even if the object is small. However model training takes longer than image classification, and manually annotating images is more time-consuming (for more information see the annotation instructions for object detection LINK).
   <img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_od_vis.jpg" height="150" alt="Object detect visualization"/>
