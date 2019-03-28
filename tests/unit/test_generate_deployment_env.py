@@ -4,16 +4,16 @@
 import os
 import sys
 
-sys.path.append("../../")
-
+sys.path.extend([".", "..", "../..", "../../.."])
 from utils_cv.generate_deployment_env import generate_yaml
+from utils_ic.common import ic_root_path
 
 
 def test_generate_yaml():
     """Tests creation of deployment-specific yaml file
     from existing image_classification/environment.yml"""
     generate_yaml(
-        directory="../../image_classification",
+        directory=ic_root_path(),
         ref_filename="environment.yml",
         needed_libraries=["fastai", "pytorch"],
         conda_filename="mytestyml.yml",

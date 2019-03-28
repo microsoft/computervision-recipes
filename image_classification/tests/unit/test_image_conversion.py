@@ -4,24 +4,25 @@
 import os
 
 from utils_ic.datasets import Urls, unzip_url
-from utils_ic.image_conversion import im2base64, ims2json
+from utils_ic.image_conversion import im2base64, ims2strlist
 
 
-def test_im2base64():
+def test_ims2strlist():
     """ Tests extraction of image content and conversion into string"""
     data_path = unzip_url(Urls.fridge_objects_path, exist_ok=True)
     im_list = [
-        os.path.join("can", "im_1.jpg"),
-        os.path.join("carton", "im_62.jpg"),
+        os.path.join(data_path, "can", "im_1.jpg"),
+        os.path.join(data_path, "carton", "im_62.jpg"),
     ]
-    input_to_service = ims2json(im_list, data_path)
-    assert isinstance(input_to_service, str)
-    assert input_to_service[0:11] == '{"data": ["'
+    im_string_list = ims2strlist(im_list)
+    # input_to_service = json.dumps({"data": im_string_list})
+    assert isinstance(im_string_list, list)
+    # assert input_to_service[0:11] == '{"data": ["'
 
 
-def test_ims2json():
+def test_im2base64():
     """ Tests extraction of image content and conversion into bytes"""
     data_path = unzip_url(Urls.fridge_objects_path, exist_ok=True)
-    im_name = os.path.join("can", "im_1.jpg")
-    im_content = im2base64(im_name, data_path)
+    im_name = os.path.join(data_path, "can", "im_1.jpg")
+    im_content = im2base64(im_name)
     assert isinstance(im_content, bytes)
