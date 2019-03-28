@@ -10,6 +10,7 @@ from fastai.callbacks import EarlyStoppingCallback
 from fastai.metrics import accuracy
 from functools import partial
 from matplotlib.axes import Axes
+from matplotlib.text import Annotation
 from typing import Union, List, Any, Dict
 from pathlib import Path
 
@@ -30,17 +31,29 @@ class Architecture(Enum):
     squeezenet1_1 = partial(models.squeezenet1_1)
 
 
-def clean_df(df: pd.DataFrame) -> pd.DataFrame:
-    """
+class DataFrameAlreadyCleaned(Exception):
+    pass
+
+
+def clean_sweeper_df(df: pd.DataFrame) -> pd.DataFrame:
+    """ Cleans up dataframe outputed from sweeper
+
     Cleans up experiment paramter strings in {df} by removing all experiment
     parameters that held constant through each experiment. This method uses a
     variable <parameter_flag> to search for strings.
+
     Args:
         df (pd.DataFrame): dataframe to clean up
+    Raises:
+        DataFrameAlreadyCleaned
     Return:
         pd.DataFrame: df with renamed experiment parameter strings
     """
     text = df.to_html()
+
+    if parameter_flag not in text:
+        raise DataFrameAlreadyCleaned
+
     text = re.findall(fr">\s{{0,1}}{parameter_flag}\s{{0,1}}(.*?)</th>", text)
 
     sets = [set(t.split("|")) for t in text]
@@ -55,66 +68,95 @@ def clean_df(df: pd.DataFrame) -> pd.DataFrame:
     return pd.read_html(html, index_col=[0, 1, 2])[0]
 
 
-def plot_df(
-    df: pd.DataFrame,
-    sort_by: str = "accuracy",
-    figsize: Tuple[int, int] = (12, 8),
+def add_value_labels(
+    ax: Axes, spacing: int = 5, percentage: bool = False
 ) -> None:
+    """ Add labels to the end of each bar in a bar chart.
+
+    Overwrite labels on axes if they already exist.
+
+    Args:
+        ax (Axes): The matplotlib object containing the axes of the plot to annotate.
+        spacing (int): The distance between the labels and the bars.
+        percentage (bool): if y-value is a percentage
     """
-    Visuaize graph from {df}, which must contain columns "accuracy" and
-    "duration".
+    for child in ax.get_children():
+        if isinstance(child, Annotation):
+            child.remove()
+
+    for rect in ax.patches:
+        y_value = rect.get_height()
+        x_value = rect.get_x() + rect.get_width() / 2
+
+        label = (
+            "{:.2f}%".format(y_value * 100)
+            if percentage
+            else "{:.1f}".format(y_value)
+        )
+
+        ax.annotate(
+            label,
+            (x_value, y_value),
+            xytext=(0, spacing),  # Vertically shift label by `space`
+            textcoords="offset points",  # Interpret `xytext` as offset in points
+            ha="center",  # Horizontally center label
+            va="bottom",  # Vertically align label
+        )
+
+
+def plot_sweeper_df(
+    df: pd.DataFrame,
+    sort_by: str = None,
+    figsize: Tuple[int, int] = (12, 8),
+    show_cols: List[str] = None,
+) -> None:
+    """ Visualize df outputed from sweeper
+
+    Visualize graph from {df}, which should contain columns "accuracy" and
+    "duration". Columns not titled "accuracy" or "duration" will also be
+    rendered.
+
     Args:
         df (pd.DataFrame): the dataframe to visualize.
         sort_by (str): whether to sort visualization by accuracy or duration.
         figsize (Tuple[int, int]): as defined in matplotlib.
+        show_cols (List[str]): a list of columns in the df to show
     Raises:
-        ValueError: if {sort_by} is an invalid value.
+        ValueError: if {sort_by} is an invalid value, if elements of
+        {show_cols} is not a valid column name, or if {sort_by} is not in
+        {show_cols} if it is used.
     """
-    if sort_by not in ("accuracy", "duration"):
-        raise ValueError("{sort_by} must equal 'accuracy' or 'duration'")
+    cols = list(df.columns.values) if show_cols is None else show_cols
 
-    def add_value_labels(
-        ax: Axes, spacing: int = 5, percentage: bool = False
-    ) -> None:
-        """
-        Add labels to the end of each bar in a bar chart.
-        Args:
-            ax (Axes): The matplotlib object containing the axes of the plot to annotate.
-            spacing (int): The distance between the labels and the bars.
-            percentage (bool): if y-value is a percentage
-        """
-        for rect in ax.patches:
-            y_value = rect.get_height()
-            x_value = rect.get_x() + rect.get_width() / 2
+    if not set(cols) <= set(list(df.columns.values)):
+        raise ValueError("values of {show_cols} is not found {df}.")
 
-            label = (
-                "{:.2f}%".format(y_value * 100)
-                if percentage
-                else "{:.1f}".format(y_value)
-            )
+    if sort_by is not None and sort_by not in cols:
+        raise ValueError(
+            "{sort_by} must be in {show_cols} if {show_cols} is used."
+        )
 
-            ax.annotate(
-                label,
-                (x_value, y_value),
-                xytext=(0, spacing),  # Vertically shift label by `space`
-                textcoords="offset points",  # Interpret `xytext` as offset in points
-                ha="center",  # Horizontally center label
-                va="bottom",  # Vertically align label
-            )
+    if sort_by:
+        df = df.sort_values(by=sort_by)
 
-    top_accuracy = df["accuracy"].max()
-    top_duration = df["duration"].max()
-    ax1, ax2 = df.sort_values(by=sort_by).plot.bar(
+    axes = df[cols].plot.bar(
         rot=90, subplots=True, legend=False, figsize=figsize
     )
-    ax1.set_title("Duration (seconds)")
-    ax2.set_title("Accuracy (%)")
-    ax1.set_ylabel("seconds")
-    ax2.set_ylabel("%")
-    ax1.set_ylim(top=top_duration * 1.2)
-    ax2.set_ylim(top=top_accuracy * 1.2)
-    add_value_labels(ax2, percentage=True)
-    add_value_labels(ax1)
+
+    assert len(cols) == len(axes)
+
+    for col, ax in zip(cols, axes):
+        top_val = df[col].max()
+        ax.set_ylim(top=top_val * 1.2)
+        add_value_labels(ax)
+
+        if col in ["accuracy"]:
+            add_value_labels(ax, percentage=True)
+            ax.set_title("Accuracy (%)")
+            ax.set_ylabel("%")
+        if col in ["duration"]:
+            ax.set_title("Training Duration (seconds)")
+            ax.set_ylabel("seconds")
 
 
 class ParameterSweeper:

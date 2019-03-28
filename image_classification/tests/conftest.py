@@ -28,5 +28,11 @@ def notebooks():
         "01_training_introduction": os.path.join(
             folder_notebooks, "01_training_introduction.ipynb"
         ),
+        "02_training_accuracy_vs_speed": os.path.join(
+            folder_notebooks, "02_training_accuracy_vs_speed.ipynb"
+        ),
+        "11_exploring_hyperparameters": os.path.join(
+            folder_notebooks, "11_exploring_hyperparameters.ipynb"
+        ),
     }
     return paths

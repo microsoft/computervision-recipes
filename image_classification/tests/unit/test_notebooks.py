@@ -32,3 +32,42 @@ def test_01_notebook_run(notebooks):
         ),
         kernel_name=KERNEL_NAME,
     )
+
+
+def test_02_notebook_run(notebooks):
+    notebook_path = notebooks["02_training_accuracy_vs_speed"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            DATA_PATH=unzip_url(Urls.fridge_objects_path, exist_ok=True),
+            MODEL_A=False,  # high performance model
+            MODEL_B=True,  # high speed / low memory model
+        ),
+        kernel_name=KERNEL_NAME,
+    )
+
+
+def test_11_notebook_run(notebooks):
+    notebook_path = notebooks["11_exploring_hyperparameters"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            DATA=unzip_url(Urls.fridge_objects_path, exist_ok=True),
+            REPS=1,
+            LEARNING_RATES=[1e-3],
+            IM_SIZES=[199],
+            EPOCHS=[1],
+            BENCHMARK_DATA=[
+                unzip_url(Urls.fridge_objects_path, exist_ok=True),
+                unzip_url(Urls.lettuce_path, exist_ok=True),
+            ],
+            BENCHMARK_REPS=1,
+            BENCHMARK_LEARNING_RATES=[1e-3],
+            BENCHMARK_EPOCHS=[1],
+        ),
+        kernel_name=KERNEL_NAME,
+    )

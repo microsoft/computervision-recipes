@@ -39,10 +39,10 @@ def _test_sweeper_run(df: pd.DataFrame, df_length: int):
     # assert df is a multi-index dataframe
     assert isinstance(df.index, pd.core.index.MultiIndex)
     # assert clean_df works
-    df = clean_df(df)
+    df = clean_sweeper_df(df)
     assert isinstance(df.index, pd.core.index.MultiIndex)
     # assert no error when calling plot_df function
-    plot_df(df)
+    plot_sweeper_df(df)
 
 
 def test_default_sweeper_single_dataset(setup_a_dataset):
