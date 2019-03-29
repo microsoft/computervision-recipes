@@ -46,28 +46,39 @@ To setup on your local machine:
 
 
 ## Frequently asked questions
+
+Expand each question below to see the answer. Note that some browsers do not render the drop-down correctly.
+
 <details>
-<summary>How does the technology work?</summary>
-Todo: talk about CNN/finetuning...
+<summary> *How does the technology work?* </summary>
+State-of-the-art image classification methods such as used in this repository are based on Convolutional Neural Networks (CNN). CNNs are a special group of Deep Learning approaches shown to work extremely well on images. The key is to use CNNs which were already trained on millions of images (the ImageNet dataset) and to fine-tune these pre-trained CNNs using a potentially much smaller custom dataset. The web is full of sites explaining these conceptions, such as [link](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac).
 </details>
 
 <details>
-<summary>Which problems can be solved using image classification, and which ones cannot?</summary>
-orem ipsum dolor sit amet, in sed tale eligendi. Consul sensibus molestiae usu id, mutat nemore eos an. Sit te esse saepe laoreet, mei laudem alterum democritum in. No agam consul mentitum qui, nec nemore laboramus appellantur ut. Vim vero possit ex. Iudico propriae sapientem est ex, no probo deserunt quo.
+<summary> *Which problems can be solved using image classification, and which ones cannot?* </summary>
+Image classification can be used if the object-of-interest is relatively large in the image, e.g. not less than 10% image width/height. If the object is smaller, or if the location of the object is required, then object detection methods needs to be used instead.
 </details>
 
-
-
-- How to annotate my images
 <details>
-<summary>orem ipsum dolor sit amet, in sed tale eligendi. Consul sensibus molestiae usu id, mutat nemore eos an. orem ipsum dolor sit amet, in sed tale eligendi. Consul sensibus molestiae usu id, mutat nemore eos an.</summary>
-orem ipsum dolor sit amet, in sed tale eligendi. Consul sensibus molestiae usu id, mutat nemore eos an. Sit te esse saepe laoreet, mei laudem alterum democritum in. No agam consul mentitum qui, nec nemore laboramus appellantur ut. Vim vero possit ex. Iudico propriae sapientem est ex, no probo deserunt quo.
+<summary> *How many images are required to train a model?* </summary>
+This depends heavily on the complexity of the images. For example, one needs less training images if the object-of-interest has always a similar visual appearance (same angle, same lighting conditions, etc), and more images otherwise. In practice, we have seen good results using 100 images or sometime less. The only way to find out is to train a classifier with a few images, train a second time with more images, etc, and to observe how accuracy improves with more training images (while keeping the test set fixed).
 </details>
 
-- What are common pitfalls one should try to avoid
 <details>
-orem ipsum dolor sit amet, in sed tale eligendi. Consul sensibus molestiae usu id, mutat nemore eos an. Sit te esse saepe laoreet, mei laudem alterum democritum in. No agam consul mentitum qui, nec nemore laboramus appellantur ut. Vim vero possit ex. Iudico propriae sapientem est ex, no probo deserunt quo.
+<summary> *How to annotate images?* </summary>
+Consistency is key. For example, either always annotate occluded objects, or never. This is especially tricky if multiple people are involved, and hence our recommendation is that only a single person does the data annotation. Ideally the same person as the coder, since a lot can be learned by looking at the images. Note that especially the test set should be of high annotation quality, to get reliable measure of accuracy.
 </details>
+
+<details>
+<summary> *How to split into training and test images?* </summary>
+Often a random split as is performed in the notebooks is fine. However, this is not always the case. For example, if the images were extracted from a movie, then having frame n in the training set and frame n+1 in the test set would result in accuracy estimates which are over-inflated since the training and test set might be too similar.
+</details>
+
+<details>
+<summary> *What are common pitfalls one should try to avoid?* </summary>
+TODO
+</details>
+
 
 
 ## Coding guidelines
