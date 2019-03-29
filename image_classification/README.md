@@ -49,11 +49,6 @@ To setup on your local machine:
 
 Expand each question below to see the answer. Note that some browsers do not render the drop-down text correctly.
 
-TODO:
-- Might move to separate FAQ.md file
-- Add more questions and initial text
-- Check grammar and typos
-
 <details>
 <summary> How does the technology work? </summary>
 State-of-the-art image classification methods such as used in this repository are based on Convolutional Neural Networks (CNN). CNNs are a special group of Deep Learning approaches shown to work well on image data. The key is to use CNNs which were already trained on millions of images (the ImageNet dataset) and to fine-tune these pre-trained CNNs using a potentially much smaller custom dataset. This is the approach also taken in this repository. The web is full of introductions to these conceptions, such as [link](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac).
