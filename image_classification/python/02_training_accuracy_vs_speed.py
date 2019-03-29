@@ -3,104 +3,239 @@
 
 # # Building Models for Accuracy VS Speed
 #
-# When building a deep learning model for computer vision, there are many parameters that we may want to tune in order get the kind of model we need. Sometimes, we want models that perform at the highest possible accuracy it can achieve. Other times, we want models that can be packed into small machines and optimized for mobility. By configuring these parameters, we can compose models to precisely fit our needs.
-#
-# ## Table of Contents:
-#   * [Trade-off accuracy and speed](#introduction)
-#   * [Methodology](#methodology)
-#     * [Datasets](#methodology-datasets)
-#     * [Model Characteristics](#methodology-model-characteristics)
-#     * [Default Parameters](#methodology-default-parameters)
-#   * [DNN Architecture](#dnn)
-#   * [Learning Rate & Epochs](#lr)
-#   * [Image Resolution](#imsize)
-#   * [TLDR](#tldr)
-
-# ---
-
-# ## What to optimize for? <a name="introduction"></a>
+# The goal of this notebook is to understand how to train a model with different parameters to achieve either a highly accurate but slow model, or a model with fast inference speed but with lower accuracy.
 #
 # As practitioners of computer vision, we want to be able to control what to optimize when building our models. Unless you are building a model for a Kaggle competition, it is unlikely that you can build your model with only its accuracy in mind.
 #
-# In the real world, models must be able to run under varying scenarios with different constraints. Different scenarios requires us, as computer vision practitioners, to prioritize different characteristics over others.
-#
 # For example, in an IoT setting, where the inferencing device has limited computational capabilities, we need to design our models to have a small memory footprint. In contrast, medical situations often require the highest possible accuracy because the cost of mis-classification could impact the well-being of a patient. In this scenario, the accuracy of the model can not be compromised.
 #
-# This notebook will explore different characteristics when modelling and help you come up with the optimal model for your specific scenario.
-#
-# ## Methodology <a name="methodology"></a>
-#
-# To explore the charactistics of a model, we - the computer vision repo team - have conducted various experiments to explore the impact of different hyperparameters on a model's _accuracy_, _training duration_, _inference speed_, and _memory footprint_. In this notebook, we hope to outline some of the key findings so that you can make better decisions when settings parameters.
-#
-# In this notebook, we use the results of our experiments to give us concrete evidence when it comes to understanding which parameters work and which dont.
-#
-# > To recreate these experiments, you can use the `util_ic.parameter_sweeper` module that lets us easily test different parameters when building models. You can learn more about how to use the module in the [Exploring Hyperparameters](.11_exploring_hyperparamters.ipynb) notebook.
-#
-#
-# ### Datasets <a name="methodology-datasets"></a>
-#
-# For our experiments, we relied on a set of six different classification datasets. (These datasets can be downloaded directly from this repo using the `util_ic.datasets` module.)
-#
-# | Dataset Name | Number of Images | Number of Classes |
-# | --- | --- | --- |
-# | food101Subset | 5000 | 5 |
-# | flickrLogos32Subset | 2740 | 33 |
-# | fashionTexture | 1716 | 11 |
-# | recycle_v3 |  564 | 11 |
-# | lettuce | 380 | 2 |
-# | fridgeObjects | 134 | 4 |
-#
-# When selecting these datasets, we wanted to have a variety of image types with different amounts of data and number of classes.
-#
-#
-# ### Model Characteristics <a name="methodology-model-characteristics"></a>
-#
-# In our experiment, we look at these characteristics to evaluate the impact of various paramters.
-#
-# - __Accuracy__
-#
-#     Accuracy is our evaluation metric for the model. It represents the average accuracy over 5 runs for our six different datasets.
-#
-#
-# - __Training Duration__
-#
-#     The training duration is how long it takes to train the model. It represents the average duration over 5 runs for our six different datasets.
-#
-#
-# - __Inference Speed__
-#
-#     The inference speed is the time it takes the model to run 1000 predictions.
-#
-#
-# - __Memory Footprint__
-#
-#     The memory footprint is size of the model parameters saved as the pickled file. This can be achieved by running `learn.export(...)` and examining the size of the exported file.
-#
-# ### Default Parameters <a name="methodology-default-parameters"></a>
-#
-# For our experiments, we used following parameters:
-#
-# | Parameter | Value |
-# | --- | --- |
-# | Batch Size | 16 |
-# | Dropout | 0.5 |
-# | Weight Decay | 0.01 |
-# | Momentum | 0.9 |
-# | Epochs | 15 |
-#
-# It turns out that these parameters did not (in any significant way) affect the model's performance, training/inference speed, or memory footprint. So, for most datasets, we can use these as our default values.
-#
-# When running these experiments, we also set the number of epochs to 15, unless otherwise specified. For the datasets that we're using, training for 15 epochs might be more than is necessary. But one of the observations we've had is that it is extremely hard to overfit our model, so training for more epochs tends not to hurt the model's performance. However, the high number of epochs may mean that our average training durations are longer than what they could be.
+# We have conducted various experiments on multiple diverse datasets to find parameters which work well on a wide variety of settings, for e.g. high accuracy or fast inference. In this notebook, we provide these parameters, so that your initial models can be trained without any parameter tuning. For most datasets, these parameters are close to optimal, so there won't need to change them much. In the second part of the notebook, we will give guidelines as to what parameters could be fine-tuned and how they impact the model, and which parameters typically do not have a big influence
 
-# In the section below, we'll look at how different parameters affect our model.
+# ## Table of Contents:
+# * [Training a High Accuracy or a Fast Inference Speed Classifier ](#model)
+#   * [Choosing between two types of models](#choosing)
+#   * [Training](#training)
+#   * [Evaluation](#evaluation)
+# * [Fine tuning our models](#finetuning)
+#   * [DNN Architecture](#dnn)
+#   * [Learning Rate & Epochs](#lr)
+#   * [Image Resolution](#imsize)
+#   * [Other Parameters](#other-parameters)
+#   * [TLDR](#tldr)
+# * [Appendix](#appendix)
+#   * [Datasets](#dataset)
+#   * [Model Characteristics](#model-characteristics)
 
-# ## DNN Architectures <a name="dnn"></a>
+# ## Training a High Accuracy or a Fast Inference Speed Classifier <a name="model"></a>
+
+# Lets first verify our fastai version:
+
+# In[1]:
+
+
+import fastai
+
+fastai.__version__
+
+
+# Ensure edits to libraries are loaded and plotting is shown in the notebook.
+
+# In[2]:
+
+
+get_ipython().run_line_magic("reload_ext", "autoreload")
+get_ipython().run_line_magic("autoreload", "2")
+get_ipython().run_line_magic("matplotlib", "inline")
+
+
+# Import fastai. For now, we'll import all (import *) so that we can easily use different utilies provided by the fastai library.
+
+# In[3]:
+
+
+import sys
+
+sys.path.append("../")
+import os
+from pathlib import Path
+from utils_ic.datasets import Urls, unzip_url
+from fastai.vision import *
+from fastai.metrics import accuracy
+
+
+# Now that we've set up our notebook, lets set the hyperparameters based on which model type was selected.
+
+# ### Choosing between two types of models <a name="choosing"></a>
+
+# For most scenarios, computer vision practitioners want to create one of two types of models:
+#
+# 1. __Model A__ - A model that performs at its highest possible performance (such as accuracy).
+# 1. __Model B__ - A model with a small memory footprint, fast inference speeds, and fast training times.
+#
+# Based on the findings above, we can get either one of these models by tweaking our paramaters.
+
+# In[4]:
+
+
+# Only one can be True
+MODEL_A = False
+MODEL_B = True
+
+# Path to your data
+DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
+
+
+# Make sure that only one is set to True
+
+# In[5]:
+
+
+assert MODEL_A - MODEL_B != 0
+
+
+# Set parameters based on your selected model.
+
+# In[6]:
+
+
+if MODEL_A:
+    ARCHITECTURE = models.resnet50
+    IM_SIZE = 499  # you try even higher
+    LEARNING_RATE = 1e-4
+    EPOCHS = 15
+
+if MODEL_B:
+    ARCHITECTURE = models.squeezenet1_1
+    IM_SIZE = 299  # you try even lower
+    LEARNING_RATE = 1e-3
+    EPOCHS = 5
+
+
+# ### Training <a name="training"></a>
+#
+# We'll now re-apply the same steps we did in the [training introduction](01_training_introduction.ipynb) notebook here.
+
+# Load our data.
+
+# In[7]:
+
+
+data = (
+    ImageList.from_folder(Path(DATA_PATH))
+    .split_by_rand_pct(valid_pct=0.2, seed=10)
+    .label_from_folder()
+    .transform(tfms=get_transforms(), size=IM_SIZE)
+    .databunch(bs=16)
+    .normalize(imagenet_stats)
+)
+
+
+# Create our learner.
+
+# In[8]:
+
+
+learn = cnn_learner(data, ARCHITECTURE, metrics=accuracy)
+
+
+# Train the last layer for a few epochs.
+
+# In[9]:
+
+
+learn.fit_one_cycle(2, LEARNING_RATE)
+
+
+# Unfreeze the layers
+
+# In[10]:
+
+
+learn.unfreeze()
+
+
+# Fine tune the network for the remaining epochs.
+
+# In[11]:
+
+
+learn.fit_one_cycle(EPOCHS, LEARNING_RATE)
+
+
+# ### Evaluation <a name="evaluation"></a>
+
+# In this section, we test our model on the following characteristics:
+# - accuracy
+# - inference speed
+# - parameter export size / memory footprint required
+#
+#
+# Refer back to the [training introduction](01_training_introduction.ipynb) to learn about other ways to evaluate the model.
+
+# #### Accuracy
+# To keep things simple, we just a look at the final accuracy on the validation set.
+
+# In[12]:
+
+
+_, metric = learn.validate(learn.data.valid_dl, metrics=[accuracy])
+print(f"Accuracy on validation set: {float(metric)}")
+
+
+# #### Inference speed
+#
+# Use the model to inference and time how long it takes.
+
+# In[16]:
+
+
+im = open_image(f"{(Path(DATA_PATH)/learn.data.classes[0]).ls()[0]}")
+
+
+# In[17]:
+
+
+get_ipython().run_cell_magic("timeit", "", "learn.predict(im)")
+
+
+# #### Memory footprint
+#
+# Export our model and inspect the size of the file.
+
+# In[13]:
+
+
+model_fn = "model_a" if MODEL_A else "model_b"
+
+
+# In[14]:
+
+
+learn.export(f"{model_fn}")
+
+
+# In[15]:
+
+
+size_in_mb = os.path.getsize(
+    Path(DATA_PATH) / ("model_a" if MODEL_A else "model_b")
+) / (1024 * 1024.0)
+print(f"'{model_fn}' is {round(size_in_mb, 2)}MB.")
+
+
+# ---
+
+# ## Fine tuning our models <a name="finetuning"></a>
+#
+# Now that we have a good set of hyperparameters for a high-accuracy model and a fast-inference-speed model, lets see how we can fine tune our model even further for it to achieve the characteristics we want.
+
+# ### DNN Architectures <a name="dnn"></a>
 #
 # One of the most important decisions to make when building a model is choosing what DNN architectures to use. Some DNNs have hundreds of layers and end up having quite a large memory footprint with millions of parameters to tune, while others are compact and small enough to fit onto memory limited edge devices.
 #
 # When looking at an architecture, we may want to consider the characteristics mentioned above: the model's accuracy (or the model's performance metric more broadly speaking), the model's memory footprint, how long it takes to train the model, and the inference speed of the model.
 #
-# Lets take a __squeezenet1_1__ model, a __resnet18__ model and __resnet50__ model and compare the differences based on our experiment. For this experiment, we kept the image size at 499 pixels.
+# Lets take a __squeezenet1_1__ model, a __resnet18__ model and __resnet50__ model and compare the differences based on our experiment.
 #
 # ![architecture_comparisons](figs/architecture_comparisons.png)
 #
@@ -163,7 +298,7 @@
 # </details>
 #
 
-# ## Learning Rate and Epochs <a name="lr"></a>
+# ### Learning Rate and Epochs <a name="lr"></a>
 #
 # Learning rate tends to be one of the most important parameters to set when training your model.
 #
@@ -177,11 +312,14 @@
 #
 # In both figures, we can see that a learning rate of 1e-3 and 1e-4 tends to work the best across the different datasets and the two settings for epochs.
 #
+# > Note: Fastai has implemented [one cycle policy with cyclical momentum](https://arxiv.org/abs/1803.09820) which requires a maximum learning rate since the learning rate will shift up and down over its training duration. Instead of calling `fit()`, we simply call `fit_one_cycle()`. This is what we used when testing.
+#
 # In the figure on the left which shows the results of the different learning rates on different datasets at 15 epochs, we can see that a learning rate of 1e-4 does the best overall. But this may not be the case for every dataset. If you look carefully, there is a pretty significant variance between the datasets and it may be possible that a learning rate of 1-e3 works better than a learning rate of 1e-4 for some datasets.
 #
 # In the figure on the right, both 1e-4 and 1e-3 seem to work well. At 15 epochs, the results of 1e-4 are only slightly better than that of 1e-3. However, at 3 epochs, a learning rate of 1e-3 out performs the learning rate at 1e-4. This makes sense since we're limiting the training to only 3 epochs, the model that can update its weights more quickly will perform better.
+# As a result, we may learn towards using higher learning rates (such as 1e-3) if we want to minimize the training time, and lower learning rates (such as 1e-4) if training time is not constrained. Generally speaking, choosing a learning rate of 5e-3 will work pretty well for most datasets.
 #
-# As a result, we may learn towards using higher learning rates (such as 1e-3) if we want to minimize the training time, and lower learning rates (such as 1e-4) if training time is not constrained.
+# When it comes to choosing the number of epochs, a common question is - _Won't too many epochs will cause over-fitting?_ It turns out that it quite difficult to over-fit convolutional neural networks if your datasize if sufficiently large. Unless your are working with small datasets, using 15 epochs tends to work pretty well in most cases.
 #
 # ---
 #
@@ -234,7 +372,7 @@
 # </p>
 # </details>
 
-# ## Image Resolution <a name="imsize"></a>
+# ### Image Resolution <a name="imsize"></a>
 #
 # A model's input image resolution tends to affect its accuracy. Usually, convolutional neural networks able to take advantage of higher resolution images.
 #
@@ -305,6 +443,32 @@
 # </p>
 # </details>
 
+# ### Other Parameters <a name="other-parameters"></a>
+#
+# In this section, we examine some of the other common hyperparameters when dealing with DNNs, namely, batch size, dropout, weight decay, and momemtum. The key take-away is that these parameters do not (in any significant way) affect the model's performance, training/inference speed, or memory footprint. So, for most datasets, we can get pretty good results just using these default values.
+#
+# | Parameter | Good Default Value |
+# | --- | --- |
+# | Batch Size | 16 or 32 |
+# | Dropout | 0.5 or (0.5 on the final layer and 0.25 on all subsequent layers) |
+# | Weight Decay | 0.01 |
+# | Momentum | 0.9 or (min=0.85 and max=0.95 when using cyclical momentum) |
+#
+# #### Batch Size
+# Batch size is the number of training samples you use in order to make one update to the model parameters. A batch size of 16 or 32 works well for most cases. You could use all the training samples (so a batch size equal to the number of training samples you have) to calculate the gradients for every single update so that we reach a convergence faster, however that is not efficient and most GPUs dont have enough RAM to manage batch sizes that are too large. When the batch size is too low, the weights might be unable to learn or it converges extremely slowly. As a compromise, we can pick a happy medium for the batch size. Depending on your dataset and the GPU you have, you can start with a batch size of 32, and move down to 16 if your GPU doesn't have enough memory.
+#
+# #### Dropout
+# Dropout is a way to discard activations at random when training your model. It is a way to keep the model from over-fitting on the training data. In Fastai, dropout is by default set to 0.5 on the final layer, and 0.25 on all subsequent layer. Unless there is clear evidence of over-fitting, drop out tends to work well at this default so there is no need to change it much.
+#
+# #### Weight decay (L2 regularization)
+# Weight decay is a regularization term applied when minimizing the network's loss. Generally speaking, the more training examples you have, the lower we can set the term since the model will generalize across all training samples. However, the more parameters you have, the higher you should set the term to mitigate against overfitting. When weight decay is big, the penalty for big weights is also big, when it is small weights can freely grow. In Fastai, the default weight decay is 0.1. Unless there is clear evidence of over-fitting, there is no need to increase it.
+#
+# #### Momentum
+# Momentum is a way to reach convergence faster when training our model. Conceptually, it is a way to incorporate a weighted average of the most recent updates to the current update. Fastai implements cyclical momentum when calling `fit_one_cycle()` , so the momentum will fluctuate up and down over the course of the training cycle. By default, Fastai uses a max of 0.95 and a min of 0.85. Without cyclical momentum, the default value for momentum is simply the middle point - 0.9. It turns out theres not much need to change momentum, especially if you are not time constrained when training your model.
+#
+#
+#
+
 # ## TLDR <a name="tldr"></a>
 #
 # Heres the tldr if you didn't have time to read the above.
@@ -326,203 +490,56 @@
 #
 # __Other parameters__
 #
-# - Don't worry about the model's __batch size__, __momentum__, __drop-out__ and __weight decay__. Unless you're really fine-tuning your model, just stick with these [defaults](#methodology-default-parameters).
+# - Don't worry about the model's __batch_size, __momentum__, __drop-out__ and __weight decay__. Unless you're really fine-tuning your model, just stick with the [defaults](#other-parameters).
 #
 
 # ---
 
-# # Training our classifier
-
-# Lets first verify our fastai version:
-
-# In[1]:
-
-
-import fastai
-
-fastai.__version__
-
-
-# Ensure edits to libraries are loaded and plotting is shown in the notebook.
-
-# In[2]:
-
-
-get_ipython().run_line_magic("reload_ext", "autoreload")
-get_ipython().run_line_magic("autoreload", "2")
-get_ipython().run_line_magic("matplotlib", "inline")
-
-
-# Import fastai. For now, we'll import all (import *) so that we can easily use different utilies provided by the fastai library.
-
-# In[3]:
-
-
-import sys
-
-sys.path.append("../")
-import os
-from pathlib import Path
-from utils_ic.datasets import Urls, unzip_url
-from fastai.vision import *
-from fastai.metrics import accuracy
-
-
-# Now that we've set up our notebook, lets set the hyperparameters based on which model type was selected.
-
-# ## Choosing between two types of models
-
-# For most scenarios, computer vision practitioners want to create one of two types of models:
+# ## (Appendix) How we found good default parameters <a name="appendix"></a>
 #
-# 1. __Model A__ - A model that performs at its highest possible performance (such as accuracy).
-# 1. __Model B__ - A model with a small memory footprint, fast inference speeds, and fast training times.
+# To explore the charactistics of a model, we - the computer vision repo team - have conducted various experiments to explore the impact of different hyperparameters on a model's _accuracy_, _training duration_, _inference speed_, and _memory footprint_. In this notebook, we hope to outline some of the key findings so that you can make better decisions when settings parameters.
 #
-# Based on the findings above, we can get either one of these models by tweaking our paramaters.
-
-# In[4]:
-
-
-# Only one can be True
-MODEL_A = False
-MODEL_B = True
-
-# Path to your data
-DATA_PATH = unzip_url(Urls.recycle_path, exist_ok=True)
-
-
-# Make sure that only one is set to True
-
-# In[5]:
-
-
-assert MODEL_A - MODEL_B != 0
-
-
-# In[6]:
-
-
-if MODEL_A:
-    ARCHITECTURE = models.resnet50
-    IM_SIZE = 499  # you try even higher
-    LEARNING_RATE = 1e-4
-    EPOCHS = 15
-
-if MODEL_B:
-    ARCHITECTURE = models.squeezenet1_1
-    IM_SIZE = 299  # you try even lower
-    LEARNING_RATE = 1e-3
-    EPOCHS = 5
-
-
-# ## Training
+# In this notebook, we use the results of our experiments to give us concrete evidence when it comes to understanding which parameters work and which dont.
 #
-# We'll now re-apply the same steps we did in the [training introduction](01_training_introduction.ipynb) notebook here.
-
-# Load our data.
-
-# In[7]:
-
-
-data = (
-    ImageList.from_folder(Path(DATA_PATH))
-    .split_by_rand_pct(valid_pct=0.2, seed=10)
-    .label_from_folder()
-    .transform(size=IM_SIZE)
-    .databunch(bs=16)
-    .normalize(imagenet_stats)
-)
-
-
-# Create our learner.
-
-# In[8]:
-
-
-learn = cnn_learner(data, ARCHITECTURE, metrics=accuracy)
-
-
-# Train the last layer for a few epochs.
-
-# In[9]:
-
-
-learn.fit_one_cycle(2, LEARNING_RATE)
-
-
-# Unfreeze the layers
-
-# In[10]:
-
-
-learn.unfreeze()
-
-
-# Fine tune the network for the remaining epochs.
-
-# In[11]:
-
-
-learn.fit_one_cycle(EPOCHS, LEARNING_RATE)
-
-
-# ## Evaluation
-
-# In this section, we test our model on the following characteristics:
-# - accuracy
-# - parameter export size / memory footprint required
-# - inference speed
+# > To create these experiments, we used the `util_ic.parameter_sweeper` module that lets us easily test different parameters across different datasets.
 #
-# Refer back to the [training introduction](01_training_introduction.ipynb) to learn about other ways to evaluate the model.
-
-# #### Accuracy
-# For now, we can just take a look at the final accuracy on the validation set.
-
-# In[12]:
-
-
-_, metric = learn.validate(learn.data.valid_dl, metrics=[accuracy])
-print(f"Accuracy on validation set: {float(metric)}")
-
-
-# #### Memory footprint
 #
-# Export our model and inspect the size of the file.
-
-# In[13]:
-
-
-model_fn = "model_a" if MODEL_A else "model_b"
-
-
-# In[14]:
-
-
-learn.export(f"{model_fn}")
-
-
-# In[15]:
-
-
-size_in_mb = os.path.getsize(
-    Path(DATA_PATH) / ("model_a" if MODEL_A else "model_b")
-) / (1024 * 1024.0)
-print(f"'{model_fn}' is {round(size_in_mb, 2)}MB.")
-
-
-# #### Inference speed
+# ### Datasets <a name="datasets"></a>
 #
-# Use the model to inference and time how long it takes.
-
-# In[16]:
-
-
-im = open_image(f"{(Path(DATA_PATH)/learn.data.classes[0]).ls()[0]}")
-
-
-# In[17]:
-
-
-get_ipython().run_cell_magic("timeit", "", "learn.predict(im)")
-
-
-# Now that we have a good understanding of how different parameters affect the model, we can create more specific models to better fit out needs.
+# For our experiments, we relied on a set of six different classification datasets. When selecting these datasets, we wanted to have a variety of image types with different amounts of data and number of classes.
+#
+# | Dataset Name | Number of Images | Number of Classes |
+# | --- | --- | --- |
+# | food101Subset | 5000 | 5 |
+# | flickrLogos32Subset | 2740 | 33 |
+# | fashionTexture | 1716 | 11 |
+# | recycle_v3 |  564 | 11 |
+# | lettuce | 380 | 2 |
+# | fridgeObjects | 134 | 4 |
+#
+#
+#
+#
+# ### Model Characteristics <a name="model-characteristics"></a>
+#
+# In our experiment, we look at these characteristics to evaluate the impact of various paramters.
+#
+# - __Accuracy__
+#
+#     Accuracy is our evaluation metric for the model. It represents the average accuracy over 5 runs for our six different datasets.
+#
+#
+# - __Training Duration__
+#
+#     The training duration is how long it takes to train the model. It represents the average duration over 5 runs for our six different datasets.
+#
+#
+# - __Inference Speed__
+#
+#     The inference speed is the time it takes the model to run 1000 predictions.
+#
+#
+# - __Memory Footprint__
+#
+#     The memory footprint is size of the model parameters saved as the pickled file. This can be achieved by running `learn.export(...)` and examining the size of the exported file.
+#

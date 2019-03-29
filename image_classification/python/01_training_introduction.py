@@ -163,7 +163,7 @@ learn.unfreeze()
 # In[12]:
 
 
-learn.fit_one_cyle(EPOCHS, LEARNING_RATE)
+learn.fit_one_cycle(EPOCHS, LEARNING_RATE)
 
 
 # ## Evaluating

@@ -14,17 +14,21 @@ def cleanup_data():
 
 
 @pytest.fixture(scope="module")
-def setup_all_datasets(request):
-    """ Sets up all available datasets for testing on. """
-    ParameterSweeper.download_benchmark_datasets(TEMP_DIR)
+def setup_multiple_datasets(request):
+    """ Sets up multiple datasets for testing on. """
+    if not os.path.exists(TEMP_DIR):
+        os.makedirs(TEMP_DIR)
+    unzip_url(Urls.fridge_objects_watermark_tiny_path, TEMP_DIR, exist_ok=True)
+    unzip_url(Urls.fridge_objects_tiny_path, TEMP_DIR, exist_ok=True)
     request.addfinalizer(cleanup_data)
 
 
 @pytest.fixture(scope="module")
 def setup_a_dataset(request):
     """ Sets up a dataset for testing on. """
-    os.makedirs(TEMP_DIR)
-    unzip_url(Urls.fridge_objects_path, TEMP_DIR, exist_ok=True)
+    if not os.path.exists(TEMP_DIR):
+        os.makedirs(TEMP_DIR)
+    unzip_url(Urls.fridge_objects_tiny_path, TEMP_DIR, exist_ok=True)
     request.addfinalizer(cleanup_data)
 
 
@@ -47,7 +51,7 @@ def _test_sweeper_run(df: pd.DataFrame, df_length: int):
 
 def test_default_sweeper_single_dataset(setup_a_dataset):
     """ Test default sweeper on a single dataset. """
-    fridge_objects_path = TEMP_DIR / "fridgeObjects"
+    fridge_objects_path = TEMP_DIR / "fridgeObjectsTiny"
     sweeper = ParameterSweeper()
     df = sweeper.run([fridge_objects_path])
     _test_sweeper_run(df, df_length=3)
@@ -56,7 +60,7 @@ def test_default_sweeper_single_dataset(setup_a_dataset):
     assert df.mean(level=(1))["accuracy"][0] > 0.85
 
 
-def test_default_sweeper_benchmark_dataset(setup_all_datasets):
+def test_default_sweeper_benchmark_dataset(setup_multiple_datasets):
     """
     Test default sweeper on benchmark dataset.
     WARNING: This test can take a while to execute since we run the sweeper
@@ -68,17 +72,15 @@ def test_default_sweeper_benchmark_dataset(setup_all_datasets):
     _test_sweeper_run(df, df_length=len(datasets))
 
     # assert min accuracy for each dataset
-    assert df.mean(level=(2)).loc["fridgeObjects", "accuracy"] > 0.85
-    assert df.mean(level=(2)).loc["food101Subset", "accuracy"] > 0.75
-    assert df.mean(level=(2)).loc["fashionTexture", "accuracy"] > 0.70
-    assert df.mean(level=(2)).loc["flickrLogos32Subset", "accuracy"] > 0.75
-    assert df.mean(level=(2)).loc["lettuce", "accuracy"] > 0.70
-    assert df.mean(level=(2)).loc["recycle_v3", "accuracy"] > 0.85
+    assert df.mean(level=(2)).loc["fridgeObjectsTiny", "accuracy"] > 0.60
+    assert (
+        df.mean(level=(2)).loc["fridgeObjectsWatermarkTiny", "accuracy"] > 0.60
+    )
 
 
 def test_update_parameters_01(setup_a_dataset):
     """ Tests updating parameters. """
-    fridge_objects_path = TEMP_DIR / "fridgeObjects"
+    fridge_objects_path = TEMP_DIR / "fridgeObjectsTiny"
     sweeper = ParameterSweeper()
 
     # at this point there should only be 1 permutation of the default params

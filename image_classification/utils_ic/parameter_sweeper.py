@@ -406,7 +406,7 @@ class ParameterSweeper:
 
         return learn, duration
 
-    def update_parameters(self, **kwargs) -> None:
+    def update_parameters(self, **kwargs) -> "ParameterSweeper":
         """ Update the class object's parameters.
         If kwarg key is not in an existing param key, then raise exception.
         If the kwarg value is None, pass.
@@ -418,6 +418,8 @@ class ParameterSweeper:
             if v is None:
                 continue
             self.params[k] = v
+
+        return self
 
     def run(
         self, datasets: List[Path], reps: int = 3, early_stopping: bool = False
