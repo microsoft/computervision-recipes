@@ -2,17 +2,22 @@
 
 ## Frequently asked questions
 
-Expand each question below to see the answer. Note that some browsers do not render the drop-down text correctly.
 
-<details>
-<summary> How does the technology work? </summary>
+* [TEST ](#test)
+  * [How does the technology work?](#how-does-the-technology-work)
+  * [Which problems can be solved using image classification, and which ones cannot?](#which-problems-can-be-solved-using-image-classification?)
+
+
+
+### How does the technology work?
+
 State-of-the-art image classification methods such as used in this repository are based on Convolutional Neural Networks (CNN). CNNs are a special group of Deep Learning approaches shown to work well on image data. The key is to use CNNs which were already trained on millions of images (the ImageNet dataset) and to fine-tune these pre-trained CNNs using a potentially much smaller custom dataset. This is the approach also taken in this repository. The web is full of introductions to these conceptions, such as [link](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac).
-</details>
 
-<details>
-<summary> Which problems can be solved using image classification, and which ones cannot? </summary>
+
+### Which problems can be solved using image classification?
+
 Image classification can be used if the object-of-interest is relatively large in the image, e.g. more than 20% image width/height. If the object is smaller, or if the location of the object is required, then object detection methods should be used instead.
-</details>
+
 
 <details>
 <summary> How many images are required to train a model? </summary>
