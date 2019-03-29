@@ -34,13 +34,17 @@ Scenario-agnostic machine learning service that helps users accelerate training 
 
 Most applications in Computer Vision fall into one of these 4 categories:
 
-- **Image classification**: Given an input image, predict what objects are present. This is typically the easiest CV problem to solve, however requires objects to be reasonably large in the image. <img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_ic_vis.jpg" height="150" alt="Image classification visualization"/>  
+- **Image classification**: Given an input image, predict what objects are present. This is typically the easiest CV problem to solve, however requires objects to be reasonably large in the image.
+<img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_ic_vis.jpg" height="150" alt="Image classification visualization"/>  
 
-- **Object Detection**: Given an input image, predict what objects are present and where the objects are (using rectangular coordinates). Object detection approaches work even if the object is small. However model training takes longer than image classification, and manually annotating images is more time-consuming. <img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_od_vis.jpg" height="150" alt="Object detect visualization"/>
+- **Object Detection**: Given an input image, predict what objects are present and where the objects are (using rectangular coordinates). Object detection approaches work even if the object is small. However model training takes longer than image classification, and manually annotating images is more time-consuming.
+<img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_od_vis.jpg" height="150" alt="Object detect visualization"/>
 
-- **Image Similarity** Given an input image, find all similar images in a reference dataset. Here, rather than predicting a label or a rectangle, the task is to sort a reference dataset by their similarity to the query image. <img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_is_vis.jpg" height="150" alt="Image similarity visualization"/>
+- **Image Similarity** Given an input image, find all similar images in a reference dataset. Here, rather than predicting a label or a rectangle, the task is to sort a reference dataset by their similarity to the query image.
+<img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_is_vis.jpg" height="150" alt="Image similarity visualization"/>
 
-- **Image Segmentation** Given an input image, assign a label to all pixels e.g. background, bottle, hand, sky, etc. In practice, this problem is less common in industry, in big parts due to the segmentation masks required during training. <img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_iseg_vis.jpg" height="150" alt="Image segmentation visualization"/>
+- **Image Segmentation** Given an input image, assign a label to all pixels e.g. background, bottle, hand, sky, etc. In practice, this problem is less common in industry, in big parts due to the segmentation masks required during training.
+<img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_iseg_vis.jpg" height="150" alt="Image segmentation visualization"/>
 
 
 ## Contributing
