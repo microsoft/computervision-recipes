@@ -5,12 +5,12 @@
 
 * General
   * [How does the technology work?](#how-does-the-technology-work)
-  * [Which problems can be solved using image classification, and which ones cannot](#which-problems-can-be-solved-using-image-classification?)
+  * [Which problems can be solved using image classification, and which ones cannot](#which-problems-can-be-solved-using-image-classification)
 * Data
   * [How many images are required to train a model?](#how-many-images-are-required-to-train-a-model)
   * [How to annotate images?](#how-to-annotate-images)
   * [How to split into training and test images?](#How-to-split-into-training-and-test-images)
-  * [How to design a good test set?](#how-to-design-a-good-test-set?)
+  * [How to design a good test set?](#how-to-design-a-good-test-set)
   * [How to speed up training?](#how-to-speed-up-training)
 * Training
   * [How to improve accuracy or inference speed?](#how-to-improve-accuracy-or-inference-speed)
