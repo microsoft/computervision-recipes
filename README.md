@@ -40,7 +40,7 @@ Most applications in Computer Vision fall into one of these 4 categories:
 
 - **Object Detection**: Given an input image, predict what objects are present and where the objects are (using rectangular coordinates). Object detection approaches work even if the object is small. However model training takes longer than image classification, and manually annotating images is more time-consuming.
 
-<img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_od_vis.jpg" height="150" alt="Object detect visualization"/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_od_vis.jpg" height="150" alt="Object detect visualization"/>
 
 - **Image Similarity** Given an input image, find all similar images in a reference dataset. Here, rather than predicting a label or a rectangle, the task is to sort a reference dataset by their similarity to the query image.
 
