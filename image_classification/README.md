@@ -1,10 +1,9 @@
 # Image classification
 
-This directory provides examples and best practices for building image classification systems. We recommend to use PyTorch as Deep Learning library due to its ease of use, simple debugging, and popularity in the data science community. For Computer Vision functionality, we rely heavily on [fast.ai](https://github.com/fastai/fastai), one of the most well-known PyTorch data science libraries, which comes with rich feature support and extensive documentation.
+This directory provides examples and best practices for building image classification systems. Our goal is enable the users to bring their own datasets and train a high-accuracy classifier easily and quickly. To this end, we provide example notebooks with pre-set default parameters shown to work well on a variety of datasets, and extensive documentation of common pitfalls, best practices, etc. In addition, we show how to use the Azure cloud to e.g. deploy models as a webserivce, or to speed up training on large datasets using the power of the cloud.
 
-Our goal is enable the users to bring their own datasets and train a high-accuracy classifier easily and quickly. To this end, we provide example notebooks with pre-set default parameters shown to work well on a variety of datasets, and extensive documentation of commont pitfalls, best practices, etc. In addition, we show how to use the Azure cloud to e.g. deploy models as a webserivce, or to speed up training on large datasets using the power of the cloud.
 
-See also fast.ai's [documentation](https://docs.fast.ai/) and most recent [course](https://github.com/fastai/course-v3) for more explanations and code examples.
+We recommend to use PyTorch as Deep Learning library due to its ease of use, simple debugging, and popularity in the data science community. For Computer Vision functionality, we rely heavily on [fast.ai](https://github.com/fastai/fastai), one of the most well-known PyTorch data science libraries, which comes with rich feature support and extensive documentation. To get a better understanding of the underlying technology, we highly recommend to watch the [2019 fast.ai lecture series](https://course.fast.ai/videos/?lesson=1), and to go through fast.ai's [documentation](https://docs.fast.ai/).
 
 
 ## Notebooks
@@ -14,10 +13,10 @@ We provide several notebooks to show how image classification algorithms can be 
 | Notebook name | Description |
 | --- | --- |
 | [00_webcam.ipynb](.notebooks/00_webcam.ipynb)| Quick start notebooks which demonstrate how to load a trained model and run inference using a single image of webcam input.
-| [01_training_introduction.ipynb](.notebooks/01_training_introduction.ipynb)| Notebook which shows how to train a model and explains some of the underlying concepts.|
-| [02_training_accuracy_vs_speed.ipynb](.notebooks/02_training_accuracy_vs_speed.ipynb)| Advanced notebook to train a model with e.g. high accuracy of fast inference speed. <font color="orange"> Use this to train your custom models </font> |
-| [11_exploring_hyperparameters.ipynb](.notebooks/11_exploring_hyperparameters.ipynb)| Notebook to find optimal parameters by doing an exhaustive grid search. |
-
+| [01_training_introduction.ipynb](.notebooks/01_training_introduction.ipynb)| Notebook which explains some of the basic concepts around model training and evaluation.|
+| [02_training_accuracy_vs_speed.ipynb](.notebooks/02_training_accuracy_vs_speed.ipynb)| Notebook to train a model with e.g. high accuracy of fast inference speed. <font color="orange"> Use this to train on your own datasets! </font> |
+| [11_exploring_hyperparameters.ipynb](.notebooks/11_exploring_hyperparameters.ipynb)| Advanced notebook to find optimal parameters by doing an exhaustive grid search. |
+| deployment/[01_deployment_on_azure_container_instances.ipynb](.notebooks/11_exploring_hyperparameters.ipynb)| Notebook showing how to deploy a trained model as REST API using Azure Container Instances. |
 
 ## Getting Started
 
@@ -45,10 +44,30 @@ To setup on your local machine:
 2. Run the [Webcam Image Classification Notebook](notebooks/00_webcam.ipynb) notebook under the notebooks folder. Make sure to change the kernel to "Python (cvbp)".
 
 
-## Technology
 
-A large number of problems in the computer vision domain can be solved using image classification approaches. These include building models which answer questions such as, *"Is an OBJECT present in the image?"* (where OBJECT could for example be "dog", "car", "ship", etc.) as well as more complex questions, like *"What class of eye disease severity is evinced by this patient's retinal scan?"*
+## Frequently asked questions
+<details>
+<summary>How does the technology work?</summary>
+Todo: talk about CNN/finetuning...
+</details>
 
+<details>
+<summary>Which problems can be solved using image classification, and which ones cannot?</summary>
+orem ipsum dolor sit amet, in sed tale eligendi. Consul sensibus molestiae usu id, mutat nemore eos an. Sit te esse saepe laoreet, mei laudem alterum democritum in. No agam consul mentitum qui, nec nemore laboramus appellantur ut. Vim vero possit ex. Iudico propriae sapientem est ex, no probo deserunt quo.
+</details>
+
+
+
+- How to annotate my images
+<details>
+<summary>orem ipsum dolor sit amet, in sed tale eligendi. Consul sensibus molestiae usu id, mutat nemore eos an. orem ipsum dolor sit amet, in sed tale eligendi. Consul sensibus molestiae usu id, mutat nemore eos an.</summary>
+orem ipsum dolor sit amet, in sed tale eligendi. Consul sensibus molestiae usu id, mutat nemore eos an. Sit te esse saepe laoreet, mei laudem alterum democritum in. No agam consul mentitum qui, nec nemore laboramus appellantur ut. Vim vero possit ex. Iudico propriae sapientem est ex, no probo deserunt quo.
+</details>
+
+- What are common pitfalls one should try to avoid
+<details>
+orem ipsum dolor sit amet, in sed tale eligendi. Consul sensibus molestiae usu id, mutat nemore eos an. Sit te esse saepe laoreet, mei laudem alterum democritum in. No agam consul mentitum qui, nec nemore laboramus appellantur ut. Vim vero possit ex. Iudico propriae sapientem est ex, no probo deserunt quo.
+</details>
 
 
 ## Coding guidelines
@@ -75,8 +94,3 @@ The main variables and abbreviations are given in the table below:
 | lines,strings          | List of strings
 | list1D                 | List of items, not necessarily strings
 | -s    | Multiple of something (plural) should be indicated by appending an "s" to an abbreviation.
-
-
-## Appendix
-
-1. [Fastai course v3](https://github.com/fastai/course-v3)
