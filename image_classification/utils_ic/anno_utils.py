@@ -49,12 +49,12 @@ def wImread(im_path):
     imgBytes = open(im_path, "rb").read()
     return imgBytes
 
-def _cap_min_max(val, min_val, max_val):
-    return min( max(val, min_val), max_val)
+#def _cap_min_max(val, min_val, max_val):
+#    return min( max(val, min_val), max_val)
             
 
 class AnnotationWidget(object):
-    IM_WIDTH = 100 #500  # pixels
+    IM_WIDTH = 500  # pixels
 
     def __init__(
         self,
@@ -66,9 +66,6 @@ class AnnotationWidget(object):
         """Widget class to annotate images.
 
         Args:
-            dataset (LabelList): Data used for prediction, containing ImageList x and CategoryList y.
-            y_score (np.ndarray): Predicted scores.
-            y_label (iterable): Predicted labels. Note, not a true label.
             labels (list of strings): Class names 
             im_dir (string): Directory containing the images to be annotated.
             anno_fname(string): Filename where to write annotations to, and (if exists) load initial annotations from. 
@@ -138,29 +135,31 @@ class AnnotationWidget(object):
         # ------------
         # Callbacks + logic
         # ------------
-        def skip_image(image_index):
-            """Return if image should be skipped."""
+        def skip_image():
+            """Return true if image should be skipped, and false otherwise."""
+            # Stop skipping if image index is out of bounds
+            if self.vis_image_index <= 0 or self.vis_image_index >= int(len(self.im_filenames)) - 1:
+                return False
+
             # Skip if image has annotation
             im_filename = self.im_filenames[self.vis_image_index]
             labels = self.annos[im_filename]["labels"]
             exclude = self.annos[im_filename]["exclude"]
             if self.w_skip_annotated.value and (exclude or len(labels) > 0):
                 return True
+
             return False
 
         def button_pressed(obj):
             """Next / previous image button callback."""
-            step = int(obj.value)
-            self.vis_image_index += step
-
             # Find next/previous image
-            self.vis_image_index = _cap_min_max(self.vis_image_index, 0, len(self.im_filenames) - 1)   
-            while skip_image(self.vis_image_index):
-                self.vis_image_index += step
-                if self.vis_image_index <= 0 or self.vis_image_index >= int(len(self.im_filenames)) - 1:
-                    break
-            self.vis_image_index = _cap_min_max(self.vis_image_index, 0, len(self.im_filenames) - 1) 
+            step = int(obj.value)
 
+            self.vis_image_index += step 
+            while skip_image():
+                self.vis_image_index += step
+                
+            self.vis_image_index = min( max(self.vis_image_index, 0), len(self.im_filenames) - 1)
             self.w_image_slider.value = self.vis_image_index
             self.update_ui()
 
@@ -197,10 +196,6 @@ class AnnotationWidget(object):
                 #with open(anno_path,'w') as f:
                 #    f.write(xml_string)
 
-
-
-
-            
 
         # ------------
         # UI - image + controls (left side)
@@ -255,34 +250,6 @@ class AnnotationWidget(object):
         self.label_widgets = [widgets.Checkbox(value=False, description=label) for label in self.labels]
         for label_widget in self.label_widgets:
             label_widget.observe(anno_changed)
-
-        #self.label_widgets = []
-        #for label in self.labels:
-        #    self.label_widgets.append(
-        #        widgets.Checkbox(
-        #            value=False, description=label
-        #        )
-        #    )
-
-        #w_gt_header = widgets.HTML(value="Ground truth:")
-        #self.w_gt_label = widgets.Text(value="")
-        #self.w_gt_label.layout.width = '360px'
-        
-        #w_pred_header = widgets.HTML(value="Predictions:")
-        #self.w_pred_labels = widgets.Textarea(value="")
-        #self.w_pred_labels.layout.height = '200px'
-        #self.w_pred_labels.layout.width = '360px'
-        
-        #w_scores_header = widgets.HTML(value="Classification scores:")
-        #self.w_scores = bqpyplot.figure()
-        #self.w_scores.layout.height = '250px'
-        #self.w_scores.layout.width = '370px'
-        #self.w_scores.fig_margin = {
-        #    "top": 5,
-        #    "bottom": 80,
-        #    "left": 30,
-        #    "right": 5,
-        #}
 
         # Combine UIs into tab widget
         w_info = widgets.VBox(
