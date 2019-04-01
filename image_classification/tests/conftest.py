@@ -4,7 +4,7 @@
 # NOTE: This file is used by pytest to inject fixtures automatically. As it is explained in the documentation
 # https://docs.pytest.org/en/latest/fixture.html:
 # "If during implementing your tests you realize that you want to use a fixture function from multiple test files
-# you can move it to a conftest.py file. You don’t need to import the fixture you want to use in a test, it
+# you can move it to a conftest.py file. You don't need to import the fixture you want to use in a test, it
 # automatically gets discovered by pytest."
 
 import os
