@@ -36,12 +36,16 @@ To setup on your local machine:
     conda activate cvbp
     python -m ipykernel install --user --name cvbp --display-name "Python (cvbp)"
     ```
+    If you use *jupyterlab*, install jupyter-webrtc widget:
+    ```
+    jupyter labextension install jupyter-webrtc
+    ``` 
 1. Start the Jupyter notebook server
     ```
     cd notebooks
     jupyter notebook
     ```
-2. Run the [Webcam Image Classification Notebook](notebooks/00_webcam.ipynb) notebook under the notebooks folder. Make sure to change the kernel to "Python (cvbp)".
+1. Run the [Webcam Image Classification Notebook](notebooks/00_webcam.ipynb) notebook under the notebooks folder. Make sure to change the kernel to "Python (cvbp)".
 
 
 ## Frequently asked questions
