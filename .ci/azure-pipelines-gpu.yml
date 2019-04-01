@@ -1,0 +1,52 @@
+# This build definition runs unit test across Linux and Windows GPU Hosted agents.
+# We need this file to make sure our code works across windows and linux and identifies
+# any platform breaking changes that gets introduced.
+# Pull request against these pipelines will trigger this build
+pr:
+- master
+- staging
+
+#Any commit to this branch will trigger the build.
+trigger:
+- staging
+- master
+
+# Running build on Windows and Linux GPU hosted VMs
+strategy:
+  matrix:
+    windows:
+      AgentName: Windows GPU Agent
+      imageName: 'winagent-gpu'   
+    linux:
+      AgentName: Linux GPU Agent
+      imageName: 'linuxagent-gpu'
+
+
+pool:
+  name: cvbpbuildagents
+
+steps:
+
+- bash: |
+    echo "##vso[task.prependpath]/data/anaconda/bin"
+  displayName: Add Conda to PATH
+
+- bash: |
+    source deactivate cvbp
+    conda remove -q -n cvbp --all -y
+    conda env create -f image_classification/environment.yml
+    conda env list  
+    source activate cvbp
+  displayName: 'Build Configuration'
+
+- bash: |
+    cd image_classification
+    source activate cvbp
+    python -m ipykernel install --user --name cvbp --display-name "cvbp"
+    pytest tests/unit --junitxml=junit/test-unitttest.xml
+  displayName: 'Run Unit tests'
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFiles: '**/test-unitttest.xml'
+    testRunTitle: 'Test results for PyTest'
