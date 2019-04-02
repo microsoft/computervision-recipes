@@ -59,5 +59,5 @@ def get_files_in_directory(directory: str, suffixes: List[str] = None) -> List[s
         raise Exception(f"Directory '{directory}' does not exist.")
     filenames = [s for s in os.listdir(directory) if not os.path.isdir(os.path.join(directory,s))]
     if suffixes and suffixes != "":
-        filenames = [s for s in filenames if s.lower().endswith(suffixes)]
+        filenames = [s for s in filenames if s.lower().endswith(tuple(suffixes))]
     return filenames
