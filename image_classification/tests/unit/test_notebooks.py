@@ -3,7 +3,6 @@
 
 
 import papermill as pm
-from utils_ic.datasets import Urls, unzip_url
 
 # Unless manually modified, python3 should be the name of the current jupyter kernel
 # that runs on the activated conda environment
@@ -21,42 +20,40 @@ def test_webcam_notebook_run(notebooks):
     )
 
 
-def test_01_notebook_run(notebooks):
+def test_01_notebook_run(notebooks, dataset):
     notebook_path = notebooks["01_training_introduction"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(
-            PM_VERSION=pm.__version__,
-            DATA_PATH=unzip_url(Urls.fridge_objects_tiny_path, exist_ok=True),
-        ),
+        parameters=dict(PM_VERSION=pm.__version__, DATA_PATH=dataset),
         kernel_name=KERNEL_NAME,
     )
 
 
-def test_02_notebook_run(notebooks):
+def test_02_notebook_run(notebooks, dataset):
     notebook_path = notebooks["02_training_accuracy_vs_speed"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
-            DATA_PATH=unzip_url(Urls.fridge_objects_tiny_path, exist_ok=True),
-            MODEL_A=False,  # high performance model
-            MODEL_B=True,  # high speed / low memory model
+            DATA_PATH=dataset,
+            MODEL_TYPE="fast_inference",  # options: ['fast_inference', 'high_accuracy', 'small_size']
+            EPOCHS_HEAD=1,
+            EPOCHS_BODY=1,
         ),
         kernel_name=KERNEL_NAME,
     )
 
 
-def test_11_notebook_run(notebooks):
+def test_11_notebook_run(notebooks, dataset):
     notebook_path = notebooks["11_exploring_hyperparameters"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
-            DATA=[unzip_url(Urls.fridge_objects_tiny_path, exist_ok=True)],
+            DATA=[dataset],
             REPS=1,
             LEARNING_RATES=[1e-3],
             IM_SIZES=[199],

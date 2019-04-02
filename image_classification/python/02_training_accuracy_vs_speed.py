@@ -80,6 +80,10 @@ MODEL_TYPE = "fast_inference"
 # Path to your data
 DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
 
+# Epochs to train for
+EPOCHS_HEAD = 4
+EPOCHS_BODY = 12
+
 
 # Make sure that only one is set to True
 
@@ -142,7 +146,7 @@ learn = cnn_learner(data, ARCHITECTURE, metrics=accuracy)
 # In[9]:
 
 
-learn.fit_one_cycle(4, LEARNING_RATE)
+learn.fit_one_cycle(EPOCHS_HEAD, LEARNING_RATE)
 
 
 # Unfreeze the layers
@@ -158,7 +162,7 @@ learn.unfreeze()
 # In[11]:
 
 
-learn.fit_one_cycle(12, LEARNING_RATE)
+learn.fit_one_cycle(EPOCHS_BODY, LEARNING_RATE)
 
 
 # ### Evaluation <a name="evaluation"></a>

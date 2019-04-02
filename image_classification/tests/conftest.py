@@ -9,6 +9,9 @@
 
 import os
 import pytest
+from pathlib import Path
+from typing import List
+from utils_ic.datasets import unzip_url, Urls
 
 
 def path_notebooks():
@@ -36,3 +39,18 @@ def notebooks():
         ),
     }
     return paths
+
+
+@pytest.fixture(scope="module")
+def multidataset(tmp_path_factory) -> List[Path]:
+    fp = tmp_path_factory.mktemp("multidatasets")
+    return [
+        unzip_url(Urls.fridge_objects_watermark_tiny_path, fp, exist_ok=True),
+        unzip_url(Urls.fridge_objects_tiny_path, fp, exist_ok=True),
+    ]
+
+
+@pytest.fixture(scope="module")
+def dataset(tmp_path_factory) -> Path:
+    fp = tmp_path_factory.mktemp("dataset")
+    return unzip_url(Urls.fridge_objects_tiny_path, fp, exist_ok=True)

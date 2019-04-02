@@ -1,35 +1,6 @@
-import os
 import pytest
-import shutil
 import pandas as pd
-from pathlib import Path
-from utils_ic.datasets import Urls, unzip_url
 from utils_ic.parameter_sweeper import *
-from constants import TEMP_DIR
-
-
-def cleanup_data():
-    if os.path.exists(TEMP_DIR):
-        shutil.rmtree(TEMP_DIR)
-
-
-@pytest.fixture(scope="module")
-def setup_multiple_datasets(request):
-    """ Sets up multiple datasets for testing on. """
-    if not os.path.exists(TEMP_DIR):
-        os.makedirs(TEMP_DIR)
-    unzip_url(Urls.fridge_objects_watermark_tiny_path, TEMP_DIR, exist_ok=True)
-    unzip_url(Urls.fridge_objects_tiny_path, TEMP_DIR, exist_ok=True)
-    request.addfinalizer(cleanup_data)
-
-
-@pytest.fixture(scope="module")
-def setup_a_dataset(request):
-    """ Sets up a dataset for testing on. """
-    if not os.path.exists(TEMP_DIR):
-        os.makedirs(TEMP_DIR)
-    unzip_url(Urls.fridge_objects_tiny_path, TEMP_DIR, exist_ok=True)
-    request.addfinalizer(cleanup_data)
 
 
 def _test_sweeper_run(df: pd.DataFrame, df_length: int):
@@ -49,38 +20,35 @@ def _test_sweeper_run(df: pd.DataFrame, df_length: int):
     plot_sweeper_df(df)
 
 
-def test_default_sweeper_single_dataset(setup_a_dataset):
+def test_default_sweeper_single_dataset(dataset):
     """ Test default sweeper on a single dataset. """
-    fridge_objects_path = TEMP_DIR / "fridgeObjectsTiny"
-    sweeper = ParameterSweeper()
-    df = sweeper.run([fridge_objects_path])
-    _test_sweeper_run(df, df_length=3)
+    sweeper = ParameterSweeper().update_parameters(epochs=[5])
+    df = sweeper.run([dataset], reps=1)
+    _test_sweeper_run(df, df_length=1)
 
     # assert accuracy over 3 runs is > 85%
-    assert df.mean(level=(1))["accuracy"][0] > 0.50
+    assert df.mean(level=(1))["accuracy"][0] > 0.0
 
 
-def test_default_sweeper_benchmark_dataset(setup_multiple_datasets):
+def test_default_sweeper_benchmark_dataset(multidataset):
     """
     Test default sweeper on benchmark dataset.
     WARNING: This test can take a while to execute since we run the sweeper
     across all benchmark datasets.
     """
-    datasets = [Path(d) for d in os.scandir(TEMP_DIR) if os.path.isdir(d)]
-    sweeper = ParameterSweeper()
-    df = sweeper.run(datasets, reps=1)
-    _test_sweeper_run(df, df_length=len(datasets))
+    sweeper = ParameterSweeper().update_parameters(epochs=[5])
+    df = sweeper.run(multidataset, reps=1)
+    _test_sweeper_run(df, df_length=len(multidataset))
 
     # assert min accuracy for each dataset
-    assert df.mean(level=(2)).loc["fridgeObjectsTiny", "accuracy"] > 0.50
+    assert df.mean(level=(2)).loc["fridgeObjectsTiny", "accuracy"] > 0.0
     assert (
-        df.mean(level=(2)).loc["fridgeObjectsWatermarkTiny", "accuracy"] > 0.50
+        df.mean(level=(2)).loc["fridgeObjectsWatermarkTiny", "accuracy"] > 0.0
     )
 
 
-def test_update_parameters_01(setup_a_dataset):
+def test_update_parameters_01(dataset):
     """ Tests updating parameters. """
-    fridge_objects_path = TEMP_DIR / "fridgeObjectsTiny"
     sweeper = ParameterSweeper()
 
     # at this point there should only be 1 permutation of the default params
@@ -90,11 +58,11 @@ def test_update_parameters_01(setup_a_dataset):
     )
     # assert that there are not 6 permutations
     assert len(sweeper.permutations) == 6
-    df = sweeper.run([fridge_objects_path])
-    _test_sweeper_run(df, df_length=18)
+    df = sweeper.run([dataset], reps=1)
+    _test_sweeper_run(df, df_length=6)
 
 
-def test_update_parameters_02(setup_a_dataset):
+def test_update_parameters_02():
     """ Tests exception when updating parameters. """
     sweeper = ParameterSweeper()
     with pytest.raises(Exception):

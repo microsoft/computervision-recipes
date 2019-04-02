@@ -3,7 +3,11 @@
 
 import pytest
 import numpy as np
-from utils_ic.plot_utils import plot_roc_curve, plot_precision_recall_curve, plot_pr_roc_curves
+from utils_ic.plot_utils import (
+    plot_roc_curve,
+    plot_precision_recall_curve,
+    plot_pr_roc_curves,
+)
 
 
 @pytest.fixture(scope="function")
