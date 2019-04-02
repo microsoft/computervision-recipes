@@ -614,7 +614,15 @@ print(f"Prediction: {resp.text}")
 #
 # Throughout the notebook, we used a workspace and Azure container instances.
 #
-# When we first created our workspace, 4 extra resources were automatically added to it: a [container registry](https://azure.microsoft.com/en-us/pricing/details/container-registry/), a [storage account](https://azure.microsoft.com/en-us/pricing/details/storage/blobs/), [Application Insights](https://azure.microsoft.com/en-us/pricing/details/monitor/) and a [key vault](https://azure.microsoft.com/en-us/pricing/details/key-vault/), each with its own cost. In this notebook, we also hosted our web service on container instances. Overall, assuming it took us about 1 hour to go through this notebook, and assuming that our web service was up for 30 minutes (so we could have time to test it), this tutorial cost us a few dollars.
+# When we first created our workspace, 4 extra resources were automatically added to it:
+# - A container registry, which hosts our Docker images
+# - A storage account, in which our output files get stored
+# - Application Insights, which allows us to monitor the health of and traffic to our web service, as we will see in the next notebook
+# - A key vault, which stores our credentials.
+#
+# In this notebook, we also hosted our web service on container instances. Overall, during the time it took us to run this notebook (assuming ~ 1h), the cost we incurred was of less than $3.
+#
+# To get a better sense of pricing, we can refer to this [calculator](https://azure.microsoft.com/en-us/pricing/calculator/). We can also navigate to the [Cost Management + Billing](https://ms.portal.azure.com/#blade/Microsoft_Azure_Billing/ModernBillingMenuBlade/Overview) pane on the portal, click on our subscription ID, and click on the Cost Analysis tab to check our credit usage.
 #
 # In order not to incur extra costs, let's now delete the resources we no longer need.
 
