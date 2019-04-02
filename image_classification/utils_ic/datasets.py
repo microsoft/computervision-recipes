@@ -18,6 +18,9 @@ class Urls:
 
     # datasets
     fridge_objects_path = urljoin(base, "fridgeObjects.zip")
+    multilabel_fridge_objects_path = urljoin(
+        base, "multilabelFridgeObjects.zip"
+    )
     food_101_subset_path = urljoin(base, "food101Subset.zip")
     fashion_texture_path = urljoin(base, "fashionTexture.zip")
     flickr_logos_32_subset_path = urljoin(base, "flickrLogos32Subset.zip")
