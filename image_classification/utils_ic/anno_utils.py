@@ -11,74 +11,93 @@ Helper module for annotation widget
 import os
 #import dicttoxml, xmltodict
 from ipywidgets import widgets, Layout, IntSlider
-import matplotlib.pyplot as plt
-import numpy as np
+#import matplotlib.pyplot as plt
+#import numpy as np
 from PIL import Image
 
 ##################
 #HELPER FUNCTIONS 
-# - NEED TO MODIFY TO FOLLOW CODING STYLE
-# - allow multipl postfix
+# - TODO: allow multipl postfix
 ##################
-def isString(var):
+def is_string(var): #TODO: look up Python 3 way to check if string
     return type(var) == type("")
 
-def imWidth(input):
-    return imWidthHeight(input)[0]
+def im_width(input) -> int:
+    """
+    Returns the width of an image.
+    Args:
+        input  (str or np.array): Image path or image as numpy array
+    Return:
+        int: image width.
+    """
+    return im_width_height(input)[0]
 
-def imHeight(input):
-    return imWidthHeight(input)[1]
+def im_height(input) -> int:
+    """
+    Returns the height of an image.
+    Args:
+        input (str or np.array): Image path or image as numpy array
+    Return:
+        int: image height.
+    """
+    return im_width_height(input)[1]
 
-def imWidthHeight(input):
-    if isString(input):
-        width, height = Image.open(input).size #this does not load the full image, hence fast
+def im_width_height(input) -> [int, int]:
+    """
+    Returns the width and height of an image.
+    Args:
+        input (str or np.array): Image path or image as numpy array
+    Return:
+        int: Tupe of ints (height,width).
+    """
+    if is_string(input):
+        width, height = Image.open(input).size #this is fast since it does not load the full image
     else:
         width, height = (input.shape[1], input.shape[0])
     return width,height
 
-def getFilesInDirectory(directory, postfix = ""):
+def get_files_in_directory(directory, postfix = None) -> list:
+    """
+    Returns all filenames in a directory which optionally match a given postfix.
+    Args:
+        directory (str): directory to scan for files.
+        postfix (str): string which filenames need to end with (e.g. ".jpg"). 
+    Return:
+        List[str]: Tupe of ints (height,width).
+    """
     if not os.path.exists(directory):
-        raise Exception(f"Directory {directory} does not exist.")
-    fileNames = [s for s in os.listdir(directory) if not os.path.isdir(directory+"/"+s)]
-    if not postfix or postfix == "":
-        return fileNames
-    else:
-        return [s for s in fileNames if s.lower().endswith(postfix)]
+        raise Exception(f"Directory '{directory}' does not exist.")
+    filenames = [s for s in os.listdir(directory) if not os.path.isdir(os.path.join(directory,s))]
+    if postfix and postfix != "":
+        filenames = [s for s in filenames if s.lower().endswith(postfix)]
+    return filenames
 
-def wImread(im_path):
-    imgBytes = open(im_path, "rb").read()
-    return imgBytes
-
-#def _cap_min_max(val, min_val, max_val):
-#    return min( max(val, min_val), max_val)
-            
 
 class AnnotationWidget(object):
     IM_WIDTH = 500  # pixels
 
     def __init__(
         self,
-        labels: list = [],
-        im_dir: str = "",
-        anno_filename: str = "cvbp_ic_annotation.txt",
+        labels: list,
+        im_dir: str,
+        anno_path: str,
         im_filenames: list = None 
     ):
         """Widget class to annotate images.
 
         Args:
-            labels (list of strings): Class names 
+            labels (list of strings): Label names.
             im_dir (string): Directory containing the images to be annotated.
-            anno_fname(string): Filename where to write annotations to, and (if exists) load initial annotations from. 
+            anno_path(string): path where to write annotations to, and (if exists) load annotations from. 
             im_fnames (list of strings): List of image filenames. If set to None, then will auto-detect all images in the provided image directory.
             
         """
-        #assert len(y_score) == len(y_label) == len(dataset)
         if im_filenames:
             assert type(im_filenames) == list,  "Parameter im_filenames expected to be None or to be a list of strings"
 
         self.labels = labels
         self.im_dir = im_dir
-        self.anno_filename = anno_filename
+        self.anno_path = anno_path
         self.im_filenames = im_filenames
 
         # Init
@@ -86,12 +105,11 @@ class AnnotationWidget(object):
         self.label_to_id = {s: i for i, s in enumerate(self.labels)}
         self.id_to_label = {i: s for i, s in enumerate(self.labels)}
         if not im_filenames:
-            self.im_filenames = getFilesInDirectory(im_dir, postfix = ".jpg") #, ".jpeg", ".tif", ".tiff", ".gif", ".png"])
+            self.im_filenames = get_files_in_directory(im_dir, postfix = ".jpg") #, ".jpeg", ".tif", ".tiff", ".gif", ".png"])
         assert len(self.im_filenames) >0, "Not a single image specified or found in directory {im_dir}."
 
         # Load annotations if file exist, otherwise create empty annotations dictionary
-        anno_path = os.path.join(self.im_dir, self.anno_filename)
-        if not os.path.exists(anno_path):
+        if not os.path.exists(self.anno_path):
             self.annos = dict()
             for im_filename in self.im_filenames:
                 if im_filename not in self.annos:
@@ -115,12 +133,12 @@ class AnnotationWidget(object):
         im_path = os.path.join(self.im_dir, im_filename)
         
         # Update the image and info
-        self.w_img.value = wImread(im_path)
+        self.w_img.value = open(im_path, "rb").read()
         self.w_filename.value = im_filename 
         self.w_path.value = self.im_dir
 
         # Fix the width of the image widget and adjust the height
-        self.w_img.layout.height = f"{int(self.IM_WIDTH * (imHeight(im_path)/imWidth(im_path)))}px" #     # (im.size[0]/im.size[1]))}px"
+        self.w_img.layout.height = f"{int(self.IM_WIDTH * (im_height(im_path)/im_width(im_path)))}px" #     # (im.size[0]/im.size[1]))}px"
         
         # Update annotations
         self.exclude_widget.value = self.annos[im_filename]["exclude"]
@@ -191,9 +209,8 @@ class AnnotationWidget(object):
                 print('    a nd self.annos[im_filename]["labels"] set to {}'.format(self.annos[im_filename]["labels"]))
     
                 # Write annotation file to disk
-                #anno_path = os.path.join(self.im_dir, self.anno_filename)
                 #xml_string = dicttoxml(self.annos, attr_type = False, custom_root = "root")
-                #with open(anno_path,'w') as f:
+                #with open(self.anno_path,'w') as f:
                 #    f.write(xml_string)
 
 
