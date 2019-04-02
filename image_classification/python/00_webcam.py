@@ -17,6 +17,18 @@
 #
 # > For more details about image classification tasks including transfer-learning (aka fine tuning), please see our [training introduction notebook](01_training_introduction.ipynb).
 
+# ### Prerequisite
+#
+# You will need to run this notebook on a machine with a webcam. We uses `ipywebrtc` module to show the webcam widget<sup>*</sup> on the notebook ([github](https://github.com/maartenbreddels/ipywebrtc) or [doc](https://ipywebrtc.readthedocs.io/en/latest/)).
+#
+# To install `ipywebrtc` (if your python environment hasn't had it already):
+# ```
+# $ pip install ipywebrtc                        # will auto enable for notebook >= 5.3
+# $ jupyter labextension install jupyter-webrtc  # for jupyter lab
+# ```
+#
+# <sub>* Some browsers may not render & update widgets correctly. We tested this notebook works on Chrome browser.</sub>
+
 # In[1]:
 
 
@@ -25,7 +37,7 @@ get_ipython().run_line_magic("autoreload", "2")
 get_ipython().run_line_magic("matplotlib", "inline")
 
 
-# In[2]:
+# In[1]:
 
 
 import sys
@@ -46,7 +58,7 @@ from utils_ic.imagenet_models import model_to_learner
 
 
 print(f"Fast.ai: {fastai.__version__}")
-print(get_device_name(0))
+print(f"Fast.ai/Torch is using {get_device_name(0)}")
 
 
 # ## 1. Load Pretrained Model
@@ -105,7 +117,7 @@ print(f"Took {time.time()-start_time} sec")
 
 # ### 2.2 WebCam Stream
 #
-# Now, let's use WebCam stream for image classification. We use `ipywebrtc` to start a webcam and get the video stream to the notebook's widget. For details about `ipywebrtc`, see [this link](https://ipywebrtc.readthedocs.io/en/latest/).
+# Now, let's use WebCam stream for image classification. We use `ipywebrtc` to start a webcam and get the video stream to the notebook's widget.
 
 # In[7]:
 

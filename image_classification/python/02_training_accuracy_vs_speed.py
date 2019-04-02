@@ -185,13 +185,13 @@ print(f"Accuracy on validation set: {float(metric)}")
 #
 # Use the model to inference and time how long it takes.
 
-# In[16]:
+# In[13]:
 
 
 im = open_image(f"{(Path(DATA_PATH)/learn.data.classes[0]).ls()[0]}")
 
 
-# In[17]:
+# In[14]:
 
 
 get_ipython().run_cell_magic("timeit", "", "learn.predict(im)")
@@ -201,25 +201,17 @@ get_ipython().run_cell_magic("timeit", "", "learn.predict(im)")
 #
 # Export our model and inspect the size of the file.
 
-# In[13]:
-
-
-model_fn = "model_a" if MODEL_A else "model_b"
-
-
-# In[14]:
-
-
-learn.export(f"{model_fn}")
-
-
 # In[15]:
 
 
-size_in_mb = os.path.getsize(
-    Path(DATA_PATH) / ("model_a" if MODEL_A else "model_b")
-) / (1024 * 1024.0)
-print(f"'{model_fn}' is {round(size_in_mb, 2)}MB.")
+learn.export(f"{MODEL_TYPE}")
+
+
+# In[16]:
+
+
+size_in_mb = os.path.getsize(Path(DATA_PATH) / MODEL_TYPE) / (1024 * 1024.0)
+print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 
 
 # ---
