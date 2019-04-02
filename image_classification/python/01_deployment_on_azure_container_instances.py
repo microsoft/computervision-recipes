@@ -628,7 +628,7 @@ print(f"Prediction: {resp.text}")
 
 # ### 8.A Service termination <a id="svcterm"></a>
 #
-# Now that we have verified that our web service works well on ACI, we can delete it. This helps reduce [costs](https://azure.microsoft.com/en-us/pricing/calculator/?service=container-instances), since the container group we were paying for no longer exists, and allows us to keep our workspace clean.
+# Now that we have verified that our web service works well on ACI, we can delete it. This helps reduce [costs](https://azure.microsoft.com/en-us/pricing/details/container-instances/), since the container group we were paying for no longer exists, and allows us to keep our workspace clean.
 
 # In[32]:
 
