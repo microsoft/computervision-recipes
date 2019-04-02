@@ -18,13 +18,6 @@ get_ipython().run_line_magic('autoreload', '2')
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 
-# In[2]:
-
-
-import numpy
-numpy.version.version
-
-
 # Import fastai. For now, we'll import all (`from fastai.vision import *`) so that we can easily use different utilies provided by the fastai library.
 
 # In[3]:
