@@ -10,6 +10,8 @@
 # For example, in an IoT setting, where the inferencing device has limited computational capabilities, we need to design our models to have a small memory footprint. In contrast, medical situations often require the highest possible accuracy because the cost of mis-classification could impact the well-being of a patient. In this scenario, the accuracy of the model can not be compromised.
 #
 # We have conducted various experiments on multiple diverse datasets to find parameters which work well on a wide variety of settings, for e.g. high accuracy or fast inference. In this notebook, we provide these parameters, so that your initial models can be trained without any parameter tuning. For most datasets, these parameters are close to optimal, so there won't need to change them much. In the second part of the notebook, we will give guidelines as to what parameters could be fine-tuned and how they impact the model, and which parameters typically do not have a big influence
+#
+# It is recommended that you first train your model with the default parameters, evaluate the results, and then only as needed, try fine tuning the model to achieve better results.
 
 # ## Table of Contents:
 # * [Training a High Accuracy or a Fast Inference Speed Classifier ](#model)
@@ -67,19 +69,13 @@ from fastai.metrics import accuracy
 
 # ### Choosing between two types of models <a name="choosing"></a>
 
-# For most scenarios, computer vision practitioners want to create one of two types of models:
-#
-# 1. __Model A__ - A model that performs at its highest possible performance (such as accuracy).
-# 1. __Model B__ - A model with a small memory footprint, fast inference speeds, and fast training times.
-#
-# Based on the findings above, we can get either one of these models by tweaking our paramaters.
+# For most scenarios, computer vision practitioners want to create a high accuracy model, a fast-inference model or a small size model. Set your `MODEL_TYPE` variable to one of the following: `"high_accuracy"`, `"fast_inference"`, or `"small_size"`.
 
 # In[4]:
 
 
-# Only one can be True
-MODEL_A = False
-MODEL_B = True
+# Choose between "high_accuracy", "fast_inference", or "small_size"
+MODEL_TYPE = "fast_inference"
 
 # Path to your data
 DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
@@ -90,7 +86,7 @@ DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
 # In[5]:
 
 
-assert MODEL_A - MODEL_B != 0
+assert MODEL_TYPE in ["high_accuracy", "fast_inference", "small_size"]
 
 
 # Set parameters based on your selected model.
@@ -98,17 +94,20 @@ assert MODEL_A - MODEL_B != 0
 # In[6]:
 
 
-if MODEL_A:
+if MODEL_TYPE == "high_acccuracy":
     ARCHITECTURE = models.resnet50
-    IM_SIZE = 499  # you try even higher
+    IM_SIZE = 499
     LEARNING_RATE = 1e-4
-    EPOCHS = 15
 
-if MODEL_B:
-    ARCHITECTURE = models.squeezenet1_1
-    IM_SIZE = 299  # you try even lower
+if MODEL_TYPE == "fast_inference":
+    ARCHITECTURE = models.resnet18
+    IM_SIZE = 299
     LEARNING_RATE = 1e-3
-    EPOCHS = 5
+
+if MODEL_TYPE == "small_size":
+    ARCHITECTURE = models.squeezenet1_1
+    IM_SIZE = 299
+    LEARNING_RATE = 1e-3
 
 
 # ### Training <a name="training"></a>
@@ -143,7 +142,7 @@ learn = cnn_learner(data, ARCHITECTURE, metrics=accuracy)
 # In[9]:
 
 
-learn.fit_one_cycle(2, LEARNING_RATE)
+learn.fit_one_cycle(4, LEARNING_RATE)
 
 
 # Unfreeze the layers
@@ -159,7 +158,7 @@ learn.unfreeze()
 # In[11]:
 
 
-learn.fit_one_cycle(EPOCHS, LEARNING_RATE)
+learn.fit_one_cycle(12, LEARNING_RATE)
 
 
 # ### Evaluation <a name="evaluation"></a>
@@ -227,21 +226,25 @@ print(f"'{model_fn}' is {round(size_in_mb, 2)}MB.")
 
 # ## Fine tuning our models <a name="finetuning"></a>
 #
-# Now that we have a good set of hyperparameters for a high-accuracy model and a fast-inference-speed model, lets see how we can fine tune our model even further for it to achieve the characteristics we want.
+# If you use the parameters provided in the repo along with the defaults that Fastai provides, you can get good results across a wide variety of datasets. However, as is true for most machine learning projects, getting the best possible results for a new dataset requires tuning the parameters that you use. The following section provides guidelines on how to optimize for accuracy, inference speed, or model size on a given dataset. We'll go through the parameters that will make the largest impact on your model as well as the parameters that may not be worth tweaking.
+#
+# Generally speaking, models for image classification comes with a trade-off between training time versus model accuracy. The four parameters that most affect this trade-off are the DNN architecture, image resolution, learning rate, and number of epochs. DNN architecture and image resolution will additionally affect the model's inference time and memory footprint. As a rule of thumb, deeper networks with high image resolution will achieve high accuracy at the cost of large model sizes and low training and inference speeds. Shallow networks with low image resolution will result in models with fast inference speed, fast training speeds and low model sizes at the cost of the model's accuracy.
 
 # ### DNN Architectures <a name="dnn"></a>
 #
 # One of the most important decisions to make when building a model is choosing what DNN architectures to use. Some DNNs have hundreds of layers and end up having quite a large memory footprint with millions of parameters to tune, while others are compact and small enough to fit onto memory limited edge devices.
 #
-# When looking at an architecture, we may want to consider the characteristics mentioned above: the model's accuracy (or the model's performance metric more broadly speaking), the model's memory footprint, how long it takes to train the model, and the inference speed of the model.
+# When choosing at an architecture, we want to make sure if fits our requirements for accuracy, memory footprint, inference speed and training speeds.
 #
-# Lets take a __squeezenet1_1__ model, a __resnet18__ model and __resnet50__ model and compare the differences based on our experiment.
+# Lets take a __squeezenet1_1__ model, a __resnet18__ model and __resnet50__ model and compare the differences based on our experiment that is based of a diverse set of 6 different datasets. (More about the datasets in the appendix below)
 #
 # ![architecture_comparisons](figs/architecture_comparisons.png)
 #
 # As you can see from the graphs above, there is a clear trade-off when deciding between the models.
 #
 # In terms of accuracy, __resnet50__ out-performs the rest, but it also suffers from having the highest memory footprint, and the longest training and inference times. On the other end of the spectrum, __squeezenet1_1__ performs the worst in terms fo accuracy, but has by far the smallest memory footprint.
+#
+# Generally speaking, given enough data, the deeper DNN and the higher the image resolution, the higher the accuracy you'll be able to achieve with your model.
 #
 # ---
 #
@@ -300,24 +303,25 @@ print(f"'{model_fn}' is {round(size_in_mb, 2)}MB.")
 
 # ### Learning Rate and Epochs <a name="lr"></a>
 #
-# Learning rate tends to be one of the most important parameters to set when training your model.
+# Learning rate tends to be one of the most important parameters to set when training your model. If your learning rate is set too low, training will progress very slowly since we're only making tiny updates to the weights in your network. However, if your learning rate is too high, it can cause undesirable divergent behavior in your loss function.
 #
-# If your learning rate is set too low, training will progress very slowly since we're only making tiny updates to the weights in your network. However, if your learning rate is too high, it can cause undesirable divergent behavior in your loss function.
+# One way to mitigate against a low learning rate is to make sure that you're training for many epochs. But this can take a long time.
 #
-# One way to mitigate against a low learning rate is to make sure that you're training for many epochs.
-#
-# To efficiently build a model, we need to make sure that our learning rate is in the correct range. To find a good default learning rate, we've tested various learning rates on a range of datasets over two different epochs settings.
+# So, to efficiently build a model, we need to make sure that our learning rate is in the correct range so that we can train for as few epochs as possible. To find a good default learning rate, we've tested various learning rates on 6 different datasets over two different epochs settings.
 #
 # ![lr_comparisons](figs/lr_comparisons.png)
 #
-# In both figures, we can see that a learning rate of 1e-3 and 1e-4 tends to work the best across the different datasets and the two settings for epochs.
+# <details><summary><em>Understanding the diagram</em></summary>
+# <p>
+#
+# > In the figure on the left which shows the results of the different learning rates on different datasets at 15 epochs, we can see that a learning rate of 1e-4 does the best overall. But this may not be the case for every dataset. If you look carefully, there is a pretty significant variance between the datasets and it may be possible that a learning rate of 1-e3 works better than a learning rate of 1e-4 for some datasets. In the figure on the right, both 1e-4 and 1e-3 seem to work well. At 15 epochs, the results of 1e-4 are only slightly better than that of 1e-3. However, at 3 epochs, a learning rate of 1e-3 out performs the learning rate at 1e-4. This makes sense since we're limiting the training to only 3 epochs, the model that can update its weights more quickly will perform better. As a result, we may learn towards using higher learning rates (such as 1e-3) if we want to minimize the training time, and lower learning rates (such as 1e-4) if training time is not constrained.
+#
+# </p>
+# </details>
+#
+# In both figures, we can see that a learning rate of 1e-3 and 1e-4 tends to work the best across the different datasets and the two settings for epochs. Generally speaking, choosing a learning rate of 5e-3 (the mean of 1e-3 and 1e-4) will work pretty well for most datasets.
 #
 # > Note: Fastai has implemented [one cycle policy with cyclical momentum](https://arxiv.org/abs/1803.09820) which requires a maximum learning rate since the learning rate will shift up and down over its training duration. Instead of calling `fit()`, we simply call `fit_one_cycle()`. This is what we used when testing.
-#
-# In the figure on the left which shows the results of the different learning rates on different datasets at 15 epochs, we can see that a learning rate of 1e-4 does the best overall. But this may not be the case for every dataset. If you look carefully, there is a pretty significant variance between the datasets and it may be possible that a learning rate of 1-e3 works better than a learning rate of 1e-4 for some datasets.
-#
-# In the figure on the right, both 1e-4 and 1e-3 seem to work well. At 15 epochs, the results of 1e-4 are only slightly better than that of 1e-3. However, at 3 epochs, a learning rate of 1e-3 out performs the learning rate at 1e-4. This makes sense since we're limiting the training to only 3 epochs, the model that can update its weights more quickly will perform better.
-# As a result, we may learn towards using higher learning rates (such as 1e-3) if we want to minimize the training time, and lower learning rates (such as 1e-4) if training time is not constrained. Generally speaking, choosing a learning rate of 5e-3 will work pretty well for most datasets.
 #
 # When it comes to choosing the number of epochs, a common question is - _Won't too many epochs will cause over-fitting?_ It turns out that it quite difficult to over-fit convolutional neural networks if your datasize if sufficiently large. Unless your are working with small datasets, using 15 epochs tends to work pretty well in most cases.
 #
@@ -476,33 +480,31 @@ print(f"'{model_fn}' is {round(size_in_mb, 2)}MB.")
 #
 # __Architecture__
 #
-# - Start with __resnet18__. If you're not memory or inference speed constrained, switch to __resnet50__. If you are memory constrained, use __squeezenet1_1__.
-#
+# - If you're not memory or inference speed constrained, use __resnet50__. If you want faster inference speeds, use __resnet18__. If you are memory constrained, use __squeezenet1_1__.
 #
 # __Learning rate__
 #
-# - Set your learning rate to __1e-4__ if you have lots of time to train. Otherwise, __1e-3__ will work pretty well on fewer epochs.
+# - Start with 5e-3.
 #
+# __Epochs__
+#
+# - If you are not training time constrained, use 15 epochs.
 #
 # __Image size__
 #
-# - Image size __299__ works pretty well. Increase image size and it'll work a bit better but much slower.
+# - Image size __299__ works pretty well. Increase image size and it'll work better but much slower.
 #
 # __Other parameters__
 #
 # - Don't worry about the model's __batch_size, __momentum__, __drop-out__ and __weight decay__. Unless you're really fine-tuning your model, just stick with the [defaults](#other-parameters).
 #
+# If you want to fine tune your model and test different parameters, you can use the ParameterSweeper module the find the best parameter. See the [exploring hyperparameters notebook](./11_exploring_hyperparameters.ipynb) for more information.
 
 # ---
 
 # ## (Appendix) How we found good default parameters <a name="appendix"></a>
 #
-# To explore the charactistics of a model, we - the computer vision repo team - have conducted various experiments to explore the impact of different hyperparameters on a model's _accuracy_, _training duration_, _inference speed_, and _memory footprint_. In this notebook, we hope to outline some of the key findings so that you can make better decisions when settings parameters.
-#
-# In this notebook, we use the results of our experiments to give us concrete evidence when it comes to understanding which parameters work and which dont.
-#
-# > To create these experiments, we used the `util_ic.parameter_sweeper` module that lets us easily test different parameters across different datasets.
-#
+# To explore the charactistics of a model, we - the computer vision repo team - have conducted various experiments to explore the impact of different hyperparameters on a model's _accuracy_, _training duration_, _inference speed_, and _memory footprint_. In this notebook, we used the results of our experiments to give us concrete evidence when it comes to understanding which parameters work and which dont.
 #
 # ### Datasets <a name="datasets"></a>
 #
@@ -517,12 +519,9 @@ print(f"'{model_fn}' is {round(size_in_mb, 2)}MB.")
 # | lettuce | 380 | 2 |
 # | fridgeObjects | 134 | 4 |
 #
-#
-#
-#
 # ### Model Characteristics <a name="model-characteristics"></a>
 #
-# In our experiment, we look at these characteristics to evaluate the impact of various paramters.
+# In our experiment, we look at these characteristics to evaluate the impact of various paramters. Here is how we calculated each of the following metrics:
 #
 # - __Accuracy__
 #
@@ -543,3 +542,5 @@ print(f"'{model_fn}' is {round(size_in_mb, 2)}MB.")
 #
 #     The memory footprint is size of the model parameters saved as the pickled file. This can be achieved by running `learn.export(...)` and examining the size of the exported file.
 #
+
+# In[ ]:
