@@ -2,77 +2,20 @@
 # Licensed under the MIT License.
 
 # TODO:
-# Write and load from pandas dataframe instead of dict-xml
-
+# - Move helpers to utils
 
 """
 Helper module for annotation widget
 """
 import os
-#import dicttoxml, xmltodict
 from ipywidgets import widgets, Layout, IntSlider
-#import matplotlib.pyplot as plt
-#import numpy as np
-from PIL import Image
+import pandas as pd
+from utils_ic.common import im_width, im_height, get_files_in_directory
+
 
 ##################
 #HELPER FUNCTIONS 
-# - TODO: allow multipl postfix
 ##################
-def is_string(var): #TODO: look up Python 3 way to check if string
-    return type(var) == type("")
-
-def im_width(input) -> int:
-    """
-    Returns the width of an image.
-    Args:
-        input  (str or np.array): Image path or image as numpy array
-    Return:
-        int: image width.
-    """
-    return im_width_height(input)[0]
-
-def im_height(input) -> int:
-    """
-    Returns the height of an image.
-    Args:
-        input (str or np.array): Image path or image as numpy array
-    Return:
-        int: image height.
-    """
-    return im_width_height(input)[1]
-
-def im_width_height(input) -> [int, int]:
-    """
-    Returns the width and height of an image.
-    Args:
-        input (str or np.array): Image path or image as numpy array
-    Return:
-        int: Tupe of ints (height,width).
-    """
-    if is_string(input):
-        width, height = Image.open(input).size #this is fast since it does not load the full image
-    else:
-        width, height = (input.shape[1], input.shape[0])
-    return width,height
-
-def get_files_in_directory(directory, postfix = None) -> list:
-    """
-    Returns all filenames in a directory which optionally match a given postfix.
-    Args:
-        directory (str): directory to scan for files.
-        postfix (str): string which filenames need to end with (e.g. ".jpg"). 
-    Return:
-        List[str]: Tupe of ints (height,width).
-    """
-    if not os.path.exists(directory):
-        raise Exception(f"Directory '{directory}' does not exist.")
-    filenames = [s for s in os.listdir(directory) if not os.path.isdir(os.path.join(directory,s))]
-    if postfix and postfix != "":
-        filenames = [s for s in filenames if s.lower().endswith(postfix)]
-    return filenames
-
-
 class AnnotationWidget(object):
     IM_WIDTH = 500  # pixels
 
@@ -86,11 +29,10 @@ class AnnotationWidget(object):
         """Widget class to annotate images.
 
         Args:
-            labels (list of strings): Label names.
-            im_dir (string): Directory containing the images to be annotated.
-            anno_path(string): path where to write annotations to, and (if exists) load annotations from. 
-            im_fnames (list of strings): List of image filenames. If set to None, then will auto-detect all images in the provided image directory.
-            
+            labels: Label names.
+            im_dir: Directory containing the images to be annotated.
+            anno_path: path where to write annotations to, and (if exists) load annotations from. 
+            im_fnames: List of image filenames. If set to None, then will auto-detect all images in the provided image directory.
         """
         if im_filenames:
             assert type(im_filenames) == list,  "Parameter im_filenames expected to be None or to be a list of strings"
@@ -105,22 +47,19 @@ class AnnotationWidget(object):
         self.label_to_id = {s: i for i, s in enumerate(self.labels)}
         self.id_to_label = {i: s for i, s in enumerate(self.labels)}
         if not im_filenames:
-            self.im_filenames = get_files_in_directory(im_dir, postfix = ".jpg") #, ".jpeg", ".tif", ".tiff", ".gif", ".png"])
+            self.im_filenames = get_files_in_directory(im_dir, suffixes = (".jpg", ".jpeg", ".tif", ".tiff", ".gif", ".giff", ".png", ".bmp"))
         assert len(self.im_filenames) >0, "Not a single image specified or found in directory {im_dir}."
 
-        # Load annotations if file exist, otherwise create empty annotations dictionary
+        # Load annotations if file exist, and create empty entrees for each image 
         if not os.path.exists(self.anno_path):
-            self.annos = dict()
-            for im_filename in self.im_filenames:
-                if im_filename not in self.annos:
-                    self.annos[im_filename] = dict()
-                    self.annos[im_filename]["labels"] = []
-                    self.annos[im_filename]["exclude"] = False
-
-        #else:
-        #   with open(anno_path,'w') as f:
-        #       xml_string = f.read()
-        #   self.annos = xmltodict(xml_string)["root"]
+            self.annos = pd.DataFrame()
+        else:
+            print(f"Loading existing annotation from {self.anno_path}.")
+            self.annos = pd.read_pickle(self.anno_path) 
+        for im_filename in self.im_filenames:
+            if im_filename not in self.annos:
+                self.annos[im_filename] = pd.Series({'exclude':False, 'labels':[]})
+        #print(self.annos)
 
         # Create UI and "start" widget
         self._create_ui()
@@ -141,10 +80,10 @@ class AnnotationWidget(object):
         self.w_img.layout.height = f"{int(self.IM_WIDTH * (im_height(im_path)/im_width(im_path)))}px" #     # (im.size[0]/im.size[1]))}px"
         
         # Update annotations
-        self.exclude_widget.value = self.annos[im_filename]["exclude"]
+        self.exclude_widget.value = self.annos[im_filename].exclude
         for w in self.label_widgets:
             w.value = False
-        for label in self.annos[im_filename]["labels"]:
+        for label in self.annos[im_filename].labels:
             label_id = self.label_to_id[label]
             self.label_widgets[label_id].value = True
 
@@ -161,8 +100,8 @@ class AnnotationWidget(object):
 
             # Skip if image has annotation
             im_filename = self.im_filenames[self.vis_image_index]
-            labels = self.annos[im_filename]["labels"]
-            exclude = self.annos[im_filename]["exclude"]
+            labels = self.annos[im_filename].labels
+            exclude = self.annos[im_filename].exclude
             if self.w_skip_annotated.value and (exclude or len(labels) > 0):
                 return True
 
@@ -199,19 +138,28 @@ class AnnotationWidget(object):
             #print("Calling anno_changed obj= {}".format(obj))
             #print("*** Calling anno_changed obj[new] {}".format(obj['new']))
 
-            #Test if callback is coming from the user having changed the checkbox
+            #Test if calling is coming from the user having clicked on a checkbox to change its state,
+            #rather than a change of state when e.g. updating the value in Python code. This is a bit of hack,
+            #but necessary since widgets.Checkbox() does not support on_click() or similar.
             if 'new' in obj and obj['new']==dict() and len(obj['new']) == 0:
                 im_filename = self.im_filenames[self.vis_image_index]
                 label_ids = [i for i,w in enumerate(self.label_widgets) if w.value==True]
-                self.annos[im_filename]["labels"] = [self.id_to_label[i] for i in label_ids]
-                self.annos[im_filename]["exclude"] = self.exclude_widget.value
-                print('Setting self.annos[im_filename]["exclude"] set to {}'.format(self.annos[im_filename]["exclude"]))
-                print('    a nd self.annos[im_filename]["labels"] set to {}'.format(self.annos[im_filename]["labels"]))
+
+                # If single-label annotation then unset all checkboxes except the one which the user just clicked
+                if not self.w_multi_class.value:
+                    for w in self.label_widgets:
+                        if w.description != obj['owner'].description:
+                            w.value = False
+                
+                # Update annotations
+                self.annos[im_filename].labels = [self.id_to_label[i] for i in label_ids]
+                self.annos[im_filename].exclude = self.exclude_widget.value
+                #print('Setting self.annos[im_filename]["exclude"] set to {}'.format(self.annos[im_filename]["exclude"]))
+                #print('    and self.annos[im_filename]["labels"] set to {}'.format(self.annos[im_filename]["labels"]))
     
-                # Write annotation file to disk
-                #xml_string = dicttoxml(self.annos, attr_type = False, custom_root = "root")
-                #with open(self.anno_path,'w') as f:
-                #    f.write(xml_string)
+                # Write annotation to disk           
+                keys_with_annotation = [k for k,v in self.annos.items() if (v.labels!=[] or v.exclude)]
+                self.annos[keys_with_annotation].to_pickle(self.anno_path)
 
 
         # ------------
@@ -228,7 +176,6 @@ class AnnotationWidget(object):
 
         self.w_filename = widgets.Text(value="", description="Name:", layout=Layout(width='200px'))
         self.w_path = widgets.Text(value="", description="Path:", layout=Layout(width='200px'))
-        
         self.w_image_slider = IntSlider(
             min=0,
             max=len(self.im_filenames) - 1,
@@ -239,6 +186,7 @@ class AnnotationWidget(object):
         self.w_image_slider.observe(slider_changed)
         self.w_img = widgets.Image()
         self.w_img.layout.width = f"{self.IM_WIDTH}px"
+
         w_header = widgets.HBox(
             children=[
                 w_previous_image_button,
@@ -258,12 +206,12 @@ class AnnotationWidget(object):
         )
         #self.w_skip_annotated.layout.width = '600px'
         self.w_multi_class = widgets.Checkbox(
-            value=True, description='Allow multi-class labeling'
+            value=False, description='Allow multi-class labeling'
         )
         
         # Label checkboxes widgets
         self.exclude_widget = widgets.Checkbox(value=False, description="EXCLUDE IMAGE")
-        self.exclude_widget.observe(anno_changed)  #TODO: CHANGE TO VALUE CHANGED, BECAUSE OBSERVE IS CALLED 3 TIMES
+        self.exclude_widget.observe(anno_changed)
         self.label_widgets = [widgets.Checkbox(value=False, description=label) for label in self.labels]
         for label_widget in self.label_widgets:
             label_widget.observe(anno_changed)
