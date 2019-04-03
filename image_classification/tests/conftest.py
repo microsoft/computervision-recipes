@@ -28,5 +28,8 @@ def notebooks():
         "01_training_introduction": os.path.join(
             folder_notebooks, "01_training_introduction.ipynb"
         ),
+        "10_image_annotation": os.path.join(
+            folder_notebooks, "10_image_annotation.ipynb"
+        ),
     }
     return paths
