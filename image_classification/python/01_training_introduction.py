@@ -150,11 +150,22 @@ data.batch_stats
 # For the model, we use a convolutional neural network (CNN). Specifically, we'll use **ResNet50** architecture. You can find more details about ResNet from [here](https://arxiv.org/abs/1512.03385).
 # 
 # When training a model, there are many hypter parameters to select, such as the learning rate, the model architecture, layers to tune, and many more. With fastai, we can use the `create_cnn` function that allows us to specify the model architecture and performance indicator (metric). At this point, we already benefit from transfer learning since we download the parameters used to train on [ImageNet](http://www.image-net.org/).
+# 
+# Note, we use a custom callback `TrainMetricsRecorder` to track the accuracy on the training set during training, since fast.ai's default [recorder class](https://docs.fast.ai/basic_train.html#Recorder) only supports tracking accuracy on the validation set.
 
 # In[10]:
 
 
-learn = cnn_learner(data, ARCHITECTURE, metrics=[accuracy])
+learn = cnn_learner(
+    data,
+    ARCHITECTURE,
+    metrics=[accuracy],
+    callback_fns=[partial(
+        TrainMetricsRecorder,
+        n_batch=len(data.valid_ds)//BATCH_SIZE,
+        show_graph=True
+    )]
+)
 
 
 # Unfreeze our CNN since we're training all the layers.
@@ -166,26 +177,14 @@ learn.unfreeze()
 
 
 # We can call the `fit` function to train the dnn.
-# 
-# Here, we use our custom callback class `TrainMetricsRecorder` to measure the model performance while training. It basically evaluate the metrics (which we specified before) on the training and validation sets for every epoch and plot the graphs.
 
-# In[15]:
+# In[12]:
 
 
-# Train callback
-train_metrics_recorder = TrainMetricsRecorder(
-    n_batch=(len(learn.data.valid_ds) // BATCH_SIZE),  # Batches to use for metrics evaluation.
-    show_graph=True  # Show graphs while training. Alternatively, call .plot() later.
-)
-
-learn.fit(EPOCHS, LEARNING_RATE, callbacks=[train_metrics_recorder])
+learn.fit(EPOCHS, LEARNING_RATE)
 
 
-# The graph shows how our model has been trained.
-# 
-# Note, fastai has some predefined callbacks. For example, `Recorder`, which is included in the `Learner` by default, tracks the metrics and loss on the validation set and plots the graphs. `ShowGraph` callback class draws the loss graphs while training. Those callbacks are very useful but also somewhat limited. For example, they don't evaluate the model on the training set with the metrics which we may want to see. In such cases, you can always write a custom callback like `TrainMetricsRecorder`.
-
-# In[16]:
+# In[13]:
 
 
 # You can plot loss by using the default callback Recorder.
@@ -196,7 +195,7 @@ learn.recorder.plot_losses()
 
 # To evaluate our model, lets take a look at the accuracy on the validation set.
 
-# In[17]:
+# In[14]:
 
 
 _, metric = learn.validate(learn.data.valid_dl, metrics=[accuracy])
@@ -205,7 +204,7 @@ print(f'Accuracy on validation set: {100*float(metric):3.2f}')
 
 # Now, analyze the classification results by using `ClassificationInterpretation` module.
 
-# In[18]:
+# In[15]:
 
 
 interp = ClassificationInterpretation.from_learner(learn)
@@ -218,7 +217,7 @@ pred_scores = to_np(interp.probs)
 # <img src="https://cvbp.blob.core.windows.net/public/images/ic_widget.png" width="600"/>
 # <center><i>Image Classification Result Widget</i></center>
 
-# In[19]:
+# In[16]:
 
 
 w_results = ResultsWidget(
@@ -231,7 +230,7 @@ display(w_results.show())
 
 # We can plot precision-recall and ROC curves for each class as well. Please note that these plots are not too interesting here, since the dataset is easy and thus the accuracy is close to 100%.
 
-# In[20]:
+# In[17]:
 
 
 # True labels of the validation set. We convert to numpy array for plotting.
@@ -241,7 +240,7 @@ plot_pr_roc_curves(true_labels, pred_scores, data.classes)
 
 # Let's take a close look how our model confused some of the samples (if any). The most common way to do that is to use a confusion matrix.
 
-# In[21]:
+# In[18]:
 
 
 interp.plot_confusion_matrix()
@@ -249,7 +248,7 @@ interp.plot_confusion_matrix()
 
 # When evaluating our results, we want to see where the model messes up, and whether or not we can do better. So we're interested in seeing images where the model predicted the image incorrectly but with high confidence (images with the highest loss).
 
-# In[22]:
+# In[19]:
 
 
 interp.plot_top_losses(9, figsize=(15,11))

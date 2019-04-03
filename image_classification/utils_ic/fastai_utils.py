@@ -1,21 +1,34 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import torch
-import matplotlib.pyplot as plt
+from time import time
 from typing import List, Any
-from fastai.callback import Callback
+
+from IPython.display import display
+
+from fastai.basic_train import LearnerCallback
 from fastai.core import PBar
-from torch import Tensor
+from fastai.torch_core import TensorOrNumList
+from fastprogress.fastprogress import format_time
+import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+import torch
+from torch import Tensor
 
 
-class TrainMetricsRecorder(Callback):
-    def __init__(self, n_batch:int=None, show_graph:bool=False):
-        """Fastai Train hook. Calculate metrics on train and validation set for every epoch.
+class TrainMetricsRecorder(LearnerCallback):
+    _order = -20  # Needs to run before the recorder
 
-        Works with the metrics functions whose signature is fn(input:Tensor, targs:Tensor),
+    def __init__(self, learn, n_batch: int = None, show_graph: bool = False):
+        """Fastai Train hook to evaluate metrics on train and validation set for every epoch.
+
+        This class works with the metrics functions whose signature is fn(input:Tensor, targs:Tensor),
         e.g. fastai.metrics.accuracy and error_rate.
+        For custom metrics, see https://docs.fast.ai/metrics.html#Creating-your-own-metric
+
+        Note, Learner's Recorder callback tracks the metrics and loss on the validation set and
+        ShowGraph callback plots the loss on train and validation sets while training.
+        TrainMetricsRecorder, on the other hand, records the metrics on the training set and plot them as well.
 
         Arguments:
             n_batch (int): Number of train batches to use when evaluate metrics on the training set.
@@ -24,127 +37,147 @@ class TrainMetricsRecorder(Callback):
                 it draws only the first metrics graph.
 
         Examples:
-            >>> learn = cnn_learner(data, models.resnet50, metrics=[accuracy])
-            >>> train_metrics_cb = TrainMetricsRecorder(n_batch=1, show_graph=True)
-            >>> learn.fit(epochs=10, lr=0.001, callbacks=[train_metrics_cb])
+            >>> learn = cnn_learner(data, model, metrics=[accuracy])
+            >>> train_metrics_cb = TrainMetricsRecorder(n_batch=1)
+            >>> learn.callbacks.append(train_metrics_cb)
+            >>> learn.fit(epochs=10, lr=0.001)
             >>> train_metrics_cb.plot()
+
+            or
+
+            >>> learn = cnn_learner(data, model, metrics=[accuracy, error_rate],
+            ...     callback_fns=[partial(
+            ...         TrainMetricsRecorder,
+            ...         n_batch=len(data.valid_ds)//BATCH_SIZE,
+            ...         show_graph=True
+            ...     )]
+            ... )
+    )])
+
         """
+        super().__init__(learn)
+
+        # Check number of batches we will evaluate on with the metrics.
+        if n_batch: assert n_batch > 0
+
         self.n_batch = n_batch
         self.show_graph = show_graph
 
-        self.epochs = None  # x-axis, i.e. [0, 1, ... n_epochs-1]
-        self.metric_names = None
-        self.valid_metrics = None
-        self.train_metrics = None
-        self.y = None       # Target class labels from the last epoch
-        self.out = None     # Outputs from the last epoch
+    def on_train_begin(self, pbar: PBar, metrics: List, n_epochs: int, **kwargs: Any):
+        self.has_metrics = metrics and len(metrics) > 0
+        self.has_val = hasattr(self.learn.data, 'valid_ds')
 
-    def on_train_begin(self, metrics:List, n_epochs:int, **kwargs:Any):
-        if not metrics or len(metrics) == 0:
-            import warnings
-            warnings.warn(f"{self.__class__.__name__}: No metrics to record. Metrics should be set to the learner.")
-        else:
-            self.epochs = [i for i in range(0, n_epochs)]  # Fastai's epoch number starts from 0
-            self.metric_names = [m_fn.__name__ for m_fn in metrics]
-            self.valid_metrics = []
-            self.train_metrics = []
+        # Result table and graph variables
+        self.learn.recorder.silent = True  # Mute recorder. This callback will printout results instead.
+        self.pbar = pbar
+        self.names = ['epoch', 'train_loss']
+        if self.has_val: self.names.append('valid_loss')
+        # Add metrics names
+        self.metrics_names = [m_fn.__name__ for m_fn in metrics]
+        for m in self.metrics_names:
+            self.names.append('train_' + m)
+            if self.has_val: self.names.append('valid_' + m)
+        self.names.append('time')
+        self.pbar.write(self.names, table=True)
 
-    def on_epoch_begin(self, **kwargs:Any):
-        self.y = []
-        self.out = []
+        self.n_epochs = n_epochs
+        self.valid_metrics = []
+        self.train_metrics = []
 
-    def on_loss_begin(self, train:bool, num_batch:int, metrics:List, last_target:Tensor, last_output:Tensor,
-                      **kwargs:Any):
-        """Callback on loss begin. This is being called between model prediction and backpropagation while training."""
-        if train and (self.n_batch is None or self.n_batch > num_batch) and (metrics and len(metrics) > 0):
+    def on_epoch_begin(self, **kwargs: Any):
+        self.start_epoch = time()
+        self.y = []  # Target class labels from the last epoch
+        self.out = []  # Outputs from the last epoch
+
+    def on_batch_end(self, train: bool, num_batch: int, last_target: Tensor, last_output: Tensor, **kwargs: Any):
+        if train and self._use_batch(num_batch) and self.has_metrics:
             self.y.append(last_target.cpu())
             self.out.append(last_output.cpu())
 
-    def on_epoch_end(self, epoch:int, metrics:List, last_metrics:List, pbar:PBar, **kwargs:Any):
-        if metrics and len(metrics) > 0:
-            # Metrics on the training set.
-            train_metrics = []
-            for m_fn in metrics:
-                train_metrics.append(m_fn(torch.stack(self.out), torch.stack(self.y)))
-            self.train_metrics.append(train_metrics)
+    def _use_batch(self, num_batch: int):
+        """Check if we want to evaluate this train-batch or not"""
+        return self.n_batch is None or self.n_batch > num_batch
 
-            # Metrics on the validation set. Note, last_metrics[0] is the validation loss
-            if last_metrics and len(last_metrics) > 1:
-                self.valid_metrics.append(last_metrics[1:])
+    def on_epoch_end(self, epoch: int, smooth_loss: Tensor, metrics: List, last_metrics: List, pbar: PBar,
+                     **kwargs: Any):
+        stats = [epoch, smooth_loss]
+        if self.has_val: stats.append(last_metrics[0])  # validation loss
 
-            # Plot 1st metrics for every end of epoch
-            if self.show_graph:
-                self._update_pbar_graph(pbar)
+        if self.has_metrics:
+            # Evaluate metrics on the training set
+            tr_lm = [m_fn(torch.stack(self.out), torch.stack(self.y)) for m_fn in metrics]
+            self.train_metrics.append(tr_lm)
 
-            # Follow fastai's callback ShowGraph's return value
-            return {}
+            # Get evaluation metrics on the validation set (computed by learner)
+            if self.has_val:
+                vl_lm = last_metrics[1:]
+                self.valid_metrics.append(vl_lm)
 
-    def _update_pbar_graph(self, pbar:PBar):
-        """Update Learner.Recorder.pbar graphs. Only the 1st metrics will be plotted"""
-        train_metrics_0 = [met[0] for met in self.train_metrics]
-        valid_metrics_0 = []
+            # Prepare result table values
+            for i in range(len(metrics)):
+                stats.append(tr_lm[i])
+                if self.has_val: stats.append(vl_lm[i])
 
-        # Add 1st metrics on the training set to the graph
-        x_axis = [i for i in range(0, len(train_metrics_0))]
-        pbar.names = ["Train"]
-        graphs = [(x_axis, train_metrics_0)]
+        # Write to result table
+        self._format_stats(stats)
 
-        # Add 1st metrics on the validation set to the graph if exists
-        if len(self.valid_metrics) > 0:
-            valid_metrics_0 = [met[0] for met in self.valid_metrics]
-            pbar.names.append("Validation")
-            graphs.append((x_axis, valid_metrics_0))
+        # Plot (update) metrics for every end of epoch
+        if self.show_graph and len(self.train_metrics) > 0:
+            self.plot()
 
-        # +- 0.05 boundary padding
-        x_bounds = (-0.05, len(self.epochs) - 0.95)
-        y_bounds = (
-            min(-0.05, min(Tensor(train_metrics_0)), min(Tensor(valid_metrics_0))) - 0.05,
-            max(1.05, max(Tensor(train_metrics_0)), max(Tensor(valid_metrics_0))) + 0.05
-        )
-        pbar.update_graph(graphs, x_bounds, y_bounds)
-
-        try:
-            # Draw x and y axes names
-            pbar.ax.set_ylabel(self.metric_names[0])
-            pbar.ax.set_xlabel("Epochs")
-            pbar.ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-            pbar.out2.update(pbar.ax.figure)
-        except AttributeError:
-            # ax and out2 attributes may not be set yet
-            pass
+    def _format_stats(self, stats: TensorOrNumList) -> None:
+        """Format stats before printing. Note, this does the same thing as Recorder's"""
+        str_stats = []
+        for name, stat in zip(self.names, stats):
+            str_stats.append('#na#' if stat is None else str(stat) if isinstance(stat, int) else f'{stat:.6f}')
+        str_stats.append(format_time(time() - self.start_epoch))
+        self.pbar.write(str_stats, table=True)
 
     def plot(self):
         """Plot metrics graph"""
-        if self.train_metrics is None:
+        if len(self.train_metrics) == 0:
             raise ValueError("No records to plot.")
 
         # Number of metrics on training set and validation set should be the same
         if len(self.valid_metrics) > 0:
             assert len(self.train_metrics[0]) == len(self.valid_metrics[0])
 
-        fig, axes = plt.subplots(len(self.train_metrics[0]), 1, figsize=(6, 4 * len(self.train_metrics[0])))
-        axes = axes.flatten() if len(self.train_metrics[0]) != 1 else [axes]
+        # init graph
+        if not hasattr(self, 'fig'):
+            self.fig, self.axes = plt.subplots(
+                len(self.train_metrics[0]), 1, figsize=(6, 4 * len(self.train_metrics[0]))
+            )
+            self.axes = self.axes.flatten() if len(self.train_metrics[0]) > 1 else [self.axes]
+            self.graphs = display(self.fig, display_id=True)
+
         # Plot each metrics as a subplot
-        for i, ax in enumerate(axes):
-            train_metrics = [met[i] for met in self.train_metrics]
-            valid_metrics = []
-            ax.plot(self.epochs, train_metrics, label="Train")
+        for i, ax in enumerate(self.axes):
+            ax.clear()
 
+            # Plot training set results
+            tr_m = [met[i] for met in self.train_metrics]
+            x_axis = [i for i in range(len(tr_m))]
+            ax.plot(x_axis, tr_m, label="Train")
+
+            # Plot validation set results
             if len(self.valid_metrics) > 0:
-                valid_metrics = [met[i] for met in self.valid_metrics]
-                ax.plot(self.epochs, valid_metrics, label="Validation")
+                vl_m = [met[i] for met in self.valid_metrics]
+                ax.plot(x_axis, vl_m, label="Validation")
+            else:
+                vl_m = []
 
-            x_bounds = (-0.05, len(self.epochs) - 0.95)
+            x_bounds = (-0.05, self.n_epochs - 0.95)
             y_bounds = (
-                min(-0.05, min(Tensor(train_metrics)), min(Tensor(valid_metrics))) - 0.05,
-                max(1.05, max(Tensor(train_metrics)), max(Tensor(valid_metrics))) + 0.05
+                min(-0.05, min(Tensor(tr_m)), min(Tensor(vl_m))) - 0.05,
+                max(1.05, max(Tensor(tr_m)), max(Tensor(vl_m))) + 0.05
             )
             ax.set_xlim(x_bounds)
             ax.set_ylim(y_bounds)
 
-            ax.set_ylabel(self.metric_names[i])
+            ax.set_ylabel(self.metrics_names[i])
             ax.set_xlabel("Epochs")
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-            ax.legend()
+            ax.legend(loc='upper right')
 
-        # To use this in python script, may use >>> if not IN_NOTEBOOK: plot_sixel(fig)
+        plt.close()  # close plot windows. Otherwise two figures are shown at the end
+        self.graphs.update(self.fig)
