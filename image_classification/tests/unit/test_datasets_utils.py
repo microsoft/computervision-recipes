@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Union
 from utils_ic.datasets import Urls, unzip_url, imagenet_labels
 
-# temporarily putting this constant here until we add a way to manage constants in tests
+# temporarily putting this constant here until we add a way
+# to manage constants in tests
 TEMP_DIR = Path("../tmp_data")
 
 

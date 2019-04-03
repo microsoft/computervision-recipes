@@ -28,5 +28,8 @@ def notebooks():
         "01_training_introduction": os.path.join(
             folder_notebooks, "01_training_introduction.ipynb"
         ),
+        "deploy_on_ACI": os.path.join(folder_notebooks,
+                                      "deployment", "01_deployment_on_"
+                                      "azure_container_instances.ipynb"),
     }
     return paths
