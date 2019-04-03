@@ -28,6 +28,9 @@ steps:
     source activate cvbp
   displayName: 'Build Configuration'
 
+- script: |
+   sed -i 's#"subscription_id": "<>"#"subscription_id": "$(subscriptionid)"#g' .aml_config/config.json
+
 - bash: |
     cd image_classification
     source activate cvbp
