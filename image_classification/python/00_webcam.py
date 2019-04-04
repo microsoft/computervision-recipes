@@ -18,14 +18,7 @@
 # > For more details about image classification tasks including transfer-learning (aka fine tuning), please see our [training introduction notebook](01_training_introduction.ipynb).
 
 # ### Prerequisite
-#
-# You will need to run this notebook on a machine with a webcam. We uses `ipywebrtc` module to show the webcam widget<sup>*</sup> on the notebook ([github](https://github.com/maartenbreddels/ipywebrtc) or [doc](https://ipywebrtc.readthedocs.io/en/latest/)).
-#
-# To install `ipywebrtc` (if your python environment hasn't had it already):
-# ```
-# $ pip install ipywebrtc                        # will auto enable for notebook >= 5.3
-# $ jupyter labextension install jupyter-webrtc  # for jupyter lab
-# ```
+# You will need to run this notebook on a machine with a webcam. We use `ipywebrtc` module to show the webcam widget<sup>*</sup> on the notebook. For more details about the widget, please visit ipywebrtc [github](https://github.com/maartenbreddels/ipywebrtc) or [doc](https://ipywebrtc.readthedocs.io/en/latest/).
 #
 # <sub>* Some browsers may not render & update widgets correctly. We tested this notebook works on Chrome browser.</sub>
 
@@ -63,13 +56,13 @@ print(f"Fast.ai/Torch is using {get_device_name(0)}")
 
 # ## 1. Load Pretrained Model
 #
-# We use ResNet18 which is a relatively small and fast compare to other CNNs models. The [reported error rate](https://pytorch-zh.readthedocs.io/en/latest/torchvision/models.html) of the model on ImageNet is 30.24% for top-1 and 10.92% for top-5<sup>*</sup>.
+# We use pretrained<sup>*</sup> ResNet18 which is a relatively small and fast compare to other CNNs models. The [reported error rate](https://pytorch-zh.readthedocs.io/en/latest/torchvision/models.html) of the model on ImageNet is 30.24% for top-1 and 10.92% for top-5 (top five labels considered most probable by the mode).
 #
-# The pretrained model expects input images normalized using mean = [0.485, 0.456, 0.406] and std = [0.229, 0.224, 0.225], which is defined in `fastai.vision.imagenet_stats`.
+# The model expects input images normalized using mean = [0.485, 0.456, 0.406] and std = [0.229, 0.224, 0.225], which is defined in `fastai.vision.imagenet_stats`.
 #
 # The output of the model is the probability distribution of the classes in ImageNet. To convert them into human-readable labels, we utilize the label json file used from [Keras](https://github.com/keras-team/keras/blob/master/keras/applications/imagenet_utils.py).
 #
-# > \* top-n: *n* labels considered most probable by the mode
+# > \* The model is pretrained on ImageNet. Note you can load your own model by using `learn = load_learner(path)` and use it. To learn more about model-export and load, see fastai [doc](https://docs.fast.ai/basic_train.html#Deploying-your-model)).
 
 # In[3]:
 
@@ -83,6 +76,7 @@ print(f"{', '.join(labels[:5])}, ...")
 
 
 # Convert a pretrained imagenet model into Learner for prediction.
+# You can load an exported model by learn = load_learner(path) as well.
 learn = model_to_learner(models.resnet18(pretrained=True), IMAGENET_IM_SIZE)
 
 

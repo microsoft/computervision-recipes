@@ -37,6 +37,11 @@ def notebooks():
         "11_exploring_hyperparameters": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
+        "deploy_on_ACI": os.path.join(
+            folder_notebooks,
+            "deployment",
+            "01_deployment_on_" "azure_container_instances.ipynb",
+        ),
     }
     return paths
 
