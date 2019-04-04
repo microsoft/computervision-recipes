@@ -159,15 +159,9 @@ class AnnotationWidget(object):
 
                 # Update annotations and write to disk
                 im_filename = self.im_filenames[self.vis_image_index]
-
-                label_ids = [
-                    i for i, w in enumerate(self.label_widgets) if w.value
+                self.annos[im_filename].labels = [
+                    w.description for w in self.label_widgets if w.value
                 ]
-                labels_old = [self.id_to_label[i] for i in label_ids]
-                labels = [w.description for w in self.label_widgets if w.value]
-                print(labels, labels_old)
-
-                self.annos[im_filename].labels = labels
                 self.annos[im_filename].exclude = self.exclude_widget.value
                 keys_with_annotation = [
                     k
