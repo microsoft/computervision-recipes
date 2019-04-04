@@ -1,7 +1,7 @@
 # This test is based on the test suite implemented for Recommenders project
 # https://github.com/Microsoft/Recommenders/tree/master/tests
 
-
+import os
 import papermill as pm
 from utils_ic.datasets import Urls, unzip_url
 
@@ -41,7 +41,9 @@ def test_10_notebook_run(notebooks):
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
-            DATA_PATH=unzip_url(Urls.recycle_path, exist_ok=True),
+            IM_DIR=os.path.join(
+                unzip_url(Urls.fridge_objects_path, exist_ok=True), "can"
+            ),
         ),
         kernel_name=KERNEL_NAME,
     )
