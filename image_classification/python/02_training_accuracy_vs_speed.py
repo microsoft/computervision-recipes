@@ -11,7 +11,7 @@
 #
 # We have conducted various experiments on multiple diverse datasets to find parameters which work well on a wide variety of settings, for e.g. high accuracy or fast inference. In this notebook, we provide these parameters, so that your initial models can be trained without any parameter tuning. For most datasets, these parameters are close to optimal, so there won't need to change them much. In the second part of the notebook, we will give guidelines as to what parameters could be fine-tuned and how they impact the model, and which parameters typically do not have a big influence
 #
-# It is recommended that you first train your model with the default parameters, evaluate the results, and then only as needed, try fine tuning the model to achieve better results.
+# It is recommended that you first train your model with the default parameters, evaluate the results, and then only as needed, try fine tuning parameters to achieve better results.
 
 # ## Table of Contents:
 # * [Training a High Accuracy or a Fast Inference Speed Classifier ](#model)
@@ -20,13 +20,13 @@
 #   * [Evaluation](#evaluation)
 # * [Fine tuning our models](#finetuning)
 #   * [DNN Architecture](#dnn)
-#   * [Learning Rate & Epochs](#lr)
-#   * [Image Resolution](#imsize)
+#   * [Key Parameters](#key-parameters)
 #   * [Other Parameters](#other-parameters)
-#   * [TLDR](#tldr)
+#   * [Testing Parameters](#testing-parameters)
 # * [Appendix](#appendix)
-#   * [Datasets](#dataset)
-#   * [Model Characteristics](#model-characteristics)
+#   * [Learning Rate](#appendix-learning-rate)
+#   * [Image Size](#appendix-imsize)
+#   * [How we got good parameters](#appendix-good-parameters)
 
 # ## Training a High Accuracy or a Fast Inference Speed Classifier <a name="model"></a>
 
@@ -70,6 +70,10 @@ from fastai.metrics import accuracy
 # ### Choosing between two types of models <a name="choosing"></a>
 
 # For most scenarios, computer vision practitioners want to create a high accuracy model, a fast-inference model or a small size model. Set your `MODEL_TYPE` variable to one of the following: `"high_accuracy"`, `"fast_inference"`, or `"small_size"`.
+#
+# For this notebook, we'll be using the FridgeObjects dataset as we did in the [previous notebook](01_training_introduction.ipynb). You can replace the `DATA_PATH` variable with your own data by passing its path.
+#
+# When choosing your batch size, its worth noting that even mid-level GPUs run out of memory when training a deeper resnet models at larger image resolutions. If you get an _out of memory_ error, try reducing the batch size by a factor of 2, and try again.
 
 # In[4]:
 
@@ -83,6 +87,8 @@ DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
 # Epochs to train for
 EPOCHS_HEAD = 4
 EPOCHS_BODY = 12
+LEARNING_RATE = 5e-3
+BATCH_SIZE = 16
 
 
 # Make sure that only one is set to True
@@ -100,18 +106,15 @@ assert MODEL_TYPE in ["high_accuracy", "fast_inference", "small_size"]
 
 if MODEL_TYPE == "high_acccuracy":
     ARCHITECTURE = models.resnet50
-    IM_SIZE = 499
-    LEARNING_RATE = 1e-4
+    IM_SIZE = 500
 
 if MODEL_TYPE == "fast_inference":
     ARCHITECTURE = models.resnet18
-    IM_SIZE = 299
-    LEARNING_RATE = 1e-3
+    IM_SIZE = 300
 
 if MODEL_TYPE == "small_size":
     ARCHITECTURE = models.squeezenet1_1
-    IM_SIZE = 299
-    LEARNING_RATE = 1e-3
+    IM_SIZE = 300
 
 
 # ### Training <a name="training"></a>
@@ -220,17 +223,15 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 
 # ---
 
-# ## Fine tuning our models <a name="finetuning"></a>
+# ## Fine tuning parameters <a name="finetuning"></a>
 #
 # If you use the parameters provided in the repo along with the defaults that Fastai provides, you can get good results across a wide variety of datasets. However, as is true for most machine learning projects, getting the best possible results for a new dataset requires tuning the parameters that you use. The following section provides guidelines on how to optimize for accuracy, inference speed, or model size on a given dataset. We'll go through the parameters that will make the largest impact on your model as well as the parameters that may not be worth tweaking.
 #
-# Generally speaking, models for image classification comes with a trade-off between training time versus model accuracy. The four parameters that most affect this trade-off are the DNN architecture, image resolution, learning rate, and number of epochs. DNN architecture and image resolution will additionally affect the model's inference time and memory footprint. As a rule of thumb, deeper networks with high image resolution will achieve high accuracy at the cost of large model sizes and low training and inference speeds. Shallow networks with low image resolution will result in models with fast inference speed, fast training speeds and low model sizes at the cost of the model's accuracy.
+# Generally speaking, models for image classification comes with a trade-off between training time versus model accuracy. The four parameters that most affect this trade-off are the DNN architecture, image resolution, learning rate, and number of epochs. DNN architecture and image resolution will additionally affect the model's inference time and memory footprint. As a rule of thumb, deeper networks with high image resolution will achieve higher accuracy at the cost of large model sizes and low training and inference speeds. Shallow networks with low image resolution will result in models with fast inference speed, fast training speeds and low model sizes at the cost of the model's accuracy.
 
 # ### DNN Architectures <a name="dnn"></a>
 #
-# One of the most important decisions to make when building a model is choosing what DNN architectures to use. Some DNNs have hundreds of layers and end up having quite a large memory footprint with millions of parameters to tune, while others are compact and small enough to fit onto memory limited edge devices.
-#
-# When choosing at an architecture, we want to make sure if fits our requirements for accuracy, memory footprint, inference speed and training speeds.
+# When choosing at an architecture, we want to make sure it fits our requirements for accuracy, memory footprint, inference speed and training speeds. Some DNNs have hundreds of layers and end up having quite a large memory footprint with millions of parameters to tune, while others are compact and small enough to fit onto memory limited edge devices.
 #
 # Lets take a __squeezenet1_1__ model, a __resnet18__ model and __resnet50__ model and compare the differences based on our experiment that is based of a diverse set of 6 different datasets. (More about the datasets in the appendix below)
 #
@@ -297,13 +298,67 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 # </details>
 #
 
-# ### Learning Rate and Epochs <a name="lr"></a>
+# ### Key Parameters <a name="key-parameters"></a>
+# This section examines some of the key parameters when training a deep learning model for image classification.
 #
-# Learning rate tends to be one of the most important parameters to set when training your model. If your learning rate is set too low, training will progress very slowly since we're only making tiny updates to the weights in your network. However, if your learning rate is too high, it can cause undesirable divergent behavior in your loss function.
+# | Parameter | Default Value |
+# | --- | --- |
+# | Learning Rate | 5e-3 |
+# | Epochs | 15 |
+# | Image Size | 300 X 300 |
+#
+# __Learning rate__
+#
+# Learning rate step size is used when optimizing your model with gradient descent and tends to be one of the most important parameters to set when training your model. If your learning rate is set too low, training will progress very slowly since we're only making tiny updates to the weights in your network. However, if your learning rate is too high, it can cause undesirable divergent behavior in your loss function. Generally speaking, choosing a learning rate of 5e-3 was shown to work pretty well for most datasets.
+#
+# You can learn more about learning rate in the [appendix below](#appendix-learning-rate).
+#
+# __Epochs__
+#
+# When it comes to choosing the number of epochs, a common question is - _Won't too many epochs will cause overfitting_? It turns out that the accuracy on the test set does not tend to get worse, even if training for too many epochs. Unless your are working with small datasets, using around 15 epochs tends to work pretty well in most cases.
+#
+# __Image size__
+#
+# The default image size is __300 X 300__ pixels. Using higher image resolution of, for example, __500 X 500__ or even higher, can improve the accuracy of the model but at the cost of longer training and inference times. Sometimes the training time can be increases so significantly that you have to weight the trade-off between building a model that is just marginally more accurate vs building a model in a timely manner.
+#
+# You can learn more about the impact of image resolution in the [appendix below](#appendix-imsize).
+#
+
+# ### Other Parameters <a name="other-parameters"></a>
+#
+# In this section, we examine some of the other common hyperparameters when dealing with DNNs. The key take-away is that that exact value of these parameters do have a big impact on the model's performance, training/inference speed, or memory footprint.
+#
+# | Parameter | Good Default Value |
+# | --- | --- |
+# | Batch Size | 16 or 32 |
+# | Dropout | 0.5 or (0.5 on the final layer and 0.25 on all previous layers) |
+# | Weight Decay | 0.01 |
+# | Momentum | 0.9 or (min=0.85 and max=0.95 when using cyclical momentum) |
+#
+# #### Batch Size
+# Batch size is the number of training samples you use in order to make one update to the model parameters. A batch size of 16 or 32 works well for most cases. The higher the batch size, the faster training will be, but at the expense of an increased DNN memory consumption. Depending on your dataset and the GPU you have, you can start with a batch size of 32, and move down to 16 if your GPU doesn't have enough memory.
+#
+# #### Dropout
+# Dropout is a way to discard activations at random when training your model. It is a way to keep the model from over-fitting on the training data. In Fastai, dropout is by default set to 0.5 on the final layer, and 0.25 on all previous layer. Unless there is clear evidence of over-fitting, drop out tends to work well at this default so there is no need to change it much.
+#
+# #### Weight decay (L2 regularization)
+# Weight decay is a regularization term applied when minimizing the network's loss. Generally speaking, the more training examples you have, the lower we can set the term since the model will generalize across all training samples. However, the more parameters you have, the higher you should set the term to mitigate against overfitting. When weight decay is big, the penalty for big weights is also big, when it is small weights can freely grow. In Fastai, the default weight decay is 0.1.
+#
+# #### Momentum
+# Momentum is a way to reach convergence faster when training our model. Conceptually, it is a way to incorporate a weighted average of the most recent updates to the current update. Fastai implements cyclical momentum when calling `fit_one_cycle()` , so the momentum will fluctuate up and down over the course of the training cycle. By default, Fastai uses a max of 0.95 and a min of 0.85. Without cyclical momentum, the default value for momentum is simply the middle point - 0.9. It turns out theres not much need to change momentum, especially if you are not time constrained when training your model.
+
+# ### Testing Parameters <a name="testing-parameters"></a>
+# If you want to fine tune parameters and test different parameters, you can use the ParameterSweeper module the find the best parameter. See the [exploring hyperparameters notebook](./11_exploring_hyperparameters.ipynb) for more information.
+
+# ---
+
+# # Appendix <a name="appendix"></a>
+
+# ### Learning Rate <a name="appendix-learning-rate"></a>
 #
 # One way to mitigate against a low learning rate is to make sure that you're training for many epochs. But this can take a long time.
 #
-# So, to efficiently build a model, we need to make sure that our learning rate is in the correct range so that we can train for as few epochs as possible. To find a good default learning rate, we've tested various learning rates on 6 different datasets over two different epochs settings.
+# So, to efficiently build a model, we need to make sure that our learning rate is in the correct range so that we can train for as few epochs as possible. To find a good default learning rate, we've tested various learning rates on 6 different datasets, training the full network for 3 or 15 epochs.
 #
 # ![lr_comparisons](figs/lr_comparisons.png)
 #
@@ -315,11 +370,9 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 # </p>
 # </details>
 #
-# In both figures, we can see that a learning rate of 1e-3 and 1e-4 tends to work the best across the different datasets and the two settings for epochs. Generally speaking, choosing a learning rate of 5e-3 (the mean of 1e-3 and 1e-4) will work pretty well for most datasets.
+# In both figures, we can see that a learning rate of 1e-3 and 1e-4 tends to work the best across the different datasets and the two settings for epochs. Generally speaking, choosing a learning rate of 5e-3 (the mean of 1e-3 and 1e-4) was shown to work pretty well for most datasets. We also observe that training using only 3 epochs gives inferior results compared to 15 epochs
 #
 # > Note: Fastai has implemented [one cycle policy with cyclical momentum](https://arxiv.org/abs/1803.09820) which requires a maximum learning rate since the learning rate will shift up and down over its training duration. Instead of calling `fit()`, we simply call `fit_one_cycle()`. This is what we used when testing.
-#
-# When it comes to choosing the number of epochs, a common question is - _Won't too many epochs will cause over-fitting?_ It turns out that it quite difficult to over-fit convolutional neural networks if your datasize if sufficiently large. Unless your are working with small datasets, using 15 epochs tends to work pretty well in most cases.
 #
 # ---
 #
@@ -372,7 +425,7 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 # </p>
 # </details>
 
-# ### Image Resolution <a name="imsize"></a>
+# ### Image Resolution <a name="appendix-imsize"></a>
 #
 # A model's input image resolution tends to affect its accuracy. Usually, convolutional neural networks able to take advantage of higher resolution images.
 #
@@ -380,11 +433,11 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 #
 # It turns out that the image size doesn't affect the model's memory footprint. Because the image size doesn't change the number of parameters, it makes sense that it should not affect the model size.
 #
-# However, the image size has a direct impact on training and inference speeds. An increase in image size means an increase in the number of paramters we have to calculate.
+# However, the image size has a direct impact on training and inference speeds. An increase in image size leads to an increase in computation and hence slower inference speeds.
 #
 # ![imsize_comparisons](figs/imsize_comparisons.png)
 #
-# From the results, we can see that an increase in image resolution from 299X299 to 499X499 will increase the performance marginally at the cost of a longer training duration and slower inference speed.
+# From the results, we can see that an increase in image resolution from __300 X 300__ to __500 X 500__ will increase the performance marginally at the cost of a longer training duration and slower inference speed.
 #
 # ---
 #
@@ -443,66 +496,11 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 # </p>
 # </details>
 
-# ### Other Parameters <a name="other-parameters"></a>
-#
-# In this section, we examine some of the other common hyperparameters when dealing with DNNs, namely, batch size, dropout, weight decay, and momemtum. The key take-away is that these parameters do not (in any significant way) affect the model's performance, training/inference speed, or memory footprint. So, for most datasets, we can get pretty good results just using these default values.
-#
-# | Parameter | Good Default Value |
-# | --- | --- |
-# | Batch Size | 16 or 32 |
-# | Dropout | 0.5 or (0.5 on the final layer and 0.25 on all subsequent layers) |
-# | Weight Decay | 0.01 |
-# | Momentum | 0.9 or (min=0.85 and max=0.95 when using cyclical momentum) |
-#
-# #### Batch Size
-# Batch size is the number of training samples you use in order to make one update to the model parameters. A batch size of 16 or 32 works well for most cases. You could use all the training samples (so a batch size equal to the number of training samples you have) to calculate the gradients for every single update so that we reach a convergence faster, however that is not efficient and most GPUs dont have enough RAM to manage batch sizes that are too large. When the batch size is too low, the weights might be unable to learn or it converges extremely slowly. As a compromise, we can pick a happy medium for the batch size. Depending on your dataset and the GPU you have, you can start with a batch size of 32, and move down to 16 if your GPU doesn't have enough memory.
-#
-# #### Dropout
-# Dropout is a way to discard activations at random when training your model. It is a way to keep the model from over-fitting on the training data. In Fastai, dropout is by default set to 0.5 on the final layer, and 0.25 on all subsequent layer. Unless there is clear evidence of over-fitting, drop out tends to work well at this default so there is no need to change it much.
-#
-# #### Weight decay (L2 regularization)
-# Weight decay is a regularization term applied when minimizing the network's loss. Generally speaking, the more training examples you have, the lower we can set the term since the model will generalize across all training samples. However, the more parameters you have, the higher you should set the term to mitigate against overfitting. When weight decay is big, the penalty for big weights is also big, when it is small weights can freely grow. In Fastai, the default weight decay is 0.1. Unless there is clear evidence of over-fitting, there is no need to increase it.
-#
-# #### Momentum
-# Momentum is a way to reach convergence faster when training our model. Conceptually, it is a way to incorporate a weighted average of the most recent updates to the current update. Fastai implements cyclical momentum when calling `fit_one_cycle()` , so the momentum will fluctuate up and down over the course of the training cycle. By default, Fastai uses a max of 0.95 and a min of 0.85. Without cyclical momentum, the default value for momentum is simply the middle point - 0.9. It turns out theres not much need to change momentum, especially if you are not time constrained when training your model.
-#
-#
-#
-
-# ## TLDR <a name="tldr"></a>
-#
-# Heres the tldr if you didn't have time to read the above.
-#
-#
-# __Architecture__
-#
-# - If you're not memory or inference speed constrained, use __resnet50__. If you want faster inference speeds, use __resnet18__. If you are memory constrained, use __squeezenet1_1__.
-#
-# __Learning rate__
-#
-# - Start with 5e-3.
-#
-# __Epochs__
-#
-# - If you are not training time constrained, use 15 epochs.
-#
-# __Image size__
-#
-# - Image size __299__ works pretty well. Increase image size and it'll work better but much slower.
-#
-# __Other parameters__
-#
-# - Don't worry about the model's __batch_size, __momentum__, __drop-out__ and __weight decay__. Unless you're really fine-tuning your model, just stick with the [defaults](#other-parameters).
-#
-# If you want to fine tune your model and test different parameters, you can use the ParameterSweeper module the find the best parameter. See the [exploring hyperparameters notebook](./11_exploring_hyperparameters.ipynb) for more information.
-
-# ---
-
-# ## (Appendix) How we found good default parameters <a name="appendix"></a>
+# ### How we found good default parameters <a name="#appendix-good-parameters"></a>
 #
 # To explore the charactistics of a model, we - the computer vision repo team - have conducted various experiments to explore the impact of different hyperparameters on a model's _accuracy_, _training duration_, _inference speed_, and _memory footprint_. In this notebook, we used the results of our experiments to give us concrete evidence when it comes to understanding which parameters work and which dont.
 #
-# ### Datasets <a name="datasets"></a>
+# #### Datasets <a name="datasets"></a>
 #
 # For our experiments, we relied on a set of six different classification datasets. When selecting these datasets, we wanted to have a variety of image types with different amounts of data and number of classes.
 #
@@ -515,7 +513,7 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 # | lettuce | 380 | 2 |
 # | fridgeObjects | 134 | 4 |
 #
-# ### Model Characteristics <a name="model-characteristics"></a>
+# #### Model Characteristics <a name="model-characteristics"></a>
 #
 # In our experiment, we look at these characteristics to evaluate the impact of various paramters. Here is how we calculated each of the following metrics:
 #
@@ -538,5 +536,3 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 #
 #     The memory footprint is size of the model parameters saved as the pickled file. This can be achieved by running `learn.export(...)` and examining the size of the exported file.
 #
-
-# In[ ]:
