@@ -244,7 +244,7 @@ if __name__ == "__main__":
 
     data = args.inputs
     if not data:
-        data = Experiment.download_benchmark_datasets(
+        data = ParameterSweeper.download_benchmark_datasets(
             Path(data_path()) / "benchmark_data"
         )
 

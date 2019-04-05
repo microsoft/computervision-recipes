@@ -299,12 +299,13 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 #
 
 # ### Key Parameters <a name="key-parameters"></a>
-# This section examines some of the key parameters when training a deep learning model for image classification.
+# This section examines some of the key parameters when training a deep learning model for image classification. The table below shows default parameters we recommend using.
 #
 # | Parameter | Default Value |
 # | --- | --- |
 # | Learning Rate | 5e-3 |
 # | Epochs | 15 |
+# | Batch Size | 16 |
 # | Image Size | 300 X 300 |
 #
 # __Learning rate__
@@ -315,37 +316,43 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 #
 # __Epochs__
 #
-# When it comes to choosing the number of epochs, a common question is - _Won't too many epochs will cause overfitting_? It turns out that the accuracy on the test set does not tend to get worse, even if training for too many epochs. Unless your are working with small datasets, using around 15 epochs tends to work pretty well in most cases.
+# When it comes to choosing the number of epochs, a common question is - _Won't too many epochs will cause overfitting_? It turns out that the accuracy on the test set typically does not get worse, even if training for too many epochs. Unless your are working with small datasets, using around 15 epochs tends to work pretty well in most cases.
+#
+#
+# __Batch Size__
+#
+# Batch size is the number of training samples you use in order to make one update to the model parameters. A batch size of 16 or 32 works well for most cases. The higher the batch size, the faster training will be, but at the expense of an increased DNN memory consumption. Depending on your dataset and the GPU you have, you can start with a batch size of 32, and move down to 16 if your GPU doesn't have enough memory. After a certain increase in batch size, improvments to training speed become marginal, hence we found 16 (or 32) to be a good trade-off between training speed and memory consumption.If you reduce the batch size, you may also have to reduce the learning rate.
 #
 # __Image size__
 #
-# The default image size is __300 X 300__ pixels. Using higher image resolution of, for example, __500 X 500__ or even higher, can improve the accuracy of the model but at the cost of longer training and inference times. Sometimes the training time can be increases so significantly that you have to weight the trade-off between building a model that is just marginally more accurate vs building a model in a timely manner.
+# The default image size is __300 X 300__ pixels. Using higher image resolution of, for example, __500 X 500__ or even higher, can improve the accuracy of the model but at the cost of longer training and inference times.
 #
 # You can learn more about the impact of image resolution in the [appendix below](#appendix-imsize).
 #
 
 # ### Other Parameters <a name="other-parameters"></a>
 #
-# In this section, we examine some of the other common hyperparameters when dealing with DNNs. The key take-away is that that exact value of these parameters do have a big impact on the model's performance, training/inference speed, or memory footprint.
+# In this section, we examine some of the other common hyperparameters when dealing with DNNs. The key take-away is that that exact value of these parameters do not have a big impact on the model's performance, training/inference speed, or memory footprint.
 #
 # | Parameter | Good Default Value |
 # | --- | --- |
-# | Batch Size | 16 or 32 |
 # | Dropout | 0.5 or (0.5 on the final layer and 0.25 on all previous layers) |
 # | Weight Decay | 0.01 |
 # | Momentum | 0.9 or (min=0.85 and max=0.95 when using cyclical momentum) |
 #
-# #### Batch Size
-# Batch size is the number of training samples you use in order to make one update to the model parameters. A batch size of 16 or 32 works well for most cases. The higher the batch size, the faster training will be, but at the expense of an increased DNN memory consumption. Depending on your dataset and the GPU you have, you can start with a batch size of 32, and move down to 16 if your GPU doesn't have enough memory.
+# __Dropout__
 #
-# #### Dropout
 # Dropout is a way to discard activations at random when training your model. It is a way to keep the model from over-fitting on the training data. In Fastai, dropout is by default set to 0.5 on the final layer, and 0.25 on all previous layer. Unless there is clear evidence of over-fitting, drop out tends to work well at this default so there is no need to change it much.
 #
-# #### Weight decay (L2 regularization)
-# Weight decay is a regularization term applied when minimizing the network's loss. Generally speaking, the more training examples you have, the lower we can set the term since the model will generalize across all training samples. However, the more parameters you have, the higher you should set the term to mitigate against overfitting. When weight decay is big, the penalty for big weights is also big, when it is small weights can freely grow. In Fastai, the default weight decay is 0.1.
+# __Weight decay (L2 regularization)__
 #
-# #### Momentum
-# Momentum is a way to reach convergence faster when training our model. Conceptually, it is a way to incorporate a weighted average of the most recent updates to the current update. Fastai implements cyclical momentum when calling `fit_one_cycle()` , so the momentum will fluctuate up and down over the course of the training cycle. By default, Fastai uses a max of 0.95 and a min of 0.85. Without cyclical momentum, the default value for momentum is simply the middle point - 0.9. It turns out theres not much need to change momentum, especially if you are not time constrained when training your model.
+# Weight decay is a regularization term applied when minimizing the network's loss. We can think of it as a penalty applied to the weights after an update. This will help prevent the weights from growing too big. In Fastai, the default weight decay is 0.1, which is what we should leave it at.
+#
+# __Momentum__
+#
+# Momentum is a way to reach convergence faster when training our model. It is a way to incorporate a weighted average of the most recent updates to the current update. Fastai implements cyclical momentum when calling `fit_one_cycle()`, so the momentum will fluctuate over the course of the training cycle, hence we need a min and max value for momentum.
+#
+# When using `fit_one_cycle()`, the default value of max=0.95 and min=0.85 is shown to work well. If using `fit()`, the default value of 0.9 has been shown to work well. These defaults provided by Fastai represent a good trade-off between training speed and the ability of the model to converge to a good solution
 
 # ### Testing Parameters <a name="testing-parameters"></a>
 # If you want to fine tune parameters and test different parameters, you can use the ParameterSweeper module the find the best parameter. See the [exploring hyperparameters notebook](./11_exploring_hyperparameters.ipynb) for more information.
@@ -372,7 +379,7 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 #
 # In both figures, we can see that a learning rate of 1e-3 and 1e-4 tends to work the best across the different datasets and the two settings for epochs. Generally speaking, choosing a learning rate of 5e-3 (the mean of 1e-3 and 1e-4) was shown to work pretty well for most datasets. We also observe that training using only 3 epochs gives inferior results compared to 15 epochs
 #
-# > Note: Fastai has implemented [one cycle policy with cyclical momentum](https://arxiv.org/abs/1803.09820) which requires a maximum learning rate since the learning rate will shift up and down over its training duration. Instead of calling `fit()`, we simply call `fit_one_cycle()`. This is what we used when testing.
+# Fastai has implemented [one cycle policy with cyclical momentum](https://arxiv.org/abs/1803.09820) which requires a maximum learning rate since the learning rate will shift up and down over its training duration. Instead of calling `fit()`, we simply call `fit_one_cycle()`.
 #
 # ---
 #
@@ -427,13 +434,11 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 
 # ### Image Resolution <a name="appendix-imsize"></a>
 #
-# A model's input image resolution tends to affect its accuracy. Usually, convolutional neural networks able to take advantage of higher resolution images.
+# A model's input image resolution tends to affect its accuracy. Usually, convolutional neural networks are able to take advantage of higher resolution images. This is especially true is the object-of-interest is small in the image.
 #
 # But how does it impact some of the other aspects of the model?
 #
-# It turns out that the image size doesn't affect the model's memory footprint. Because the image size doesn't change the number of parameters, it makes sense that it should not affect the model size.
-#
-# However, the image size has a direct impact on training and inference speeds. An increase in image size leads to an increase in computation and hence slower inference speeds.
+# It turns out that the image size doesn't affect the model's memory footprint, but it has a huge effect on GPU memory. Image size also has a direct impact on training and inference speeds. An increase in image size will result in slower inference speeds.
 #
 # ![imsize_comparisons](figs/imsize_comparisons.png)
 #
