@@ -16,7 +16,7 @@ from utils_ic.datasets import unzip_url, Urls
 
 
 def path_notebooks():
-    """Returns the path of the notebooks folder"""
+    """ Returns the path of the notebooks folder. """
     return os.path.abspath(
         os.path.join(os.path.dirname(__file__), os.path.pardir, "notebooks")
     )
@@ -47,23 +47,6 @@ def notebooks():
     return paths
 
 
-@pytest.fixture(scope="session")
-def tiny_ic_multidata_path(tmp) -> List[Path]:
-    """ Returns the path to multiple dataset. """
-    fp = tmp.mktemp("multidatasets")
-    return [
-        unzip_url(Urls.fridge_objects_watermark_tiny_path, fp, exist_ok=True),
-        unzip_url(Urls.fridge_objects_tiny_path, fp, exist_ok=True),
-    ]
-
-
-@pytest.fixture(scope="session")
-def tiny_ic_data_path(tmp) -> Path:
-    """ Returns the path to the tiny fridge objects dataset. """
-    fp = tmp.mktemp("dataset")
-    return unzip_url(Urls.fridge_objects_tiny_path, fp, exist_ok=True)
-
-
 @pytest.fixture(scope="function")
 def tmp(tmp_path_factory):
     """Create a function-scoped temp directory.
@@ -81,6 +64,23 @@ def tmp(tmp_path_factory):
 
 @pytest.fixture(scope="session")
 def tmp_session(tmp_path_factory):
-    """ Same as tmp but with session level scope. """
+    """ Same as 'tmp' fixture but with session level scope. """
     with TemporaryDirectory(dir=tmp_path_factory.getbasetemp()) as td:
         yield td
+
+
+@pytest.fixture(scope="session")
+def tiny_ic_multidata_path(tmp_session) -> List[Path]:
+    """ Returns the path to multiple dataset. """
+    return [
+        unzip_url(
+            Urls.fridge_objects_watermark_tiny_path, tmp_session, exist_ok=True
+        ),
+        unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True),
+    ]
+
+
+@pytest.fixture(scope="session")
+def tiny_ic_data_path(tmp_session) -> Path:
+    """ Returns the path to the tiny fridge objects dataset. """
+    return unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True)
