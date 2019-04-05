@@ -160,11 +160,7 @@ learn = cnn_learner(
     data,
     ARCHITECTURE,
     metrics=[accuracy],
-    callback_fns=[partial(
-        TrainMetricsRecorder,
-        n_batch=len(data.valid_ds)//BATCH_SIZE,
-        show_graph=True
-    )]
+    callback_fns=[partial(TrainMetricsRecorder, show_graph=True)]
 )
 
 

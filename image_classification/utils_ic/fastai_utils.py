@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 from time import time
-from typing import List, Any
+from typing import Any, List
 
 from IPython.display import display
 
@@ -10,8 +10,10 @@ from fastai.basic_train import LearnerCallback
 from fastai.core import PBar
 from fastai.torch_core import TensorOrNumList
 from fastprogress.fastprogress import format_time
+
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+
 import torch
 from torch import Tensor
 
@@ -58,25 +60,32 @@ class TrainMetricsRecorder(LearnerCallback):
         super().__init__(learn)
 
         # Check number of batches we will evaluate on with the metrics.
-        if n_batch: assert n_batch > 0
+        if n_batch:
+            assert n_batch > 0
 
         self.n_batch = n_batch
         self.show_graph = show_graph
 
-    def on_train_begin(self, pbar: PBar, metrics: List, n_epochs: int, **kwargs: Any):
+    def on_train_begin(
+        self, pbar: PBar, metrics: List, n_epochs: int, **kwargs: Any
+    ):
         self.has_metrics = metrics and len(metrics) > 0
         self.has_val = hasattr(self.learn.data, 'valid_ds')
 
         # Result table and graph variables
-        self.learn.recorder.silent = True  # Mute recorder. This callback will printout results instead.
+        self.learn.recorder.silent = (
+            True
+        )  # Mute recorder. This callback will printout results instead.
         self.pbar = pbar
         self.names = ['epoch', 'train_loss']
-        if self.has_val: self.names.append('valid_loss')
+        if self.has_val:
+            self.names.append('valid_loss')
         # Add metrics names
         self.metrics_names = [m_fn.__name__ for m_fn in metrics]
         for m in self.metrics_names:
             self.names.append('train_' + m)
-            if self.has_val: self.names.append('valid_' + m)
+            if self.has_val:
+                self.names.append('valid_' + m)
         self.names.append('time')
         self.pbar.write(self.names, table=True)
 
@@ -89,23 +98,41 @@ class TrainMetricsRecorder(LearnerCallback):
         self.y = []  # Target class labels from the last epoch
         self.out = []  # Outputs from the last epoch
 
-    def on_batch_end(self, train: bool, num_batch: int, last_target: Tensor, last_output: Tensor, **kwargs: Any):
-        if train and self._use_batch(num_batch) and self.has_metrics:
+    def on_batch_end(
+        self,
+        train: bool,
+        num_batch: int,
+        last_target: Tensor,
+        last_output: Tensor,
+        **kwargs: Any,
+    ):
+        if (
+            train
+            and (self.n_batch is None or self.n_batch > num_batch)
+            and self.has_metrics
+        ):
             self.y.append(last_target.cpu())
             self.out.append(last_output.cpu())
 
-    def _use_batch(self, num_batch: int):
-        """Check if we want to evaluate this train-batch or not"""
-        return self.n_batch is None or self.n_batch > num_batch
-
-    def on_epoch_end(self, epoch: int, smooth_loss: Tensor, metrics: List, last_metrics: List, pbar: PBar,
-                     **kwargs: Any):
+    def on_epoch_end(
+        self,
+        epoch: int,
+        smooth_loss: Tensor,
+        metrics: List,
+        last_metrics: List,
+        pbar: PBar,
+        **kwargs: Any,
+    ):
         stats = [epoch, smooth_loss]
-        if self.has_val: stats.append(last_metrics[0])  # validation loss
+        if self.has_val:
+            stats.append(last_metrics[0])  # validation loss
 
         if self.has_metrics:
             # Evaluate metrics on the training set
-            tr_lm = [m_fn(torch.stack(self.out), torch.stack(self.y)) for m_fn in metrics]
+            tr_lm = [
+                m_fn(torch.stack(self.out), torch.stack(self.y))
+                for m_fn in metrics
+            ]
             self.train_metrics.append(tr_lm)
 
             # Get evaluation metrics on the validation set (computed by learner)
@@ -116,7 +143,8 @@ class TrainMetricsRecorder(LearnerCallback):
             # Prepare result table values
             for i in range(len(metrics)):
                 stats.append(tr_lm[i])
-                if self.has_val: stats.append(vl_lm[i])
+                if self.has_val:
+                    stats.append(vl_lm[i])
 
         # Write to result table
         self._format_stats(stats)
@@ -129,7 +157,13 @@ class TrainMetricsRecorder(LearnerCallback):
         """Format stats before printing. Note, this does the same thing as Recorder's"""
         str_stats = []
         for name, stat in zip(self.names, stats):
-            str_stats.append('#na#' if stat is None else str(stat) if isinstance(stat, int) else f'{stat:.6f}')
+            str_stats.append(
+                '#na#'
+                if stat is None
+                else str(stat)
+                if isinstance(stat, int)
+                else f'{stat:.6f}'
+            )
         str_stats.append(format_time(time() - self.start_epoch))
         self.pbar.write(str_stats, table=True)
 
@@ -145,9 +179,15 @@ class TrainMetricsRecorder(LearnerCallback):
         # init graph
         if not hasattr(self, 'fig'):
             self.fig, self.axes = plt.subplots(
-                len(self.train_metrics[0]), 1, figsize=(6, 4 * len(self.train_metrics[0]))
+                len(self.train_metrics[0]),
+                1,
+                figsize=(6, 4 * len(self.train_metrics[0])),
             )
-            self.axes = self.axes.flatten() if len(self.train_metrics[0]) > 1 else [self.axes]
+            self.axes = (
+                self.axes.flatten()
+                if len(self.train_metrics[0]) > 1
+                else [self.axes]
+            )
             self.graphs = display(self.fig, display_id=True)
 
         # Plot each metrics as a subplot
@@ -169,7 +209,7 @@ class TrainMetricsRecorder(LearnerCallback):
             x_bounds = (-0.05, self.n_epochs - 0.95)
             y_bounds = (
                 min(-0.05, min(Tensor(tr_m)), min(Tensor(vl_m))) - 0.05,
-                max(1.05, max(Tensor(tr_m)), max(Tensor(vl_m))) + 0.05
+                max(1.05, max(Tensor(tr_m)), max(Tensor(vl_m))) + 0.05,
             )
             ax.set_xlim(x_bounds)
             ax.set_ylim(y_bounds)
