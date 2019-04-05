@@ -24,24 +24,26 @@ def test_webcam_notebook_run(notebooks):
     )
 
 
-def test_01_notebook_run(notebooks, dataset):
+def test_01_notebook_run(notebooks, tiny_ic_data_path):
     notebook_path = notebooks["01_training_introduction"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__, DATA_PATH=dataset),
+        parameters=dict(
+            PM_VERSION=pm.__version__, DATA_PATH=tiny_ic_data_path
+        ),
         kernel_name=KERNEL_NAME,
     )
 
 
-def test_02_notebook_run(notebooks, dataset):
+def test_02_notebook_run(notebooks, tiny_ic_data_path):
     notebook_path = notebooks["02_training_accuracy_vs_speed"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
-            DATA_PATH=dataset,
+            DATA_PATH=tiny_ic_data_path,
             MODEL_TYPE="fast_inference",  # options: ['fast_inference', 'high_accuracy', 'small_size']
             EPOCHS_HEAD=1,
             EPOCHS_BODY=1,
@@ -50,14 +52,14 @@ def test_02_notebook_run(notebooks, dataset):
     )
 
 
-def test_11_notebook_run(notebooks, dataset):
+def test_11_notebook_run(notebooks, tiny_ic_data_path):
     notebook_path = notebooks["11_exploring_hyperparameters"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
-            DATA=[dataset],
+            DATA=[tiny_ic_data_path],
             REPS=1,
             LEARNING_RATES=[1e-3],
             IM_SIZES=[199],
@@ -67,12 +69,14 @@ def test_11_notebook_run(notebooks, dataset):
     )
 
 
-def skip_test_deploy_1_notebook_run(notebooks, dataset):
+def skip_test_deploy_1_notebook_run(notebooks, tiny_ic_data_path):
     notebook_path = notebooks["deploy_on_ACI"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__, DATA_PATH=dataset),
+        parameters=dict(
+            PM_VERSION=pm.__version__, DATA_PATH=tiny_ic_data_path
+        ),
         kernel_name=KERNEL_NAME,
     )
     try:

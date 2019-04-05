@@ -20,7 +20,7 @@ get_ipython().run_line_magic("matplotlib", "inline")
 
 # Import fastai. For now, we'll import all (`from fastai.vision import *`) so that we can easily use different utilies provided by the fastai library.
 
-# In[3]:
+# In[2]:
 
 
 import sys
@@ -36,6 +36,7 @@ from fastai.metrics import accuracy
 from torch.cuda import get_device_name
 
 # local modules
+from utils_ic.fastai_utils import TrainMetricsRecorder
 from utils_ic.gpu_utils import gpu_info
 from utils_ic.plot_utils import ResultsWidget, plot_pr_roc_curves
 from utils_ic.datasets import Urls, unzip_url
@@ -43,7 +44,7 @@ from utils_ic.datasets import Urls, unzip_url
 print(f"Fast.ai version = {fastai.__version__}")
 
 
-# In[4]:
+# In[3]:
 
 
 print(f"Machine's GPU info = {gpu_info()} (memory unit = MiB)")
@@ -54,7 +55,7 @@ print(f"Fast.ai/Torch is using {get_device_name(0)}")
 
 # Set some parameters. We'll use the `unzip_url` helper function to download and unzip our data.
 
-# In[5]:
+# In[4]:
 
 
 DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
@@ -73,7 +74,7 @@ ARCHITECTURE = models.resnet50
 #
 # Let's set that directory to our `path` variable, which we'll use throughout the notebook, and checkout what's inside:
 
-# In[6]:
+# In[5]:
 
 
 path = Path(DATA_PATH)
@@ -109,7 +110,7 @@ path.ls()
 #
 # For training and validation, we randomly split the data by 8:2, where 80% of the data is for training and the rest for validation.
 
-# In[7]:
+# In[6]:
 
 
 data = (
@@ -124,7 +125,7 @@ data = (
 
 # Lets take a look at our data using the databunch we created.
 
-# In[8]:
+# In[7]:
 
 
 data.show_batch(rows=3, figsize=(15, 11))
@@ -132,7 +133,7 @@ data.show_batch(rows=3, figsize=(15, 11))
 
 # Lets see all available classes:
 
-# In[9]:
+# In[8]:
 
 
 print(f"number of classes: {data.c}")
@@ -141,7 +142,7 @@ print(data.classes)
 
 # We can also see how many images we have in our training and validation set.
 
-# In[10]:
+# In[9]:
 
 
 data.batch_stats
@@ -154,16 +155,23 @@ data.batch_stats
 # For the model, we use a convolutional neural network (CNN). Specifically, we'll use **ResNet50** architecture. You can find more details about ResNet from [here](https://arxiv.org/abs/1512.03385).
 #
 # When training a model, there are many hypter parameters to select, such as the learning rate, the model architecture, layers to tune, and many more. With fastai, we can use the `create_cnn` function that allows us to specify the model architecture and performance indicator (metric). At this point, we already benefit from transfer learning since we download the parameters used to train on [ImageNet](http://www.image-net.org/).
+#
+# Note, we use a custom callback `TrainMetricsRecorder` to track the accuracy on the training set during training, since fast.ai's default [recorder class](https://docs.fast.ai/basic_train.html#Recorder) only supports tracking accuracy on the validation set.
 
-# In[11]:
+# In[10]:
 
 
-learn = cnn_learner(data, ARCHITECTURE, metrics=accuracy)
+learn = cnn_learner(
+    data,
+    ARCHITECTURE,
+    metrics=[accuracy],
+    callback_fns=[partial(TrainMetricsRecorder, show_graph=True)],
+)
 
 
 # Unfreeze our CNN since we're training all the layers.
 
-# In[12]:
+# In[11]:
 
 
 learn.unfreeze()
@@ -171,32 +179,16 @@ learn.unfreeze()
 
 # We can call the `fit` function to train the dnn.
 
-# In[13]:
+# In[12]:
 
 
 learn.fit(EPOCHS, LEARNING_RATE)
 
 
-# To see how our model has been trained, we can plot the accuracy and loss over the number of batches processed while training.
-
-# In[14]:
+# In[13]:
 
 
-# Plot the accuracy (metric) on validation set over the number of batches processed
-learn.recorder.plot_metrics()
-plt.gca().get_lines()[0].set_color("orange")
-plt.gca().get_lines()[0].set_label("Validation")
-plt.xlim([-1.0, 26.0])
-plt.ylim([0.0, 1.05])
-plt.xlabel("Batches processed")
-plt.ylabel("Accuracy")
-plt.legend()
-
-
-# In[15]:
-
-
-# Plot losses on train and validation sets
+# You can plot loss by using the default callback Recorder.
 learn.recorder.plot_losses()
 
 
@@ -204,7 +196,7 @@ learn.recorder.plot_losses()
 
 # To evaluate our model, lets take a look at the accuracy on the validation set.
 
-# In[16]:
+# In[14]:
 
 
 _, metric = learn.validate(learn.data.valid_dl, metrics=[accuracy])
@@ -213,7 +205,7 @@ print(f"Accuracy on validation set: {100*float(metric):3.2f}")
 
 # Now, analyze the classification results by using `ClassificationInterpretation` module.
 
-# In[17]:
+# In[15]:
 
 
 interp = ClassificationInterpretation.from_learner(learn)
@@ -226,7 +218,7 @@ pred_scores = to_np(interp.probs)
 # <img src="https://cvbp.blob.core.windows.net/public/images/ic_widget.png" width="600"/>
 # <center><i>Image Classification Result Widget</i></center>
 
-# In[18]:
+# In[16]:
 
 
 w_results = ResultsWidget(
@@ -239,7 +231,7 @@ display(w_results.show())
 
 # We can plot precision-recall and ROC curves for each class as well. Please note that these plots are not too interesting here, since the dataset is easy and thus the accuracy is close to 100%.
 
-# In[19]:
+# In[17]:
 
 
 # True labels of the validation set. We convert to numpy array for plotting.
@@ -249,7 +241,7 @@ plot_pr_roc_curves(true_labels, pred_scores, data.classes)
 
 # Let's take a close look how our model confused some of the samples (if any). The most common way to do that is to use a confusion matrix.
 
-# In[20]:
+# In[18]:
 
 
 interp.plot_confusion_matrix()
@@ -257,7 +249,7 @@ interp.plot_confusion_matrix()
 
 # When evaluating our results, we want to see where the model messes up, and whether or not we can do better. So we're interested in seeing images where the model predicted the image incorrectly but with high confidence (images with the highest loss).
 
-# In[21]:
+# In[19]:
 
 
 interp.plot_top_losses(9, figsize=(15, 11))

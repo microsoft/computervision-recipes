@@ -20,25 +20,25 @@ def _test_sweeper_run(df: pd.DataFrame, df_length: int):
     plot_sweeper_df(df)
 
 
-def test_default_sweeper_single_dataset(dataset):
+def test_default_sweeper_single_dataset(tiny_ic_data_path):
     """ Test default sweeper on a single dataset. """
     sweeper = ParameterSweeper().update_parameters(epochs=[5])
-    df = sweeper.run([dataset], reps=1)
+    df = sweeper.run([tiny_ic_data_path], reps=1)
     _test_sweeper_run(df, df_length=1)
 
     # assert accuracy over 3 runs is > 85%
     assert df.mean(level=(1))["accuracy"][0] > 0.0
 
 
-def test_default_sweeper_benchmark_dataset(multidataset):
+def test_default_sweeper_benchmark_dataset(tiny_ic_multidata_path):
     """
     Test default sweeper on benchmark dataset.
     WARNING: This test can take a while to execute since we run the sweeper
     across all benchmark datasets.
     """
     sweeper = ParameterSweeper().update_parameters(epochs=[5])
-    df = sweeper.run(multidataset, reps=1)
-    _test_sweeper_run(df, df_length=len(multidataset))
+    df = sweeper.run(tiny_ic_multidata_path, reps=1)
+    _test_sweeper_run(df, df_length=len(tiny_ic_multidata_path))
 
     # assert min accuracy for each dataset
     assert df.mean(level=(2)).loc["fridgeObjectsTiny", "accuracy"] > 0.0
@@ -47,7 +47,7 @@ def test_default_sweeper_benchmark_dataset(multidataset):
     )
 
 
-def test_update_parameters_01(dataset):
+def test_update_parameters_01(tiny_ic_data_path):
     """ Tests updating parameters. """
     sweeper = ParameterSweeper()
 
@@ -58,7 +58,7 @@ def test_update_parameters_01(dataset):
     )
     # assert that there are not 6 permutations
     assert len(sweeper.permutations) == 6
-    df = sweeper.run([dataset], reps=1)
+    df = sweeper.run([tiny_ic_data_path], reps=1)
     _test_sweeper_run(df, df_length=6)
 
 

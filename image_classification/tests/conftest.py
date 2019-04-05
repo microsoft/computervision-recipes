@@ -11,6 +11,7 @@ import os
 import pytest
 from pathlib import Path
 from typing import List
+from tempfile import TemporaryDirectory
 from utils_ic.datasets import unzip_url, Urls
 
 
@@ -46,16 +47,40 @@ def notebooks():
     return paths
 
 
-@pytest.fixture(scope="module")
-def multidataset(tmp_path_factory) -> List[Path]:
-    fp = tmp_path_factory.mktemp("multidatasets")
+@pytest.fixture(scope="session")
+def tiny_ic_multidata_path(tmp) -> List[Path]:
+    """ Returns the path to multiple dataset. """
+    fp = tmp.mktemp("multidatasets")
     return [
         unzip_url(Urls.fridge_objects_watermark_tiny_path, fp, exist_ok=True),
         unzip_url(Urls.fridge_objects_tiny_path, fp, exist_ok=True),
     ]
 
 
-@pytest.fixture(scope="module")
-def dataset(tmp_path_factory) -> Path:
-    fp = tmp_path_factory.mktemp("dataset")
+@pytest.fixture(scope="session")
+def tiny_ic_data_path(tmp) -> Path:
+    """ Returns the path to the tiny fridge objects dataset. """
+    fp = tmp.mktemp("dataset")
     return unzip_url(Urls.fridge_objects_tiny_path, fp, exist_ok=True)
+
+
+@pytest.fixture(scope="function")
+def tmp(tmp_path_factory):
+    """Create a function-scoped temp directory.
+    Will be cleaned up after each test function.
+
+    Args:
+        tmp_path_factory (pytest.TempPathFactory): Pytest default fixture
+
+    Returns:
+        str: Temporary directory path
+    """
+    with TemporaryDirectory(dir=tmp_path_factory.getbasetemp()) as td:
+        yield td
+
+
+@pytest.fixture(scope="session")
+def tmp_session(tmp_path_factory):
+    """ Same as tmp but with session level scope. """
+    with TemporaryDirectory(dir=tmp_path_factory.getbasetemp()) as td:
+        yield td

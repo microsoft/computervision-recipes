@@ -5,10 +5,6 @@ from pathlib import Path
 from typing import Union
 from utils_ic.datasets import Urls, unzip_url, imagenet_labels
 
-# temporarily putting this constant here until we add a way
-# to manage constants in tests
-TEMP_DIR = Path("../tmp_data")
-
 
 def _test_url_data(url: str, path: Union[Path, str], dir_name: str):
     data_path = unzip_url(url, fpath=path, dest=path, exist_ok=True)
