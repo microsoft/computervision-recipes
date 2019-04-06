@@ -8,17 +8,15 @@
 # automatically gets discovered by pytest."
 
 import os
-from pathlib import Path
 import pytest
+from pathlib import Path
+from typing import List
 from tempfile import TemporaryDirectory
-
-from fastai.vision import ImageList, imagenet_stats
-
 from utils_ic.datasets import unzip_url, Urls
 
 
 def path_notebooks():
-    """Returns the path of the notebooks folder"""
+    """ Returns the path of the notebooks folder. """
     return os.path.abspath(
         os.path.join(os.path.dirname(__file__), os.path.pardir, "notebooks")
     )
@@ -34,6 +32,12 @@ def notebooks():
         "01_training_introduction": os.path.join(
             folder_notebooks, "01_training_introduction.ipynb"
         ),
+        "02_training_accuracy_vs_speed": os.path.join(
+            folder_notebooks, "02_training_accuracy_vs_speed.ipynb"
+        ),
+        "11_exploring_hyperparameters": os.path.join(
+            folder_notebooks, "11_exploring_hyperparameters.ipynb"
+        ),
         "deploy_on_ACI": os.path.join(
             folder_notebooks,
             "deployment",
@@ -43,7 +47,7 @@ def notebooks():
     return paths
 
 
-@pytest.fixture
+@pytest.fixture(scope="function")
 def tmp(tmp_path_factory):
     """Create a function-scoped temp directory.
     Will be cleaned up after each test function.
@@ -58,20 +62,25 @@ def tmp(tmp_path_factory):
         yield td
 
 
-@pytest.fixture
-def tiny_ic_data(tmp):
-    """Load tiny image-classification data for a test.
-    TODO refactor to use actual `tiny` data once we have it.
+@pytest.fixture(scope="session")
+def tmp_session(tmp_path_factory):
+    """ Same as 'tmp' fixture but with session level scope. """
+    with TemporaryDirectory(dir=tmp_path_factory.getbasetemp()) as td:
+        yield td
 
-    Returns:
-        ImageDataBunch
-    """
-    path = Path(unzip_url(Urls.fridge_objects_path, tmp, exist_ok=True))
-    return (
-        ImageList.from_folder(path)
-        .split_by_rand_pct(valid_pct=0.2, seed=10)
-        .label_from_folder()
-        .transform(size=299)
-        .databunch(bs=16)
-        .normalize(imagenet_stats)
-    )
+
+@pytest.fixture(scope="session")
+def tiny_ic_multidata_path(tmp_session) -> List[Path]:
+    """ Returns the path to multiple dataset. """
+    return [
+        unzip_url(
+            Urls.fridge_objects_watermark_tiny_path, tmp_session, exist_ok=True
+        ),
+        unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True),
+    ]
+
+
+@pytest.fixture(scope="session")
+def tiny_ic_data_path(tmp_session) -> Path:
+    """ Returns the path to the tiny fridge objects dataset. """
+    return unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True)

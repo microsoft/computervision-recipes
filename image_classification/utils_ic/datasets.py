@@ -18,6 +18,11 @@ class Urls:
 
     # datasets
     fridge_objects_path = urljoin(base, "fridgeObjects.zip")
+    fridge_objects_watermark_path = urljoin(base, "fridgeObjectsWatermark.zip")
+    fridge_objects_tiny_path = urljoin(base, "fridgeObjectsTiny.zip")
+    fridge_objects_watermark_tiny_path = urljoin(
+        base, "fridgeObjectsWatermarkTiny.zip"
+    )
     multilabel_fridge_objects_path = urljoin(
         base, "multilabelFridgeObjects.zip"
     )

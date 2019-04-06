@@ -2,25 +2,21 @@
 # Licensed under the MIT License.
 
 import os
-
-from utils_ic.datasets import Urls, unzip_url
 from utils_ic.image_conversion import im2base64, ims2strlist
 
 
-def test_ims2strlist():
+def test_ims2strlist(tiny_ic_data_path):
     """ Tests extraction of image content and conversion into string"""
-    data_path = unzip_url(Urls.fridge_objects_path, exist_ok=True)
     im_list = [
-        os.path.join(data_path, "can", "im_1.jpg"),
-        os.path.join(data_path, "carton", "im_62.jpg"),
+        os.path.join(tiny_ic_data_path, "can", "1.jpg"),
+        os.path.join(tiny_ic_data_path, "carton", "34.jpg"),
     ]
     im_string_list = ims2strlist(im_list)
     assert isinstance(im_string_list, list)
 
 
-def test_im2base64():
+def test_im2base64(tiny_ic_data_path):
     """ Tests extraction of image content and conversion into bytes"""
-    data_path = unzip_url(Urls.fridge_objects_path, exist_ok=True)
-    im_name = os.path.join(data_path, "can", "im_1.jpg")
+    im_name = os.path.join(tiny_ic_data_path, "can", "1.jpg")
     im_content = im2base64(im_name)
     assert isinstance(im_content, bytes)
