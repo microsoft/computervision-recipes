@@ -71,7 +71,7 @@ def _str_to_bool(string: str) -> bool:
 def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
     """ Get parser for this script. """
     parser = argparse.ArgumentParser(
-        description=argparse_desc_msg(),
+        description=argparse_desc_msg,
         epilog=argparse_epilog_msg(default_params=default_params),
         formatter_class=RawTextHelpFormatter,
     )
@@ -244,7 +244,7 @@ if __name__ == "__main__":
 
     data = args.inputs
     if not data:
-        data = Experiment.download_benchmark_datasets(
+        data = ParameterSweeper.download_benchmark_datasets(
             Path(data_path()) / "benchmark_data"
         )
 

@@ -5,21 +5,6 @@ from pathlib import Path
 from typing import Union
 from utils_ic.datasets import Urls, unzip_url, imagenet_labels
 
-# temporarily putting this constant here until we add a way
-# to manage constants in tests
-TEMP_DIR = Path("../tmp_data")
-
-
-@pytest.fixture(scope="function")
-def make_temp_data_dir(request):
-    os.makedirs(TEMP_DIR, exist_ok=True)
-
-    def remove_temp_data_dir():
-        if os.path.exists(TEMP_DIR):
-            shutil.rmtree(TEMP_DIR)
-
-    request.addfinalizer(remove_temp_data_dir)
-
 
 def _test_url_data(url: str, path: Union[Path, str], dir_name: str):
     data_path = unzip_url(url, fpath=path, dest=path, exist_ok=True)
@@ -33,44 +18,42 @@ def _test_url_data(url: str, path: Union[Path, str], dir_name: str):
     )
 
 
-def test_unzip_url_rel_path(make_temp_data_dir):
+def test_unzip_url_rel_path(tmp_path):
     """ Test unzip with relative path. """
-    rel_path = TEMP_DIR
-    _test_url_data(Urls.lettuce_path, rel_path, "lettuce")
+    rel_path = tmp_path
     _test_url_data(Urls.fridge_objects_path, rel_path, "fridgeObjects")
-    _test_url_data(Urls.recycle_path, rel_path, "recycle_v3")
 
 
-def test_unzip_url_abs_path(make_temp_data_dir):
+def test_unzip_url_abs_path(tmp_path):
     """ Test unzip with absolute path. """
-    abs_path = Path(os.path.abspath(TEMP_DIR))
-    _test_url_data(Urls.lettuce_path, abs_path, "lettuce")
+    abs_path = Path(os.path.abspath(tmp_path))
     _test_url_data(Urls.fridge_objects_path, abs_path, "fridgeObjects")
-    _test_url_data(Urls.recycle_path, abs_path, "recycle_v3")
 
 
-def test_unzip_url_exist_ok(make_temp_data_dir):
+def test_unzip_url_exist_ok(tmp_path):
     """
     Test if exist_ok is true and (file exists, file does not exist)
     """
-    os.makedirs(TEMP_DIR / "recycle_v3")
-    recycle_path = unzip_url(Urls.recycle_path, TEMP_DIR, exist_ok=True)
-    assert len(os.listdir(recycle_path)) == 0
-    lettuce_path = unzip_url(Urls.lettuce_path, TEMP_DIR, exist_ok=True)
-    assert len(os.listdir(lettuce_path)) >= 0
+    os.makedirs(tmp_path / "fridgeObjects")
+    fridge_object_path = unzip_url(
+        Urls.fridge_objects_path, tmp_path, exist_ok=True
+    )
+    assert len(os.listdir(fridge_object_path)) == 0
+    shutil.rmtree(tmp_path / "fridgeObjects")
+    fridge_object_path = unzip_url(Urls.recycle_path, tmp_path, exist_ok=True)
+    assert len(os.listdir(fridge_object_path)) > 0
 
 
-def test_unzip_url_not_exist_ok(make_temp_data_dir):
+def test_unzip_url_not_exist_ok(tmp_path):
     """
     Test if exist_ok is false and (file exists, file does not exist)
     """
-    os.makedirs(TEMP_DIR / "fridgeObjects")
+    os.makedirs(tmp_path / "fridgeObjects")
     with pytest.raises(FileExistsError):
-        unzip_url(Urls.fridge_objects_path, TEMP_DIR, exist_ok=False)
-
-    open(TEMP_DIR / "lettuce.zip", "a").close()
-    with pytest.raises(FileExistsError):
-        unzip_url(Urls.lettuce_path, TEMP_DIR, exist_ok=False)
+        unzip_url(Urls.fridge_objects_path, tmp_path, exist_ok=False)
+    shutil.rmtree(tmp_path / "fridgeObjects")
+    os.remove(tmp_path / "fridgeObjects.zip")
+    unzip_url(Urls.fridge_objects_path, tmp_path, exist_ok=False)
 
 
 def test_imagenet_labels():
