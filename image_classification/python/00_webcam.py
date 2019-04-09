@@ -30,7 +30,7 @@ get_ipython().run_line_magic('autoreload', '2')
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 
-# In[1]:
+# In[2]:
 
 
 import sys
@@ -38,19 +38,21 @@ sys.path.append("../")
 import io
 import time
 import urllib.request
+
 import fastai
 from fastai.vision import *
 from ipywebrtc import CameraStream, ImageRecorder
 from ipywidgets import HBox, Label, Layout, Widget
-from torch.cuda import get_device_name
+
+from utils_ic.common import data_path
 from utils_ic.constants import IMAGENET_IM_SIZE
 from utils_ic.datasets import imagenet_labels
-from utils_ic.common import data_path
+from utils_ic.gpu_utils import which_processor
 from utils_ic.imagenet_models import model_to_learner
 
 
 print(f"Fast.ai: {fastai.__version__}")
-print(f"Fast.ai/Torch is using {get_device_name(0)}")
+which_processor()
 
 
 # ## 1. Load Pretrained Model
