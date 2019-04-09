@@ -29,11 +29,6 @@ steps:
   displayName: 'Build Configuration'
 
 - bash: |
-    echo $OSTYPE
-    if [ ! -d aml_config ]; then  mkdir aml_config; fi;
-    if [ ! -f aml_config/config.json ]; then echo -e "{\n    \"subscription_id\":\""$subscription_id"\",    \"resource_group\":\""$resource_group"\",    \"workspace_name\":\""$workspace_name"\",    \"location\":\""$location"\"\n}" > aml_config/config.json; fi;
-
-- bash: |
     cd image_classification
     source activate cvbp
     python -m ipykernel install --user --name cvbp --display-name "cvbp"
