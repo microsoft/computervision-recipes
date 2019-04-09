@@ -8,12 +8,14 @@
   * [Which problems can be solved using image classification, and which ones cannot](#which-problems-can-be-solved-using-image-classification)
 * Data
   * [How many images are required to train a model?](#how-many-images-are-required-to-train-a-model)
+  * [How to collect a large set of images?](#how-to-collect-a-large-set-of-images)
   * [How to annotate images?](#how-to-annotate-images)
   * [How to split into training and test images?](#How-to-split-into-training-and-test-images)
   * [How to design a good test set?](#how-to-design-a-good-test-set)
   * [How to speed up training?](#how-to-speed-up-training)
 * Training
   * [How to improve accuracy or inference speed?](#how-to-improve-accuracy-or-inference-speed)
+
 
 ### How does the technology work?
 State-of-the-art image classification methods such as used in this repository are based on Convolutional Neural Networks (CNN). CNNs are a special group of Deep Learning approaches shown to work well on image data. The key is to use CNNs which were already trained on millions of images (the ImageNet dataset) and to fine-tune these pre-trained CNNs using a potentially much smaller custom dataset. This is the approach also taken in this repository. The web is full of introductions to these conceptions, such as [link](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac).
@@ -27,6 +29,10 @@ Image classification can be used if the object-of-interest is relatively large i
 This depends heavily on the complexity of the problem. For example, if the object-of-interest looks very different from image to image (viewing angle, lighting condition, etc) then more training images are required for the model to learn the appearance of the object.
 
 In practice, we have seen good results using 100 images for each class or sometime less. The only way to find out how many images are required, is by training the model using increasing number of images, while observing how the accuracy improves (while keeping the test set fixed). Once accuracy improvements become small, this would indicate that more training images are not required.
+
+
+### How to collect a large set of images?
+See the notebook `10_image_annotation.ipynb` for a discussion on how to scrape images from the web, to use for model training and/or evaluation.
 
 
 ### How to annotate images?

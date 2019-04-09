@@ -33,7 +33,6 @@ class AnnotationWidget(object):
         # Init
         self.vis_image_index = 0
         self.label_to_id = {s: i for i, s in enumerate(self.labels)}
-        self.id_to_label = {i: s for i, s in enumerate(self.labels)}
         if not im_filenames:
             self.im_filenames = get_files_in_directory(
                 im_dir,
@@ -106,7 +105,7 @@ class AnnotationWidget(object):
             # Stop skipping if image index is out of bounds
             if (
                 self.vis_image_index <= 0
-                or self.vis_image_index >= int(len(self.im_filenames)) - 1
+                or self.vis_image_index >= len(self.im_filenames) - 1
             ):
                 return False
 

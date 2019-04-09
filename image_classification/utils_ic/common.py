@@ -44,7 +44,7 @@ def im_width_height(input: Union[str, np.array]) -> Tuple[int, int]:
     Return:
         Tuple of ints (width,height).
     """
-    if isinstance(input, str):
+    if isinstance(input, str) or isinstance(input, Path):
         width, height = Image.open(
             input
         ).size  # this is fast since it does not load the full image
@@ -65,11 +65,7 @@ def get_files_in_directory(
     """
     if not os.path.exists(directory):
         raise Exception(f"Directory '{directory}' does not exist.")
-    filenames = [
-        s
-        for s in os.listdir(directory)
-        if not os.path.isdir(os.path.join(directory, s))
-    ]
+    filenames = [str(p) for p in Path(directory).iterdir() if p.is_file()]
     if suffixes and suffixes != "":
         filenames = [
             s for s in filenames if s.lower().endswith(tuple(suffixes))
