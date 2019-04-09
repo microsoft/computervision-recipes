@@ -149,7 +149,7 @@ class AnnotationWidget(object):
             # Test if call is coming from the user having clicked on a checkbox to change its state,
             # rather than a change of state when e.g. the checkbox value was updated programatically. This is a bit
             # of hack, but necessary since widgets.Checkbox() does not support a on_click() callback or similar.
-            if "new" in obj and obj["new"] == dict() and len(obj["new"]) == 0:
+            if "new" in obj and isinstance(obj["new"], dict) and len(obj["new"]) == 0:
                 # If single-label annotation then unset all checkboxes except the one which the user just clicked
                 if not self.w_multi_class.value:
                     for w in self.label_widgets:
