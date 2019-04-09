@@ -1,4 +1,4 @@
-# This file is almost similar to azure-pipelines-gpu.yml file, key difference is 
+# This file is almost similar to azure-pipelines-gpu.yml file, key difference is
 # we are running our builds only on Linux machine.  
 # Pull request against these pipelines will trigger this build
 pr:
