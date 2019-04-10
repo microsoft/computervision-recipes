@@ -26,6 +26,7 @@ To setup on your local machine:
     ```
     git clone https://github.com/Microsoft/ComputerVisionBestPractices
     cd ComputerVisionBestPractices/image_classification
+    git checkout staging #for now we work in the staging directory
     ```
 1. Install the conda environment
     ```
