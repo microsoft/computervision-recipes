@@ -34,7 +34,7 @@ class AnnotationWidget(object):
         self.vis_image_index = 0
         self.label_to_id = {s: i for i, s in enumerate(self.labels)}
         if not im_filenames:
-            self.im_filenames = get_files_in_directory(
+            self.im_filenames = [os.path.basename(s) for s in get_files_in_directory(
                 im_dir,
                 suffixes=(
                     ".jpg",
@@ -46,22 +46,26 @@ class AnnotationWidget(object):
                     ".png",
                     ".bmp",
                 ),
-            )
-        assert (
-            len(self.im_filenames) > 0
-        ), f"Not a single image specified or found in directory {im_dir}."
+            )]
+        assert len(self.im_filenames) > 0, f"Not a single image specified or found in directory {im_dir}."
 
-        # Load annotations if file exist, and create empty entries for each image
-        if not os.path.exists(self.anno_path):
-            self.annos = pd.DataFrame()
-        else:
-            print(f"Loading existing annotation from {self.anno_path}.")
-            self.annos = pd.read_pickle(self.anno_path)
+        # Initialize empty annotations and load previous annotations if file exist
+        self.annos = pd.DataFrame()
         for im_filename in self.im_filenames:
             if im_filename not in self.annos:
                 self.annos[im_filename] = pd.Series(
                     {"exclude": False, "labels": []}
                 )
+        if os.path.exists(self.anno_path):
+            print(f"Loading existing annotation from {self.anno_path}.")
+            with open(self.anno_path,'r') as f:
+                for line in f.readlines()[1:]:
+                    vec = line.strip().split("\t")
+                    im_filename = vec[0]
+                    self.annos[im_filename].exclude = vec[1]=="True"
+                    if len(vec)>2:
+                        self.annos[im_filename].labels = vec[2].split(',')
+
 
         # Create UI and "start" widget
         self._create_ui()
@@ -156,18 +160,20 @@ class AnnotationWidget(object):
                         if w.description != obj["owner"].description:
                             w.value = False
 
-                # Update annotations and write to disk
+                # Update annotation object
                 im_filename = self.im_filenames[self.vis_image_index]
                 self.annos[im_filename].labels = [
                     w.description for w in self.label_widgets if w.value
                 ]
                 self.annos[im_filename].exclude = self.exclude_widget.value
-                keys_with_annotation = [
-                    k
-                    for k, v in self.annos.items()
-                    if (v.labels != [] or v.exclude)
-                ]
-                self.annos[keys_with_annotation].to_pickle(self.anno_path)
+
+                # Write to disk as tab-separated file. 
+                with open(self.anno_path,'w') as f:
+                    f.write("{}\t{}\t{}\n".format("IM_FILENAME", "EXCLUDE", "LABELS"))
+                    for k,v in self.annos.items():
+                        if v.labels != [] or v.exclude:
+                            f.write("{}\t{}\t{}\n".format(k, v.exclude, ",".join(v.labels)))
+
 
         # ------------
         # UI - image + controls (left side)
