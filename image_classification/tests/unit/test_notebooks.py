@@ -1,16 +1,15 @@
 # This test is based on the test suite implemented for Recommenders project
 # https://github.com/Microsoft/Recommenders/tree/master/tests
 
-
-import glob
 import os
+import glob
 import papermill as pm
 import shutil
 
 # Unless manually modified, python3 should be
 # the name of the current jupyter kernel
 # that runs on the activated conda environment
-KERNEL_NAME = "python3"
+KERNEL_NAME = "cvbp"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
 
@@ -47,6 +46,19 @@ def test_02_notebook_run(notebooks, tiny_ic_data_path):
             MODEL_TYPE="fast_inference",  # options: ['fast_inference', 'high_accuracy', 'small_size']
             EPOCHS_HEAD=1,
             EPOCHS_BODY=1,
+        ),
+        kernel_name=KERNEL_NAME,
+    )
+
+
+def test_10_notebook_run(notebooks, tiny_ic_data_path):
+    notebook_path = notebooks["10_image_annotation"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            IM_DIR=os.path.join(tiny_ic_data_path, "can"),
         ),
         kernel_name=KERNEL_NAME,
     )
@@ -104,3 +116,4 @@ def skip_test_deploy_1_notebook_run(notebooks, tiny_ic_data_path):
     shutil.rmtree(os.path.join(os.getcwd(), "azureml-models"))
     shutil.rmtree(os.path.join(os.getcwd(), "models"))
     shutil.rmtree(os.path.join(os.getcwd(), "outputs"))
+

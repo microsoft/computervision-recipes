@@ -36,18 +36,18 @@
 
 # ## 1. Introduction <a id="intro"></a>
 #
-# Building a machine learning model with high precision and/or recall is very satisfying. However, it is not always the end of story. This model may need to go into production to be called in real time, and serve results to our end users. How do we go about doing that? In this notebook, we will learn:
+# Building a machine learning model with high precision and/or recall is very satisfying. However, it is not necessarily the end of the story. This model may need to go into production to be called in real time, and serve results to our end users. How do we go about doing that? In this notebook, we will learn:
 # - how to register a model on Azure
 # - how to create a Docker image that contains our model
 # - how to deploy a web service on [Azure Container Instances](https://azure.microsoft.com/en-us/services/container-instances/) using this Docker image
 # - how to test that our service works well, from within the notebook.
 #
-# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/ACI_diagram_2.jpg" width="500" style="float: left;" alt="Web service deployment workflow">
+# <img src="media/ACI_diagram_2.jpg" width="500" style="float: left;" alt="Web service deployment workflow">
 
 # ## 2. Pre-requisites
 # <a id="pre-reqs"></a>
 #
-# For this notebook to run properly on your machine, the following should already be in place:
+# For this notebook to run properly on our machine, the following should already be in place:
 #
 # * Local machine setup
 #   * We need to set up the "cvbp" conda environment. [These instructions](https://github.com/Microsoft/ComputerVisionBestPractices/blob/staging/image_classification/README.md) explain how to do that.
@@ -133,7 +133,7 @@ workspace_region = os.getenv(
 )  # (e.g. "westus2")
 
 try:
-    # Let's load the workspace from a configuration file
+    # Let's load the workspace from the configuration file
     ws = Workspace.from_config()
     print("Workspace was loaded successfully from the configuration file")
 except (UserErrorException, ProjectSystemException):
@@ -165,11 +165,11 @@ print(
 # We can see this workspace on the Azure portal by sequentially clicking on:
 # - Resource groups, and clicking the one we referenced above
 
-# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/resource_group.jpg" width="800" alt="Azure portal view of resource group">
+# <img src="media/resource_group.jpg" width="800" alt="Azure portal view of resource group">
 
 # - Workspace_name
 
-# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/workspace.jpg" width="800" alt="Azure portal view of workspace">
+# <img src="media/workspace.jpg" width="800" alt="Azure portal view of workspace">
 
 # ## 5. Model retrieval and export <a id="model"></a>
 #
@@ -213,7 +213,7 @@ learn.export(os.path.join(output_folder, PICKLED_MODEL_NAME))
 
 # #### 6.A.a Without experiment <a id="noexp"></a>
 #
-# We leverage the `register` method from the Azure ML `Model`object. For that, we just need the location of the model we saved on our local machine, its name and our workspace object.
+# We leverage the `register` method from the Azure ML `Model` object. For that, we just need the location of the model we saved on our local machine, its name and our workspace object.
 
 # In[7]:
 
@@ -260,7 +260,7 @@ run = experiment.start_logging(snapshot_directory=None)
 
 # Now that we have launched our run, we can see our experiment on the Azure portal, under `Experiments` (in the left-hand side list).
 #
-# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/experiment.jpg" width="800" alt="Azure portal view of experiment">
+# <img src="media/experiment.jpg" width="800" alt="Azure portal view of experiment">
 
 # We can now attach our local model to our workspace and experiment.
 
@@ -291,11 +291,11 @@ model = run.register_model(
 # Now that the model is uploaded and registered, we can see it on the Azure platform, under `Outputs` and `Models`
 #
 # <div class="inline-block">
-#     <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/uploaded_model.jpg" width="800" alt="Azure portal view of the Outputs/ folder">
+#     <img src="media/uploaded_model.jpg" width="800" alt="Azure portal view of the Outputs/ folder">
 # </div>
 #
 # <div class="inline-block">
-#     <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/models.jpg" width="800" alt="Azure portal view of the Models section">
+#     <img src="media/models.jpg" width="800" alt="Azure portal view of the Models section">
 # </div>
 
 # We can also check that it is programatically accessible
@@ -387,7 +387,7 @@ generate_yaml(
 # Note: Take a look at the generate_yaml() function for details on how to create your yaml file from scratch
 
 
-# There are different ways of creating a Docker image on Azure. Here, we create it separately from the service it will be used for. This way of proceeding gives us direct access to the Docker image object. Thus, if the service deployment fails, but the Docker image gets deployed successfully, we can try deploying the service again, without having to create a new image all over again.
+# There are different ways of creating a Docker image on Azure. Here, we create it separately from the service it will be used by. This way of proceeding gives us direct access to the Docker image object. Thus, if the service deployment fails, but the Docker image gets deployed successfully, we can try deploying the service again, without having to create a new image all over again.
 
 # In[20]:
 
@@ -447,7 +447,7 @@ print(ws.images["image-classif-resnet18-f48"].image_build_log_uri)
 
 # ### 6.D Computational resources <a id="compute"></a>
 
-# In this notebook, we use [Azure Container Instances](https://docs.microsoft.com/en-us/azure/container-instances/) (ACI) which are good for quick and [cost-effective](https://azure.microsoft.com/en-us/pricing/details/container-instances/) development/test deployment scenarios.
+# In this notebook, we use [Azure Container Instances](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-overview) (ACI) which are good for quick and [cost-effective](https://azure.microsoft.com/en-us/pricing/details/container-instances/) development/test deployment scenarios.
 #
 # To set them up properly, we need to indicate the number of CPU cores and the amount of memory we want to allocate to our web service. Optional tags and descriptions are also available for us to identify the instances in AzureML when looking at the `Compute` tab in the Azure Portal.
 #
@@ -537,16 +537,14 @@ print(
 # We can also check the presence and status of both our new Docker image and web service on the Azure portal, under the `Images` and `Deployments` tabs, respectively.
 #
 #
-# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/docker_images.jpg" width="800" alt="Azure portal view of the Images section">
-# <img src="https://cvbp.blob.core.windows.net/public/images/deployment_screenshots/deployments.jpg" width="800" alt="Azure portal view of the Deployments section">
+# <img src="media/docker_images.jpg" width="800" alt="Azure portal view of the Images section">
+# <img src="media/deployments.jpg" width="800" alt="Azure portal view of the Deployments section">
 
 # ## 7. Testing of the web service <a id="test"></a>
 
-# To make sure that our service is working as expected, let's test it. We first need to retrieve test images and to pre-process them into the format expected by our model.
-
-# ### 7.A Using the `run` API <a id="api"></a>
-
-# A service typically expects input data to be in a JSON serializable format. Here, we use our own `ims2jstrlist()` function to transform our .jpg images into strings of bytes.
+# Our web service is now up and running. To make sure that it is working as expected, let's test it.
+#
+# We first need to retrieve test images and to pre-process them into the format expected by our model. A service typically expects input data to be in a JSON serializable format. Here, we use our own `ims2strlist()` function to transform our .jpg images into strings of bytes.
 
 # In[28]:
 
@@ -563,6 +561,10 @@ images_fname_list = [
 im_string_list = ims2strlist(images_fname_list)
 test_samples = json.dumps({"data": im_string_list})
 
+
+# ### 7.A Using the `run` API <a id="api"></a>
+#
+# Our data are now properly formatted. We can send them to our web service.
 
 # In[29]:
 
@@ -604,9 +606,9 @@ print(f"Prediction: {resp.text}")
 
 # ### 7.C Notes on web service deployment <a id="notes"></a>
 
-# As we discussed above, Azure Container Instances are typically used to develop and test deployments. They are typically configured with CPUs, which usually suffice when the number of requests per second is not too high. When working with several instances, we can configure them further by specifically [allocating CPU resources](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-container-groups#deployment) to each of them.
+# As we discussed above, Azure Container Instances tend to be used to develop and test deployments. They are typically configured with CPUs, which usually suffice when the number of requests per second is not too high. When working with several instances, we can configure them further by specifically [allocating CPU resources](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-container-groups#deployment) to each of them.
 #
-# For production requirements, i.e. when &gt; 100 requests per second are expected, we recommend deploying models to Azure Kubernetes Service (AKS). It is a convenient infrastructure as it manages hosted Kubernetes environments, and makes it easy to deploy and manage containerized applications without container orchestration expertise.
+# For production requirements, i.e. when &gt; 100 requests per second are expected, we recommend deploying models to Azure Kubernetes Service (AKS). It is a convenient infrastructure as it manages hosted Kubernetes environments, and makes it easy to deploy and manage containerized applications without container orchestration expertise. It also supports deployments with CPU clusters and deployments with GPU clusters, the latter of which are [more economical and efficient](https://azure.microsoft.com/en-us/blog/gpus-vs-cpus-for-deployment-of-deep-learning-models/) when serving complex models such as deep neural networks, and/or when traffic to the endpoint is high.
 #
 # We will see an example of this in the next notebook (to be published).
 
