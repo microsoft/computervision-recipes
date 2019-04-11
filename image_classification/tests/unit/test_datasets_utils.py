@@ -3,6 +3,7 @@ import pytest
 import shutil
 from pathlib import Path
 from typing import Union
+
 from utils_ic.datasets import Urls, unzip_url, imagenet_labels
 
 
