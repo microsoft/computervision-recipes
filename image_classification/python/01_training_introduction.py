@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # <i>Copyright (c) Microsoft Corporation. All rights reserved.</i>
-# 
+#
 # <i>Licensed under the MIT License.</i>
 
 # # Introduction to Training Image Classification Models
@@ -13,9 +13,9 @@
 
 
 # Ensure edits to libraries are loaded and plotting is shown in the notebook.
-get_ipython().run_line_magic('reload_ext', 'autoreload')
-get_ipython().run_line_magic('autoreload', '2')
-get_ipython().run_line_magic('matplotlib', 'inline')
+get_ipython().run_line_magic("reload_ext", "autoreload")
+get_ipython().run_line_magic("autoreload", "2")
+get_ipython().run_line_magic("matplotlib", "inline")
 
 
 # Import fastai. For now, we'll import all (`from fastai.vision import *`) so that we can easily use different utilies provided by the fastai library.
@@ -24,14 +24,16 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 
 import sys
+
 sys.path.append("../")
 import numpy as np
 from pathlib import Path
+
 # fastai and torch
 import fastai
 from fastai.vision import *
 from fastai.metrics import accuracy
-from torch.cuda import get_device_name
+
 # local modules
 from utils_ic.fastai_utils import TrainMetricsRecorder
 from utils_ic.gpu_utils import which_processor
@@ -49,12 +51,12 @@ which_processor()
 # In[4]:
 
 
-DATA_PATH     = unzip_url(Urls.fridge_objects_path, exist_ok=True)
-EPOCHS        = 5
+DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
+EPOCHS = 5
 LEARNING_RATE = 1e-4
-IMAGE_SIZE    = 299
-BATCH_SIZE    = 16
-ARCHITECTURE  = models.resnet50
+IMAGE_SIZE = 299
+BATCH_SIZE = 16
+ARCHITECTURE = models.resnet50
 
 
 # ---
@@ -62,7 +64,7 @@ ARCHITECTURE  = models.resnet50
 # ## 1. Prepare Image Classification Dataset
 
 # In this notebook, we'll use a toy dataset called *Fridge Objects*, which consists of 134 images of can, carton, milk bottle and water bottle photos taken with different backgrounds. With our helper function, the data set will be downloaded and unzip to `image_classification/data`.
-# 
+#
 # Let's set that directory to our `path` variable, which we'll use throughout the notebook, and checkout what's inside:
 
 # In[5]:
@@ -79,7 +81,7 @@ path.ls()
 # - `/can`
 
 # The most common data format for multiclass image classification is to have a folder titled the label with the images inside:
-# 
+#
 # ```
 # /images
 # +-- can (class 1)
@@ -92,24 +94,26 @@ path.ls()
 # |   +-- ...
 # +-- ...
 # ```
-# 
+#
 # and our data is already structured in that format!
 
 # ## 2. Load Images
 
 # To use fastai, we want to create `ImageDataBunch` so that the library can easily use multiple images (mini-batches) during training time. We create an ImageDataBunch by using fastai's [data_block apis](https://docs.fast.ai/data_block.html).
-# 
-# For training and validation, we randomly split the data by 8:2, where 80% of the data is for training and the rest for validation. 
+#
+# For training and validation, we randomly split the data by 8:2, where 80% of the data is for training and the rest for validation.
 
 # In[6]:
 
 
-data = (ImageList.from_folder(path) 
-        .split_by_rand_pct(valid_pct=0.2, seed=10) 
-        .label_from_folder() 
-        .transform(size=IMAGE_SIZE) 
-        .databunch(bs=BATCH_SIZE) 
-        .normalize(imagenet_stats))
+data = (
+    ImageList.from_folder(path)
+    .split_by_rand_pct(valid_pct=0.2, seed=10)
+    .label_from_folder()
+    .transform(size=IMAGE_SIZE)
+    .databunch(bs=BATCH_SIZE)
+    .normalize(imagenet_stats)
+)
 
 
 # Lets take a look at our data using the databunch we created.
@@ -117,7 +121,7 @@ data = (ImageList.from_folder(path)
 # In[7]:
 
 
-data.show_batch(rows=3, figsize=(15,11))
+data.show_batch(rows=3, figsize=(15, 11))
 
 
 # Lets see all available classes:
@@ -125,7 +129,7 @@ data.show_batch(rows=3, figsize=(15,11))
 # In[8]:
 
 
-print(f'number of classes: {data.c}')
+print(f"number of classes: {data.c}")
 print(data.classes)
 
 
@@ -142,9 +146,9 @@ data.batch_stats
 # ## 3. Train a Model
 
 # For the model, we use a convolutional neural network (CNN). Specifically, we'll use **ResNet50** architecture. You can find more details about ResNet from [here](https://arxiv.org/abs/1512.03385).
-# 
+#
 # When training a model, there are many hypter parameters to select, such as the learning rate, the model architecture, layers to tune, and many more. With fastai, we can use the `create_cnn` function that allows us to specify the model architecture and performance indicator (metric). At this point, we already benefit from transfer learning since we download the parameters used to train on [ImageNet](http://www.image-net.org/).
-# 
+#
 # Note, we use a custom callback `TrainMetricsRecorder` to track the accuracy on the training set during training, since fast.ai's default [recorder class](https://docs.fast.ai/basic_train.html#Recorder) only supports tracking accuracy on the validation set.
 
 # In[10]:
@@ -154,7 +158,7 @@ learn = cnn_learner(
     data,
     ARCHITECTURE,
     metrics=[accuracy],
-    callback_fns=[partial(TrainMetricsRecorder, show_graph=True)]
+    callback_fns=[partial(TrainMetricsRecorder, show_graph=True)],
 )
 
 
@@ -189,7 +193,7 @@ learn.recorder.plot_losses()
 
 
 _, metric = learn.validate(learn.data.valid_dl, metrics=[accuracy])
-print(f'Accuracy on validation set: {100*float(metric):3.2f}')
+print(f"Accuracy on validation set: {100*float(metric):3.2f}")
 
 
 # Now, analyze the classification results by using `ClassificationInterpretation` module.
@@ -203,7 +207,7 @@ pred_scores = to_np(interp.probs)
 
 
 # To see details of each sample and prediction results, we use our widget helper class `ResultsWidget`. The widget shows each test image along with its ground truth label and model's prediction scores. We can use this tool to see how our model predicts each image and debug the model if needed.
-# 
+#
 # <img src="https://cvbp.blob.core.windows.net/public/images/ic_widget.png" width="600"/>
 # <center><i>Image Classification Result Widget</i></center>
 
@@ -213,7 +217,7 @@ pred_scores = to_np(interp.probs)
 w_results = ResultsWidget(
     dataset=learn.data.valid_ds,
     y_score=pred_scores,
-    y_label=[data.classes[x] for x in np.argmax(pred_scores, axis=1)]
+    y_label=[data.classes[x] for x in np.argmax(pred_scores, axis=1)],
 )
 display(w_results.show())
 
@@ -241,13 +245,9 @@ interp.plot_confusion_matrix()
 # In[19]:
 
 
-interp.plot_top_losses(9, figsize=(15,11))
+interp.plot_top_losses(9, figsize=(15, 11))
 
 
-# That's pretty much it! Now you can bring your own dataset and train your model on them easily. 
+# That's pretty much it! Now you can bring your own dataset and train your model on them easily.
 
 # In[ ]:
-
-
-
-

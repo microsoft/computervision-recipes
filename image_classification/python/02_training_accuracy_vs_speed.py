@@ -87,7 +87,7 @@ DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
 # Epochs to train for
 EPOCHS_HEAD = 4
 EPOCHS_BODY = 12
-LEARNING_RATE = 5e-3
+LEARNING_RATE = 1e-4
 BATCH_SIZE = 16
 
 
@@ -303,14 +303,14 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 #
 # | Parameter | Default Value |
 # | --- | --- |
-# | Learning Rate | 5e-3 |
+# | Learning Rate | 1e-4 |
 # | Epochs | 15 |
 # | Batch Size | 16 |
 # | Image Size | 300 X 300 |
 #
 # __Learning rate__
 #
-# Learning rate step size is used when optimizing your model with gradient descent and tends to be one of the most important parameters to set when training your model. If your learning rate is set too low, training will progress very slowly since we're only making tiny updates to the weights in your network. However, if your learning rate is too high, it can cause undesirable divergent behavior in your loss function. Generally speaking, choosing a learning rate of 5e-3 was shown to work pretty well for most datasets.
+# Learning rate step size is used when optimizing your model with gradient descent and tends to be one of the most important parameters to set when training your model. If your learning rate is set too low, training will progress very slowly since we're only making tiny updates to the weights in your network. However, if your learning rate is too high, it can cause undesirable divergent behavior in your loss function. Generally speaking, choosing a learning rate of 1e-4 was shown to work pretty well for most datasets. If you want to reduce training time (by training for fewer epochs), you can try setting the learning rate to 5e-3, but if you notice a spike in the training or validation loss, you may want to try reducing your learning rate.
 #
 # You can learn more about learning rate in the [appendix below](#appendix-learning-rate).
 #
@@ -377,7 +377,7 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 # </p>
 # </details>
 #
-# In both figures, we can see that a learning rate of 1e-3 and 1e-4 tends to work the best across the different datasets and the two settings for epochs. Generally speaking, choosing a learning rate of 5e-3 (the mean of 1e-3 and 1e-4) was shown to work pretty well for most datasets. We also observe that training using only 3 epochs gives inferior results compared to 15 epochs
+# In both figures, we can see that a learning rate of 1e-3 and 1e-4 tends to work the best across the different datasets and the two settings for epochs. We observe that training using only 3 epochs gives inferior results compared to 15 epochs. Generally speaking, choosing a learning rate of 5e-3 (the mean of 1e-3 and 1e-4) was shown to work pretty well for most datasets. However, for some datasets, a learning rate of 5-e3 will cause the training to diverge. In those cases, try a lower epoch, like 1e-4.
 #
 # Fastai has implemented [one cycle policy with cyclical momentum](https://arxiv.org/abs/1803.09820) which requires a maximum learning rate since the learning rate will shift up and down over its training duration. Instead of calling `fit()`, we simply call `fit_one_cycle()`.
 #
