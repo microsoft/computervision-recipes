@@ -34,7 +34,7 @@ In practice, we have seen good results using 100 images for each class or someti
 
 ### How to augment image data
 Using more training data can make the model generalize better, but it is very expensive to collect data. Instead, augmenting the training data with minor alterations has been proven to work well.
-Some image transformations such as rotation, cropping, and adjusting brightness / contrast are widely used for data augmentation in image classification,
+Some [image transformations](https://docs.fast.ai/vision.transform.html) such as rotation, cropping, and adjusting brightness / contrast are widely used for data augmentation in image classification,
 but they do not necessarily work all the time. For example, flipping horizontally and vertically (flip_h and flip_v in the figure) will harm the model performance for character recognition problem. 
 So, when you select image transformations for data augmentation, you should consider the characteristics of your images.
   
