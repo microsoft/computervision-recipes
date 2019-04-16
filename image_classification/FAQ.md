@@ -8,6 +8,7 @@
   * [Which problems can be solved using image classification, and which ones cannot](#which-problems-can-be-solved-using-image-classification)
 * Data
   * [How many images are required to train a model](#how-many-images-are-required-to-train-a-model)
+  * [How to augment image data](#how-to-augment-image-data)
   * [How to collect a large set of images](#how-to-collect-a-large-set-of-images)
   * [How to annotate images](#how-to-annotate-images)
   * [How to split into training and test images](#how-to-split-into-training-and-test-images)
@@ -29,6 +30,17 @@ Image classification can be used if the object-of-interest is relatively large i
 This depends heavily on the complexity of the problem. For example, if the object-of-interest looks very different from image to image (viewing angle, lighting condition, etc) then more training images are required for the model to learn the appearance of the object.
 
 In practice, we have seen good results using 100 images for each class or sometime less. The only way to find out how many images are required, is by training the model using increasing number of images, while observing how the accuracy improves (while keeping the test set fixed). Once accuracy improvements become small, this would indicate that more training images are not required.
+
+
+### How to augment image data
+Using more training data can make the model generalize better, but it is very expensive to collect data. Instead, augmenting the training data with minor alterations has been proven to work well.
+Some image transformations such as rotation, cropping, and adjusting brightness / contrast are widely used for data augmentation in image classification,
+but they do not necessarily work all the time. For example, flipping horizontally and vertically (flip_h and flip_v in the figure) will harm the model performance for character recognition problem. 
+So, when you select image transformations for data augmentation, you should consider the characteristics of your images.
+  
+![Different transformations](media/transform_examples.jpg)
+*Examples of different image transformations
+(First row: [MNIST](http://yann.lecun.com/exdb/mnist/), second row: Fridge Object, third row: [Planet](https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/data))*
 
 
 ### How to collect a large set of images
