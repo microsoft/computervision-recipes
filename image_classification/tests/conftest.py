@@ -36,14 +36,14 @@ def notebooks():
             folder_notebooks, "02_training_accuracy_vs_speed.ipynb"
         ),
         "10_image_annotation": os.path.join(
-            folder_notebooks, "10_image_annotation.ipynb"),
+            folder_notebooks, "10_image_annotation.ipynb"
+        ),
         "11_exploring_hyperparameters": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
         "deploy_on_ACI": os.path.join(
             folder_notebooks,
-            "deployment",
-            "01_deployment_on_" "azure_container_instances.ipynb",
+            "21_deployment_on_azure_container_instances.ipynb",
         ),
     }
     return paths
