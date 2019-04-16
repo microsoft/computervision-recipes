@@ -60,6 +60,7 @@ The test set should contain images which resemble what the input to the trained 
 ### How to speed up training
 - All images should be stored on an SSD device, since HDD or network access times can dominate the training time due to high latency.
 - Very high-resolution images (>4 MegaPixels) should be downsized before DNN training since JPEG decoding is expensive and can slow down training by a factor of >10x.
+- High-resolution images can slow down training due to JPEG decoding becoming the bottleneck. See the [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb) notebook for more information.
 
 
 ### How to improve accuracy or inference speed
