@@ -549,11 +549,11 @@ print(
 
 
 # Convert images to json object
-im_fname_list = [
+im_fnames = [
     os.path.join(ic_root_path(), "notebooks", "test_images", "im_11.jpg"),
     os.path.join(ic_root_path(), "notebooks", "test_images", "im_97.jpg"),
 ]
-im_string_list = ims2strlist(im_fname_list)
+im_string_list = ims2strlist(im_fnames)
 test_samples = json.dumps({"data": im_string_list})
 
 
@@ -579,7 +579,7 @@ for k in range(len(result)):
         result[k]["label"],
         round(100.0 * float(result[k]["probability"]), 2),
     )
-    open_image(im_fname_list[k]).show(title=title)
+    open_image(im_fnames[k]).show(title=title)
 
 
 # ### 7.B Via a raw HTTP request <a id="http"></a>
