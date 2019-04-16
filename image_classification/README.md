@@ -19,7 +19,7 @@ Linux is the recommended operating system. While all notebooks can also be execu
 | [01_training_introduction.ipynb](notebooks/01_training_introduction.ipynb)| Notebook which explains some of the basic concepts around model training and evaluation.|
 | [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb)| Notebook to train a model with e.g. high accuracy of fast inference speed. <font color="orange"> Use this to train on your own datasets! </font> |
 | [11_exploring_hyperparameters.ipynb](notebooks/11_exploring_hyperparameters.ipynb)| Advanced notebook to find optimal parameters by doing an exhaustive grid search. |
-| deployment/[01_deployment_on_azure_container_instances.ipynb](notebooks/11_exploring_hyperparameters.ipynb)| Notebook showing how to deploy a trained model as REST API using Azure Container Instances. |
+| [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Notebook showing how to deploy a trained model as REST API using Azure Container Instances. |
 
 ## Getting Started
 
