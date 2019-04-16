@@ -77,15 +77,14 @@ def plot_roc_curve(
     plt.plot([0, 1], [0, 1], color="gray", lw=1, linestyle="--")
 
     # Plot ROC curve
-    if len(y_score.shape) == 2:
-        y_true = label_binarize(y_true, classes=list(range(len(classes))))
-        # If y_score is 2-dim on a binary-class problem, we manually convert y_true to be 2-dim
-        if y_true.shape[1] == 1:
-            y_true = np.hstack((y_true, 1 - y_true))
-
-        _plot_multi_roc_curve(y_true, y_score, classes)
-    else:
+    if len(classes) == 2:
+        # If y_score is soft-max output from a binary-class problem, we use the second node's output only.
+        if len(y_score.shape) == 2:
+            y_score = y_score[:, 1]
         _plot_roc_curve(y_true, y_score)
+    else:
+        y_true = label_binarize(y_true, classes=list(range(len(classes))))
+        _plot_multi_roc_curve(y_true, y_score, classes)
 
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
@@ -152,17 +151,17 @@ def plot_precision_recall_curve(
     # Set random colors seed for reproducibility.
     np.random.seed(123)
 
-    if len(y_score.shape) == 2:
-        y_true = label_binarize(y_true, classes=list(range(len(classes))))
-        # If y_score is 2-dim on a binary-class problem, we manually convert y_true to be 2-dim
-        if y_true.shape[1] == 1:
-            y_true = np.hstack((y_true, 1 - y_true))
-
-        _plot_multi_precision_recall_curve(y_true, y_score, classes)
-    else:
+    # Plot ROC curve
+    if len(classes) == 2:
+        # If y_score is soft-max output from a binary-class problem, we use the second node's output only.
+        if len(y_score.shape) == 2:
+            y_score = y_score[:, 1]
         _plot_precision_recall_curve(
             y_true, y_score, average_precision_score(y_true, y_score)
         )
+    else:
+        y_true = label_binarize(y_true, classes=list(range(len(classes))))
+        _plot_multi_precision_recall_curve(y_true, y_score, classes)
 
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
