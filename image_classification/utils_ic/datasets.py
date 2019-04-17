@@ -1,12 +1,13 @@
 import os
 import requests
 from .common import data_path
-from fastai.vision import ImageList
 from pathlib import Path
-from PIL import Image
 from typing import List, Union
-from tqdm import tqdm
 from urllib.parse import urljoin, urlparse
+
+from fastai.vision import ImageList
+from PIL import Image
+from tqdm import tqdm
 from zipfile import ZipFile
 
 Url = str
@@ -129,7 +130,6 @@ def unzip_urls(
 def downsize_imagelist(im_list: ImageList, out_dir: Union[Path, str], dim: int = 500):
     """ Aspect-ratio preserving down-sizing of each image in the ImageList {im_list} so that min(width,height) is at most {dim} pixels.
         Writes each image to the directory {out_dir} while preserving the original subdirectory structure.
-
     Args:
         im_list: Fastai ImageList object.
         out_dir: Output root location.
