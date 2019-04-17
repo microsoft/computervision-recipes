@@ -15,7 +15,7 @@ Answers to Frequently Asked Questions such as "How many images do I need to trai
 
 We provide several notebooks to show how image classification algorithms can be designed, evaluated and operationalized. Note that the notebooks starting with 0 are meant to be "required", while all other notebooks are optional.
 
-Linux is the recommended operating system. While all notebooks can also be executed in Windows, there seems to be a bug in fast.ai which slows down training by an order of magnitude on small datasets. GPU is required for training, and for best training speeds we suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm),[price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)).
+Linux is the recommended operating system. While all notebooks can also be executed in Windows, there seems to be a bug in fast.ai which slows down training by an order of magnitude on small datasets. GPU is required for training, and for best training speeds we suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm),[price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). Note that some browsers (e.g. Internet Explorer) do not render jupyter widgets correctly.   
 
 
 | Notebook name | Description |
