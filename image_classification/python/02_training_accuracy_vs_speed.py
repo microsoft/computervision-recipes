@@ -16,6 +16,7 @@
 # ## Table of Contents:
 # * [Training a High Accuracy or a Fast Inference Speed Classifier ](#model)
 #   * [Choosing between two types of models](#choosing)
+#   * [Pre-processing](#preprocessing)
 #   * [Training](#training)
 #   * [Evaluation](#evaluation)
 # * [Fine tuning our models](#finetuning)
@@ -58,7 +59,7 @@ import sys
 sys.path.append("../")
 import os
 from pathlib import Path
-from utils_ic.datasets import Urls, unzip_url
+from utils_ic.datasets import downsize_imagelist, unzip_url, Urls
 from fastai.vision import *
 from fastai.metrics import accuracy
 
@@ -102,7 +103,7 @@ assert MODEL_TYPE in ["high_accuracy", "fast_inference", "small_size"]
 # In[6]:
 
 
-if MODEL_TYPE == "high_acccuracy":
+if MODEL_TYPE == "high_accuracy":
     ARCHITECTURE = models.resnet50
     IM_SIZE = 500 
     
@@ -114,6 +115,15 @@ if MODEL_TYPE == "small_size":
     ARCHITECTURE = models.squeezenet1_1
     IM_SIZE = 300 
 
+
+# ### Pre-processing <a name="preprocessing"></a>
+# 
+# JPEG decoding represents a bottleneck on systems with powerful GPUs and can slow training significantly, often by a factor of 2-3x, and sometimes by much more. We therefore recommend creating a down-sized copy of the dataset if training otherwise takes too long, or if running training multiple times e.g. to evaluate different parameters. After running the following function, update the `DATA_PATH` variable (to `out_dir`) so that this notebook uses the resized images. 
+# ```python
+# downsize_imagelist(im_list = ImageList.from_folder(Path(DATA_PATH)),
+#                    out_dir = "downsized_images", 
+#                    max_dim = IM_SIZE)
+# ```
 
 # ### Training <a name="training"></a>
 # 

@@ -4,6 +4,10 @@ from .common import data_path
 from pathlib import Path
 from typing import List, Union
 from urllib.parse import urljoin, urlparse
+
+from fastai.vision import ImageList
+from PIL import Image
+from tqdm import tqdm
 from zipfile import ZipFile
 
 Url = str
@@ -121,3 +125,35 @@ def unzip_urls(
         paths.append(unzip_url(url, dest, exist_ok=True))
 
     return paths
+
+
+def downsize_imagelist(im_list: ImageList, out_dir: Union[Path, str], dim: int = 500):
+    """ Aspect-ratio preserving down-sizing of each image in the ImageList {im_list} so that min(width,height) is at most {dim} pixels.
+        Writes each image to the directory {out_dir} while preserving the original subdirectory structure.
+    Args:
+        im_list: Fastai ImageList object.
+        out_dir: Output root location.
+        dim: maximum image dimension (width/height) after resize
+    """
+    assert len(im_list.items)>0, "Input ImageList does not contain any images."
+    
+    # Find parent directory which all images have in common
+    im_paths = [str(s) for s in im_list.items]
+    src_root_dir = os.path.commonprefix(im_paths)
+
+    # Loop over all images
+    for src_path in tqdm(im_list.items):
+        # Load and optionally down-size image
+        im = Image.open(src_path).convert('RGB')
+        scale = float(dim) / min(im.size)
+        if scale < 1.0:
+            new_size = [int(round(f*scale)) for f in im.size]
+            im = im.resize(new_size, resample=Image.LANCZOS)
+
+        # Write image
+        src_rel_path = os.path.relpath(src_path, src_root_dir)
+        dst_path = os.path.join(out_dir, src_rel_path)
+        assert os.path.normpath(src_rel_path) != os.path.normpath(dst_path), "Image source and destination path should not be the same: {src_rel_path}"
+        os.makedirs(os.path.dirname(dst_path), exist_ok = True)
+        im.save(dst_path)
+        
