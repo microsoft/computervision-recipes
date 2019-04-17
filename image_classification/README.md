@@ -3,20 +3,29 @@
 This directory provides examples and best practices for building image classification systems. Our goal is enable the users to bring their own datasets and train a high-accuracy classifier easily and quickly. To this end, we provide example notebooks with pre-set default parameters shown to work well on a variety of datasets, and extensive documentation of common pitfalls, best practices, etc. In addition, we show how to use the Azure cloud to e.g. deploy models as a webserivce, or to speed up training on large datasets using the power of the cloud.
 
 
-We recommend to use PyTorch as Deep Learning library due to its ease of use, simple debugging, and popularity in the data science community. For Computer Vision functionality, we rely heavily on [fast.ai](https://github.com/fastai/fastai), one of the most well-known PyTorch data science libraries, which comes with rich feature support and extensive documentation. To get a better understanding of the underlying technology, we highly recommend to watch the [2019 fast.ai lecture series](https://course.fast.ai/videos/?lesson=1), and to go through fast.ai's [documentation](https://docs.fast.ai/).
+We recommend to use PyTorch as Deep Learning library due to its ease of use, simple debugging, and popularity in the data science community. For Computer Vision functionality, we rely heavily on [fast.ai](https://github.com/fastai/fastai), one of the most well-known PyTorch data science libraries, which comes with rich feature support and extensive documentation. To get a better understanding of the underlying technology, we highly recommend watching the [2019 fast.ai lecture series](https://course.fast.ai/videos/?lesson=1), and to go through fast.ai's [documentation](https://docs.fast.ai/).
+
+
+## Frequently asked questions
+
+Answers to Frequently Asked Questions such as "How many images do I need to train a model?" or "How to annotate images?" can be found in the [FAQ.md](FAQ.md) file.
 
 
 ## Notebooks
 
 We provide several notebooks to show how image classification algorithms can be designed, evaluated and operationalized. Note that the notebooks starting with 0 are meant to be "required", while all other notebooks are optional.
 
+Linux is the recommended operating system. While all notebooks can also be executed in Windows, there seems to be a bug in fast.ai which slows down training by an order of magnitude on small datasets. GPU is required for training, and for best training speeds we suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm),[price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). Note that some browsers (e.g. Internet Explorer) do not render jupyter widgets correctly.   
+
+
 | Notebook name | Description |
 | --- | --- |
-| [00_webcam.ipynb](.notebooks/00_webcam.ipynb)| Quick start notebooks which demonstrate how to load a trained model and run inference using a single image of webcam input.
-| [01_training_introduction.ipynb](.notebooks/01_training_introduction.ipynb)| Notebook which explains some of the basic concepts around model training and evaluation.|
-| [02_training_accuracy_vs_speed.ipynb](.notebooks/02_training_accuracy_vs_speed.ipynb)| Notebook to train a model with e.g. high accuracy of fast inference speed. <font color="orange"> Use this to train on your own datasets! </font> |
-| [11_exploring_hyperparameters.ipynb](.notebooks/11_exploring_hyperparameters.ipynb)| Advanced notebook to find optimal parameters by doing an exhaustive grid search. |
-| deployment/[01_deployment_on_azure_container_instances.ipynb](.notebooks/11_exploring_hyperparameters.ipynb)| Notebook showing how to deploy a trained model as REST API using Azure Container Instances. |
+| [00_webcam.ipynb](notebooks/00_webcam.ipynb)| Quick start notebooks which demonstrate how to load a trained model and run inference using a single image of webcam input.
+| [01_training_introduction.ipynb](notebooks/01_training_introduction.ipynb)| Notebook which explains some of the basic concepts around model training and evaluation.|
+| [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb)| Notebook to train a model with e.g. high accuracy of fast inference speed. <font color="orange"> Use this to train on your own datasets! </font> |
+| [10_image_annotation.ipynb](notebooks/10_image_annotation.ipynb)| Simple UI to annotate images. |
+| [11_exploring_hyperparameters.ipynb](notebooks/11_exploring_hyperparameters.ipynb)| Advanced notebook to find optimal parameters by doing an exhaustive grid search. |
+| [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Notebook showing how to deploy a trained model as REST API using Azure Container Instances. |
 
 ## Getting Started
 
@@ -47,11 +56,6 @@ To setup on your local machine:
     jupyter notebook
     ```
 1. Run the [Webcam Image Classification Notebook](notebooks/00_webcam.ipynb) notebook under the notebooks folder. Make sure to change the kernel to "Python (cvbp)".
-
-
-## Frequently asked questions
-
-Answers to Frequently Asked Questions such as "How many images do I need to train a model?" or "How to annotate images?" can be found in the [FAQ.md](FAQ.md) file.
 
 
 ## Coding guidelines

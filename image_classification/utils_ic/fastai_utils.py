@@ -151,7 +151,7 @@ class TrainMetricsRecorder(LearnerCallback):
 
         # Plot (update) metrics for every end of epoch
         if self.show_graph and len(self.train_metrics) > 0:
-            self.plot()
+            self._plot(True)
 
     def _format_stats(self, stats: TensorOrNumList) -> None:
         """Format stats before printing. Note, this does the same thing as Recorder's"""
@@ -167,31 +167,23 @@ class TrainMetricsRecorder(LearnerCallback):
         str_stats.append(format_time(time() - self.start_epoch))
         self.pbar.write(str_stats, table=True)
 
-    def plot(self):
-        """Plot metrics graph"""
-        if len(self.train_metrics) == 0:
-            raise ValueError("No records to plot.")
-
-        # Number of metrics on training set and validation set should be the same
-        if len(self.valid_metrics) > 0:
-            assert len(self.train_metrics[0]) == len(self.valid_metrics[0])
-
+    def _plot(self, update=False):
         # init graph
-        if not hasattr(self, 'fig'):
-            self.fig, self.axes = plt.subplots(
+        if not hasattr(self, '_fig'):
+            self._fig, self._axes = plt.subplots(
                 len(self.train_metrics[0]),
                 1,
                 figsize=(6, 4 * len(self.train_metrics[0])),
             )
-            self.axes = (
-                self.axes.flatten()
+            self._axes = (
+                self._axes.flatten()
                 if len(self.train_metrics[0]) > 1
-                else [self.axes]
+                else [self._axes]
             )
-            self.graphs = display(self.fig, display_id=True)
+            plt.close(self._fig)
 
         # Plot each metrics as a subplot
-        for i, ax in enumerate(self.axes):
+        for i, ax in enumerate(self._axes):
             ax.clear()
 
             # Plot training set results
@@ -200,16 +192,16 @@ class TrainMetricsRecorder(LearnerCallback):
             ax.plot(x_axis, tr_m, label="Train")
 
             # Plot validation set results
+            maybe_y_bounds = [-0.05, 1.05, min(Tensor(tr_m)), max(Tensor(tr_m))]
             if len(self.valid_metrics) > 0:
                 vl_m = [met[i] for met in self.valid_metrics]
                 ax.plot(x_axis, vl_m, label="Validation")
-            else:
-                vl_m = []
+                maybe_y_bounds.extend([min(Tensor(vl_m)), max(Tensor(vl_m))])
 
             x_bounds = (-0.05, self.n_epochs - 0.95)
             y_bounds = (
-                min(-0.05, min(Tensor(tr_m)), min(Tensor(vl_m))) - 0.05,
-                max(1.05, max(Tensor(tr_m)), max(Tensor(vl_m))) + 0.05,
+                min(maybe_y_bounds) - 0.05,
+                max(maybe_y_bounds) + 0.05,
             )
             ax.set_xlim(x_bounds)
             ax.set_ylim(y_bounds)
@@ -219,5 +211,29 @@ class TrainMetricsRecorder(LearnerCallback):
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
             ax.legend(loc='upper right')
 
-        plt.close()  # close plot windows. Otherwise two figures are shown at the end
-        self.graphs.update(self.fig)
+        if update:
+            if not hasattr(self, '_display'):
+                self._display = display(self._fig, display_id=True)
+            else:
+                self._display.update(self._fig)
+
+    def plot(self):
+        """Plot metrics graph"""
+        if len(self.train_metrics) == 0:
+            raise ValueError("No records to plot.")
+
+        # Number of metrics on training set and validation set should be the same
+        if len(self.valid_metrics) > 0:
+            assert len(self.train_metrics[0]) == len(self.valid_metrics[0])
+
+        self._plot()
+        display(self._fig)
+
+    def last_train_metrics(self):
+        """Train set metrics from the last epoch"""
+        return self.train_metrics[-1]
+
+    def last_valid_metrics(self):
+        """Validation set metrics from the last epoch"""
+        return self.valid_metrics[-1]
+

@@ -1,4 +1,4 @@
-# Computer Vision Best Practices
+# Computer Vision
 
 This repository provides implementations and best practice guidelines for building Computer Vision systems. All examples are given as Jupyter notebooks, and use PyTorch as Deep Learning library.
 
@@ -46,7 +46,7 @@ Most applications in Computer Vision fall into one of these 4 categories:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_is_vis.jpg" height="150" alt="Image similarity visualization"/>
 
-- **Image Segmentation** Given an input image, assign a label to all pixels e.g. background, bottle, hand, sky, etc. In practice, this problem is less common in industry, in big parts due to the segmentation masks required during training.
+- **Image Segmentation** Given an input image, assign a label to all pixels e.g. background, bottle, hand, sky, etc. In practice, this problem is less common in industry, in big parts due to the (time-consuming to annotate) ground truth segmentation required during training.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="https://cvbp.blob.core.windows.net/public/images/document_images/intro_iseg_vis.jpg" height="150" alt="Image segmentation visualization"/>
 

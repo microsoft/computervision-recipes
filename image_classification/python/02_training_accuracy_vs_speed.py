@@ -118,7 +118,7 @@ if MODEL_TYPE == "small_size":
 
 # ### Pre-processing <a name="preprocessing"></a>
 # 
-# JPEG decoding represents a bottleneck on systems with powerful GPUs and can slow training significantly, often by a factor of 2-3x, and sometimes by much more. We therefore recommend creating a down-sized copy of the dataset if training otherwise takes too long, or if running training multiple times e.g. to evaluate different parameters. After running the following function, one has to update the `DATA_PATH` variable (to `out_dir`) so that this notebook uses the resized images:
+# JPEG decoding represents a bottleneck on systems with powerful GPUs and can slow training significantly, often by a factor of 2-3x, and sometimes by much more. We therefore recommend creating a down-sized copy of the dataset if training otherwise takes too long, or if running training multiple times e.g. to evaluate different parameters. After running the following function, update the `DATA_PATH` variable (to `out_dir`) so that this notebook uses the resized images. 
 # ```python
 # downsize_imagelist(im_list = ImageList.from_folder(Path(DATA_PATH)),
 #                    out_dir = "downsized_images", 
@@ -241,7 +241,7 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 # 
 # Lets take a __squeezenet1_1__ model, a __resnet18__ model and __resnet50__ model and compare the differences based on our experiment that is based of a diverse set of 6 different datasets. (More about the datasets in the appendix below)
 # 
-# ![architecture_comparisons](figs/architecture_comparisons.png)
+# ![architecture_comparisons](media/architecture_comparisons.png)
 # 
 # As you can see from the graphs above, there is a clear trade-off when deciding between the models. 
 # 
@@ -373,7 +373,7 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 # 
 # So, to efficiently build a model, we need to make sure that our learning rate is in the correct range so that we can train for as few epochs as possible. To find a good default learning rate, we've tested various learning rates on 6 different datasets, training the full network for 3 or 15 epochs.
 # 
-# ![lr_comparisons](figs/lr_comparisons.png)
+# ![lr_comparisons](media/lr_comparisons.png)
 # 
 # <details><summary><em>Understanding the diagram</em></summary>
 # <p>
@@ -446,7 +446,7 @@ print(f"'{MODEL_TYPE}' is {round(size_in_mb, 2)}MB.")
 # 
 # It turns out that the image size doesn't affect the model's memory footprint, but it has a huge effect on GPU memory. Image size also has a direct impact on training and inference speeds. An increase in image size will result in slower inference speeds.
 # 
-# ![imsize_comparisons](figs/imsize_comparisons.png)
+# ![imsize_comparisons](media/imsize_comparisons.png)
 # 
 # From the results, we can see that an increase in image resolution from __300 X 300__ to __500 X 500__ will increase the performance marginally at the cost of a longer training duration and slower inference speed.
 # 
