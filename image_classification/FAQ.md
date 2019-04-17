@@ -41,10 +41,9 @@ and adjusting brightness / contrast are widely used for data augmentation in ima
 but they do not necessarily work on all the problems.
 You should only apply transformations if the transformed images end up looking like the data you plan to score on.
 For example, as you can see from the figure below, flipping horizontally and vertically (flip_h and flip_v in the figure)
-will harm the performance of the model for character recognition.
-On the other hand, both flipping transforms will be ok for satellite images as shown in the figure.
-For bottle images, it will depend on the data you expect to score. If you have objects laid on a surface with random direction,
-you should consider to use vertical flipping and rotation. Otherwise, vertical flipping will not help to promote the model accuracy.
+will harm the model performance in character recognition.
+For bottle images, vertical flipping still does not look good for improving the model accuracy while horizontal flipping does.
+On the other hand, both flipping transforms will be useful for satellite images as shown in the figure.
 
 ![Different transformations](media/transform_examples.jpg)
 *Examples of different image transformations
