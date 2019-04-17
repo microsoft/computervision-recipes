@@ -72,7 +72,6 @@ get_ipython().run_line_magic("autoreload", "2")
 import os
 import requests
 import sys
-import urllib.request
 
 # fast.ai
 from fastai.vision import *
@@ -549,22 +548,23 @@ print(
 # In[28]:
 
 
-# Retrieve test images from our storage blob
 im_url_root = "https://cvbp.blob.core.windows.net/public/images/"
-test_ims = ["cvbp_milk_bottle.jpg", "cvbp_water_bottle.jpg"]
+im_names = ["cvbp_milk_bottle.jpg", "cvbp_water_bottle.jpg"]
 
-# Copy test images to local data/ folder
-im_fnames = []
-for im_name in test_ims:
-    im_fnames.append(
-        urllib.request.urlretrieve(
-            os.path.join(im_url_root, im_name),
-            os.path.join(data_path(), im_name),
-        )[0]
-    )
+local_im_fnames = []
+for im_name in im_names:
+    # Retrieve test images from our storage blob
+    r = requests.get(os.path.join(im_url_root, im_name))
+
+    # Copy test images to local data/ folder
+    with open(os.path.join(data_path(), im_name), "wb") as f:
+        f.write(r.content)
+
+    # Extract local path to test images
+    local_im_fnames.append(os.path.join(data_path(), im_name))
 
 # Convert images to json object
-im_string_list = ims2strlist(im_fnames)
+im_string_list = ims2strlist(local_im_fnames)
 test_samples = json.dumps({"data": im_string_list})
 
 
@@ -590,7 +590,7 @@ for k in range(len(result)):
         result[k]["label"],
         round(100.0 * float(result[k]["probability"]), 2),
     )
-    open_image(im_fnames[k]).show(title=title)
+    open_image(local_im_fnames[k]).show(title=title)
 
 
 # ### 7.B Via a raw HTTP request <a id="http"></a>
