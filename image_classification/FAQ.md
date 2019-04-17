@@ -16,7 +16,7 @@
   * [How to speed up training](#how-to-speed-up-training)
   * [How to improve accuracy or inference speed](#how-to-improve-accuracy-or-inference-speed)
   * [How to monitor GPU usage during training](#how-to-monitor-gpu-usage-during-training)
-                                          
+  
 
 ### How does the technology work
 State-of-the-art image classification methods such as used in this repository are based on Convolutional Neural Networks (CNN). CNNs are a special group of Deep Learning approaches shown to work well on image data. The key is to use CNNs which were already trained on millions of images (the ImageNet dataset) and to fine-tune these pre-trained CNNs using a potentially much smaller custom dataset. This is the approach also taken in this repository. The web is full of introductions to these conceptions, such as [link](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac).
@@ -69,7 +69,7 @@ See the [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_
 
 
 ### How to monitor GPU usage during training
-Various tools to monitor real-time GPU utilization exist, including:
+Various useful tools to monitor real-time GPU information (e.g. GPU or memory load) exist, including:
 - [GPU-Z](https://www.techpowerup.com/gpuz/): easy to install UI.
 - [nvidia-smi](https://developer.nvidia.com/nvidia-system-management-interface): command line tool. Pre-installed on the Azure Data Science VM.
 - [GPU monitor](https://github.com/msalvaris/gpu_monitor): python SDK for monitoring GPU on a single machine or across a cluster.

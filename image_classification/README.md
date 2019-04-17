@@ -15,7 +15,7 @@ Answers to Frequently Asked Questions such as "How many images do I need to trai
 
 We provide several notebooks to show how image classification algorithms can be designed, evaluated and operationalized. Note that the notebooks starting with 0 are meant to be "required", while all other notebooks are optional.
 
-Linux is the recommended operating system. While all notebooks can also be executed in Windows, there seems to be a bug in fast.ai which slows down training by an order of magnitude on small datasets. GPU is required for training, and for best training speeds we suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm),[price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)).
+Linux is the recommended operating system. While all notebooks can also be executed in Windows, there seems to be a bug in fast.ai which slows down training by an order of magnitude on small datasets. GPU is required for training, and for best training speeds we suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm),[price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). Note that some browsers (e.g. Internet Explorer) do not render jupyter widgets correctly.   
 
 
 | Notebook name | Description |
@@ -23,8 +23,9 @@ Linux is the recommended operating system. While all notebooks can also be execu
 | [00_webcam.ipynb](notebooks/00_webcam.ipynb)| Quick start notebooks which demonstrate how to load a trained model and run inference using a single image of webcam input.
 | [01_training_introduction.ipynb](notebooks/01_training_introduction.ipynb)| Notebook which explains some of the basic concepts around model training and evaluation.|
 | [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb)| Notebook to train a model with e.g. high accuracy of fast inference speed. <font color="orange"> Use this to train on your own datasets! </font> |
+| [10_image_annotation.ipynb](notebooks/10_image_annotation.ipynb)| Simple UI to annotate images. |
 | [11_exploring_hyperparameters.ipynb](notebooks/11_exploring_hyperparameters.ipynb)| Advanced notebook to find optimal parameters by doing an exhaustive grid search. |
-| deployment/[01_deployment_on_azure_container_instances.ipynb](notebooks/11_exploring_hyperparameters.ipynb)| Notebook showing how to deploy a trained model as REST API using Azure Container Instances. |
+| [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Notebook showing how to deploy a trained model as REST API using Azure Container Instances. |
 
 ## Getting Started
 

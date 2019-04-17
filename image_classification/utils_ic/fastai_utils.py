@@ -180,7 +180,6 @@ class TrainMetricsRecorder(LearnerCallback):
                 if len(self.train_metrics[0]) > 1
                 else [self._axes]
             )
-            self._display = display(self._fig, display_id=True)
             plt.close(self._fig)
 
         # Plot each metrics as a subplot
@@ -213,7 +212,10 @@ class TrainMetricsRecorder(LearnerCallback):
             ax.legend(loc='upper right')
 
         if update:
-            self._display.update(self._fig)
+            if not hasattr(self, '_display'):
+                self._display = display(self._fig, display_id=True)
+            else:
+                self._display.update(self._fig)
 
     def plot(self):
         """Plot metrics graph"""
