@@ -33,11 +33,19 @@ In practice, we have seen good results using 100 images for each class or someti
 
 
 ### How to augment image data
-Using more training data can make the model generalize better, but it is very expensive to collect data. Instead, augmenting the training data with minor alterations has been proven to work well.
-Some [image transformations](https://docs.fast.ai/vision.transform.html) such as rotation, cropping, and adjusting brightness / contrast are widely used for data augmentation in image classification,
-but they do not necessarily work all the time. For example, flipping horizontally and vertically (flip_h and flip_v in the figure) will harm the model performance for character recognition problem. 
-So, when you select image transformations for data augmentation, you should consider the characteristics of your images.
-  
+Using more training data can make the model generalize better, but data collection is very expensive.
+Alternatively, augmenting the training data with minor alterations has been proven to work well,
+which saves your time and money to collect more data as well as prevents model from overfitting.
+Some [image transformations](https://docs.fast.ai/vision.transform.html) such as rotation, cropping,
+and adjusting brightness / contrast are widely used for data augmentation in image classification,
+but they do not necessarily work on all the problems.
+You should only apply transformations if the transformed images end up looking like the data you plan to score on.
+For example, as you can see from the figure below, flipping horizontally and vertically (flip_h and flip_v in the figure)
+will harm the performance of the model for character recognition.
+On the other hand, both flipping transforms will be ok for satellite images as shown in the figure.
+For bottle images, it will depend on the data you expect to score. If you have objects laid on a surface with random direction,
+you should consider to use vertical flipping and rotation. Otherwise, vertical flipping will not help to promote the model accuracy.
+
 ![Different transformations](media/transform_examples.jpg)
 *Examples of different image transformations
 (First row: [MNIST](http://yann.lecun.com/exdb/mnist/), second row: Fridge Object, third row: [Planet](https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/data))*
