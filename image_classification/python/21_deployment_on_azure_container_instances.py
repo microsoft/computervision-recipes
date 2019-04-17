@@ -72,6 +72,7 @@ get_ipython().run_line_magic("autoreload", "2")
 import os
 import requests
 import sys
+import urllib.request
 
 # fast.ai
 from fastai.vision import *
@@ -90,7 +91,7 @@ sys.path.extend([".", "..", "../.."])
 # This "sys.path.extend()" statement allows us to move up the directory hierarchy
 # and access the utils_ic and utils_cv packages
 from utils_cv.generate_deployment_env import generate_yaml
-from utils_ic.common import ic_root_path
+from utils_ic.common import data_path, ic_root_path
 from utils_ic.constants import IMAGENET_IM_SIZE
 from utils_ic.image_conversion import ims2strlist
 from utils_ic.imagenet_models import model_to_learner
@@ -548,11 +549,21 @@ print(
 # In[28]:
 
 
+# Retrieve test images from our storage blob
+im_url_root = "https://cvbp.blob.core.windows.net/public/images/"
+test_ims = ["cvbp_milk_bottle.jpg", "cvbp_water_bottle.jpg"]
+
+# Copy test images to local data/ folder
+im_fnames = []
+for im_name in test_ims:
+    im_fnames.append(
+        urllib.request.urlretrieve(
+            os.path.join(im_url_root, im_name),
+            os.path.join(data_path(), im_name),
+        )[0]
+    )
+
 # Convert images to json object
-im_fnames = [
-    os.path.join(ic_root_path(), "notebooks", "test_images", "im_11.jpg"),
-    os.path.join(ic_root_path(), "notebooks", "test_images", "im_97.jpg"),
-]
 im_string_list = ims2strlist(im_fnames)
 test_samples = json.dumps({"data": im_string_list})
 
