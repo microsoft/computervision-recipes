@@ -163,11 +163,11 @@ for cp in ws.compute_targets:
 #   - 12 GB of GPU memory
 #   - These machines also have 6 CPUs and 56 GB of memory.
 #
-# <i><b>Notes:</b>
+# <i><b>Notes:</b></i>
 # - These are Azure-specific denominations
 # - Information on optimized machines can be found [here](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general#other-sizes)
 # - By default, 3 agents get provisioned on a new AKS cluster. When choosing a type of machine, this parameter (`agent_count`) may need to be changed such that `agent_count x cpu_count` &ge; `12` virtual CPUs
-# - Additional considerations on deployments using GPUs are available [here](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu#deployment-considerations)</i>
+# - Additional considerations on deployments using GPUs are available [here](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu#deployment-considerations)
 #
 # Here, we will use a cluster of CPUs.
 
