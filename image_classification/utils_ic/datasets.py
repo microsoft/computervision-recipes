@@ -156,3 +156,4 @@ def downsize_imagelist(im_list: ImageList, out_dir: Union[Path, str], dim: int =
         assert os.path.normpath(src_rel_path) != os.path.normpath(dst_path), "Image source and destination path should not be the same: {src_rel_path}"
         os.makedirs(os.path.dirname(dst_path), exist_ok = True)
         im.save(dst_path)
+        
