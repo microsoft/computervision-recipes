@@ -549,22 +549,22 @@ print(
 
 
 im_url_root = "https://cvbp.blob.core.windows.net/public/images/"
-im_names = ["cvbp_milk_bottle.jpg", "cvbp_water_bottle.jpg"]
+im_filenames = ["cvbp_milk_bottle.jpg", "cvbp_water_bottle.jpg"]
 
-local_im_fnames = []
-for im_name in im_names:
+local_im_paths = []
+for im_filename in im_filenames:
     # Retrieve test images from our storage blob
-    r = requests.get(os.path.join(im_url_root, im_name))
+    r = requests.get(os.path.join(im_url_root, im_filename))
 
     # Copy test images to local data/ folder
-    with open(os.path.join(data_path(), im_name), "wb") as f:
+    with open(os.path.join(data_path(), im_filename), "wb") as f:
         f.write(r.content)
 
     # Extract local path to test images
-    local_im_fnames.append(os.path.join(data_path(), im_name))
+    local_im_paths.append(os.path.join(data_path(), im_filename))
 
 # Convert images to json object
-im_string_list = ims2strlist(local_im_fnames)
+im_string_list = ims2strlist(local_im_paths)
 test_samples = json.dumps({"data": im_string_list})
 
 
@@ -590,7 +590,7 @@ for k in range(len(result)):
         result[k]["label"],
         round(100.0 * float(result[k]["probability"]), 2),
     )
-    open_image(local_im_fnames[k]).show(title=title)
+    open_image(local_im_paths[k]).show(title=title)
 
 
 # ### 7.B Via a raw HTTP request <a id="http"></a>
