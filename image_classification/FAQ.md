@@ -8,6 +8,7 @@
   * [Which problems can be solved using image classification, and which ones cannot](#which-problems-can-be-solved-using-image-classification)
 * Data
   * [How many images are required to train a model](#how-many-images-are-required-to-train-a-model)
+  * [How to augment image data](#how-to-augment-image-data)
   * [How to collect a large set of images](#how-to-collect-a-large-set-of-images)
   * [How to annotate images](#how-to-annotate-images)
   * [How to split into training and test images](#how-to-split-into-training-and-test-images)
@@ -30,6 +31,24 @@ Image classification can be used if the object-of-interest is relatively large i
 This depends heavily on the complexity of the problem. For example, if the object-of-interest looks very different from image to image (viewing angle, lighting condition, etc) then more training images are required for the model to learn the appearance of the object.
 
 In practice, we have seen good results using 100 images for each class or sometime less. The only way to find out how many images are required, is by training the model using increasing number of images, while observing how the accuracy improves (while keeping the test set fixed). Once accuracy improvements become small, this would indicate that more training images are not required.
+
+
+### How to augment image data
+Using more training data can make the model generalize better, but data collection is very expensive.
+Alternatively, augmenting the training data with minor alterations has been proven to work well,
+which saves your time and money to collect more data as well as prevents model from overfitting.
+Some [image transformations](https://docs.fast.ai/vision.transform.html) such as rotation, cropping,
+and adjusting brightness / contrast are widely used for data augmentation in image classification,
+but they do not necessarily work on all the problems.
+You should only apply transformations if the transformed images end up looking like the data you plan to score on.
+For example, as you can see from the figure below, flipping horizontally and vertically (flip_h and flip_v in the figure)
+will harm the model performance in character recognition.
+For bottle images, vertical flipping still does not look good for improving the model accuracy while horizontal flipping does.
+On the other hand, both flipping transforms will be useful for satellite images as shown in the figure.
+
+![Different transformations](media/transform_examples.jpg)
+*Examples of different image transformations
+(First row: [MNIST](http://yann.lecun.com/exdb/mnist/), second row: Fridge Object, third row: [Planet](https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/data))*
 
 
 ### How to collect a large set of images
