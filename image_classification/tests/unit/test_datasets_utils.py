@@ -1,10 +1,13 @@
 import os
 import pytest
-import shutil
 from pathlib import Path
+from PIL import Image
+import shutil
 from typing import Union
+from unittest import mock
 
-from utils_ic.datasets import Urls, unzip_url, imagenet_labels
+from fastai.vision import ImageList
+from utils_ic.datasets import downsize_imagelist, imagenet_labels, unzip_url, Urls
 
 
 def _test_url_data(url: str, path: Union[Path, str], dir_name: str):
@@ -70,3 +73,13 @@ def test_imagenet_labels():
     labels = imagenet_labels()
     for i in range(5):
         assert labels[i] == IMAGENET_LABELS_FIRST_FIVE[i]
+
+
+def test_downsize_imagelist(tiny_ic_data_path, tmp):
+    im_list = ImageList.from_folder(tiny_ic_data_path)
+    max_dim = 50
+    downsize_imagelist(im_list, tmp, max_dim)
+    im_list2 = ImageList.from_folder(tmp)
+    assert len(im_list) == len(im_list2)
+    for im_path in im_list2.items:
+        assert min(Image.open(im_path).size) <= max_dim
