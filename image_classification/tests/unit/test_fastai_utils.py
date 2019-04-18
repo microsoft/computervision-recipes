@@ -2,7 +2,7 @@ import pytest
 from fastai.metrics import accuracy, error_rate
 from fastai.vision import cnn_learner, models
 from fastai.vision import ImageList, imagenet_stats
-from utils_ic.fastai_utils import TrainMetricsRecorder
+from utils_ic.fastai_utils import set_random_seed, TrainMetricsRecorder
 
 
 @pytest.fixture
@@ -16,6 +16,10 @@ def tiny_ic_data(tiny_ic_data_path):
         .databunch(bs=16)
         .normalize(imagenet_stats)
     )
+
+
+def test_set_random_seed():
+    set_random_seed(1)
 
 
 def test_train_metrics_recorder(tiny_ic_data):
