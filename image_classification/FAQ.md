@@ -8,6 +8,7 @@
   * [Which problems can be solved using image classification, and which ones cannot](#which-problems-can-be-solved-using-image-classification)
 * Data
   * [How many images are required to train a model](#how-many-images-are-required-to-train-a-model)
+  * [How to augment image data](#how-to-augment-image-data)
   * [How to collect a large set of images](#how-to-collect-a-large-set-of-images)
   * [How to annotate images](#how-to-annotate-images)
   * [How to split into training and test images](#how-to-split-into-training-and-test-images)
@@ -16,10 +17,17 @@
   * [How to speed up training](#how-to-speed-up-training)
   * [How to improve accuracy or inference speed](#how-to-improve-accuracy-or-inference-speed)
   * [How to monitor GPU usage during training](#how-to-monitor-gpu-usage-during-training)
-  
+
 
 ### How does the technology work
-State-of-the-art image classification methods such as used in this repository are based on Convolutional Neural Networks (CNN). CNNs are a special group of Deep Learning approaches shown to work well on image data. The key is to use CNNs which were already trained on millions of images (the ImageNet dataset) and to fine-tune these pre-trained CNNs using a potentially much smaller custom dataset. This is the approach also taken in this repository. The web is full of introductions to these conceptions, such as [link](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac).
+State-of-the-art image classification methods such as used in this repository are based on Convolutional Neural Networks (CNN). CNNs are a special group of Deep Learning (DL) approaches shown to work well on image data. The key is to use CNNs which were already trained on millions of images (typically using the [ImageNet](http://image-net.org/index) dataset) and to fine-tune these pre-trained CNNs using a potentially much smaller custom dataset. This is the approach also taken in this repository.
+
+Transfer-learning using CNNs easily outperforms "traditional" (non-DL) approaches in terms of accuracy, easy of implementation, and often also inference speed. In fact, how to design Computer Vision systems changed completely ever since the influential [AlexNet](https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf) paper was published in 2012. Before, CV researchers spend most time on designing features which capture the discriminative information of a given problem. These features were often hand-designed and very problem specific. Due in large parts to the success of the AlexNet paper, most time to build a CV solution is now spend on collecting and annotating data, as well as fine-tuning CNN parameters.
+
+The AlexNet DNN architecture (shown below) consists of 8 layers: 5 convolution layers followed by 3 fully connected layers. Early layers learn low-level features (e.g. lines, edges) which are combined by successive layers into ever more complex concepts (e.g. wheel, face). More recent architectures (e.g. [ResNet](https://arxiv.org/abs/1512.03385)) are much deeper than AlexNet and consist of possibly hundrets of layers, and use more advanced techniques to help model convergence (e.g. Batch Normalization).  
+![CNN architecture](media/img_class_cnn.jpg)
+
+The research community studied transfer learning in detail, including the great survey paper [CNN Features off-the-shelf: an Astounding Baseline for Recognition](http://openaccess.thecvf.com/content_cvpr_workshops_2014/W15/papers/Razavian_CNN_Features_Off-the-Shelf_2014_CVPR_paper.pdf) by Razavian et. al.  In addition, the web is full of introductions to CNNs and related conceptions, such as [link1](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac) or [link2](https://ujjwalkarn.me/2016/08/11/intuitive-explanation-convnets/).
 
 
 ### Which problems can be solved using image classification
@@ -30,6 +38,24 @@ Image classification can be used if the object-of-interest is relatively large i
 This depends heavily on the complexity of the problem. For example, if the object-of-interest looks very different from image to image (viewing angle, lighting condition, etc) then more training images are required for the model to learn the appearance of the object.
 
 In practice, we have seen good results using 100 images for each class or sometime less. The only way to find out how many images are required, is by training the model using increasing number of images, while observing how the accuracy improves (while keeping the test set fixed). Once accuracy improvements become small, this would indicate that more training images are not required.
+
+
+### How to augment image data
+Using more training data can make the model generalize better, but data collection is very expensive.
+Alternatively, augmenting the training data with minor alterations has been proven to work well,
+which saves your time and money to collect more data as well as prevents model from overfitting.
+Some [image transformations](https://docs.fast.ai/vision.transform.html) such as rotation, cropping,
+and adjusting brightness / contrast are widely used for data augmentation in image classification,
+but they do not necessarily work on all the problems.
+You should only apply transformations if the transformed images end up looking like the data you plan to score on.
+For example, as you can see from the figure below, flipping horizontally and vertically (flip_h and flip_v in the figure)
+will harm the model performance in character recognition.
+For bottle images, vertical flipping still does not look good for improving the model accuracy while horizontal flipping does.
+On the other hand, both flipping transforms will be useful for satellite images as shown in the figure.
+
+![Different transformations](media/transform_examples.jpg)
+*Examples of different image transformations
+(First row: [MNIST](http://yann.lecun.com/exdb/mnist/), second row: Fridge Object, third row: [Planet](https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/data))*
 
 
 ### How to collect a large set of images
