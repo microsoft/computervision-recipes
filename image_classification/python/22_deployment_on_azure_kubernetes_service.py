@@ -20,9 +20,7 @@
 #   1. [Service deployment](#svc_deploy)
 # 1. [Testing of the web service](#testing)
 # 1. [Clean up](#clean)
-#   1. [Application Insights deactivation](#insights)
-#   1. [Service termination](#del_svc)
-#   1. [Image deletion](#del_img)
+#   1. [Monitoring deactivation and service deletion](#insights)
 #   1. [Workspace deletion](#del_workspace)
 # 1. [Next steps](#next)
 #
@@ -45,7 +43,7 @@
 # - Our local conda environment and Azure Machine Learning workspace
 # - The Docker image that contains the model and scoring script needed for the web service to work.
 #
-# If we are missing any of these, we should go back to the previous notebook and generate them.
+# If we are missing any of these, we should go back and run the steps from the sections "2. Pre-requisites" to "6.C Environment setup" to generate them.
 
 # ## 3. Library import <a id="libraries"/>
 #
@@ -155,89 +153,77 @@ for cp in ws.compute_targets:
 #
 # In the case where we have no compute resource available, we can create a new one. For this, we can choose between a CPU-based or a GPU-based cluster of virtual machines. There is a [wide variety](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general) of machine types that can be used. In the present example, however, we will not need the fastest machines that exist nor the most memory optimized ones. We will use typical default machines:
 # - [Standard D3 V2](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general#dv2-series):
-#   - 4 CPUs
+#   - 4 vCPUs
 #   - 14 GB of memory
-#   - This allows for at least 12 cores to operate, which is the [minimum needed](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-deploy-and-where#create-a-new-cluster) for such cluster.
 # - [Standard NC6](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu):
 #   - 1 GPU
 #   - 12 GB of GPU memory
-#   - These machines also have 6 CPUs and 56 GB of memory.
+#   - These machines also have 6 vCPUs and 56 GB of memory.
 #
 # <i><b>Notes:</b></i>
 # - These are Azure-specific denominations
 # - Information on optimized machines can be found [here](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general#other-sizes)
-# - By default, 3 agents get provisioned on a new AKS cluster. When choosing a type of machine, this parameter (`agent_count`) may need to be changed such that `agent_count x cpu_count` &ge; `12` virtual CPUs
+# - When configuring the provisioning of an AKS cluster, we need to choose a type of machine, as examplified above. This choice must be such that the number of virtual machines (also called `agent nodes`), we require, multiplied by the number of vCPUs on each machine must be greater than or equal to 12 vCPUs. This is indeed the [minimum needed](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-deploy-and-where#create-a-new-cluster) for such cluster. By default, a pool of 3 virtual machines gets provisioned on a new AKS cluster to allow for redundancy. So, if the type of virtual machine we choose has a number of vCPUs (`vm_size`) smaller than 4, we need to increase the number of machines (`agent_count`) such that `agent_count x vm_size` &ge; `12` virtual CPUs. `agent_count` and `vm_size` are both parameters we can pass to the `provisioning_configuration()` method below.
+# - [This document](https://docs.microsoft.com/en-us/azure/templates/Microsoft.ContainerService/2019-02-01/managedClusters?toc=%2Fen-us%2Fazure%2Fazure-resource-manager%2Ftoc.json&bc=%2Fen-us%2Fazure%2Fbread%2Ftoc.json#managedclusteragentpoolprofile-object) provides the full list of virtual machine types that can be deployed in an AKS cluster
 # - Additional considerations on deployments using GPUs are available [here](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu#deployment-considerations)
 #
-# Here, we will use a cluster of CPUs.
+# Here, we will use a cluster of CPUs. The creation of such resource typically takes several minutes to complete.
 
-# In[9]:
+# In[11]:
 
 
 # Declare the name of the cluster
 virtual_machine_type = "cpu"
 aks_name = f"imgclass-aks-{virtual_machine_type}"
 
-# Define the type of virtual machines to use
 if aks_name not in ws.compute_targets:
+    # Define the type of virtual machines to use
     if virtual_machine_type == "gpu":
-        vm_size = "Standard_NC6"
+        vm_size_name = "Standard_NC6"
     else:
-        vm_size = "Standard_D3_v2"
+        vm_size_name = "Standard_D3_v2"
 
-print(f"Our AKS computer target's name is: {aks_name}")
+    # Configure the cluster using the default configuration (i.e. with 3 virtual machines)
+    prov_config = AksCompute.provisioning_configuration(
+        vm_size=vm_size_name, agent_count=3
+    )
 
-
-# In[10]:
-
-
-# Configure the cluster
-# Use the default configuration (can also provide parameters to customize)
-# Full list available at https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.compute.akscompute?view=azure-ml-py#provisioning-configuration-agent-count-none--vm-size-none--ssl-cname-none--ssl-cert-pem-file-none--ssl-key-pem-file-none--location-none--vnet-resourcegroup-name-none--vnet-name-none--subnet-name-none--service-cidr-none--dns-service-ip-none--docker-bridge-cidr-none-
-if aks_name not in ws.compute_targets:
-    prov_config = AksCompute.provisioning_configuration(vm_size=vm_size)
-
-
-# In[11]:
-
-
-if aks_name not in ws.compute_targets:
     # Create the cluster
     aks_target = ComputeTarget.create(
         workspace=ws, name=aks_name, provisioning_configuration=prov_config
     )
     aks_target.wait_for_completion(show_output=True)
+    print(f"We created the {aks_target.name} AKS compute target")
 else:
     # Retrieve the already existing cluster
     aks_target = ws.compute_targets[aks_name]
     print(f"We retrieved the {aks_target.name} AKS compute target")
 
 
+# If we need a more customized AKS cluster, we can provide more parameters to the `provisoning_configuration()` method, the full list of which is available [here](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.compute.akscompute?view=azure-ml-py#provisioning-configuration-agent-count-none--vm-size-none--ssl-cname-none--ssl-cert-pem-file-none--ssl-key-pem-file-none--location-none--vnet-resourcegroup-name-none--vnet-name-none--subnet-name-none--service-cidr-none--dns-service-ip-none--docker-bridge-cidr-none-).
+#
 # When the cluster deploys successfully, we typically see the following:
 #
 # ```
 # Creating ...
 # SucceededProvisioning operation finished, operation "Succeeded"
 # ```
-#
-# This step typically takes several minutes to complete.
 
 # #### 5.B.b Alternative: Attachment of an existing AKS cluster
 #
 # Within our overall subscription, we may already have created an AKS cluster. This cluster may not be visible when we run the `ws.compute_targets` command, though. This is because it is not attached to our present workspace. If we want to use that cluster instead, we need to attach it to our workspace, first. We can do this as follows:
-
-# In[ ]:
-
-
+#
+#
+# ```python
 # existing_aks_name = '<name_of_the_existing_detached_aks_cluster>'
 # resource_id = '/subscriptions/<subscription_id/resourcegroups/<resource_group>/providers/Microsoft.ContainerService/managedClusters/<aks_cluster_full_name>'
 # # <aks_cluster_full_name> can be found by clicking on the aks cluster, in the Azure portal, as the "Resource ID" string
 # # <subscription_id> can be obtained through ws.subscription_id, and <resource_group> through ws.resource_group
-
+#
 # attach_config = AksCompute.attach_configuration(resource_id=resource_id)
 # aks_target = ComputeTarget.attach(workspace=ws, name=existing_aks_name, attach_configuration=attach_config)
 # aks_target.wait_for_completion(show_output = True)
-
+# ```
 
 # This compute target can be seen on the Azure portal, under the `Compute` tab.
 #
@@ -268,6 +254,8 @@ aks_config = AksWebservice.deploy_configuration(enable_app_insights=True)
 # ### 5.D Service deployment <a id="svc_deploy"/>
 #
 # We are now ready to deploy our web service. As in the [first](https://github.com/Microsoft/ComputerVision/blob/staging/image_classification/notebooks/21_deployment_on_azure_container_instances.ipynb) notebook, we will deploy from the Docker image. It indeed contains our image classifier model and the conda environment needed for the scoring script to work properly. The parameters to pass to the `Webservice.deploy_from_image()` command are similar to those used for the deployment on ACI. The only major difference is the compute target (`aks_target`), i.e. the CPU cluster we just spun up.
+#
+# <i><b>Note:</b> This deployment takes a few minutes to complete.</i>
 
 # In[14]:
 
@@ -295,8 +283,6 @@ else:
 # SucceededAKS service creation operation finished, operation "Succeeded"
 # The web service is Healthy
 # ```
-#
-# This deployment takes a few minutes to finish.
 #
 # In the case where the deployment is not successful, we can look at the service logs to debug. [These instructions](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-troubleshoot-deployment) can also be helpful.
 
@@ -333,33 +319,29 @@ else:
 #
 # To get a better sense of pricing, we can refer to [this calculator](https://azure.microsoft.com/en-us/pricing/calculator/?service=kubernetes-service#kubernetes-service). We can also navigate to the [Cost Management + Billing pane](https://ms.portal.azure.com/#blade/Microsoft_Azure_Billing/ModernBillingMenuBlade/Overview) on the portal, click on our subscription ID, and click on the Cost Analysis tab to check our credit usage.
 #
-# If we plan on no longer using this web service, we can turn monitoring off, and delete the service itself as well as the associated Docker image.
-
-# ### 7.A Application Insights deactivation <a id="insights"/>
+# ### 7.A Monitoring deactivation and service deletion <a id="insights"/>
+# If we plan on no longer using this web service, we can turn monitoring off, and delete the compute target, the service itself as well as the associated Docker image.
 
 # In[ ]:
 
 
+# Application Insights deactivation
 # aks_service.update(enable_app_insights=False)
 
-
-# ### 7.B Service termination <a id="del_svc"/>
-
-# In[ ]:
-
-
+# Service termination
 # aks_service.delete()
 
+# Compute target deletion
+# aks_target.delete()
+# This command executes fast but the actual deletion of the AKS cluster takes several minutes
 
-# ### 7.C Image deletion <a id="del_img"/>
-
-# In[ ]:
-
-
-# image.delete()
+# Docker image deletion
+# docker_image.delete()
 
 
-# ### 7.D Workspace deletion  <a id="del_workspace"/>
+# At this point, all the service resources we used in this notebook have been deleted. We are only now paying for our workspace.
+#
+# ### 7.B Workspace deletion  <a id="del_workspace"/>
 # If our goal is to continue using our workspace, we should keep it available. On the contrary, if we plan on no longer using it and its associated resources, we can delete it.
 #
 # <i><b>Note:</b> Deleting the workspace will delete all the experiments, outputs, models, Docker images, deployments, etc. that we created in that workspace.</i>
