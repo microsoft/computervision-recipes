@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 # This test is based on the test suite implemented for Recommenders project
 # https://github.com/Microsoft/Recommenders/tree/master/tests
 
