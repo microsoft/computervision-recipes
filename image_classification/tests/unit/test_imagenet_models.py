@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 from fastai.vision import models
 from utils_ic.imagenet_models import model_to_learner
 
