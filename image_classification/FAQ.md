@@ -17,10 +17,12 @@
   * [How to speed up training](#how-to-speed-up-training)
   * [How to improve accuracy or inference speed](#how-to-improve-accuracy-or-inference-speed)
   * [How to monitor GPU usage during training](#how-to-monitor-gpu-usage-during-training)
-  
+
 
 ### How does the technology work
-State-of-the-art image classification methods such as used in this repository are based on Convolutional Neural Networks (CNN). CNNs are a special group of Deep Learning approaches shown to work well on image data. The key is to use CNNs which were already trained on millions of images (the ImageNet dataset) and to fine-tune these pre-trained CNNs using a potentially much smaller custom dataset. This is the approach also taken in this repository. The web is full of introductions to these conceptions, such as [link](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac).
+State-of-the-art image classification methods such as used in this repository are based on Convolutional Neural Networks (CNN). CNNs are a special group of Deep Learning (DL) approaches shown to work very well on image data. The key is to use CNNs which were already trained on millions of images (typically using the [ImageNet](http://image-net.org/index) dataset) and to fine-tune these pre-trained CNNs using a potentially much smaller custom dataset. This is the approach also taken in this repository.
+
+Transfer-learning using CNNs easily outperforms "traditional" (non-DL) approaches in terms of accuracy, easy of implementation, and often also inference speed. The research community studied transfer learning in detail, including the great survey paper [CNN Features off-the-shelf: an Astounding Baseline for Recognition](http://openaccess.thecvf.com/content_cvpr_workshops_2014/W15/papers/Razavian_CNN_Features_Off-the-Shelf_2014_CVPR_paper.pdf) by Razavian et. al.  In addition, the web is full of introductions to CNNs and related conceptions, such as [link](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac).
 
 
 ### Which problems can be solved using image classification
