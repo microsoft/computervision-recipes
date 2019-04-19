@@ -28,7 +28,7 @@ The AlexNet DNN architecture (shown below) consists of 8 layers: 5 convolution l
 ![CNN architecture](media/img_class_cnn.jpg)
 
 
- The research community studied transfer learning in detail, including the great survey paper [CNN Features off-the-shelf: an Astounding Baseline for Recognition](http://openaccess.thecvf.com/content_cvpr_workshops_2014/W15/papers/Razavian_CNN_Features_Off-the-Shelf_2014_CVPR_paper.pdf) by Razavian et. al.  In addition, the web is full of introductions to CNNs and related conceptions, such as [link](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac).
+ The research community studied transfer learning in detail, including the great survey paper [CNN Features off-the-shelf: an Astounding Baseline for Recognition](http://openaccess.thecvf.com/content_cvpr_workshops_2014/W15/papers/Razavian_CNN_Features_Off-the-Shelf_2014_CVPR_paper.pdf) by Razavian et. al.  In addition, the web is full of introductions to CNNs and related conceptions, such as [link1](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac) or [link2](https://ujjwalkarn.me/2016/08/11/intuitive-explanation-convnets/).
 
 
 ### Which problems can be solved using image classification
