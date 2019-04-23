@@ -1,19 +1,56 @@
 import json
 import os
 import requests
-import sys
 
+from base64 import b64encode
 from flask import Flask, request, send_from_directory, render_template
+from pathlib import Path
+from typing import Union
 from werkzeug.utils import secure_filename
-
-sys.path.extend(["../../"])
-from utils_ic.image_conversion import ims2strlist
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
 ALLOWED_EXTENSIONS = set(["txt", "pdf", "png", "jpg", "jpeg", "gif"])
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+
+def im2base64(im_path: Union[Path, str]) -> bytes:
+    """
+    Converts an image into a base 64 encoded object
+    Args:
+        im_path (string): Path to the image
+
+    Returns: im_bytes
+
+    """
+
+    with open(im_path, "rb") as image:
+        # Extract image bytes
+        im_content = image.read()
+        # Convert bytes into a string
+        im_bytes = b64encode(im_content)
+
+    return im_bytes
+
+
+def ims2strlist(im_path_list: list) -> list:
+    """
+    Converts base 64 encoded objects into strings and appends them to a list
+
+    Args:
+        im_path_list (list of strings): List of image paths
+
+    Returns: im_string_list: List containing based64-encoded images
+    decoded into strings
+
+    """
+
+    im_string_list = []
+    for im_path in im_path_list:
+        im_string_list.append(im2base64(im_path).decode("utf-8"))
+
+    return im_string_list
 
 
 def allowed_file(filename):
@@ -26,6 +63,7 @@ def allowed_file(filename):
     Returns: (boolean) True if file name extension is in ALLOWED_EXTENSIONS
 
     """
+
     return (
         "." in filename
         and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
