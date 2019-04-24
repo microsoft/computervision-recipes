@@ -1,18 +1,29 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+from collections import OrderedDict
+from enum import Enum
+from functools import partial
 import itertools
-import pandas as pd
+import os
+from pathlib import Path
 import re
 import time
+from typing import Any, Dict, List, Tuple, Union
 
-from utils_ic.datasets import Urls, data_path, unzip_urls
-from collections import OrderedDict
-from fastai.vision import *
 from fastai.callbacks import EarlyStoppingCallback
 from fastai.metrics import accuracy
-from functools import partial
+from fastai.vision import (
+    cnn_learner, get_transforms,
+    ImageDataBunch, ImageList, imagenet_stats,
+    Learner, models,
+)
 from matplotlib.axes import Axes
 from matplotlib.text import Annotation
-from typing import Union, List, Any, Dict
-from pathlib import Path
+import pandas as pd
+
+from utils_cv.classification.data import Urls
+from utils_cv.common.data import data_path, unzip_urls
 
 Time = float
 parameter_flag = "PARAMETERS"
@@ -251,9 +262,9 @@ class ParameterSweeper:
         """ Returns an early stopping callback. """
         return partial(
             EarlyStoppingCallback,
-            monitor="accuracy",
-            min_delta=0.01,  # conservative
-            patience=3,
+            monitor=metric,
+            min_delta=min_delta,  # conservative
+            patience=patience,
         )
 
     @staticmethod
@@ -355,7 +366,7 @@ class ParameterSweeper:
 
         callbacks = list()
         if stop_early:
-            callbacks.append(_early_stopping_callback())
+            callbacks.append(ParameterSweeper._early_stopping_callback())
 
         learn = cnn_learner(
             data,

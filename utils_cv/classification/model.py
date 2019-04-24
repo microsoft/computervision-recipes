@@ -8,6 +8,10 @@ from typing import Any, List
 from fastai.basic_train import LearnerCallback
 from fastai.core import PBar
 from fastai.torch_core import TensorOrNumList
+from fastai.vision import (
+    Learner, nn,
+    ImageDataBunch, imagenet_stats,
+)
 from fastprogress.fastprogress import format_time
 from IPython.display import display
 import matplotlib.pyplot as plt
@@ -15,6 +19,37 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 import torch
 from torch import Tensor
+from torch.cuda import current_device, get_device_name, is_available
+
+from utils_cv.classification.data import imagenet_labels
+from utils_cv.common.gpu import gpu_info
+
+# Default ImageNet models image size
+IMAGENET_IM_SIZE = 224
+
+
+def model_to_learner(
+    model: nn.Module, im_size: int = IMAGENET_IM_SIZE
+) -> Learner:
+    """Create Learner based on pyTorch ImageNet model.
+
+    Args:
+        model (nn.Module): Base ImageNet model. E.g. models.resnet18()
+        im_size (int): Image size the model will expect to have.
+
+    Returns:
+         Learner: a model trainer for prediction
+    """
+
+    # Currently, fast.ai api requires to pass a DataBunch to create a model trainer (learner).
+    # To use the learner for prediction tasks without retraining, we have to pass an empty DataBunch.
+    # single_from_classes is deprecated, but this is the easiest go-around method.
+    # Create ImageNet data spec as an empty DataBunch.
+    empty_data = ImageDataBunch.single_from_classes(
+        "", classes=imagenet_labels(), size=im_size
+    ).normalize(imagenet_stats)
+
+    return Learner(empty_data, model)
 
 
 def set_random_seed(s):
@@ -29,6 +64,17 @@ def set_random_seed(s):
         torch.cuda.manual_seed_all(s)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+
+
+def which_processor():
+    """Check if fastai/torch is using GPU or CPU"""
+    if is_available():
+        print(f"Fast.ai (Torch) is using GPU: {get_device_name(0)}")
+        gpu = gpu_info()[current_device()]
+        free = int(gpu['total_memory']) - int(gpu['used_memory'])
+        print(f"Available / Total memory = {free} / {gpu['total_memory']} (MiB)")
+    else:
+        print("Cuda is not available. Fast.ai/Torch is using CPU")
 
 
 class TrainMetricsRecorder(LearnerCallback):
@@ -249,4 +295,3 @@ class TrainMetricsRecorder(LearnerCallback):
     def last_valid_metrics(self):
         """Validation set metrics from the last epoch"""
         return self.valid_metrics[-1]
-
