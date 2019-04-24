@@ -32,7 +32,7 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 
 import sys
-sys.path.append("../")
+sys.path.append("../../")
 import io
 import os
 import time
@@ -43,12 +43,10 @@ from fastai.vision import models, open_image
 from ipywebrtc import CameraStream, ImageRecorder
 from ipywidgets import HBox, Label, Layout, Widget
 
-from utils_ic.common import data_path
-from utils_ic.constants import IMAGENET_IM_SIZE
-from utils_ic.datasets import imagenet_labels
-from utils_ic.gpu_utils import which_processor
-from utils_ic.imagenet_models import model_to_learner
-
+from utils_cv.common.data import data_path
+from utils_cv.common.gpu import which_processor
+from utils_cv.classification.data import imagenet_labels
+from utils_cv.classification.model import IMAGENET_IM_SIZE, model_to_learner
 
 print(f"Fast.ai: {fastai.__version__}")
 which_processor()
@@ -165,8 +163,8 @@ HBox([w_cam, w_imrecorder, w_label])
 
 # Now, click the **capture button** of the image recorder widget to start classification. Labels show the most probable class along with the confidence predicted by the model for an image snapshot.
 # 
+# <img src="https://cvbp.blob.core.windows.net/public/images/cvbp_webcam.png" width="400" />
 # <center>
-# <img src="https://cvbp.blob.core.windows.net/public/images/cvbp_webcam.png" style="width: 400px;"/>
 # <i>Webcam image classification example</i>
 # </center>
 
