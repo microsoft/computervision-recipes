@@ -7,6 +7,7 @@
 import os
 import glob
 import papermill as pm
+import pytest
 import shutil
 
 # Unless manually modified, python3 should be
@@ -16,6 +17,7 @@ KERNEL_NAME = "cvbp"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
 
+@pytest.mark.notebooks
 def test_webcam_notebook_run(notebooks):
     notebook_path = notebooks["00_webcam"]
     pm.execute_notebook(
@@ -26,6 +28,7 @@ def test_webcam_notebook_run(notebooks):
     )
 
 
+@pytest.mark.notebooks
 def test_01_notebook_run(notebooks, tiny_ic_data_path):
     notebook_path = notebooks["01_training_introduction"]
     pm.execute_notebook(
@@ -38,6 +41,7 @@ def test_01_notebook_run(notebooks, tiny_ic_data_path):
     )
 
 
+@pytest.mark.notebooks
 def test_02_notebook_run(notebooks, tiny_ic_data_path):
     notebook_path = notebooks["02_training_accuracy_vs_speed"]
     pm.execute_notebook(
@@ -54,6 +58,7 @@ def test_02_notebook_run(notebooks, tiny_ic_data_path):
     )
 
 
+@pytest.mark.notebooks
 def test_10_notebook_run(notebooks, tiny_ic_data_path):
     notebook_path = notebooks["10_image_annotation"]
     pm.execute_notebook(
@@ -67,6 +72,7 @@ def test_10_notebook_run(notebooks, tiny_ic_data_path):
     )
 
 
+@pytest.mark.notebooks
 def test_11_notebook_run(notebooks, tiny_ic_data_path):
     notebook_path = notebooks["11_exploring_hyperparameters"]
     pm.execute_notebook(
@@ -84,6 +90,7 @@ def test_11_notebook_run(notebooks, tiny_ic_data_path):
     )
 
 
+@pytest.mark.notebooks
 def skip_test_deploy_1_notebook_run(notebooks, tiny_ic_data_path):
     notebook_path = notebooks["deploy_on_ACI"]
     pm.execute_notebook(
@@ -116,6 +123,7 @@ def skip_test_deploy_1_notebook_run(notebooks, tiny_ic_data_path):
         except OSError:
             pass
 
+    # TODO should use temp folder for safe cleanup. Notebook should accept the folder paths via papermill param.
     shutil.rmtree(os.path.join(os.getcwd(), "azureml-models"))
     shutil.rmtree(os.path.join(os.getcwd(), "models"))
     shutil.rmtree(os.path.join(os.getcwd(), "outputs"))

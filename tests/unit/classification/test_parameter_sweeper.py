@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import pytest
-import pandas as pd
 from utils_cv.classification.parameter_sweeper import *
 
 

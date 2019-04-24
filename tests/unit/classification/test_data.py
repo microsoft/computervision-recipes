@@ -1,4 +1,9 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+from PIL import Image
 from fastai.vision.data import ImageList
+
 from utils_cv.classification.data import imagenet_labels, downsize_imagelist
 
 

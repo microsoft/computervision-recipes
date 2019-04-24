@@ -123,3 +123,13 @@ image_classification/data/*
 
 # don't save data dir
 data
+
+# don't save pickles
+*.pkl
+
+# aml notebooks outputs
+*/notebooks/aml_config*
+*/notebooks/azureml-models
+*/notebooks/myenv.yml
+*/notebooks/outputs
+*/notebooks/score.py
