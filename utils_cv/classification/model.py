@@ -19,10 +19,8 @@ from matplotlib.ticker import MaxNLocator
 import numpy as np
 import torch
 from torch import Tensor
-from torch.cuda import current_device, get_device_name, is_available
 
 from utils_cv.classification.data import imagenet_labels
-from utils_cv.common.gpu import gpu_info
 
 # Default ImageNet models image size
 IMAGENET_IM_SIZE = 224
@@ -64,17 +62,6 @@ def set_random_seed(s):
         torch.cuda.manual_seed_all(s)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-
-
-def which_processor():
-    """Check if fastai/torch is using GPU or CPU"""
-    if is_available():
-        print(f"Fast.ai (Torch) is using GPU: {get_device_name(0)}")
-        gpu = gpu_info()[current_device()]
-        free = int(gpu['total_memory']) - int(gpu['used_memory'])
-        print(f"Available / Total memory = {free} / {gpu['total_memory']} (MiB)")
-    else:
-        print("Cuda is not available. Fast.ai/Torch is using CPU")
 
 
 class TrainMetricsRecorder(LearnerCallback):
