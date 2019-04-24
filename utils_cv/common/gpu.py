@@ -46,7 +46,9 @@ def which_processor():
     if is_available():
         print(f"Fast.ai (Torch) is using GPU: {get_device_name(0)}")
         gpu = gpu_info()[current_device()]
-        free = int(gpu['total_memory']) - int(gpu['used_memory'])
-        print(f"Available / Total memory = {free} / {gpu['total_memory']} (MiB)")
+        free = int(gpu["total_memory"]) - int(gpu["used_memory"])
+        print(
+            f"Available / Total memory = {free} / {gpu['total_memory']} (MiB)"
+        )
     else:
         print("Cuda is not available. Fast.ai/Torch is using CPU")

@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import torch.cuda as cuda
-from utils_ic.gpu_utils import gpu_info, which_processor
+from utils_cv.common.gpu import gpu_info, which_processor
 
 
 def test_gpu_info():

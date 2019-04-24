@@ -4,24 +4,17 @@
 import os
 import numpy as np
 from pathlib import Path
-from PIL import Image
-import pytest
-from utils_ic.common import data_path, get_files_in_directory, ic_root_path, im_height, im_width, im_width_height
-
-
-
-def test_ic_root_path():
-    s = ic_root_path()
-    assert isinstance(s, str) and s != ""
-
-
-def test_data_path():
-    s = data_path()
-    assert isinstance(s, str) and s != ""
+from utils_cv.common.image import (
+    im_width,
+    im_height,
+    im_width_height,
+    im2base64,
+    ims2strlist,
+)
 
 
 def test_im_width(tiny_ic_data_path):
-    im_path = Path(tiny_ic_data_path)/"can"/"1.jpg"
+    im_path = Path(tiny_ic_data_path) / "can" / "1.jpg"
     assert (
         im_width(im_path) == 499
     ), "Expected image width of 499, but got {}".format(im_width(im_path))
@@ -32,7 +25,7 @@ def test_im_width(tiny_ic_data_path):
 
 
 def test_im_height(tiny_ic_data_path):
-    im_path = Path(tiny_ic_data_path)/"can"/"1.jpg"
+    im_path = Path(tiny_ic_data_path) / "can" / "1.jpg"
     assert (
         im_height(im_path) == 665
     ), "Expected image height of 665, but got ".format(im_width(60))
@@ -43,7 +36,7 @@ def test_im_height(tiny_ic_data_path):
 
 
 def test_im_width_height(tiny_ic_data_path):
-    im_path = Path(tiny_ic_data_path)/"can"/"1.jpg"
+    im_path = Path(tiny_ic_data_path) / "can" / "1.jpg"
     w, h = im_width_height(im_path)
     assert w == 499 and h == 665
     im = np.zeros((100, 50))
@@ -51,8 +44,18 @@ def test_im_width_height(tiny_ic_data_path):
     assert w == 50 and h == 100
 
 
-def test_get_files_in_directory(tiny_ic_data_path):
-    im_dir = os.path.join(tiny_ic_data_path, "can")
-    assert len(get_files_in_directory(im_dir)) == 22
-    assert len(get_files_in_directory(im_dir, suffixes=[".jpg"])) == 22
-    assert len(get_files_in_directory(im_dir, suffixes=[".nonsense"])) == 0
+def test_ims2strlist(tiny_ic_data_path):
+    """ Tests extraction of image content and conversion into string"""
+    im_list = [
+        os.path.join(tiny_ic_data_path, "can", "1.jpg"),
+        os.path.join(tiny_ic_data_path, "carton", "34.jpg"),
+    ]
+    im_string_list = ims2strlist(im_list)
+    assert isinstance(im_string_list, list)
+
+
+def test_im2base64(tiny_ic_data_path):
+    """ Tests extraction of image content and conversion into bytes"""
+    im_name = os.path.join(tiny_ic_data_path, "can", "1.jpg")
+    im_content = im2base64(im_name)
+    assert isinstance(im_content, bytes)

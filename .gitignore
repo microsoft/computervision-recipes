@@ -120,3 +120,6 @@ image_classification/data/*
 
 # don't save .csv files
 *.csv
+
+# don't save data dir
+data

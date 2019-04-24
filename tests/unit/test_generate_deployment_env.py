@@ -6,7 +6,6 @@ import sys
 
 sys.path.extend([".", "..", "../..", "../../.."])
 from utils_cv.generate_deployment_env import generate_yaml
-from utils_ic.common import ic_root_path
 
 
 def test_generate_yaml():

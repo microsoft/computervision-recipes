@@ -478,20 +478,25 @@ class AnnotationWidget(object):
         self.vis_image_index = 0
         self.label_to_id = {s: i for i, s in enumerate(self.labels)}
         if not im_filenames:
-            self.im_filenames = [os.path.basename(s) for s in get_files_in_directory(
-                im_dir,
-                suffixes=(
-                    ".jpg",
-                    ".jpeg",
-                    ".tif",
-                    ".tiff",
-                    ".gif",
-                    ".giff",
-                    ".png",
-                    ".bmp",
-                ),
-            )]
-        assert len(self.im_filenames) > 0, f"Not a single image specified or found in directory {im_dir}."
+            self.im_filenames = [
+                os.path.basename(s)
+                for s in get_files_in_directory(
+                    im_dir,
+                    suffixes=(
+                        ".jpg",
+                        ".jpeg",
+                        ".tif",
+                        ".tiff",
+                        ".gif",
+                        ".giff",
+                        ".png",
+                        ".bmp",
+                    ),
+                )
+            ]
+        assert (
+            len(self.im_filenames) > 0
+        ), f"Not a single image specified or found in directory {im_dir}."
 
         # Initialize empty annotations and load previous annotations if file exist
         self.annos = pd.DataFrame()
@@ -502,13 +507,13 @@ class AnnotationWidget(object):
                 )
         if os.path.exists(self.anno_path):
             print(f"Loading existing annotation from {self.anno_path}.")
-            with open(self.anno_path,'r') as f:
+            with open(self.anno_path, "r") as f:
                 for line in f.readlines()[1:]:
                     vec = line.strip().split("\t")
                     im_filename = vec[0]
-                    self.annos[im_filename].exclude = vec[1]=="True"
-                    if len(vec)>2:
-                        self.annos[im_filename].labels = vec[2].split(',')
+                    self.annos[im_filename].exclude = vec[1] == "True"
+                    if len(vec) > 2:
+                        self.annos[im_filename].labels = vec[2].split(",")
 
         # Create UI and "start" widget
         self._create_ui()
@@ -596,7 +601,11 @@ class AnnotationWidget(object):
             # Test if call is coming from the user having clicked on a checkbox to change its state,
             # rather than a change of state when e.g. the checkbox value was updated programatically. This is a bit
             # of hack, but necessary since widgets.Checkbox() does not support a on_click() callback or similar.
-            if "new" in obj and isinstance(obj["new"], dict) and len(obj["new"]) == 0:
+            if (
+                "new" in obj
+                and isinstance(obj["new"], dict)
+                and len(obj["new"]) == 0
+            ):
                 # If single-label annotation then unset all checkboxes except the one which the user just clicked
                 if not self.w_multi_class.value:
                     for w in self.label_widgets:
@@ -611,11 +620,19 @@ class AnnotationWidget(object):
                 self.annos[im_filename].exclude = self.exclude_widget.value
 
                 # Write to disk as tab-separated file.
-                with open(self.anno_path,'w') as f:
-                    f.write("{}\t{}\t{}\n".format("IM_FILENAME", "EXCLUDE", "LABELS"))
-                    for k,v in self.annos.items():
+                with open(self.anno_path, "w") as f:
+                    f.write(
+                        "{}\t{}\t{}\n".format(
+                            "IM_FILENAME", "EXCLUDE", "LABELS"
+                        )
+                    )
+                    for k, v in self.annos.items():
                         if v.labels != [] or v.exclude:
-                            f.write("{}\t{}\t{}\n".format(k, v.exclude, ",".join(v.labels)))
+                            f.write(
+                                "{}\t{}\t{}\n".format(
+                                    k, v.exclude, ",".join(v.labels)
+                                )
+                            )
 
         # ------------
         # UI - image + controls (left side)

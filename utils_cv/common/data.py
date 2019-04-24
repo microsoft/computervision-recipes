@@ -119,8 +119,10 @@ def unzip_urls(
     return paths
 
 
-def root_path() -> str:
-    """Get utils_cv root path
-    # TODO Check if this works as expected
-    """
-    return os.path.realpath(os.path.join(os.path.dirname(__file__), os.pardir))
+def root_path() -> Path:
+    """Get path of root dir."""
+    return Path(
+        os.path.realpath(
+            os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
+        )
+    )

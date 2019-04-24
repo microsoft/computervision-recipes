@@ -3,7 +3,7 @@
 
 import pytest
 import pandas as pd
-from utils_ic.parameter_sweeper import *
+from utils_cv.classification.parameter_sweeper import *
 
 
 def _test_sweeper_run(df: pd.DataFrame, df_length: int):

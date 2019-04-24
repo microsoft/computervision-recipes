@@ -12,7 +12,8 @@ import pytest
 from pathlib import Path
 from typing import List
 from tempfile import TemporaryDirectory
-from utils_ic.datasets import unzip_url, Urls
+from utils_cv.common.data import unzip_url
+from utils_cv.classification.data import Urls
 
 
 def path_notebooks():

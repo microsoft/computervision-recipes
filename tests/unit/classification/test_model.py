@@ -5,7 +5,23 @@ import pytest
 from fastai.metrics import accuracy, error_rate
 from fastai.vision import cnn_learner, models
 from fastai.vision import ImageList, imagenet_stats
-from utils_ic.fastai_utils import set_random_seed, TrainMetricsRecorder
+from utils_cv.classification.model import (
+    set_random_seed,
+    TrainMetricsRecorder,
+    model_to_learner,
+)
+
+
+def test_model_to_learner():
+    # Test if the function loads an ImageNet model (ResNet) trainer
+    learn = model_to_learner(models.resnet34(pretrained=True))
+    assert len(learn.data.classes) == 1000  # Check Image net classes
+    assert isinstance(learn.model, models.ResNet)
+
+    # Test with SqueezeNet
+    learn = model_to_learner(models.squeezenet1_0())
+    assert len(learn.data.classes) == 1000
+    assert isinstance(learn.model, models.SqueezeNet)
 
 
 @pytest.fixture

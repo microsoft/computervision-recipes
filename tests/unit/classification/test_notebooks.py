@@ -119,4 +119,3 @@ def skip_test_deploy_1_notebook_run(notebooks, tiny_ic_data_path):
     shutil.rmtree(os.path.join(os.getcwd(), "azureml-models"))
     shutil.rmtree(os.path.join(os.getcwd(), "models"))
     shutil.rmtree(os.path.join(os.getcwd(), "outputs"))
-
