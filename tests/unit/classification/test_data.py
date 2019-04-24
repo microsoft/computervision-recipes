@@ -1,3 +1,4 @@
+from fastai.vision.data import ImageList
 from utils_cv.classification.data import imagenet_labels, downsize_imagelist
 
 
