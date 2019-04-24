@@ -9,11 +9,17 @@ from urllib.parse import urlparse
 from zipfile import ZipFile
 
 
-def data_path() -> str:
+def data_path() -> Path:
     """Get the data directory path"""
-    return os.path.realpath(
-        os.path.join(os.path.dirname(__file__), os.pardir, "data")
+    data_dir = Path(
+        os.path.realpath(
+            os.path.join(
+                os.path.dirname(__file__), os.pardir, os.pardir, "data"
+            )
+        )
     )
+    data_dir.mkdir(exist_ok=True)
+    return data_dir
 
 
 def get_files_in_directory(
