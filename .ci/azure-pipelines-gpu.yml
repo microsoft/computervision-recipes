@@ -40,7 +40,6 @@ steps:
   displayName: 'Build Configuration'
 
 - bash: |
-    cd classification
     source activate cvbp
     python -m ipykernel install --user --name cvbp --display-name "cvbp"
     pytest tests/unit --junitxml=junit/test-unitttest.xml
