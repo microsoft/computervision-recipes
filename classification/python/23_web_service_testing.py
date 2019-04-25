@@ -97,12 +97,9 @@ import azureml.core
 from azureml.core import Workspace
 
 # Computer Vision repository
-sys.path.extend([".", ".."])
-from utils_ic.common import data_path
-from utils_ic.image_conversion import im2base64, ims2strlist
-
-# from utils_cv.common.data import data_path  # <<< REPLACE BY THIS
-# from utils_cv.common.image import im2base64, ims2strlist
+sys.path.extend([".", "../.."])
+from utils_cv.common.data import data_path
+from utils_cv.common.image import im2base64, ims2strlist
 
 
 # In[2]:
