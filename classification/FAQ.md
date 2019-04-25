@@ -25,7 +25,7 @@ State-of-the-art image classification methods such as used in this repository ar
 Transfer-learning using CNNs easily outperforms "traditional" (non-DL) approaches in terms of accuracy, easy of implementation, and often also inference speed. In fact, how to design Computer Vision systems changed completely ever since the influential [AlexNet](https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf) paper was published in 2012. Before, CV researchers spend most time on designing features which capture the discriminative information of a given problem. These features were often hand-designed and very problem specific. Due in large parts to the success of the AlexNet paper, most time to build a CV solution is now spend on collecting and annotating data, as well as fine-tuning CNN parameters.
 
 The AlexNet DNN architecture (shown below) consists of 8 layers: 5 convolution layers followed by 3 fully connected layers. Early layers learn low-level features (e.g. lines, edges) which are combined by successive layers into ever more complex concepts (e.g. wheel, face). More recent architectures (e.g. [ResNet](https://arxiv.org/abs/1512.03385)) are much deeper than AlexNet and consist of possibly hundrets of layers, and use more advanced techniques to help model convergence (e.g. Batch Normalization).  
-![CNN architecture](https://cvbp.blob.core.windows.net/public/images/document_images/img_class_cnn.jpg)
+![CNN architecture](media/img_class_cnn.jpg)
 
 The research community studied transfer learning in detail, including the great survey paper [CNN Features off-the-shelf: an Astounding Baseline for Recognition](http://openaccess.thecvf.com/content_cvpr_workshops_2014/W15/papers/Razavian_CNN_Features_Off-the-Shelf_2014_CVPR_paper.pdf) by Razavian et. al.  In addition, the web is full of introductions to CNNs and related conceptions, such as [link1](https://towardsdatascience.com/simple-introduction-to-convolutional-neural-networks-cdf8d3077bac) or [link2](https://ujjwalkarn.me/2016/08/11/intuitive-explanation-convnets/).
 
@@ -53,7 +53,7 @@ will harm the model performance in character recognition.
 For bottle images, vertical flipping still does not look good for improving the model accuracy while horizontal flipping does.
 On the other hand, both flipping transforms will be useful for satellite images as shown in the figure.
 
-![Different transformations](https://cvbp.blob.core.windows.net/public/images/document_images/transform_examples.jpg)
+![Different transformations](media/transform_examples.jpg)
 *Examples of different image transformations
 (First row: [MNIST](http://yann.lecun.com/exdb/mnist/), second row: Fridge Object, third row: [Planet](https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/data))*
 
@@ -63,7 +63,7 @@ Collecting a sufficiently large number of annotated images for training and test
 
 |Bing Image Search         | Cognitive Services Image Search|
 |:-------------------------:|:-------------------------:|
-|<img src="https://cvbp.blob.core.windows.net/public/images/document_images/bing_search_striped.jpg" alt="alt text" width="400"/> |  <img src="https://cvbp.blob.core.windows.net/public/images/document_images/bing_image_search_api.jpg" alt="alt text" width="400"/>|
+|<img src="media/bing_search_striped.jpg" alt="alt text" width="400"/> |  <img src="media/bing_image_search_api.jpg" alt="alt text" width="400"/>|
 
 To generate a large and diverse dataset, multiple queries should be used. For example 7\*3 = 21 queries can by synthesized using all combinations of 7 clothing items {blouse, hoodie, pullover, sweater, shirt, tshirt, vest} and 3 attributes {striped, dotted, leopard}. Downloading the top 50 images per query would then lead to a maximum of 21*50=1050 images.
 
