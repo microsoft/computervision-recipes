@@ -23,13 +23,13 @@ steps:
 - bash: |
     source deactivate cvbp
     conda remove -q -n cvbp --all -y
-    conda env create -f image_classification/environment.yml
+    conda env create -f classification/environment.yml
     conda env list  
     source activate cvbp
   displayName: 'Build Configuration'
 
 - bash: |
-    cd image_classification
+    cd classification
     source activate cvbp
     python -m ipykernel install --user --name cvbp --display-name "cvbp"
     pytest tests/unit --junitxml=junit/test-unitttest.xml
