@@ -16,16 +16,16 @@ from utils_cv.common.data import unzip_url
 from utils_cv.classification.data import Urls
 
 
-def path_notebooks():
+def path_classification_notebooks():
     """ Returns the path of the notebooks folder. """
     return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), os.path.pardir, "notebooks")
+        os.path.join(os.path.dirname(__file__), os.path.pardir, "classification", "notebooks")
     )
 
 
 @pytest.fixture(scope="module")
-def notebooks():
-    folder_notebooks = path_notebooks()
+def classification_notebooks():
+    folder_notebooks = path_classification_notebooks()
 
     # Path for the notebooks
     paths = {
@@ -42,9 +42,13 @@ def notebooks():
         "11_exploring_hyperparameters": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
-        "deploy_on_ACI": os.path.join(
+        "21_deployment_on_azure_container_instances": os.path.join(
             folder_notebooks,
             "21_deployment_on_azure_container_instances.ipynb",
+        ),
+        "22_deployment_on_azure_kubernetes_service": os.path.join(
+            folder_notebooks,
+            "22_deployment_on_azure_kubernetes_service.ipynb",
         ),
     }
     return paths
@@ -73,7 +77,7 @@ def tmp_session(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def tiny_ic_multidata_path(tmp_session) -> List[Path]:
+def tiny_ic_multidata_path(tmp_session) -> List[str]:
     """ Returns the path to multiple dataset. """
     return [
         unzip_url(
@@ -84,6 +88,6 @@ def tiny_ic_multidata_path(tmp_session) -> List[Path]:
 
 
 @pytest.fixture(scope="session")
-def tiny_ic_data_path(tmp_session) -> Path:
+def tiny_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
     return unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True)

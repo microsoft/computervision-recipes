@@ -18,8 +18,8 @@ OUTPUT_NOTEBOOK = "output.ipynb"
 
 
 @pytest.mark.notebooks
-def test_webcam_notebook_run(notebooks):
-    notebook_path = notebooks["00_webcam"]
+def test_00_notebook_run(classification_notebooks):
+    notebook_path = classification_notebooks["00_webcam"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -29,8 +29,8 @@ def test_webcam_notebook_run(notebooks):
 
 
 @pytest.mark.notebooks
-def test_01_notebook_run(notebooks, tiny_ic_data_path):
-    notebook_path = notebooks["01_training_introduction"]
+def test_01_notebook_run(classification_notebooks, tiny_ic_data_path):
+    notebook_path = classification_notebooks["01_training_introduction"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -42,8 +42,8 @@ def test_01_notebook_run(notebooks, tiny_ic_data_path):
 
 
 @pytest.mark.notebooks
-def test_02_notebook_run(notebooks, tiny_ic_data_path):
-    notebook_path = notebooks["02_training_accuracy_vs_speed"]
+def test_02_notebook_run(classification_notebooks, tiny_ic_data_path):
+    notebook_path = classification_notebooks["02_training_accuracy_vs_speed"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -59,8 +59,8 @@ def test_02_notebook_run(notebooks, tiny_ic_data_path):
 
 
 @pytest.mark.notebooks
-def test_10_notebook_run(notebooks, tiny_ic_data_path):
-    notebook_path = notebooks["10_image_annotation"]
+def test_10_notebook_run(classification_notebooks, tiny_ic_data_path):
+    notebook_path = classification_notebooks["10_image_annotation"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -73,8 +73,8 @@ def test_10_notebook_run(notebooks, tiny_ic_data_path):
 
 
 @pytest.mark.notebooks
-def test_11_notebook_run(notebooks, tiny_ic_data_path):
-    notebook_path = notebooks["11_exploring_hyperparameters"]
+def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
+    notebook_path = classification_notebooks["11_exploring_hyperparameters"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -91,8 +91,8 @@ def test_11_notebook_run(notebooks, tiny_ic_data_path):
 
 
 @pytest.mark.notebooks
-def skip_test_deploy_1_notebook_run(notebooks, tiny_ic_data_path):
-    notebook_path = notebooks["deploy_on_ACI"]
+def test_21_notebook_run(classification_notebooks, tiny_ic_data_path):
+    notebook_path = classification_notebooks["21_deployment_on_azure_container_instances"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
