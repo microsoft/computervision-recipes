@@ -101,6 +101,9 @@ sys.path.extend([".", ".."])
 from utils_ic.common import data_path
 from utils_ic.image_conversion import im2base64, ims2strlist
 
+# from utils_cv.common.data import data_path  # <<< REPLACE BY THIS
+# from utils_cv.common.image import im2base64, ims2strlist
+
 
 # In[2]:
 
@@ -162,7 +165,7 @@ aks_service = ws.webservices["aks-cpu-image-classif-web-svc"]
 #
 # Let's now test our web service. For this, we first need to retrieve test images and to pre-process them into the format expected by our service. A service typically expects input data to be in a JSON serializable format. Here, we use our own `ims2strlist()` function to transform our .jpg images into strings of bytes.
 
-# In[ ]:
+# In[7]:
 
 
 # Check the source code of the conversion functions
@@ -172,7 +175,7 @@ print(im2base64_source)
 print(im2strlist_source)
 
 
-# In[7]:
+# In[8]:
 
 
 # Extract test images paths
@@ -199,21 +202,21 @@ test_samples = json.dumps({"data": im_string_list})
 # ### 6.A Using the run API <a id="run">
 # To facilitate the testing of both services, we create here an extra object `service`, which can take either the ACI or the AKS web service object. This would not be needed in a real case scenario, as we would have either the ACI- or the AKS-hosted service only.
 
-# In[8]:
+# In[9]:
 
 
 service = aci_service
 # service = aks_service
 
 
-# In[9]:
+# In[10]:
 
 
 # Predict using the deployed model
 result = service.run(test_samples)
 
 
-# In[10]:
+# In[11]:
 
 
 # Plot the results
@@ -227,7 +230,7 @@ for k in range(len(result)):
 #
 # In the case of AKS, we need to provide an authentication key. So let's look at the 2 examples separately, with the same testing data as before.
 
-# In[11]:
+# In[12]:
 
 
 # On ACI
@@ -249,7 +252,7 @@ resp = requests.post(service_uri, json=payload)
 print(f"Prediction: {resp.text}")
 
 
-# In[12]:
+# In[13]:
 
 
 # On AKS
@@ -321,14 +324,14 @@ print(f"Predictions: {resp.text}")
 # #### 6.C.b From this notebook <a id="ntbk"/>
 # Here, we use a built-in magic command `%run`. The experience is then the same.
 
-# In[13]:
+# In[14]:
 
 
 # Change directory
 get_ipython().run_line_magic("cd", "flask_app")
 
 
-# In[14]:
+# In[15]:
 
 
 # Built-in magic command to run our Flask application
