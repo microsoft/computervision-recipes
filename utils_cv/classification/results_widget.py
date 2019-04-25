@@ -4,6 +4,8 @@
 import bqplot
 import bqplot.pyplot as bqpyplot
 from fastai.data_block import LabelList
+from ipywidgets import widgets, Layout, IntSlider
+import numpy as np
 
 
 class ResultsWidget(object):
