@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# <i>Copyright (c) Microsoft Corporation. All rights reserved.</i>
+#
+# <i>Licensed under the MIT License.</i>
+
 # # Testing different Hyperparameters and Benchmarking
 
 # In this notebook, we'll cover how to test different hyperparameters for a particular dataset and how to benchmark different parameters across a group of datasets.
@@ -51,9 +55,10 @@ get_ipython().run_line_magic("matplotlib", "inline")
 
 import sys
 
-sys.path.append("../")
-from utils_ic.datasets import unzip_url, Urls
-from utils_ic.parameter_sweeper import *
+sys.path.append("../../")
+from utils_cv.classification.data import Urls
+from utils_cv.common.data import unzip_url
+from utils_cv.classification.parameter_sweeper import *
 
 
 # To use the Parameter Sweeper tool for single label classification, we'll need to make sure that the data is stored such that images are sorted into their classes inside of a subfolder. In this notebook, we'll use the Fridge Objects dataset, which is already stored in the correct format. We also want to use the Fridge Objects Watermarked dataset. We want to see whether the original images (which are watermarked) will perform just as well as the non-watermarked images.
@@ -117,7 +122,7 @@ sweeper.update_parameters(
 #
 # The `run` function returns a multi-index dataframe which we can work with right away.
 
-# In[9]:
+# In[8]:
 
 
 df = sweeper.run(datasets=DATA, reps=REPS)
@@ -165,7 +170,7 @@ df
 
 # To see the results, show the df using the `clean_sweeper_df` helper function. This will display all the hyperparameters in a nice, readable way.
 
-# In[10]:
+# In[9]:
 
 
 df = clean_sweeper_df(df)
@@ -173,7 +178,7 @@ df = clean_sweeper_df(df)
 
 # Since we've run our benchmarking over 3 repetitions, we may want to just look at the averages across the different __run numbers__.
 
-# In[11]:
+# In[10]:
 
 
 df.mean(level=(1, 2)).T
@@ -181,7 +186,7 @@ df.mean(level=(1, 2)).T
 
 # Print the average accuracy over the different runs for each dataset independently.
 
-# In[12]:
+# In[11]:
 
 
 ax = (
@@ -194,7 +199,7 @@ ax.set_yticklabels(["{:,.2%}".format(x) for x in ax.get_yticks()])
 
 # Additionally, we may want simply to see which set of hyperparameters perform the best across the different __datasets__. We can do that by averaging the results of the different datasets.
 
-# In[13]:
+# In[12]:
 
 
 df.mean(level=(1)).T
@@ -202,7 +207,7 @@ df.mean(level=(1)).T
 
 # To make it easier to see which permutation did the best, we can plot the results using the `plot_sweeper_df` helper function. This plot will help us easily see which parameters offer the highest accuracies.
 
-# In[14]:
+# In[13]:
 
 
 plot_sweeper_df(df.mean(level=(1)), sort_by="accuracy")

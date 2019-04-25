@@ -20,12 +20,13 @@ get_ipython().run_line_magic("matplotlib", "inline")
 
 # Import fastai. For now, we'll import all (`from fastai.vision import *`) so that we can easily use different utilies provided by the fastai library.
 
-# In[2]:
+# In[12]:
 
 
 import sys
 
-sys.path.append("../")
+sys.path.append("../../")
+
 import numpy as np
 from pathlib import Path
 
@@ -35,10 +36,11 @@ from fastai.vision import *
 from fastai.metrics import accuracy
 
 # local modules
-from utils_ic.fastai_utils import TrainMetricsRecorder
-from utils_ic.gpu_utils import which_processor
-from utils_ic.plot_utils import ResultsWidget, plot_pr_roc_curves
-from utils_ic.datasets import Urls, unzip_url
+from utils_cv.classification.model import TrainMetricsRecorder
+from utils_cv.classification.plot import ResultsWidget, plot_pr_roc_curves
+from utils_cv.classification.data import Urls
+from utils_cv.common.data import unzip_url
+from utils_cv.common.gpu import which_processor
 
 print(f"Fast.ai version = {fastai.__version__}")
 which_processor()
@@ -48,7 +50,7 @@ which_processor()
 
 # Set some parameters. We'll use the `unzip_url` helper function to download and unzip our data.
 
-# In[4]:
+# In[13]:
 
 
 DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
@@ -67,7 +69,7 @@ ARCHITECTURE = models.resnet50
 #
 # Let's set that directory to our `path` variable, which we'll use throughout the notebook, and checkout what's inside:
 
-# In[5]:
+# In[14]:
 
 
 path = Path(DATA_PATH)
@@ -103,7 +105,7 @@ path.ls()
 #
 # For training and validation, we randomly split the data by 8:2, where 80% of the data is for training and the rest for validation.
 
-# In[6]:
+# In[15]:
 
 
 data = (
@@ -118,7 +120,7 @@ data = (
 
 # Lets take a look at our data using the databunch we created.
 
-# In[7]:
+# In[16]:
 
 
 data.show_batch(rows=3, figsize=(15, 11))
@@ -126,7 +128,7 @@ data.show_batch(rows=3, figsize=(15, 11))
 
 # Lets see all available classes:
 
-# In[8]:
+# In[17]:
 
 
 print(f"number of classes: {data.c}")
@@ -135,7 +137,7 @@ print(data.classes)
 
 # We can also see how many images we have in our training and validation set.
 
-# In[9]:
+# In[18]:
 
 
 data.batch_stats
@@ -151,7 +153,7 @@ data.batch_stats
 #
 # Note, we use a custom callback `TrainMetricsRecorder` to track the accuracy on the training set during training, since fast.ai's default [recorder class](https://docs.fast.ai/basic_train.html#Recorder) only supports tracking accuracy on the validation set.
 
-# In[10]:
+# In[19]:
 
 
 learn = cnn_learner(
@@ -164,7 +166,7 @@ learn = cnn_learner(
 
 # Unfreeze our CNN since we're training all the layers.
 
-# In[11]:
+# In[20]:
 
 
 learn.unfreeze()
@@ -172,13 +174,13 @@ learn.unfreeze()
 
 # We can call the `fit` function to train the dnn.
 
-# In[12]:
+# In[21]:
 
 
 learn.fit(EPOCHS, LEARNING_RATE)
 
 
-# In[13]:
+# In[22]:
 
 
 # You can plot loss by using the default callback Recorder.
@@ -189,7 +191,7 @@ learn.recorder.plot_losses()
 
 # To evaluate our model, lets take a look at the accuracy on the validation set.
 
-# In[14]:
+# In[23]:
 
 
 _, metric = learn.validate(learn.data.valid_dl, metrics=[accuracy])
@@ -198,7 +200,7 @@ print(f"Accuracy on validation set: {100*float(metric):3.2f}")
 
 # Now, analyze the classification results by using `ClassificationInterpretation` module.
 
-# In[15]:
+# In[24]:
 
 
 interp = ClassificationInterpretation.from_learner(learn)
@@ -211,7 +213,7 @@ pred_scores = to_np(interp.probs)
 # <img src="https://cvbp.blob.core.windows.net/public/images/ic_widget.png" width="600"/>
 # <center><i>Image Classification Result Widget</i></center>
 
-# In[16]:
+# In[25]:
 
 
 w_results = ResultsWidget(
@@ -224,7 +226,7 @@ display(w_results.show())
 
 # We can plot precision-recall and ROC curves for each class as well. Please note that these plots are not too interesting here, since the dataset is easy and thus the accuracy is close to 100%.
 
-# In[17]:
+# In[26]:
 
 
 # True labels of the validation set. We convert to numpy array for plotting.
@@ -234,7 +236,7 @@ plot_pr_roc_curves(true_labels, pred_scores, data.classes)
 
 # Let's take a close look how our model confused some of the samples (if any). The most common way to do that is to use a confusion matrix.
 
-# In[18]:
+# In[27]:
 
 
 interp.plot_confusion_matrix()
@@ -242,12 +244,10 @@ interp.plot_confusion_matrix()
 
 # When evaluating our results, we want to see where the model messes up, and whether or not we can do better. So we're interested in seeing images where the model predicted the image incorrectly but with high confidence (images with the highest loss).
 
-# In[19]:
+# In[28]:
 
 
 interp.plot_top_losses(9, figsize=(15, 11))
 
 
 # That's pretty much it! Now you can bring your own dataset and train your model on them easily.
-
-# In[ ]:
