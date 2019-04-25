@@ -91,8 +91,13 @@ def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
 
 
 @pytest.mark.notebooks
-def test_21_notebook_run(classification_notebooks, tiny_ic_data_path):
-    notebook_path = classification_notebooks["21_deployment_on_azure_container_instances"]
+def skip_test_21_notebook_run(classification_notebooks, tiny_ic_data_path):
+    """ NOTE - this function is intentionally prefixed with 'skip' so that
+    pytests bypasses this function
+    """
+    notebook_path = classification_notebooks[
+        "21_deployment_on_azure_container_instances"
+    ]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,

@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import random
 from time import time
 from typing import Any, List
 
@@ -16,7 +15,6 @@ from fastprogress.fastprogress import format_time
 from IPython.display import display
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
-import numpy as np
 import torch
 from torch import Tensor
 
@@ -48,20 +46,6 @@ def model_to_learner(
     ).normalize(imagenet_stats)
 
     return Learner(empty_data, model)
-
-
-def set_random_seed(s):
-    """Set random seed for fastai
-    https://docs.fast.ai/dev/test.html#getting-reproducible-results
-    """
-    np.random.seed(s)
-    torch.manual_seed(s)
-    random.seed(s)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(s)
-        torch.cuda.manual_seed_all(s)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
 
 
 class TrainMetricsRecorder(LearnerCallback):
