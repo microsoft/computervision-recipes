@@ -7,7 +7,6 @@ from ipywidgets import widgets, Layout, IntSlider
 import numpy as np
 
 
-# TODO: REPLACE WITH NUMPY WHICH I BELIEVE HAS SIMILAR FUNCTION
 def _list_sort(list1D, reverse=False, comparison_fct=lambda x: x):
     indices = list(range(len(list1D)))
     tmp = sorted(zip(list1D,indices), key=comparison_fct, reverse=reverse)
