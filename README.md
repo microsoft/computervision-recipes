@@ -8,48 +8,45 @@ This repository provides implementations and best practice guidelines for buildi
 
 The goal of this repository is to help speed up development of Computer Vision applications. Rather than implementing custom approaches, the focus is on providing examples and links to existing state-of-the-art libraries. In addition, having worked in this space for many years, we aim to answer common questions, point out often observed pitfalls, and show how to use the cloud for deployment and training.
 
-Currently, the main investment/priority is around image classification and to a lesser extend image segmentation. We also actively work on providing a basic (but often sufficiently accurate) example on how to do image similarity. Object detection is scheduled to start once image classification is completed. See the projects and milestones in this repository for more details.
-
+Currently the main investment/priority is around image classification and to a lesser extend image segmentation. We are also actively working on providing a basic (but often sufficiently accurate) example for image similarity. Object detection is scheduled to start once image classification is completed. See the [projects](https://github.com/Microsoft/ComputerVision/projects) and milestones tab in this repository for more details.
 
 ## Getting Started
 
 Instructions on how to get started, as well as our example notebooks and discussions are provided in the [image classification](image_classification/README.md) subfolder.
 
-Note that for certain Computer Vision problems, ready-made or easily customizable solutions exist which do not require any custom coding or machine learning expertise. We strongly recommend evaluating if any of these address the problem at hand. Only if that is not the case, or if the accuracy of these solutions is not sufficient, do we recommend the much more time-consuming and difficult (since it requires expert knowledge) path of building custom models.
+Note that for certain Computer Vision problems, ready-made or easily customizable solutions exist which will not require any custom coding or machine learning expertise. We strongly recommend evaluating if these can sufficiently solve your problem. If these solutions are not applicable, or the accuracy of these solutions is not sufficient, then resorting to more complex and time-consuming custom approaches may be necessary.
 
-These Microsoft  services address common Computer Vision tasks:
+The following Microsoft services offer simple solutions to address common Computer Vision tasks:
 
 - [Cognitive Services](https://azure.microsoft.com/en-us/services/cognitive-services/directory/vision/)
-Pre-trained REST APIs which can be called to do e.g. image classification, face recognition, OCR, video analytics, and much more. These APIs are easy to use and work out of the box (e.g. no training required), however customization is limited. See the various demos to get a feeling for their functionality, e.g. on this [site](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/).
-
+provides pre-trained REST APIs which can be called to do image classification, face recognition, OCR, video analytics, and much more. These APIs are easy to use and work out of the box (no training required), however customization is limited. See the various demos available for each domain to get a feel for the functionality (e.g., [computer vision](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/), [speach to text](https://azure.microsoft.com/en-us/services/cognitive-services/speech-to-text/) ).
 
 - [Custom Vision Service](https://azure.microsoft.com/en-us/services/cognitive-services/custom-vision-service/)
-SaaS service to train and deploy a model as a REST API given a user-provided training set. All steps from image upload, annotation, to model deployment can either be performed using a UI, or alternatively (but not necessary) a Python SDK. Both training image classification and object detection models is supported, with only minimal machine learning knowledge. The Custom Vision Service hence offers more flexibility than using the pre-trained Cognitive Services APIs, but requires the user to bring and annotate their own datasets.
+is a SaaS service to train and deploy a model as a REST API given a user-provided training set. All steps from image upload, annotation, to model deployment can be performed using either the UI or a Python SDK. Training image classification or object detection models are supported using only minimal machine learning knowledge. The Custom Vision Service offers more flexibility than using the pre-trained Cognitive Services APIs, but requires the user to bring and annotate their own data.
 
 - [Azure Machine Learning service (AzureML)](https://azure.microsoft.com/en-us/services/machine-learning-service/)
-Scenario-agnostic machine learning service that helps users accelerate training and deploying machine learning models. While not specific for Computer Vision workloads, one can use the AzureML Python SDK to deploy scalable and reliable web-services using e.g. Kubernetes, or for heavily parallel training on a cloud-based GPU cluster. While AzureML offers significantly more flexibility than the other options above, it also requires significantly more machine learning and programming knowledge.
-
+is a more general machine learning service that helps users accelerate training and deploying machine learning models. While not specific for Computer Vision workloads, the AzureML Python SDK can be used for scalable and reliable training and deploying machine learning solutions to the cloud. While AzureML offers significantly more flexibility than other options, it also requires significantly more machine learning and programming knowledge.
 
 ## Computer Vision Domains
 
-Most applications in Computer Vision fall into one of these 4 categories:
+Most applications in Computer Vision (CV) fall into one of these 4 categories:
 
-- **Image classification**: Given an input image, predict what objects are present. This is typically the easiest CV problem to solve, however requires objects to be reasonably large in the image.
+- **Image classification**: Given an input image, predict what objects are present. This is typically the easiest CV problem to solve, however classification requires objects to be reasonably large in the image.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_ic_vis.jpg" height="150" alt="Image classification visualization"/>  
 
-- **Object Detection**: Given an input image, predict what objects are present and where the objects are (using rectangular coordinates). Object detection approaches work even if the object is small. However model training takes longer than image classification, and manually annotating images is more time-consuming as both labels and rectangular coordinates must be provided.
+- **Object Detection**: Given an input image, identify and locate which objects are present (using rectangular coordinates). Object detection can find small objects in an image. Compared to image classification, both model training and manually annotating images is more time-consuming in object detection, since both the label and location are required.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_od_vis.jpg" height="150" alt="Object detect visualization"/>
 
-- **Image Similarity** Given an input image, find all similar images in a reference dataset. Here, rather than predicting a label or a rectangle, the task is to sort a reference dataset by their similarity to the query image.
+- **Image Similarity** Given an input image, find all similar objects in images from a reference dataset. Here, rather than predicting a label and/or rectangle, the task is to sort through a reference dataset to find similar objects found in the query image.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_is_vis.jpg" height="150" alt="Image similarity visualization"/>
 
-- **Image Segmentation** Given an input image, assign a label to all pixels e.g. background, bottle, hand, sky, etc. In practice, this problem is less common in industry, in big parts due to the (time-consuming to annotate) ground truth segmentation required during training.
+- **Image Segmentation** Given an input image, assign a label to every pixel (e.g., background, bottle, hand, sky, etc.). In practice, this problem is less common in industry, in large part due to time required to label the ground truth segmentation required in order to train a solution.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_iseg_vis.jpg" height="150" alt="Image segmentation visualization"/>
 
 
 ## Contributing
-This project welcomes contributions and suggestions. Before contributing, please see our [contribution guidelines](CONTRIBUTING.md).
+This project welcomes contributions and suggestions. Please see our [contribution guidelines](CONTRIBUTING.md).
