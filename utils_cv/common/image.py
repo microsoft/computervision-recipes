@@ -3,10 +3,11 @@
 
 from base64 import b64encode
 from pathlib import Path
-from typing import Union, Tuple
+from typing import List, Tuple, Union 
 
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import numpy as np
-
 from PIL import Image
 
 
@@ -81,3 +82,22 @@ def im_width_height(input: Union[str, np.array]) -> Tuple[int, int]:
     else:
         width, height = (input.shape[1], input.shape[0])
     return width, height
+
+
+def show_im_files(im_files: Union[str, List[str]], size: int=3):
+    """Show image files
+    Args:
+        im_files (str or List[str]): Image filepaths
+        size (int): plot size
+    """
+    # TODO show file names as title
+    if isinstance(im_files, (str, Path)):
+        ims = [mpimg.imread(im_files)]
+    else:
+        ims = [mpimg.imread(im_f) for im_f in im_files]    
+    
+    _, axes = plt.subplots(1, len(ims), figsize=(size*len(ims), size))
+    for i, im in enumerate(ims):
+        axes[i].set_axis_off()
+        axes[i].imshow(im)
+#         im.show(ax=axes[i])
