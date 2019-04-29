@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import requests
 
@@ -7,6 +8,12 @@ from flask import Flask, request, send_from_directory, render_template
 from pathlib import Path
 from typing import Union
 from werkzeug.utils import secure_filename
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
 ALLOWED_EXTENSIONS = set(["txt", "pdf", "png", "jpg", "jpeg", "gif"])
@@ -70,7 +77,7 @@ def allowed_file(filename):
     )
 
 
-def pred_from_service(folder, filenames_list):
+def predict_from_service(folder, filenames_list):
     """
     Calls the webservice to get the predicted classes
     and probabilities of each passed image
@@ -83,8 +90,8 @@ def pred_from_service(folder, filenames_list):
     and size of that list
     """
 
-    print("Calling the image classification endpoint ...")
-    print(UPLOAD_FOLDER)
+    logging.info("Calling the image classification endpoint ...")
+    logging.info(f"Images stored in {UPLOAD_FOLDER}")
     im_paths = [os.path.join(folder, im_name) for im_name in filenames_list]
     im_string_list = ims2strlist(im_paths)
     data_for_service = json.dumps({"data": im_string_list})
@@ -147,12 +154,12 @@ def upload_file():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
             filenames.append(filename)
-    print("Files found: {}".format(filenames))
+    logging.info("Files found: {}".format(filenames))
     if filenames:
         return render_template(
             "template.html",
             all_filenames=filenames,
-            predictions_file=predictions_file,
+            return_predictions=return_predictions,
         )
     else:
         return render_template("index.html")
@@ -172,16 +179,16 @@ def send_file(file_name):
 
 
 @app.route("/predictions/<all_filenames>")
-def predictions_file(all_filenames):
+def return_predictions(all_filenames):
     """
     Calls the webservice to get the predicted classes of the uploaded images
 
     Args:
         all_filenames: (list of strings) List of uploaded image file names
 
-    Returns: Call to the pred_from_service() function
+    Returns: Call to the predict_from_service() function
     """
-    return pred_from_service(UPLOAD_FOLDER, all_filenames)
+    return predict_from_service(UPLOAD_FOLDER, all_filenames)
 
 
 if __name__ == "__main__":
