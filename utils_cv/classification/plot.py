@@ -5,6 +5,7 @@
 Helper module for drawing plots
 """
 import matplotlib.pyplot as plt
+import pandas as pd
 import numpy as np
 from sklearn.metrics import (
     precision_recall_curve,
@@ -13,6 +14,43 @@ from sklearn.metrics import (
     auc,
 )
 from sklearn.preprocessing import label_binarize
+from fastai.vision import ClassificationInterpretation, to_np
+
+
+def plot_hamming_loss_thresholds(
+    interp: ClassificationInterpretation, figsize: tuple = (12, 6)
+) -> None:
+    """ Plot the hamming loss of the model at different probability thresholds.
+
+    This function will plot the hamming loss for every 0.05 increments of the
+    threshold. This means that there will be a total of 20 increments.
+
+    Args:
+        interp: The fastai ClassificationInterpretation object
+        figsize: Figure size (w, h)
+    """
+
+    def get_hamming_loss(
+        interp: ClassificationInterpretation, threshold: float = 0.2
+    ):
+        """ Gets the hamming loss from interp. """
+        y_true = np.array(to_np(interp.y_true))
+        y_preds = np.array(to_np(interp.probs))
+        y_preds[y_preds >= threshold] = 1
+        y_preds[y_preds < threshold] = 0
+        return np.absolute(y_true - y_preds).sum() / y_true.size
+
+    hamming_losses = []
+    for threshold in np.linspace(0, 1, 21):
+        hl = get_hamming_loss(interp, threshold)
+        hamming_losses.append(hl)
+
+    ax = pd.DataFrame(hamming_losses).plot(figsize=figsize)
+    ax.set_title("Hamming Loss at different thresholds")
+    ax.set_ylabel("hamming loss")
+    ax.set_xlabel("probability threshold")
+    ax.set_xticks(np.linspace(0, 19, 10))
+    ax.set_xticklabels(np.around(np.linspace(0, 1, 10), decimals=2))
 
 
 def plot_pr_roc_curves(

@@ -74,7 +74,7 @@ def downsize_imagelist(
     # Loop over all images
     for src_path in tqdm(im_list.items):
         # Load and optionally down-size image
-        im = Image.open(src_path).convert('RGB')
+        im = Image.open(src_path).convert("RGB")
         scale = float(dim) / min(im.size)
         if scale < 1.0:
             new_size = [int(round(f * scale)) for f in im.size]
