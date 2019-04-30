@@ -56,8 +56,7 @@ def compute_vector_distance(
     return dist
 
 
-def compute_all_distances(query_image, feature_dict, distance="l2"):
-    query_features = feature_dict[query_image]
+def compute_all_distances(query_features, feature_dict, distance="l2"):
     distances = {}
     for image, feature in feature_dict.items():
         distances[image] = compute_vector_distance(
@@ -70,7 +69,7 @@ def sort_distances(distances):
     return sorted(distances.items(), key=lambda x: x[1])
 
 
-def compute_topk_similar(query_image, feature_dict, distance="l2", top_k=10):
-    distances = compute_all_distances(query_image, feature_dict, distance)
+def compute_topk_similar(query_features, feature_dict, distance="l2", top_k=10):
+    distances = compute_all_distances(query_features, feature_dict, distance)
     distances = sort_distances(distances)
     return distances[:top_k]
