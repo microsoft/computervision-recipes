@@ -44,7 +44,7 @@ To setup on your local machine:
     conda activate cvbp
     python -m ipykernel install --user --name cvbp --display-name "Python (cvbp)"
     ```
-    If you would like to use JupyterLab, install `jupyter-webrtc` widget:
+    If you would like to use [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/), install `jupyter-webrtc` widget:
     ```
     jupyter labextension install jupyter-webrtc
     ``` 
