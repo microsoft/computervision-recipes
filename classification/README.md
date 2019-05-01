@@ -12,7 +12,7 @@ Answers to Frequently Asked Questions such as "How many images do I need to trai
 
 We provide several notebooks to show how image classification algorithms are designed, evaluated and operationalized. Notebooks starting with `0` are intended to be run sequentially, as there are dependencies between them. These notebooks include introductory "required" material, the remaining notebooks are optional and include deeper dives into specialized topics.
 
-While all notebooks can be executed in Windows, we have found the computer vision tools are often more stable on the Linux operating system. Additionally, using GPU dramatically improves training speeds. We suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm),[price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). 
+While all notebooks can be executed in Windows, we have found the computer vision tools are often faster and more stable on the Linux operating system. Additionally, using GPU dramatically improves training speeds. We suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm),[price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). 
 
 Also, we have found that some browsers do not render Jupyter widgets correctly. If you have issues, using an alternative browser may be helpful.
 
