@@ -9,7 +9,6 @@
 
 import os
 import pytest
-from pathlib import Path
 from typing import List
 from tempfile import TemporaryDirectory
 from utils_cv.common.data import unzip_url
@@ -19,7 +18,12 @@ from utils_cv.classification.data import Urls
 def path_classification_notebooks():
     """ Returns the path of the notebooks folder. """
     return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), os.path.pardir, "classification", "notebooks")
+        os.path.join(
+            os.path.dirname(__file__),
+            os.path.pardir,
+            "classification",
+            "notebooks",
+        )
     )
 
 
@@ -33,8 +37,11 @@ def classification_notebooks():
         "01_training_introduction": os.path.join(
             folder_notebooks, "01_training_introduction.ipynb"
         ),
-        "02_training_accuracy_vs_speed": os.path.join(
-            folder_notebooks, "02_training_accuracy_vs_speed.ipynb"
+        "02_multilabel_classification": os.path.join(
+            folder_notebooks, "02_multilabel_classification.ipynb"
+        ),
+        "03_training_accuracy_vs_speed": os.path.join(
+            folder_notebooks, "03_training_accuracy_vs_speed.ipynb"
         ),
         "10_image_annotation": os.path.join(
             folder_notebooks, "10_image_annotation.ipynb"
@@ -47,8 +54,7 @@ def classification_notebooks():
             "21_deployment_on_azure_container_instances.ipynb",
         ),
         "22_deployment_on_azure_kubernetes_service": os.path.join(
-            folder_notebooks,
-            "22_deployment_on_azure_kubernetes_service.ipynb",
+            folder_notebooks, "22_deployment_on_azure_kubernetes_service.ipynb"
         ),
     }
     return paths

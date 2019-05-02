@@ -248,7 +248,7 @@ learn.fit(EPOCHS, LEARNING_RATE)
 learn.recorder.plot_losses()
 
 
-# ## 4. Evaluation the model
+# ## 4. Evaluate the model
 
 # The learner comes with a handy function `show_results` that will show one mini-batch of the validation set. We can use that to get an intuitive sense of what is being predicted correctly and what is not.
 
