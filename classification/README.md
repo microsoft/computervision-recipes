@@ -10,7 +10,7 @@ Answers to Frequently Asked Questions such as "How many images do I need to trai
 
 ## Notebooks
 
-We provide several notebooks to show how image classification algorithms are designed, evaluated and operationalized. Notebooks starting with `0` are intended to be run sequentially, as there are dependencies between them. These notebooks contain introductory "required" material. Notebooks starting with `1` can be consisdered optional and contain more complex and specialized topics.
+We provide several notebooks to show how image classification algorithms are designed, evaluated and operationalized. Notebooks starting with `0` are intended to be run sequentially, as there are dependencies between them. These notebooks contain introductory "required" material. Notebooks starting with `1` can be considered optional and contain more complex and specialized topics.
 
 While all notebooks can be executed in Windows, we have found the computer vision tools are often faster and more stable on the Linux operating system. Additionally, using GPU dramatically improves training speeds. We suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm), [price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). 
 
@@ -18,12 +18,12 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 
 | Notebook name | Description |
 | --- | --- |
-| [00_webcam.ipynb](notebooks/00_webcam.ipynb)| Demo a trained model and inference an image from your computper's webcam.
-| [01_training_introduction.ipynb](notebooks/01_training_introduction.ipynb)| Introducing some of the basic concepts around model training and evaluation.|
-| [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb)| Train a model with high accuracy vs one with a fast inferencing speed. *<font color="orange"> Use this to train on your own datasets! </font>* |
-| [10_image_annotation.ipynb](notebooks/10_image_annotation.ipynb)| Simple UI to annotate images. |
-| [11_exploring_hyperparameters.ipynb](notebooks/11_exploring_hyperparameters.ipynb)| Find optimal model parameters using grid search. |
-| [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Deploy a trained model as REST API using Azure Container Instances. |
+| [00_webcam.ipynb](notebooks/00_webcam.ipynb)| Demonstrates a trained model and inference an image from your computer's webcam.
+| [01_training_introduction.ipynb](notebooks/01_training_introduction.ipynb)| Introduces some of the basic concepts around model training and evaluation.|
+| [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb)| Trains a model with high accuracy vs one with a fast inferencing speed. *<font color="orange"> Use this to train on your own datasets! </font>* |
+| [10_image_annotation.ipynb](notebooks/10_image_annotation.ipynb)| A simple UI to annotate images. |
+| [11_exploring_hyperparameters.ipynb](notebooks/11_exploring_hyperparameters.ipynb)| Finds optimal model parameters using grid search. |
+| [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Deploys a trained model as REST API using Azure Container Instances. |
 
 ## Getting Started
 
@@ -53,7 +53,7 @@ To setup on your local machine:
     cd notebooks
     jupyter notebook
     ```
-1. Start with the [Webcam Image Classification Notebook](notebooks/00_webcam.ipynb) notebook under the `notebooks` folder. Make sure to change the kernel to "Python (cvbp)".
+1. Start with the [00_webcam](notebooks/00_webcam.ipynb) Image Classification Notebook under the `notebooks` folder. Make sure to change the kernel to "Python (cvbp)".
 
 ## Coding guidelines
 
