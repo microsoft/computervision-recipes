@@ -70,7 +70,7 @@ class TrainMetricsRecorder(LearnerCallback):
 
         Examples:
             >>> learn = cnn_learner(data, model, metrics=[accuracy])
-            >>> train_metrics_cb = TrainMetricsRecorder(n_batch=1)
+            >>> train_metrics_cb = TrainMetricsRecorder(learn, n_batch=1)
             >>> learn.callbacks.append(train_metrics_cb)
             >>> learn.fit(epochs=10, lr=0.001)
             >>> train_metrics_cb.plot()
@@ -122,6 +122,11 @@ class TrainMetricsRecorder(LearnerCallback):
         self.n_epochs = n_epochs
         self.valid_metrics = []
         self.train_metrics = []
+        
+        # Init graph
+        self._fig = None
+        self._axes = None
+        self._display = None
 
     def on_epoch_begin(self, **kwargs: Any):
         self.start_epoch = time()
@@ -196,22 +201,17 @@ class TrainMetricsRecorder(LearnerCallback):
             )
         str_stats.append(format_time(time() - self.start_epoch))
         self.pbar.write(str_stats, table=True)
-
+        
     def _plot(self, update=False):
-        # init graph
-        if not hasattr(self, '_fig'):
+        if not self._fig:
             self._fig, self._axes = plt.subplots(
                 len(self.train_metrics[0]),
                 1,
                 figsize=(6, 4 * len(self.train_metrics[0])),
             )
-            self._axes = (
-                self._axes.flatten()
-                if len(self.train_metrics[0]) > 1
-                else [self._axes]
-            )
+            self._axes = (self._axes.flatten() if len(self.train_metrics[0]) > 1 else [self._axes])
             plt.close(self._fig)
-
+        
         # Plot each metrics as a subplot
         for i, ax in enumerate(self._axes):
             ax.clear()
@@ -242,7 +242,7 @@ class TrainMetricsRecorder(LearnerCallback):
             ax.legend(loc='upper right')
 
         if update:
-            if not hasattr(self, '_display'):
+            if not self._display:
                 self._display = display(self._fig, display_id=True)
             else:
                 self._display.update(self._fig)
