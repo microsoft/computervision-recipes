@@ -45,10 +45,14 @@ import fastai
 from fastai.vision import *
 
 # local modules
-from utils_cv.classification.model import TrainMetricsRecorder, hamming_loss
+from utils_cv.classification.model import (
+    TrainMetricsRecorder,
+    hamming_loss,
+    zero_one_loss,
+)
 from utils_cv.classification.plot import (
     plot_pr_roc_curves,
-    plot_hamming_loss_thresholds,
+    plot_loss_thresholds,
 )
 from utils_cv.classification.data import Urls
 from utils_cv.common.data import unzip_url
@@ -171,40 +175,65 @@ data.batch_stats
 data.show_batch(rows=3, figsize=(15, 11))
 
 
-# ## 3. Training our multilabel classifier
+# # 3. Training our multilabel classifier
 #
-# One of the main differences between training a multilabel classifier an a single-label classifier is how we may want to evaluate our model.
+# One of the main differences between training a multilabel classifier an a single-label classifier is how we may want to evaluate our model. In a single-label (multi-class) classification model, we often use a model's accuracy to see how well a model performs. But _accuracy_ as an evaluation metric isn't specific enough when it comes to multilabel classification problems.
 #
-# In a single-label (multi-class) classification model, we often use a model's accuracy to see how well a model performs.
+# __The Problem With Accuracy__
 #
-# However, for multilabel classification problems, a misclassification is not just a binary: right or wrong. Instead a prediction containing a subset of the labels we're looking for is better than one that contains none of them. For example, in an image that is labelled both 'rainy' and 'forest', it is better to predict one correct label than neither of the correct labels. A prediction that is faulty must also be penalized.
+# For multilabel classification problems, a misclassification is not binary: right or wrong. Instead a prediction containing a subset of the correct labels we're looking for is better than one that contains none of them. For example, in an image that is labelled both 'rainy' and 'forest', it is usually better to predict one correct label than neither of the correct labels.
 #
-# ---
+# One of the other problems when it comes to calculating accuracy is that the softmax activation function does not work well for multilabel classification problems. In single-label classification, we usually use a softmax function on the output of our neural network because we want to express a dependency across the labels; if the picture is likely of a _dog_, then it is unlikely of a _cat_. By applying a softmax on the output, we force the sum of the values to 1, enforcing this dependency.
+#
+# For multilabel classification, label likelihoods are independent from each other; the likelihood of an image being _rainy_ is independent from the likelihood of it being a _forest_. Instead of the softmax function, we can use the sigmoid activation function to normalize our result while preserving the independent relationship of each label.
+#
 #
 # __Hamming Loss__
 #
-# One of the most common ways to evaluate a multilabel classification problem is by using the Hamming loss, which we can think of as the fraction of wrong labels to the total number of labels.
+# One of the most common ways to evaluate a multilabel classification problem is by using the hamming loss, which we can think of as the fraction of wrong labels to the total number of labels.
 #
-# For example, lets our validation set contains 4 images and the results looks as such:
+# For example, lets say our validation set contains 4 images and the results looks as such:
 # ```
-# +-------+------------------+------------------+
-# | Image |  y_true:         |  y_pred:         |
-# |-------+------------------+------------------+
-# | im_01 |  [[1, 0, 0, 1],  |  [[1, 0, 0, 0],  |
-# | im_02 |   [1, 0, 1, 1],  |   [1, 1, 1, 1],  |
-# | im_03 |   [0, 1, 0, 0],  |   [0, 1, 0, 0],  |
-# | im_04 |   [1, 1, 0, 0]]  |   [1, 1, 1, 0]]  |
-# +-------+------------------+------------------+
+# +-------+------------------+------------------+------------------+
+# | Image |  y_true:         |  y_pred:         |  hamming_loss:   |
+# |-------+------------------+------------------+------------------+
+# | im_01 |  [[1, 0, 0, 1],  |  [[1, 0, 0, 0],  |  [[0, 0, 0, 1],  |
+# | im_02 |   [1, 0, 1, 1],  |   [1, 1, 1, 1],  |   [0, 1, 0, 0],  |
+# | im_03 |   [0, 1, 0, 0],  |   [0, 1, 0, 0],  |   [0, 0, 0, 0],  |
+# | im_04 |   [1, 1, 0, 0]]  |   [1, 1, 1, 0]]  |   [0, 0, 1, 0]]  |
+# +-------+------------------+------------------+------------------+
+# |                                             | = 3/25 incorrect |
+# +-------+------------------+------------------+------------------+
 # ```
 # In this case, the predictions has 3 out of a total of 16 predictions that are not true, so the hamming loss is __0.1875__.
 #
-# While hamming loss is a common evaluation metric for multilabel classification, note that it may not be ideal for all multilabel classification problems. For each problem, you need to access what you're evaluating your model against to see if it is a good fit.
+# __Zero-one Loss__
+#
+# Zero-one loss is a much harsher evaluation metric than hamming loss. The zero-one loss will classify an entire set of labels for a given sample incorrect if it does not entirely match the true set of labels. Hamming loss is more forgiving since it penalizes only the individual labels themselves.
+#
+# Once again, lets say our validation set contains 4 images and the results looks as such:
+# ```
+# +-------+------------------+------------------+------------------+
+# | Image |  y_true:         |  y_pred:         |  zero_one_loss:  |
+# |-------+------------------+------------------+------------------+
+# | im_01 |  [[1, 0, 0, 1],  |  [[1, 0, 0, 0],  |  [[1],           |
+# | im_02 |   [1, 0, 1, 1],  |   [1, 1, 1, 1],  |   [1],           |
+# | im_03 |   [0, 1, 0, 0],  |   [0, 1, 0, 0],  |   [0],           |
+# | im_04 |   [1, 1, 0, 0]]  |   [1, 1, 1, 0]]  |   [1]]           |
+# +-------+------------------+------------------+------------------+
+# |                                             | = 3/4 incorrect  |
+# +-------+------------------+------------------+------------------+
+# ```
+# In this case, the predictions have only classified 3 individual labels incorrectly. But since we're using zero-one loss, and each of those misclassifications are in a different set, we end up with a zero-one loss of __0.75__. If we compare this to hamming loss, we can see that it is a much less forgiving metric.
+#
+# While hamming loss and zero-one loss are a common evaluation metric for multilabel classification, note that it may not be ideal for all multilabel classification problems. For each problem, you need to access what you're evaluating your model against to see if it is a good fit.
 
 # ---
 
+#
 # If we want to take advantage of using Hamming Loss, we'll need to define our own evaluation metric. To do this, we'll need to create a custom function that will takes a `y_pred` and a `y_true`, and returns a single metric.
 #
-# > Since we've defined our hamming loss function in the `utils_cv.classification.models` module, lets just print out the function to see what it looks like.
+# > Since we've defined our hamming loss and zero-one loss functions in the `utils_cv.classification.models` module, lets just print out them out to see what they looks like.
 #
 
 # In[11]:
@@ -213,22 +242,28 @@ data.show_batch(rows=3, figsize=(15, 11))
 print(inspect.getsource(hamming_loss))
 
 
+# In[12]:
+
+
+print(inspect.getsource(zero_one_loss))
+
+
 # We'll use the `create_cnn` function to create our CNN, passing in our custom `hamming_loss` function.
 
-# In[12]:
+# In[13]:
 
 
 learn = cnn_learner(
     data,
     ARCHITECTURE,
-    metrics=[hamming_loss],
+    metrics=[hamming_loss, zero_one_loss],
     callback_fns=[partial(TrainMetricsRecorder, show_graph=True)],
 )
 
 
 # Unfreeze our CNN since we're training all the layers.
 
-# In[13]:
+# In[14]:
 
 
 learn.unfreeze()
@@ -236,13 +271,13 @@ learn.unfreeze()
 
 # We can call the `fit` function to train the dnn.
 
-# In[14]:
+# In[15]:
 
 
 learn.fit(EPOCHS, LEARNING_RATE)
 
 
-# In[15]:
+# In[16]:
 
 
 learn.recorder.plot_losses()
@@ -252,7 +287,7 @@ learn.recorder.plot_losses()
 
 # The learner comes with a handy function `show_results` that will show one mini-batch of the validation set. We can use that to get an intuitive sense of what is being predicted correctly and what is not.
 
-# In[16]:
+# In[17]:
 
 
 learn.show_results(rows=3, figsize=(15, 10))
@@ -260,27 +295,38 @@ learn.show_results(rows=3, figsize=(15, 10))
 
 # To concretely evaluate our model, lets take a look at the hamming loss on the validation set. We can think of this value as the percentage of the total incorrect classifications out of the total possible classifications.
 
-# In[17]:
-
-
-_, metric = learn.validate(learn.data.valid_dl, metrics=[hamming_loss])
-print(f"Hamming Loss on validation set: {float(metric):3.2f}")
-
-
-# We've calculated the hamming loss on our validation set with the default probability threshold of 0.2. However, this default value may not be the most optimal value. We can use the `plot_hamming_loss_thresholds` function to plot the hamming loss at different probability thresholds. If the default threshold is far from the minimum, we may consider retraining the model with a new threshold.
-#
-# When tweaking the threshold, note that the threshold represents a trade-off between specificity and sensitivity. The higher the threshold, the higher the specificity. The lower the threshold, the higher the sensivity.
-
 # In[18]:
 
 
-interp = ClassificationInterpretation.from_learner(learn)
-plot_hamming_loss_thresholds(interp)
+_, hl, zol = learn.validate(
+    learn.data.valid_dl, metrics=[hamming_loss, zero_one_loss]
+)
+print(f"Hamming Loss on validation set: {float(hl):3.2f}")
+print(f"Zero-one Loss on validation set: {float(zol):3.2f}")
 
 
-# Other than looking at hamming loss, we can also plot the recision-recall and ROC curves for each class.
+# We've calculated the hamming loss on our validation set with the default probability threshold of 0.2. However, this default value may not be the most optimal value. We can use the `plot_loss_thresholds` function to plot the evaluation metric at different levels of thresholds. If, for example, we were interested in the zero-one loss, but we noticed that the default threshold is far from the minimum, we may consider using a different threshold when we perform inferencing. Lets plot the zero-one loss at various thresholds to what the most optimal threshold is.
+#
+# Note that the threshold represents a trade-off between specificity and sensitivity. The higher the threshold, the higher the _specificity_. The lower the threshold, the higher the _sensivity_.
 
 # In[19]:
+
+
+interp = learn.interpret()
+plot_loss_thresholds(zero_one_loss, interp.probs, interp.y_true)
+
+
+# We can clearly see that the default threshold value of 0.2 is not the mininum. Lets move the threshold to achieve a better loss.
+
+# In[20]:
+
+
+zero_one_loss(interp.probs, interp.y_true, threshold=0.3)
+
+
+# Other than looking at zero-one loss and hamming loss, we can also plot the recision-recall and ROC curves for each class.
+
+# In[21]:
 
 
 # True labels of the validation set. We convert to numpy array for plotting.

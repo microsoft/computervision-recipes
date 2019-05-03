@@ -2,13 +2,32 @@
 # Licensed under the MIT License.
 
 import pytest
+from torch import tensor
 from fastai.metrics import accuracy, error_rate
 from fastai.vision import cnn_learner, models
 from fastai.vision import ImageList, imagenet_stats
 from utils_cv.classification.model import (
     TrainMetricsRecorder,
     model_to_learner,
+    hamming_loss,
+    zero_one_loss,
 )
+
+
+def test_hamming_loss_function(multilabel_result):
+    """ Test the hamming loss evaluation metric function. """
+    y_pred, y_true = multilabel_result
+    assert hamming_loss(y_pred, y_true) == tensor(0.1875)
+    assert hamming_loss(y_pred, y_true, sigmoid=True) == tensor(0.375)
+    assert hamming_loss(y_pred, y_true, threshold=1.0) == tensor(0.625)
+
+
+def test_zero_one_loss_function(multilabel_result):
+    """ Test the zero-one loss evaluation metric function. """
+    y_pred, y_true = multilabel_result
+    assert zero_one_loss(y_pred, y_true) == tensor(0.75)
+    assert zero_one_loss(y_pred, y_true, sigmoid=True) == tensor(0.75)
+    assert zero_one_loss(y_pred, y_true, threshold=1.0) == tensor(1.0)
 
 
 def test_model_to_learner():

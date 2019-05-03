@@ -14,40 +14,36 @@ from sklearn.metrics import (
     auc,
 )
 from sklearn.preprocessing import label_binarize
-from fastai.vision import ClassificationInterpretation, to_np
+from torch import Tensor
+from typing import Callable
 
 
-def plot_hamming_loss_thresholds(
-    interp: ClassificationInterpretation, figsize: tuple = (12, 6)
+def plot_loss_thresholds(
+    loss_function: Callable[[Tensor, Tensor, float], Tensor],
+    probs: Tensor,
+    y_true: Tensor,
+    figsize: tuple = (12, 6),
 ) -> None:
-    """ Plot the hamming loss of the model at different probability thresholds.
+    """ Plot the loss of the model at different thresholds.
 
-    This function will plot the hamming loss for every 0.05 increments of the
+    This function will plot the loss for every 0.05 increments of the
     threshold. This means that there will be a total of 20 increments.
 
     Args:
-        interp: The fastai ClassificationInterpretation object
+        loss_function: The loss function
+        probs: Estimated probabilities.
+        y_true: True class indices.
         figsize: Figure size (w, h)
     """
-
-    def get_hamming_loss(
-        interp: ClassificationInterpretation, threshold: float = 0.2
-    ):
-        """ Gets the hamming loss from interp. """
-        y_true = np.array(to_np(interp.y_true))
-        y_preds = np.array(to_np(interp.probs))
-        y_preds[y_preds >= threshold] = 1
-        y_preds[y_preds < threshold] = 0
-        return np.absolute(y_true - y_preds).sum() / y_true.size
-
-    hamming_losses = []
+    loss_name = loss_function.__name__
+    losses = []
     for threshold in np.linspace(0, 1, 21):
-        hl = get_hamming_loss(interp, threshold)
-        hamming_losses.append(hl)
+        loss = loss_function(probs, y_true, threshold=threshold)
+        losses.append(loss)
 
-    ax = pd.DataFrame(hamming_losses).plot(figsize=figsize)
-    ax.set_title("Hamming Loss at different thresholds")
-    ax.set_ylabel("hamming loss")
+    ax = pd.DataFrame(losses).plot(figsize=figsize)
+    ax.set_title(f"{loss_name} at different thresholds")
+    ax.set_ylabel(f"{loss_name}")
     ax.set_xlabel("probability threshold")
     ax.set_xticks(np.linspace(0, 19, 10))
     ax.set_xticklabels(np.around(np.linspace(0, 1, 10), decimals=2))

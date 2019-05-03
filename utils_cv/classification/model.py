@@ -22,14 +22,60 @@ IMAGENET_IM_SIZE = 224
 
 
 def hamming_loss(
-    y_pred: Tensor, y_true: Tensor, thresh: float = 0.2, sigmoid: bool = True
-) -> float:
-    """ Callback for using hamming loss as a evaluation metric. """
+    y_pred: Tensor,
+    y_true: Tensor,
+    threshold: float = 0.2,
+    sigmoid: bool = False,
+) -> Tensor:
+    """ Callback for using hamming loss as a evaluation metric.
+
+    Hamming loss is the fraction of wrong labels to the total number of labels.
+
+    Args:
+        y_pred: prediction output
+        y_true: true class labels
+        threshold: the threshold to consider a positive classification
+        sigmoid: whether to apply the sigmoid activation
+
+    Returns:
+        The hamming loss function as a tensor of dtype float
+    """
     if sigmoid:
         y_pred = y_pred.sigmoid()
-    if thresh:
-        y_pred = y_pred > thresh
+    if threshold:
+        y_pred = y_pred > threshold
     return (y_pred.float() != y_true).sum() / torch.ones(y_pred.shape).sum()
+
+
+def zero_one_loss(
+    y_pred: Tensor,
+    y_true: Tensor,
+    threshold: float = 0.2,
+    sigmoid: bool = False,
+) -> Tensor:
+    """ Callback for using zero-one loss as a evaluation metric.
+
+    The zero-one loss will classify an entire set of labels for a given sample
+    incorrect if it does not entirely match the true set of labels.
+
+    Args:
+        y_pred: prediction output
+        y_true: true class labels
+        threshold: the threshold to consider a positive classification
+        sigmoid: whether to apply the sigmoid activation
+
+    Returns:
+        The zero-one loss function as a tensor with dtype float
+    """
+    if sigmoid:
+        y_pred = y_pred.sigmoid()
+    if threshold:
+        y_pred = y_pred > threshold
+
+    zero_one_preds = (y_pred.float() != y_true).sum(dim=1)
+    zero_one_preds[zero_one_preds >= 1] = 1
+    num_labels = y_pred.shape[-1]
+    return zero_one_preds.sum().float() / len(y_pred.reshape(-1, num_labels))
 
 
 def model_to_learner(

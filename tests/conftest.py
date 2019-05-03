@@ -9,6 +9,7 @@
 
 import os
 import pytest
+import torch
 from typing import List
 from tempfile import TemporaryDirectory
 from utils_cv.common.data import unzip_url
@@ -97,3 +98,20 @@ def tiny_ic_multidata_path(tmp_session) -> List[str]:
 def tiny_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
     return unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True)
+
+
+@pytest.fixture(scope="session")
+def multilabel_result():
+    """ Fake results to test evaluation metrics for multilabel classification. """
+    y_pred = torch.tensor(
+        [
+            [0.9, 0.0, 0.0, 0.0],
+            [0.9, 0.0, 0.9, 0.9],
+            [0.0, 0.9, 0.0, 0.0],
+            [0.9, 0.9, 0.0, 0.0],
+        ]
+    ).float()
+    y_true = torch.tensor(
+        [[1, 0, 0, 1], [1, 1, 1, 1], [0, 1, 0, 0], [1, 1, 1, 0]]
+    ).float()
+    return y_pred, y_true

@@ -3,6 +3,7 @@
 
 import os
 import sys
+
 sys.path.extend([".", "..", "../..", "../../.."])
 
 from utils_cv.common.data import root_path
