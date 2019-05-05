@@ -17,7 +17,7 @@
 # 1. [Workspace retrieval](#workspace)
 # 1. [Service retrieval](#service)
 # 1. [Testing of the web services](#testing)
-#   1. [Using the run API](#run)
+#   1. [Using the *run* API](#run)
 #   1. [Via a raw HTTP request](#request)
 #   1. [Using a user interface - Locally](#local)
 #     1. [From the terminal](#terminal)
@@ -36,32 +36,24 @@
 #   1. [Application Insights deactivation and web service termination](#del_app_insights)
 #   1. [Docker image deletion](#del_image)
 # 1. [Resources](#resources)
-#
-#
+
 # ## 1. Introduction <a id="intro"/>
 # In the 2 prior notebooks, we deployed our machine learning model as a web service on [Azure Container Instances](https://github.com/Microsoft/ComputerVisionBestPractices/blob/staging/image_classification/notebooks/21_deployment_on_azure_container_instances.ipynb) (ACI) and on [Azure Kubernetes Service](https://github.com/Microsoft/ComputerVision/blob/staging/image_classification/notebooks/22_deployment_on_azure_kubernetes_service.ipynb) (AKS). In this notebook, we will learn how to test our service:
 # - Using the `run` API
 # - Via a raw HTTP request
 # - Through a locally run Flask app
 # - Through the same Flask app, deployed on the same AKS cluster, as a separate web service.
-#
+
 # ## 2. Pre-requisites <a id="pre-reqs"/>
 #
 # ### 2.A Tools <a id="tools"/>
 #
-# In addition to the "cvbp" conda environment, and account on the Azure platform, we will need three other tools:
-# - The Azure CLI, which installation instructions are provided [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
-# - The Kubernestes CLI, which we will install together in this notebook
+# In addition to the "cvbp" conda environment, and an Azure account, we will need two other tools:
+# - The Azure CLI, which installation instructions are provided  [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest)
 # - Docker, which we will use to containerize our application. If we don't have it installed on our machine, we can follow the instructions below to do so:
 #   - [Linux](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 #   - [MacOS](https://docs.docker.com/docker-for-mac/install/)
 #   - [Windows](https://docs.docker.com/docker-for-windows/install/)
-#
-#       In case of issues, troubleshooting documentation can be found [here](https://docs.docker.com/docker-for-windows/troubleshoot/#running-docker-for-windows-in-nested-virtualization-scenarios). Additionally, we can follow the steps below, if we have a Windows machine:
-#     - Go to `Task Manager > Performance`
-#     - Check that `Virtualization` is enabled
-#     - If it is not, go to `Start > Settings > Update and security > Recovery > Advanced Startup - Restart now > Troubleshoot > Advanced options > UEFI firmware settings - restart`
-#     - In the BIOS, go to `Advanced > System options > Click on "Virtualization Technology (VTx) only" > Save > Exit > Save all changes` -- This will restart the machine
 #
 #
 # ### 2.B Existing objects <a id="exist-obj"/>
@@ -70,8 +62,7 @@
 # - An web service that serves our machine learning model on ACI and/or AKS.
 #
 # If that is not the case, we can refer to the two notebooks linked in the "1. Introduction" section.
-#
-#
+
 # ## 3. Library import <a id="imports"/>
 #
 # Let's start by importing the libraries we will need to access our Azure workspace and the test data.
@@ -100,10 +91,6 @@ from azureml.core import Workspace
 sys.path.extend([".", "../.."])
 from utils_cv.common.data import data_path
 from utils_cv.common.image import im2base64, ims2strlist
-
-
-# In[2]:
-
 
 # Check core SDK version number
 print(f"Azure ML SDK Version: {azureml.core.VERSION}")
@@ -144,7 +131,7 @@ print(
 ws.webservices
 
 
-# This command should return a dictionary, which keys are the names we gave to our web services.
+# This command should return a dictionary, where the keys are the names we assigned to them.
 #
 # Let's now retrieve the web services of interest.
 
@@ -196,7 +183,7 @@ im_string_list = ims2strlist(local_im_paths)
 test_samples = json.dumps({"data": im_string_list})
 
 
-# ### 6.A Using the run API <a id="run">
+# ### 6.A Using the *run* API <a id="run">
 # To facilitate the testing of both services, we create here an extra object `service`, which can take either the ACI or the AKS web service object. This would not be needed in a real case scenario, as we would have either the ACI- or the AKS-hosted service only.
 
 # In[9]:
