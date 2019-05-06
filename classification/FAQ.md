@@ -38,69 +38,64 @@ Transfer-learning is the current state-of-the-art approach for CV problems. To g
 ### Which problems can be solved using image classification?
 Image classification can be used if the object-of-interest is relatively large in the image (more than 20% image width/height). If the object is smaller, or if the location of the object is required, then _object detection_ methods should be used instead.
 
-#Data
+## Data
 
 ### How many images are required to train a model?
 This depends heavily on the complexity of the problem. For example, if the object-of-interest looks very different from image to image (viewing angle, lighting condition, etc) then more training images are required for the model to learn the appearance of the object.
 
-In practice, we have seen good results using ~100 images for each class. The only way to find out how many images are required is by training the model and successively increase the number of images while observing how the accuracy improves (while keeping the test set fixed). Once accuracy improvements become small (converges), this indicates that more training images are not required.
-
+We have seen insances where using ~100 images for each class has given good results. The best approach to finding the required training set size is to train the model with a small number of images and successively increase that number and observe the model accuracy improvements on a fixed test set. Once accuracy improvements stop changing (converges), more training images will not improve accuracy, and are not required.
 
 ### How to collect a large set of images?
-Collecting a sufficiently large number of annotated images for training and testing can be difficult. One way to over-come this problem is to scrape images from the Internet. For example, see below (left image) the Bing Image Search results for the query "t-shirt striped". As expected, most images indeed are striped t-shirts, and the few incorrect or ambiguous images (such as column 1, row 1; or column 3, row 2) can be identified and removed easily. Rather than manually downloading images from Bing Image Search, the [Cognitive Services Bing Image Search API](https://www.microsoft.com/cognitive-services/en-us/bing-image-search-api) (right image) can be used instead.
+Collecting a sufficiently large number of annotated (labeled) images for training and testing can be difficult. For some problems, it may be possible to scrape additional images from the Internet. For example, we used  Bing Image Search results for the query "t-shirt striped". As expected, most images matched the query for striped t-shirts, and the few incorrect are easily identified and removed. 
 
 |Bing Image Search         | Cognitive Services Image Search|
 |:-------------------------:|:-------------------------:|
 |<img src="media/bing_search_striped.jpg" alt="alt text" width="400"/> |  <img src="media/bing_image_search_api.jpg" alt="alt text" width="400"/>|
 
-To generate a large and diverse data set, multiple queries should be used. For example 7\*3 = 21 queries can by synthesized using all combinations of 7 clothing items {blouse, hoodie, pullover, sweater, shirt, t-shirt, vest} and 3 attributes {striped, dotted, leopard}. Downloading the top 50 images per query would then lead to a maximum of 21*50=1050 images.
+As an alternative to manually downloading images, the [Cognitive Services Bing Image Search API](https://www.microsoft.com/cognitive-services/en-us/bing-image-search-api) (right image) can also be used for this process. To generate a large and diverse data set with Cognitive Services, multiple queries can be used. For example 7\*3 = 21 queries can by synthesized using all combinations of 7 clothing items `{blouse, hoodie, pullover, sweater, shirt, t-shirt, vest}` and 3 attributes `{striped, dotted, leopard}`. Downloading the top 50 images per query leads to a maximum of 21*50=1050 images.
 
-Some of the downloaded images will be exact or near duplicates (e.g. differ just by image resolution or jpg artifacts) and should be removed so that the training and test split do not contain the same images. This can be achieved using a hashing-based approach which works in two steps: (i) first, the hash string is computed for all images; (ii) only images are kept with a hash string which has not yet been seen. All other images are discarded. We found the *dhash* approach in the Python library *imagehash* and described in this [blog](http://www.hackerfactor.com/blog/index.php?/archives/529-Kind-of-Like-That.html) to perform well, with the parameter `hash_size` set to 16. It is OK to incorrectly remove some non-duplicates images, as long as the majority of the real duplicates get removed.
+A caveat with automatically augmenting your training set is that some downloaded images may be exact or near duplicates (differing by image resolution or jpg artifacts). These images should be removed so that the training and test split do not contain the identical example images. A two step hashing-based approach can help steps: 
+
+  1. A hash string is computed for all images. 
+  1. Only images with a unique hash string are retained.
+  
+ We found the *dhash* approach from the *imagehash* Python Library ([blog](http://www.hackerfactor.com/blog/index.php?/archives/529-Kind-of-Like-That.html)) with a `hash_size` parameter set to 16 to be helpful. 
 
 ### How to augment image data?
-Using more training data can make the model generalize better, but data collection is very expensive.
-Alternatively, augmenting the training data with minor alterations has been proven to work well,
-which saves your time and money to collect more data as well as prevents model from over fitting.
-Some [image transformations](https://docs.fast.ai/vision.transform.html) such as rotation, cropping,
-and adjusting brightness / contrast are widely used for data augmentation in image classification,
-but they do not necessarily work on all the problems.
-You should only apply transformations if the transformed images end up looking like the data you plan to score on.
-For example, as you can see from the figure below, flipping horizontally and vertically (flip_h and flip_v in the figure)
-will harm the model performance in character recognition.
-For bottle images, vertical flipping still does not look good for improving the model accuracy while horizontal flipping does.
-On the other hand, both flipping transforms will be useful for satellite images as shown in the figure.
+Using more training data can make the model generalize better, but data collection is very expensive. Augmenting the training data with minor alterations has been proven to work well in these instances. This approach saves your having to collect more data and prevents the CV model from over fitting.
+
+The method uses [image transformations](https://docs.fast.ai/vision.transform.html) such as rotation, cropping, and adjusting brightness/contrast augmentation the training data. These do not necessarily work on all the problems but may be helpful if the transformed images are representative of the overall image population where the CV model will be applied. For example, in the figure below, flipping horizontally and vertically will hurt model performance in character recognition since these directions are informative for the model outcome. However, in the bottle image example, vertical flipping may not  improving the model accuracy but horizontal flipping may. Both directions are helpful in the satellite image problem.
 
 ![Different transformations](media/transform_examples.jpg)
 *Examples of different image transformations
 (First row: [MNIST](http://yann.lecun.com/exdb/mnist/), second row: Fridge Object, third row: [Planet](https://www.kaggle.com/c/planet-understanding-the-amazon-from-space/data))*
 
 ### How to annotate images?
-Consistency is key. For example, occluded objects should either be always annotated, or never. Furthermore, ambiguous images should be removed, eg if it is unclear to a human eye if an image shows a lemon or a tennis ball. Ensuring consistency is difficult especially if multiple people are involved, and hence our recommendation is that only a single person, the one who trains the AI model, annotates all images. This has the added benefit of gaining a better understanding of the images and of the complexity of the classification task.
+Annotating images is complex and expensive. Consistency is key. Occluded objects should either be always annotated, or never. Ambiguous images should be removed, for example if it is unclear to a human if an image shows a lemon or a tennis ball. Ensuring consistency is difficult especially if multiple people are involved, and hence our recommendation is that only a single person annotates all images. If that person also trains the AI model, the annotation process assists in giving a better understanding of the images and of the complexity of the classification task.
 
-Note that the test set should be of high annotation quality, so that accuracy estimates are reliable.
-
+Note that the test set should be of high annotation quality to ensure that model accuracy estimates are reliable.
 
 ### How to split into training and test images?
-Often a random split, as is performed in the notebooks, is fine. However, there are exceptions: for example, if the images are extracted from a movie, then having frame *n* in the training set and frame *n+1* in the test set would result in accuracy estimates which are over-inflated since the two images are too similar.
+Often a random split is fine but there are exceptions. For example, if the images are extracted from a movie, then having frame *n* in the training set and frame *n+1* in the test set would result in accuracy estimates which are over-inflated since the two images are too similar. Additionally, if there is an inherent class imbalance in the data, there should be other controls to ensure that all classes are included in the training and test data sets.
 
 
 ### How to design a good test set?
-The test set should contain images which resemble what the input to the trained model looks like when deployed. For example, images taken under similar lighting conditions, similar angles, etc. This is to ensure that the accuracy estimate reflects the real performance of the application which uses the trained model.
+The test set should contain images which resemble the population the model will be used to score. For example, images taken under similar lighting conditions, similar angles, etc. This helps to ensure that the accuracy estimate reflects the real performance of the application which uses the trained model.
 
 ## Training
 
 ### How to speed up training?
-- All images should be stored on an SSD device, since HDD or network access times can dominate the training time due to high latency.
-- Very high-resolution images (>4 Mega Pixels) should be downsized before DNN training since JPEG decoding is expensive and can slow down training by a factor of >10x.
-- High-resolution images can slow down training due to JPEG decoding becoming the bottleneck. See the [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb) notebook for more information.
+- All images can be stored on a local SSD device, since HDD or network access times can dominate the training time.
+- High-resolution images can slow down training due to JPEG decoding becoming the bottleneck (>10x performance penalty). See the [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb) notebook for more information.
+- Very high-resolution images (>4 Mega Pixels) can be downsized before DNN training..
 
 
 ### How to improve accuracy or inference speed?
-See the [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb) notebook for a discussion what parameters are important, and how to select a model which is fast during inference.
+See the [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb) notebook for a discussion around which parameters are important, and strategies to select a model optimized for faster inferencing speed.
 
 
 ### How to monitor GPU usage during training?
-Various useful tools to monitor real-time GPU information (e.g. GPU or memory load) exist, including:
+Various tools for monitoring real-time GPU information (e.g. GPU or memory load) exist. This is an incomplete list of tools we've used:
 - [GPU-Z](https://www.techpowerup.com/gpuz/): easy to install UI.
 - [nvidia-smi](https://developer.nvidia.com/nvidia-system-management-interface): command line tool. Pre-installed on the Azure Data Science VM.
 - [GPU monitor](https://github.com/msalvaris/gpu_monitor): python SDK for monitoring GPU on a single machine or across a cluster.
