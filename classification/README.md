@@ -35,7 +35,7 @@ To setup on your local machine:
     cd ComputerVisionBestPractices/image_classification
     git checkout staging # for now we work in the staging directory
     ```
-1. Install the conda environment
+1. Install the conda environment, you'll find the `environment.yml` file in the `classification` subdirectory. From there:
     ```
     conda env create -f environment.yml
     ```
