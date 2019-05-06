@@ -43,7 +43,7 @@ Image classification can be used if the object-of-interest is relatively large i
 ### How many images are required to train a model?
 This depends heavily on the complexity of the problem. For example, if the object-of-interest looks very different from image to image (viewing angle, lighting condition, etc) then more training images are required for the model to learn the appearance of the object.
 
-We have seen insances where using ~100 images for each class has given good results. The best approach to finding the required training set size is to train the model with a small number of images and successively increase that number and observe the model accuracy improvements on a fixed test set. Once accuracy improvements stop changing (converges), more training images will not improve accuracy, and are not required.
+We have seen instances where using ~100 images for each class has given good results. The best approach to finding the required training set size is to train the model with a small number of images and successively increase that number and observe the model accuracy improvements on a fixed test set. Once accuracy improvements stop changing (converges), more training images will not improve accuracy, and are not required.
 
 ### How to collect a large set of images?
 Collecting a sufficiently large number of annotated (labeled) images for training and testing can be difficult. For some problems, it may be possible to scrape additional images from the Internet. For example, we used  Bing Image Search results for the query "t-shirt striped". As expected, most images matched the query for striped t-shirts, and the few incorrect are easily identified and removed. 
@@ -76,7 +76,7 @@ Annotating images is complex and expensive. Consistency is key. Occluded objects
 Note that the test set should be of high annotation quality to ensure that model accuracy estimates are reliable.
 
 ### How to split into training and test images?
-Often a random split is fine but there are exceptions. For example, if the images are extracted from a movie, then having frame *n* in the training set and frame *n+1* in the test set would result in accuracy estimates which are over-inflated since the two images are too similar. Additionally, if there is an inherent class imbalance in the data, there should be other controls to ensure that all classes are included in the training and test data sets.
+Often a random split is fine but there are exceptions. For example, if the images are extracted from a movie, then having frame `n` in the training set and frame `n+1` in the test set would result in accuracy estimates which are over-inflated since the two images are too similar. Additionally, if there is an inherent class imbalance in the data, there should be other controls to ensure that all classes are included in the training and test data sets.
 
 
 ### How to design a good test set?
@@ -85,9 +85,9 @@ The test set should contain images which resemble the population the model will 
 ## Training
 
 ### How to speed up training?
-- All images can be stored on a local SSD device, since HDD or network access times can dominate the training time.
-- High-resolution images can slow down training due to JPEG decoding becoming the bottleneck (>10x performance penalty). See the [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb) notebook for more information.
-- Very high-resolution images (>4 Mega Pixels) can be downsized before DNN training..
+ - All images can be stored on a local SSD device, since HDD or network access times can dominate the training time.
+ - High-resolution images can slow down training due to JPEG decoding becoming the bottleneck (>10x performance penalty). See the [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb) notebook for more information.
+ - Very high-resolution images (>4 Mega Pixels) can be downsized before DNN training..
 
 
 ### How to improve accuracy or inference speed?
@@ -96,6 +96,6 @@ See the [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_
 
 ### How to monitor GPU usage during training?
 Various tools for monitoring real-time GPU information (e.g. GPU or memory load) exist. This is an incomplete list of tools we've used:
-- [GPU-Z](https://www.techpowerup.com/gpuz/): easy to install UI.
-- [nvidia-smi](https://developer.nvidia.com/nvidia-system-management-interface): command line tool. Pre-installed on the Azure Data Science VM.
-- [GPU monitor](https://github.com/msalvaris/gpu_monitor): python SDK for monitoring GPU on a single machine or across a cluster.
+- [GPU-Z](https://www.techpowerup.com/gpuz/): Has an easy to install UI.
+- [nvidia-smi](https://developer.nvidia.com/nvidia-system-management-interface): Command line tool. Pre-installed on the Azure Data Science VM.
+- [GPU monitor](https://github.com/msalvaris/gpu_monitor): Python SDK for monitoring GPU on a single machine or across a cluster.
