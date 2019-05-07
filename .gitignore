@@ -134,3 +134,5 @@ data
 */notebooks/outputs
 */notebooks/score.py
 classification/FAQ.html
+classification/.DS_Store
+.DS_Store
