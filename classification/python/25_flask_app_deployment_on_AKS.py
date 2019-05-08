@@ -447,12 +447,14 @@ get_ipython().system("kubectl delete deploy flask-app-deployment")
 
 
 # Telemetry deactivation
+aks_service = ws.webservices["aks-cpu-image-classif-web-svc"]
 aks_service.update(enable_app_insights=False)
 
 # Services termination
 aks_service.delete()
 
 # Compute target deletion
+aks_target = ws.compute_targets["imgclass-aks-cpu"]
 aks_target.delete()
 
 
