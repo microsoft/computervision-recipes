@@ -34,3 +34,4 @@ dependencies:
   - lxml>=4.3.2
   - pyyaml>=5.1
   - python-dateutil
+  - pymongo
