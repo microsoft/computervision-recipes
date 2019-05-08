@@ -26,10 +26,10 @@ class Urls:
     fridge_objects_watermark_tiny_path = urljoin(
         base, "fridgeObjectsWatermarkTiny.zip"
     )
+    fridge_objects_negatives_path = urljoin(base, "fridgeObjectsNegative.zip")
     multilabel_fridge_objects_path = urljoin(
         base, "multilabelFridgeObjects.zip"
     )
-    unlabeled_objects_path = urljoin(base, "unlabeledNegative.zip")
     food_101_subset_path = urljoin(base, "food101Subset.zip")
     fashion_texture_path = urljoin(base, "fashionTexture.zip")
     flickr_logos_32_subset_path = urljoin(base, "flickrLogos32Subset.zip")

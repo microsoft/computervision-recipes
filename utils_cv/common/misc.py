@@ -27,18 +27,16 @@ def set_random_seed(s: int):
         pass
 
     
-def copy_files(files: List[str], dst: str, infer_subdir=False, remove=False):
+def copy_files(fpaths: List[str], dst: str, infer_subdir=False, remove=False):
     """Copy list of files into destination
     """
-    for f in files:
+    for fpath in fpaths:
         if infer_subdir:
-            d = os.path.join(dst, os.path.basename(os.path.dirname(f)))
-        else:
-            d = dst
+            dst = os.path.join(dst, os.path.basename(os.path.dirname(fpath)))
             
-        if not os.path.isdir(d):
-            os.makedirs(d)
-        shutil.copy(f, d)
+        if not os.path.isdir(dst):
+            os.makedirs(dst)
+        shutil.copy(fpath, dst)
         
         if remove:
-            os.remove(f)
+            os.remove(fpath)
