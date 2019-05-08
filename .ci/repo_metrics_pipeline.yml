@@ -1,0 +1,22 @@
+pool:
+  name: cvbpbuildagents
+  vmImage: 'linuxagent-gpu'
+
+steps:
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
+      sed -i ''s/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/$(github_token)/g'' tools/repo_metrics/config.py
+      sed -i ''s/XXXXXXXXXXXXXXXXXXXXXXXXX/$(cosmosdb_connectionstring)/g'' tools/repo_metrics/config.py'
+  displayName: Configure CosmosDB Connection
+
+- task: CmdLine@2
+  inputs:
+    script: 'source activate cvbp \
+      && python tools/repo_metrics/track_metrics.py --github_repo "https://github.com/microsoft/ComputerVision" --save_to_database \
+      && source deactivate
+      echo Use the environment variables input below to pass secret variables to this script'
+  displayName: Python script to record stats
+
+
