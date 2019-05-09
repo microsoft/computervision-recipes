@@ -10,13 +10,10 @@
 # ## Table of contents <a id="table_of_content"></a>
 #
 # 1. [Introduction](#intro)
-# 1. [Pre-requisites](#pre-reqs)
 # 1. [Library import](#libraries)
-# 1. [Azure workspace](#workspace)
-#   1. [SDK version](#sdk)
-#   1. [Workspace creation](#ws)
 # 1. [Model retrieval and export](#model)
 # 1. [Model deployment on Azure](#deploy)
+#   1. [Workspace retrieval](#workspace)
 #   1. [Model registration](#register)
 #     1. [Without experiment](#noexp)
 #     1. [With an experiment](#exp)
@@ -25,9 +22,7 @@
 #   1. [Computational resources](#compute)
 #   1. [Web service deployment](#websvc)
 # 1. [Testing of the web service](#test)
-#   1. [Using the run API](#api)
-#   1. [Via a raw HTTP request](#http)
-#   1. [Notes on web service deployment](#notes)
+# 1. [Notes on web service deployment](#notes)
 # 1. [Clean-up](#clean)
 #   1. [Service termination](#svcterm)
 #   1. [Image deletion](#imdel)
@@ -44,21 +39,9 @@
 #
 # <img src="media/ACI_diagram_2.jpg" width="500" style="float: left;" alt="Web service deployment workflow">
 
-# ## 2. Pre-requisites
-# <a id="pre-reqs"></a>
-#
-# For this notebook to run properly on our machine, the following should already be in place:
-#
-# * Local machine setup
-#   * We need to set up the "cvbp" conda environment. [These instructions](https://github.com/Microsoft/ComputerVision/blob/master/classification/README.md#getting-started) explain how to do that.
-#
-#
-# * Azure subscription setup
-#   * We also need an account on the Azure platform. If we do not have one, we first need to:
-#     * [Create an account](https://azure.microsoft.com/en-us/free/services/machine-learning/)
-#     * [Create a resource group and a workspace](https://docs.microsoft.com/en-us/azure/machine-learning/service/setup-create-workspace#portal)
+# For this notebook to run properly on our machine, we will need to have an Azure workspace. If have not done so yet, we can run through the short [20_azure_workspace_setup.ipynb](20_azure_workspace_setup.ipynb) notebook to create one.
 
-# ## 3. Library import <a id="libraries"></a>
+# ## 2. Library import <a id="libraries"></a>
 # Throughout this notebook, we will be using a variety of libraries. We are listing them here for better readibility.
 
 # In[1]:
@@ -70,7 +53,6 @@ get_ipython().run_line_magic("autoreload", "2")
 
 # Regular python libraries
 import os
-import requests
 import sys
 
 # fast.ai
@@ -83,97 +65,26 @@ from azureml.core import Experiment, Workspace
 from azureml.core.image import ContainerImage
 from azureml.core.model import Model
 from azureml.core.webservice import AciWebservice, Webservice
-from azureml.exceptions import ProjectSystemException, UserErrorException
 
 # Computer Vision repository
 sys.path.extend([".", "../.."])
 # This "sys.path.extend()" statement allows us to move up the directory hierarchy
-# and access the utils_ic and utils_cv packages
+# and access the utils_cv package
 from utils_cv.common.deployment import generate_yaml
-from utils_cv.common.data import data_path, root_path
-from utils_cv.common.image import ims2strlist
+from utils_cv.common.data import root_path
 from utils_cv.classification.model import IMAGENET_IM_SIZE, model_to_learner
-
-
-# ## 4. Azure workspace <a id="workspace"></a>
-
-# ### 4.A SDK version <a id="sdk"></a>
-#
-# Before we start, let's check which version of the Azure SDK we are working with.
-
-# In[2]:
-
 
 # Check core SDK version number
 print(f"Azure ML SDK Version: {azureml.core.VERSION}")
 
 
-# ### 4.B Workspace creation <a id="ws"></a>
-# Now that we have our environment and proper libraries in place, let's load an existing workspace or create a new one on our Azure account, and save it to a local configuration file (`./aml_config/config.json`).
-#
-# If it is the first time we create a workspace, or if we are missing our `config.json` file, we need to provide the appropriate:
-# - subscription ID: the ID of the Azure subscription we are using
-# - resource group: the name of the resource group in which our workspace resides
-# - workspace_region: the geographical area in which our workspace resides (examples are available [here](https://azure.microsoft.com/en-us/global-infrastructure/geographies/))
-# - workspace_name: the name of the workspace we want to create or retrieve.
-
-# In[3]:
-
-
-# Let's define these variables here - These pieces of information can be found on the portal
-subscription_id = os.getenv("SUBSCRIPTION_ID", default="<our_subscription_id>")
-resource_group = os.getenv("RESOURCE_GROUP", default="<our_resource_group>")
-workspace_name = os.getenv("WORKSPACE_NAME", default="<our_workspace_name>")
-workspace_region = os.getenv(
-    "WORKSPACE_REGION", default="<our_workspace_region>"
-)
-
-try:
-    # Let's load the workspace from the configuration file
-    ws = Workspace.from_config()
-    print("Workspace was loaded successfully from the configuration file")
-except (UserErrorException, ProjectSystemException):
-    # or directly from Azure, if it already exists (exist_ok=True).
-    # If it does not exist, let's create a workspace from scratch
-    ws = Workspace.create(
-        name=workspace_name,
-        subscription_id=subscription_id,
-        resource_group=resource_group,
-        location=workspace_region,
-        create_resource_group=True,
-        exist_ok=True,
-    )
-    ws.write_config()
-    print("Workspace was loaded successfully from Azure")
-
-
-# Let's check that the workspace is properly loaded
-
-# In[4]:
-
-
-# Print the workspace attributes
-print(
-    f"Workspace name: {ws.name}\n       Azure region: {ws.location}\n       Subscription id: {ws.subscription_id}\n       Resource group: {ws.resource_group}"
-)
-
-
-# We can see this workspace on the Azure portal by sequentially clicking on:
-# - Resource groups, and clicking the one we referenced above
-
-# <img src="media/resource_group.jpg" width="800" alt="Azure portal view of resource group">
-
-# - Workspace_name
-
-# <img src="media/workspace.jpg" width="800" alt="Azure portal view of workspace">
-
-# ## 5. Model retrieval and export <a id="model"></a>
+# ## 3. Model retrieval and export <a id="model"></a>
 #
 # For demonstration purposes, we will use here a ResNet18 model, pretrained on ImageNet. The following steps would be the same if we had trained a model locally (cf. [**01_training_introduction.ipynb**](01_training_introduction.ipynb) notebook for details).
 #
 # Let's first retrieve the model.
 
-# In[5]:
+# In[2]:
 
 
 learn = model_to_learner(models.resnet18(pretrained=True), IMAGENET_IM_SIZE)
@@ -181,7 +92,7 @@ learn = model_to_learner(models.resnet18(pretrained=True), IMAGENET_IM_SIZE)
 
 # To be able to use this model, we need to export it to our local machine. We store it in an `outputs/` subfolder.
 
-# In[6]:
+# In[3]:
 
 
 current_directory = os.getcwd()
@@ -195,9 +106,28 @@ os.makedirs(output_folder, exist_ok=True)
 learn.export(os.path.join(output_folder, PICKLED_MODEL_NAME))
 
 
-# ## 6. Model deployment on Azure <a id="deploy"></a>
+# ## 4. Model deployment on Azure <a id="deploy"></a>
+#
+# ### 4.A Workspace retrieval <a id="workspace"></a>
+#
+# The Azure workspace is a resource that coordinates storage, databases, and compute resources. It is also the space in which we can run experiments. The workspace is the critical object from which we will build all the pieces we need to deploy our model as a web service. Let's first retrieve it from the configuration file we created in the [prior notebook](20_azure_workspace_setup.ipynb).
 
-# ### 6.A Model registration <a id="register"></a>
+# In[4]:
+
+
+ws = Workspace.from_config()
+
+# Print the workspace attributes
+print(
+    "Workspace name: " + ws.name,
+    "Workspace region: " + ws.location,
+    "Subscription id: " + ws.subscription_id,
+    "Resource group: " + ws.resource_group,
+    sep="\n",
+)
+
+
+# ### 4.B Model registration <a id="register"></a>
 #
 # Our final goal is to deploy our model as a web service. To do so, we need to first register it in our workspace, i.e. place it in our workspace's model registry. We can do this in 2 ways:
 # 1. register the model directly
@@ -207,11 +137,11 @@ learn.export(os.path.join(output_folder, PICKLED_MODEL_NAME))
 #
 # The cells below show each of the methods.
 
-# #### 6.A.a Without experiment <a id="noexp"></a>
+# #### 4.B.a Without experiment <a id="noexp"></a>
 #
 # We leverage the `register` method from the Azure ML `Model` object. For that, we just need the location of the model we saved on our local machine, its name and our workspace object.
 
-# In[7]:
+# In[5]:
 
 
 model = Model.register(
@@ -223,7 +153,7 @@ model = Model.register(
 )
 
 
-# #### 6.A.b With an experiment <a id="exp"></a>
+# #### 4.B.b With an experiment <a id="exp"></a>
 #
 # An experiment contains a series of trials called `Runs`. A run typically contains some tasks, such as training a model, etc. Through a run's methods, we can log several metrics such as training and test loss and accuracy, and even tag our run. The full description of the run class is available [here](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.run.run?view=azure-ml-py). In our case, however, we just need the run to attach our model file to our workspace and experiment.
 #
@@ -235,7 +165,7 @@ model = Model.register(
 #
 # Let's first create a new experiment. If an experiment with the same name already exists in our workspace, the run we will generate will be recorded under that already existing experiment.
 
-# In[8]:
+# In[6]:
 
 
 # Create a new/Retrieve an existing experiment
@@ -246,7 +176,7 @@ print(
 )
 
 
-# In[9]:
+# In[7]:
 
 
 # Initialize the run
@@ -260,7 +190,7 @@ run = experiment.start_logging(snapshot_directory=None)
 
 # We can now attach our local model to our workspace and experiment.
 
-# In[10]:
+# In[8]:
 
 
 # Upload the model (.pkl) file to Azure
@@ -272,7 +202,7 @@ run.upload_file(
 )
 
 
-# In[11]:
+# In[9]:
 
 
 # Register the model with the workspace
@@ -296,7 +226,7 @@ model = run.register_model(
 
 # We can also check that it is programatically accessible
 
-# In[12]:
+# In[10]:
 
 
 print(
@@ -304,7 +234,7 @@ print(
 )
 
 
-# In[13]:
+# In[11]:
 
 
 run.get_file_names()
@@ -312,7 +242,7 @@ run.get_file_names()
 
 # If we are also interested in verifying which model we uploaded, we can download it to our local machine
 
-# In[14]:
+# In[12]:
 
 
 model.download()
@@ -322,21 +252,21 @@ model.download()
 
 # We are all done with our model registration, so we can close our run.
 
-# In[15]:
+# In[13]:
 
 
 # Close the run
 run.complete()
 
 
-# In[16]:
+# In[14]:
 
 
 # Access the portal
 run
 
 
-# ### 6.B Scoring script <a id="scoring"></a>
+# ### 4.C Scoring script <a id="scoring"></a>
 # For the web service to return predictions on a given input image, we need to provide it with instructions on how to use the model we just registered. These instructions are stored in the scoring script.
 #
 # This script must contain two required functions, `init()` and `run(input_data)`:
@@ -347,13 +277,13 @@ run
 #
 # This file must also be stored in the current directory.
 
-# In[17]:
+# In[15]:
 
 
 scoring_script = "score.py"
 
 
-# In[18]:
+# In[16]:
 
 
 get_ipython().run_cell_magic(
@@ -363,13 +293,13 @@ get_ipython().run_cell_magic(
 )
 
 
-# ### 6.C Environment setup <a id="env"></a>
+# ### 4.D Environment setup <a id="env"></a>
 #
 # In order to make predictions on the Azure platform, it is important to create an environment as similar as possible to the one in which the model was trained. Here, we use a fast.ai pretrained model that also requires pytorch and a few other libraries. To re-create this environment, we use a [Docker container](https://www.docker.com/resources/what-container). We configure it via a yaml file that will contain all the conda dependencies needed by the model. This yaml file is a subset of  `image_classification/environment.yml`.
 #
 # <i><b>Note:</b> If we had trained our model locally, we would have created a yaml file that contains the same libraries as what is installed on our local machine.</i>
 
-# In[19]:
+# In[17]:
 
 
 # Create a deployment-specific yaml file from image_classification/environment.yml
@@ -385,7 +315,7 @@ generate_yaml(
 
 # There are different ways of creating a Docker image on Azure. Here, we create it separately from the service it will be used by. This way of proceeding gives us direct access to the Docker image object. Thus, if the service deployment fails, but the Docker image gets deployed successfully, we can try deploying the service again, without having to create a new image all over again.
 
-# In[20]:
+# In[18]:
 
 
 # Configure the Docker image
@@ -402,7 +332,7 @@ image_config = ContainerImage.image_configuration(
 )
 
 
-# In[21]:
+# In[19]:
 
 
 # Create the Docker image
@@ -416,7 +346,7 @@ docker_image = ContainerImage.create(
 # A Docker image can contain several model objects. Here, we just have one.
 
 
-# In[22]:
+# In[20]:
 
 
 get_ipython().run_cell_magic(
@@ -435,21 +365,21 @@ get_ipython().run_cell_magic(
 #
 # It happens, sometimes, that the deployment of the Docker image fails. Re-running the previous command typically solves the problem. If it doesn't, however, we can run the following one and inspect the deployment logs.
 
-# In[23]:
+# In[21]:
 
 
 print(ws.images["image-classif-resnet18-f48"].image_build_log_uri)
 
 
-# ### 6.D Computational resources <a id="compute"></a>
-
+# ### 4.E Computational resources <a id="compute"></a>
+#
 # In this notebook, we use [Azure Container Instances](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-overview) (ACI) which are good for quick and [cost-effective](https://azure.microsoft.com/en-us/pricing/details/container-instances/) development/test deployment scenarios.
 #
 # To set them up properly, we need to indicate the number of CPU cores and the amount of memory we want to allocate to our web service. Optional tags and descriptions are also available for us to identify the instances in AzureML when looking at the `Compute` tab in the Azure Portal.
 #
 # <i><b>Note:</b> For production workloads, it is better to use [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/) (AKS) instead. We will demonstrate how to do this in the [next notebook](22_deployment_on_azure_kubernetes_service.ipynb).<i>
 
-# In[24]:
+# In[22]:
 
 
 # Create a deployment configuration with 1 CPU and 5 gigabytes of RAM
@@ -480,7 +410,7 @@ aci_config = AciWebservice.deploy_configuration(
 #
 # <i><b>Note:</b> The web service creation can take a few minutes</i>
 
-# In[25]:
+# In[23]:
 
 
 # Define how to deploy the web service
@@ -498,7 +428,7 @@ service = Webservice.deploy_from_image(
 # to re-use the same Docker image in case the deployment of this service fails, or even for other
 # types of deployments, as we will see in the next notebook.
 
-# In[26]:
+# In[24]:
 
 
 # Deploy the web service
@@ -521,7 +451,7 @@ service.wait_for_deployment(show_output=True)
 # print(service.get_logs())
 
 
-# In[27]:
+# In[25]:
 
 
 # Retrieve the service status
@@ -536,92 +466,27 @@ print(
 # <img src="media/docker_images.jpg" width="800" alt="Azure portal view of the Images section">
 # <img src="media/deployments.jpg" width="800" alt="Azure portal view of the Deployments section">
 
-# ## 7. Testing of the web service <a id="test"></a>
-
-# Our web service is now up and running. To make sure that it is working as expected, let's test it.
+# ## 5. Testing of the web service <a id="test"></a>
 #
-# We first need to retrieve test images and to pre-process them into the format expected by our model. A service typically expects input data to be in a JSON serializable format. Here, we use our own `ims2strlist()` function to transform our .jpg images into strings of bytes.
+# Such testing is a whole task of its own, so we separated it from this notebook. We provide all the needed steps in [23_aci_aks_web_service_testing.ipynb](23_aci_aks_web_service_testing.ipynb). There, we test our service:
+# - From within our workspace (using `aks_service.run()`)
+# - From outside our workspace (using `requests.post()`).
 
-# In[28]:
-
-
-im_url_root = "https://cvbp.blob.core.windows.net/public/images/"
-im_filenames = ["cvbp_milk_bottle.jpg", "cvbp_water_bottle.jpg"]
-
-local_im_paths = []
-for im_filename in im_filenames:
-    # Retrieve test images from our storage blob
-    r = requests.get(os.path.join(im_url_root, im_filename))
-
-    # Copy test images to local data/ folder
-    with open(os.path.join(data_path(), im_filename), "wb") as f:
-        f.write(r.content)
-
-    # Extract local path to test images
-    local_im_paths.append(os.path.join(data_path(), im_filename))
-
-# Convert images to json object
-im_string_list = ims2strlist(local_im_paths)
-test_samples = json.dumps({"data": im_string_list})
-
-
-# ### 7.A Using the `run` API <a id="api"></a>
+# ## 6. Notes on web service deployment <a id="notes"></a>
 #
-# Our data are now properly formatted. We can send them to our web service.
-
-# In[29]:
-
-
-# Predict using the deployed model
-result = service.run(test_samples)
-
-
-# In[30]:
-
-
-# Plot the results
-actual_labels = ["milk_bottle", "water_bottle"]
-for k in range(len(result)):
-    title = "{}/{} - {}%".format(
-        actual_labels[k],
-        result[k]["label"],
-        round(100.0 * float(result[k]["probability"]), 2),
-    )
-    open_image(local_im_paths[k]).show(title=title)
-
-
-# ### 7.B Via a raw HTTP request <a id="http"></a>
-
-# In[31]:
-
-
-# Send the same test data
-payload = {"data": im_string_list}
-resp = requests.post(service.scoring_uri, json=payload)
-
-# Alternative way of sending the test data
-# headers = {'Content-Type':'application/json'}
-# resp = requests.post(service.scoring_uri, test_samples, headers=headers)
-
-print(f"POST to url: {service.scoring_uri}")
-print(f"Prediction: {resp.text}")
-
-
-# ### 7.C Notes on web service deployment <a id="notes"></a>
-
 # As we discussed above, Azure Container Instances tend to be used to develop and test deployments. They are typically configured with CPUs, which usually suffice when the number of requests per second is not too high. When working with several instances, we can configure them further by specifically [allocating CPU resources](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-container-groups#deployment) to each of them.
 #
 # For production requirements, i.e. when &gt; 100 requests per second are expected, we recommend deploying models to Azure Kubernetes Service (AKS). It is a convenient infrastructure as it manages hosted Kubernetes environments, and makes it easy to deploy and manage containerized applications without container orchestration expertise. It also supports deployments with CPU clusters and deployments with GPU clusters, the latter of which are [more economical and efficient](https://azure.microsoft.com/en-us/blog/gpus-vs-cpus-for-deployment-of-deep-learning-models/) when serving complex models such as deep neural networks, and/or when traffic to the endpoint is high.
 #
 # We will see an example of this in the [next notebook](22_deployment_on_azure_kubernetes_service.ipynb).
 
-# ## 8. Clean up <a id="clean"></a>
+# ## 7. Clean up <a id="clean"></a>
 #
 # Throughout the notebook, we used a workspace and Azure container instances.
 #
 # When we first created our workspace, 4 extra resources were automatically added to it:
-# - A container registry, which hosts our Docker images
-# - A storage account, in which our output files get stored
+# - A container registry, which hosts our Docker images, and is lazily created (i.e. only when images get stored in it)
+# - A storage account, in which our output files get saved
 # - Application Insights, which allows us to monitor the health of and traffic to our web service, as we will see in the next notebook
 # - A key vault, which stores our credentials.
 #
@@ -631,19 +496,19 @@ print(f"Prediction: {resp.text}")
 #
 # In order not to incur extra costs, let's now delete the resources we no longer need.
 
-# ### 8.A Service termination <a id="svcterm"></a>
+# ### 7.A Service termination <a id="svcterm"></a>
 #
 # Now that we have verified that our web service works well on ACI, we can delete it. This helps reduce [costs](https://azure.microsoft.com/en-us/pricing/details/container-instances/), since the container group we were paying for no longer exists, and allows us to keep our workspace clean.
 
 # In[ ]:
 
 
-service.delete()
+# service.delete()
 
 
 # At this point, the main resource we are paying for is the <b>Standard</b> Azure Container Registry (ACR), which contains our Docker image, and came as a default when we created our workspace. Details on pricing are available [here](https://azure.microsoft.com/en-us/pricing/details/container-registry/).
 
-# ### 8.B Image deletion <a id="imdel"></a>
+# ### 7.B Image deletion <a id="imdel"></a>
 #
 # We may decide to use our Docker image in a separate ACI or even in an AKS deployment. In that case, we should keep it available in our workspace. However, if we no longer have a use for it, we can delete it.
 
@@ -653,7 +518,7 @@ service.delete()
 # docker_image.delete()
 
 
-# ### 8.C Workspace deletion <a id="wsdel"></a>
+# ### 7.C Workspace deletion <a id="wsdel"></a>
 #
 # If our goal is to continue using our workspace, we should keep it available. On the contrary, if we plan on no longer using it and its associated resources, we can delete it.
 #
@@ -666,8 +531,6 @@ service.delete()
 # This deletes our workspace, the container registry, the account storage, Application Insights and the key vault
 
 
-# ## 9. Next steps <a id="next-steps"></a>
+# ## 8. Next steps <a id="next-steps"></a>
 #
 # In the [next notebook](22_deployment_on_azure_kubernetes_service.ipynb), we will leverage the same Docker image, and deploy our model on AKS. In our [third tutorial](23_web_service_testing.ipynb), we will then learn how a Flask app, with an interactive user interface, can be used to call our web service.
-
-# In[ ]:
