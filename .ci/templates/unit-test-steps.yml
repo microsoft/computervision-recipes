@@ -1,19 +1,4 @@
-# This file is almost similar to azure-pipelines-gpu.yml file, key difference is
-# we are running our builds only on Linux machine.  
-# Pull request against these pipelines will trigger this build
-pr:
-- master
-- staging
-
-#Any commit to this branch will trigger the build.
-trigger:
-- staging
-- master
-
-pool:
-  name: cvbpbuildagents
-  vmImage: 'linuxagent-gpu'
-
+# Unit Test steps
 steps:
 
 - bash: |
@@ -23,12 +8,13 @@ steps:
 - bash: |
     source deactivate cvbp
     conda remove -q -n cvbp --all -y
-    conda env create -f classification/environment.yml
+    conda env create -f image_classification/environment.yml
     conda env list  
     source activate cvbp
   displayName: 'Build Configuration'
 
 - bash: |
+    cd image_classification
     source activate cvbp
     python -m ipykernel install --user --name cvbp --display-name "cvbp"
     pytest tests/unit --junitxml=junit/test-unitttest.xml
@@ -38,4 +24,3 @@ steps:
   inputs:
     testResultsFiles: '**/test-unitttest.xml'
     testRunTitle: 'Test results for PyTest'
-
