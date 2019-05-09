@@ -23,7 +23,7 @@ steps:
       conda remove -n cvbp --all -q --force -y
       conda env list
       echo Done Cleanup
-    displayName: 'Cleanup Task'
+  displayName: 'Cleanup Task'
     condition: always()
 
 - task: PublishTestResults@2
