@@ -13,7 +13,7 @@ steps:
     conda env create -f classification/environment.yml
     conda env list  
     source activate cvbp
-  displayName: 'Build Configuration'
+  displayName: 'Set up conda environment'
 
 - script: |
       mkdir tools/repo_metrics

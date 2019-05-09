@@ -33,6 +33,6 @@ dependencies:
   - pre-commit>=1.14.4
   - lxml>=4.3.2
   - pyyaml>=5.1
-  - python-dateutil
-  - pymongo
-  - gitpython
+  - python-dateutil>=2.8.0
+  - pymongo>=3.8.0
+  - gitpython>2.1.11
