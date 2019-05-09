@@ -35,3 +35,4 @@ dependencies:
   - pyyaml>=5.1
   - python-dateutil
   - pymongo
+  - gitpython
