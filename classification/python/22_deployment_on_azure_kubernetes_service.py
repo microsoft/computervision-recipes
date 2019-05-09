@@ -40,16 +40,16 @@
 # ## 2. Pre-requisites <a id="pre-reqs"/>
 #
 # This notebook relies on resources we created in [21_deployment_on_azure_container_instances.ipynb](21_deployment_on_azure_container_instances.ipynb):
-# - Our local conda environment and Azure Machine Learning workspace
+# - Our Azure Machine Learning workspace
 # - The Docker image that contains the model and scoring script needed for the web service to work.
 #
-# If we are missing any of these, we should go back and run the steps from the sections "2. Pre-requisites" to "6.C Environment setup" to generate them.
+# If we are missing any of these, we should go back and run the steps from the sections "1. Introduction" to "4.D Environment setup" to generate them.
 
 # ## 3. Library import <a id="libraries"/>
 #
 # Now that our prior resources are available, let's first import a few libraries we will need for the deployment on AKS.
 
-# In[4]:
+# In[1]:
 
 
 # For automatic reloading of modified libraries
@@ -64,27 +64,20 @@ from azureml.core.webservice import AksWebservice, Webservice
 
 # ## 4. Azure workspace <a id="workspace"/>
 #
-# In the prior notebook, we retrieved an existing or created a new workspace, and generated an `./aml_config/config.json` file.
-# Let's use it to load this workspace.
+# Let's now load the workspace we used in the [prior notebook](21_deployment_on_azure_container_instances.ipynb).
 #
-# <i><b>Note:</b> The Docker image we will use below is attached to the workspace we used in the prior notebook. It is then important to use the same workspace here. If, for any reason, we need to use a separate workspace here, then the steps followed to create a Docker image containing our image classifier model in the prior notebook, should be reproduced here.</i>
+# <i><b>Note:</b> The Docker image we will use below is attached to that workspace. It is then important to use the same workspace here. If, for any reason, we needed to use another workspace instead, we would need to reproduce, here, the steps followed to create a Docker image containing our image classifier model in the prior notebook.</i>
 
-# In[5]:
+# In[2]:
 
 
 ws = Workspace.from_config()
 # from_config() refers to this config.json file by default
 
-
-# Let's check that the workspace is properly loaded
-
-# In[6]:
-
-
 # Print the workspace attributes
 print(
     "Workspace name: " + ws.name,
-    "Azure region: " + ws.location,
+    "Workspace region: " + ws.location,
     "Subscription id: " + ws.subscription_id,
     "Resource group: " + ws.resource_group,
     sep="\n",
@@ -95,9 +88,9 @@ print(
 #
 # ### 5.A Docker image retrieval <a id="docker_image">
 #
-# As for the deployment on Azure Container Instances, we will use Docker containers. The Docker image we created in the prior notebook is very much suitable for our deployment on Azure Kubernetes Service, as it contains the libraries we need and the model we registered. Let's make sure this Docker image is still available (if not, we can just run the cells of section "6. Model deployment on Azure" of the [prior notebook](https://github.com/Microsoft/ComputerVision/blob/staging/image_classification/notebooks/21_deployment_on_azure_container_instances.ipynb)).
+# As for the deployment on Azure Container Instances, we will use Docker containers. The Docker image we created in the prior notebook is very much suitable for our deployment on Azure Kubernetes Service, as it contains the libraries we need and the model we registered. Let's make sure this Docker image is still available (if not, we can just run the cells of section "4. Model deployment on Azure" of the [prior notebook](21_deployment_on_azure_container_instances.ipynb)).
 
-# In[7]:
+# In[3]:
 
 
 print("Docker images:")
@@ -109,7 +102,7 @@ for docker_im in ws.images:
 
 # As we did not delete it in the prior notebook, our Docker image is still present in our workspace. Let's retrieve it.
 
-# In[8]:
+# In[4]:
 
 
 docker_image = ws.images["image-classif-resnet18-f48"]
@@ -119,13 +112,13 @@ docker_image = ws.images["image-classif-resnet18-f48"]
 #
 # <i><b>Note:</b> We will not use the `registered_model` object anywhere here. We are running the next 2 cells just for verification purposes.</i>
 
-# In[9]:
+# In[5]:
 
 
 registered_model = docker_image.models[0]
 
 
-# In[10]:
+# In[6]:
 
 
 print(
@@ -141,7 +134,7 @@ print(
 #
 # Let's first check what types of compute resources we have, if any
 
-# In[11]:
+# In[7]:
 
 
 print("List of compute resources associated with our workspace:")
@@ -163,13 +156,13 @@ for cp in ws.compute_targets:
 # <i><b>Notes:</b></i>
 # - These are Azure-specific denominations
 # - Information on optimized machines can be found [here](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general#other-sizes)
-# - When configuring the provisioning of an AKS cluster, we need to choose a type of machine, as examplified above. This choice must be such that the number of virtual machines (also called `agent nodes`), we require, multiplied by the number of vCPUs on each machine must be greater than or equal to 12 vCPUs. This is indeed the [minimum needed](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-deploy-and-where#create-a-new-cluster) for such cluster. By default, a pool of 3 virtual machines gets provisioned on a new AKS cluster to allow for redundancy. So, if the type of virtual machine we choose has a number of vCPUs (`vm_size`) smaller than 4, we need to increase the number of machines (`agent_count`) such that `agent_count x vm_size` &ge; `12` virtual CPUs. `agent_count` and `vm_size` are both parameters we can pass to the `provisioning_configuration()` method below.
+# - When configuring the provisioning of an AKS cluster, we need to choose a type of machine, as examplified above. This choice must be such that the number of virtual machines (also called `agent nodes`), we require, multiplied by the number of vCPUs on each machine must be greater than or equal to 12 vCPUs. This is indeed the [minimum needed](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-deploy-and-where#create-a-new-aks-cluster) for such cluster. By default, a pool of 3 virtual machines gets provisioned on a new AKS cluster to allow for redundancy. So, if the type of virtual machine we choose has a number of vCPUs (`vm_size`) smaller than 4, we need to increase the number of machines (`agent_count`) such that `agent_count x vm_size` &ge; `12` virtual CPUs. `agent_count` and `vm_size` are both parameters we can pass to the `provisioning_configuration()` method below.
 # - [This document](https://docs.microsoft.com/en-us/azure/templates/Microsoft.ContainerService/2019-02-01/managedClusters?toc=%2Fen-us%2Fazure%2Fazure-resource-manager%2Ftoc.json&bc=%2Fen-us%2Fazure%2Fbread%2Ftoc.json#managedclusteragentpoolprofile-object) provides the full list of virtual machine types that can be deployed in an AKS cluster
 # - Additional considerations on deployments using GPUs are available [here](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu#deployment-considerations)
 #
 # Here, we will use a cluster of CPUs. The creation of such resource typically takes several minutes to complete.
 
-# In[12]:
+# In[8]:
 
 
 # Declare the name of the cluster
@@ -235,7 +228,7 @@ else:
 #
 # <img src="media/aks_compute_target_cpu.jpg" width="900">
 
-# In[13]:
+# In[9]:
 
 
 # Check provisioning status
@@ -250,7 +243,7 @@ print(
 #
 # Once our web app is up and running, it is very important to monitor it, and measure the amount of traffic it gets, how long it takes to respond, the type of exceptions that get raised, etc. We will do so through [Application Insights](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview), which is an application performance management service. To enable it on our soon-to-be-deployed web service, we first need to update our AKS configuration file:
 
-# In[14]:
+# In[10]:
 
 
 # Set the AKS web service configuration and add monitoring to it
@@ -259,11 +252,11 @@ aks_config = AksWebservice.deploy_configuration(enable_app_insights=True)
 
 # ### 5.D Service deployment <a id="svc_deploy"/>
 #
-# We are now ready to deploy our web service. As in the [first](https://github.com/Microsoft/ComputerVision/blob/staging/image_classification/notebooks/21_deployment_on_azure_container_instances.ipynb) notebook, we will deploy from the Docker image. It indeed contains our image classifier model and the conda environment needed for the scoring script to work properly. The parameters to pass to the `Webservice.deploy_from_image()` command are similar to those used for the deployment on ACI. The only major difference is the compute target (`aks_target`), i.e. the CPU cluster we just spun up.
+# We are now ready to deploy our web service. As in the [first](21_deployment_on_azure_container_instances.ipynb) notebook, we will deploy from the Docker image. It indeed contains our image classifier model and the conda environment needed for the scoring script to work properly. The parameters to pass to the `Webservice.deploy_from_image()` command are similar to those used for the deployment on ACI. The only major difference is the compute target (`aks_target`), i.e. the CPU cluster we just spun up.
 #
 # <i><b>Note:</b> This deployment takes a few minutes to complete.</i>
 
-# In[15]:
+# In[11]:
 
 
 if aks_target.provisioning_state == "Succeeded":
@@ -307,11 +300,9 @@ else:
 
 # ## 6. Testing of the web service <a id="testing"/>
 #
-# Such testing is a whole task of its own, so we separated it from this notebook. We provide all the needed steps in [23_web_service_testing.ipynb](https://github.com/Microsoft/ComputerVision/blob/service_deploy/image_classification/notebooks/deployment/23_web_service_testing.ipynb). There, we test our service:
+# Such testing is a whole task of its own, so we separated it from this notebook. We provide all the needed steps in [23_aci_aks_web_service_testing.ipynb](23_aci_aks_web_service_testing.ipynb). There, we test our service:
 # - From within our workspace (using `aks_service.run()`)
-# - From outside our workspace (using `requests.post()`)
-# - From a Flask app running on our local machine
-# - From a Flask app deployed on the same AKS cluster as our web service.
+# - From outside our workspace (using `requests.post()`).
 
 # ## 7. Clean up <a id="clean">
 #
@@ -360,4 +351,4 @@ else:
 
 
 # ## 8. Next steps  <a id="next"/>
-# In the [next notebook](https://github.com/Microsoft/ComputerVision/blob/service_deploy/image_classification/notebooks/deployment/23_web_service_testing.ipynb), we will test the web services we deployed on ACI and on AKS. We will also learn how a Flask app, with an interactive user interface, can be used to call our web service.
+# In the [next notebook](23_aci_aks_web_service_testing.ipynb), we will test the web services we deployed on ACI and on AKS.
