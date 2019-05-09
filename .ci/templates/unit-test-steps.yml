@@ -24,7 +24,7 @@ steps:
       conda env list
       echo Done Cleanup
   displayName: 'Cleanup Task'
-    condition: always()
+  condition: always()
 
 - task: PublishTestResults@2
   inputs:
