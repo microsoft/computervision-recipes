@@ -18,8 +18,8 @@ We provide several notebooks to show how image similarity algorithms can be desi
 
 | Notebook name | Description |
 | --- | --- |
-| [00_webcam.ipynb](./similarity/notebooks/00_webcam.ipynb)| Quick start notebook which demonstrates how to build an image retrieval system using a single image or webcam as input.
-| [01_training_and_evaluation_introduction.ipynb](./similarity/notebooks/01_training_and_evaluation_introduction.ipynb)| Notebook which explains the basic concepts around model training and evaluation, based on using DNNs trained for image classification.|
+| [00_webcam.ipynb](./notebooks/00_webcam.ipynb)| Quick start notebook which demonstrates how to build an image retrieval system using a single image or webcam as input.
+| [01_training_and_evaluation_introduction.ipynb](./notebooks/01_training_and_evaluation_introduction.ipynb)| Notebook which explains the basic concepts around model training and evaluation, based on using DNNs trained for image classification.|
 
 
 ## Getting Started
