@@ -24,7 +24,7 @@ steps:
 
 - script: | 
       source activate cvbp
-      python tools/repo_metrics/track_metrics.py --github_repo "https://github.com/microsoft/ComputerVision" --save_to_database \
+      python tools/repo_metrics/track_metrics.py --github_repo "https://github.com/microsoft/ComputerVision" --save_to_database
       source deactivate
   displayName: Python script to record stats
 
