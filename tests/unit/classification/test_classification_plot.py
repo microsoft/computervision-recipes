@@ -7,16 +7,16 @@ from utils_cv.classification.plot import (
     plot_roc_curve,
     plot_precision_recall_curve,
     plot_pr_roc_curves,
-    plot_loss_thresholds,
+    plot_thresholds,
 )
-from utils_cv.classification.model import hamming_loss, zero_one_loss
+from utils_cv.classification.model import hamming_score, zero_one_score
 
 
-def test_plot_loss_threshold(multilabel_result):
+def test_plot_threshold(multilabel_result):
     """ Test the plot_loss_threshold function """
     y_pred, y_true = multilabel_result
-    plot_loss_thresholds(hamming_loss, y_pred, y_true)
-    plot_loss_thresholds(zero_one_loss, y_pred, y_true)
+    plot_thresholds(hamming_score, y_pred, y_true)
+    plot_thresholds(zero_one_score, y_pred, y_true)
 
 
 @pytest.fixture(scope="module")

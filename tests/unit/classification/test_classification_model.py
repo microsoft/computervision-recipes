@@ -9,25 +9,40 @@ from fastai.vision import ImageList, imagenet_stats
 from utils_cv.classification.model import (
     TrainMetricsRecorder,
     model_to_learner,
-    hamming_loss,
-    zero_one_loss,
+    hamming_score,
+    zero_one_score,
+    get_optimal_threshold,
 )
 
 
-def test_hamming_loss_function(multilabel_result):
+def test_hamming_score_function(multilabel_result):
     """ Test the hamming loss evaluation metric function. """
     y_pred, y_true = multilabel_result
-    assert hamming_loss(y_pred, y_true) == tensor(0.1875)
-    assert hamming_loss(y_pred, y_true, sigmoid=True) == tensor(0.375)
-    assert hamming_loss(y_pred, y_true, threshold=1.0) == tensor(0.625)
+    assert hamming_score(y_pred, y_true) == tensor(0.1875)
+    assert hamming_score(y_pred, y_true, sigmoid=True) == tensor(0.375)
+    assert hamming_score(y_pred, y_true, threshold=1.0) == tensor(0.625)
 
 
-def test_zero_one_loss_function(multilabel_result):
+def test_zero_one_score_function(multilabel_result):
     """ Test the zero-one loss evaluation metric function. """
     y_pred, y_true = multilabel_result
-    assert zero_one_loss(y_pred, y_true) == tensor(0.75)
-    assert zero_one_loss(y_pred, y_true, sigmoid=True) == tensor(0.75)
-    assert zero_one_loss(y_pred, y_true, threshold=1.0) == tensor(1.0)
+    assert zero_one_score(y_pred, y_true) == tensor(0.75)
+    assert zero_one_score(y_pred, y_true, sigmoid=True) == tensor(0.75)
+    assert zero_one_score(y_pred, y_true, threshold=1.0) == tensor(1.0)
+
+
+def test_get_optimal_threshold(multilabel_result):
+    """ Test the get_optimal_threshold function. """
+    y_pred, y_true = multilabel_result
+    assert get_optimal_threshold(hamming_score, y_pred, y_true) == 0.05
+    assert (
+        get_optimal_threshold(hamming_score, y_pred, y_true, samples=11) == 0.1
+    )
+    assert get_optimal_threshold(zero_one_score, y_pred, y_true) == 0.05
+    assert (
+        get_optimal_threshold(zero_one_score, y_pred, y_true, samples=11)
+        == 0.1
+    )
 
 
 def test_model_to_learner():

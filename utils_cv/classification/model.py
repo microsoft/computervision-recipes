@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 from time import time
-from typing import Any, List
+from typing import Any, List, Callable
 
 from fastai.basic_train import LearnerCallback
 from fastai.core import PBar
@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import torch
 from torch import Tensor
+import numpy as np
 
 from utils_cv.classification.data import imagenet_labels
 
@@ -21,13 +22,13 @@ from utils_cv.classification.data import imagenet_labels
 IMAGENET_IM_SIZE = 224
 
 
-def hamming_loss(
+def hamming_score(
     y_pred: Tensor,
     y_true: Tensor,
     threshold: float = 0.2,
     sigmoid: bool = False,
 ) -> Tensor:
-    """ Callback for using hamming loss as a evaluation metric.
+    """ Callback for using hamming score as a evaluation metric.
 
     Hamming loss is the fraction of wrong labels to the total number of labels.
 
@@ -38,7 +39,7 @@ def hamming_loss(
         sigmoid: whether to apply the sigmoid activation
 
     Returns:
-        The hamming loss function as a tensor of dtype float
+        The hamming score function as a tensor of dtype float
     """
     if sigmoid:
         y_pred = y_pred.sigmoid()
@@ -47,15 +48,15 @@ def hamming_loss(
     return (y_pred.float() != y_true).sum() / torch.ones(y_pred.shape).sum()
 
 
-def zero_one_loss(
+def zero_one_score(
     y_pred: Tensor,
     y_true: Tensor,
     threshold: float = 0.2,
     sigmoid: bool = False,
 ) -> Tensor:
-    """ Callback for using zero-one loss as a evaluation metric.
+    """ Callback for using zero-one score as a evaluation metric.
 
-    The zero-one loss will classify an entire set of labels for a given sample
+    The zero-one score will classify an entire set of labels for a given sample
     incorrect if it does not entirely match the true set of labels.
 
     Args:
@@ -65,7 +66,7 @@ def zero_one_loss(
         sigmoid: whether to apply the sigmoid activation
 
     Returns:
-        The zero-one loss function as a tensor with dtype float
+        The zero-one score function as a tensor with dtype float
     """
     if sigmoid:
         y_pred = y_pred.sigmoid()
@@ -76,6 +77,38 @@ def zero_one_loss(
     zero_one_preds[zero_one_preds >= 1] = 1
     num_labels = y_pred.shape[-1]
     return zero_one_preds.sum().float() / len(y_pred.reshape(-1, num_labels))
+
+
+def get_optimal_threshold(
+    metric_function: Callable[[Tensor, Tensor, float], Tensor],
+    y_pred: Tensor,
+    y_true: Tensor,
+    samples: int = 21,
+) -> float:
+    """ Gets the best threshold to use for the provided metric function.
+
+    This function can be used when evaluating a multilabel classification
+    problem to get the best threshold on for the predicted set. This method
+    samples the metric function at evenly distributed threshold intervals
+    to find the best threshold.
+
+    Args:
+        metric_function: The metric function
+        y_pred: predicted probabilities.
+        y_true: True class indices.
+        samples: The number of samples.
+
+    Returns:
+        The threshold that minimizes the metric function.
+    """
+    optimal_threshold = None
+    metric_min = 1
+    for threshold in np.linspace(0, 1, samples):
+        metric = metric_function(y_pred, y_true, threshold=threshold)
+        if metric < metric_min:
+            metric_min = metric
+            optimal_threshold = threshold
+    return optimal_threshold
 
 
 def model_to_learner(

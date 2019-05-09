@@ -18,35 +18,36 @@ from torch import Tensor
 from typing import Callable
 
 
-def plot_loss_thresholds(
-    loss_function: Callable[[Tensor, Tensor, float], Tensor],
-    probs: Tensor,
+def plot_thresholds(
+    metric_function: Callable[[Tensor, Tensor, float], Tensor],
+    y_pred: Tensor,
     y_true: Tensor,
+    samples: int = 21,
     figsize: tuple = (12, 6),
 ) -> None:
-    """ Plot the loss of the model at different thresholds.
+    """ Plot the evaluation metric of the model at different thresholds.
 
-    This function will plot the loss for every 0.05 increments of the
+    This function will plot the metric for every 0.05 increments of the
     threshold. This means that there will be a total of 20 increments.
 
     Args:
-        loss_function: The loss function
-        probs: Estimated probabilities.
+        metric_function: The metric function
+        y_pred: predicted probabilities.
         y_true: True class indices.
         figsize: Figure size (w, h)
     """
-    loss_name = loss_function.__name__
-    losses = []
-    for threshold in np.linspace(0, 1, 21):
-        loss = loss_function(probs, y_true, threshold=threshold)
-        losses.append(loss)
+    metric_name = metric_function.__name__
+    metrics = []
+    for threshold in np.linspace(0, 1, samples):
+        metric = metric_function(y_pred, y_true, threshold=threshold)
+        metrics.append(metric)
 
-    ax = pd.DataFrame(losses).plot(figsize=figsize)
-    ax.set_title(f"{loss_name} at different thresholds")
-    ax.set_ylabel(f"{loss_name}")
-    ax.set_xlabel("probability threshold")
-    ax.set_xticks(np.linspace(0, 19, 10))
-    ax.set_xticklabels(np.around(np.linspace(0, 1, 10), decimals=2))
+    ax = pd.DataFrame(metrics).plot(figsize=figsize)
+    ax.set_title(f"{metric_name} at different thresholds")
+    ax.set_ylabel(f"{metric_name}")
+    ax.set_xlabel("threshold")
+    ax.set_xticks(np.linspace(0, 20, 11))
+    ax.set_xticklabels(np.around(np.linspace(0, 1, 11), decimals=2))
 
 
 def plot_pr_roc_curves(
