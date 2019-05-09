@@ -63,7 +63,8 @@ def test_03_notebook_run(classification_notebooks, tiny_ic_data_path):
         parameters=dict(
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_ic_data_path,
-            MODEL_TYPE="fast_inference",  # options: ['fast_inference', 'high_accuracy', 'small_size']
+            MULTILABEL=False,
+            MODEL_TYPE="fast_inference",  # options: ['fast_inference', 'high_performance', 'small_size']
             EPOCHS_HEAD=1,
             EPOCHS_BODY=1,
         ),
