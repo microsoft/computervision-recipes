@@ -22,11 +22,4 @@ jobs:
       echo "##vso[task.prependpath]/usr/share/miniconda/bin"
     displayName: Add Conda to PATH
 
-  - bash: |
-      echo "ls results"
-      ls -al
-      echo "pwd"
-      pwd
-    displayName: checking working dir
-
   - template: templates/unit-test-steps.yml  # Template reference
