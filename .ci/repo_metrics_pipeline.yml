@@ -1,9 +1,14 @@
   
   
+# jobs:
+# - job: Repometrics
+#   pool:
+#     vmImage: 'ubuntu-16.04'
+
 jobs:
-- job: Repometrics
+- job: LinuxGPU
   pool:
-    vmImage: 'ubuntu-16.04'
+    name: cvbpbuildagents
 
   steps:
 
