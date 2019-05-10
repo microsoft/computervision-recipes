@@ -28,7 +28,7 @@
 # - Using the `run` API
 # - Via a raw HTTP request.
 #
-# <i><b>Note:</b> We are assuming that we already have a workspace, and a web service that serves our machine learning model on ACI and/or AKS. If that is not the case, we can refer to the two notebooks linked above.</i>
+# <i><b>Note:</b> We are assuming that notebooks "20", "21" and "22" were previously run, and that we consequently already have a workspace, and a web service that serves our machine learning model on ACI and/or AKS. If that is not the case, we can refer to these three notebooks.</i>
 
 # ## 2. Setup <a id="setup"/>
 #
@@ -67,9 +67,9 @@ print(f"Azure ML SDK Version: {azureml.core.VERSION}")
 
 # ### 2.B Workspace retrieval <a id="workspace">
 #
-# We get our workspace from the configuration file we already created and that was saved in the `aml_config/` folder.
+# We get our workspace from the configuration file we created in notebook ["20"](20_azure_workspace_setup.ipynb), and that was saved in the `.azureml/` folder.
 
-# In[3]:
+# In[2]:
 
 
 # Retrieve the workspace object
@@ -78,7 +78,7 @@ ws = Workspace.from_config()
 # Print the workspace attributes
 print(
     "Workspace name: " + ws.name,
-    "Azure region: " + ws.location,
+    "Workspace region: " + ws.location,
     "Subscription id: " + ws.subscription_id,
     "Resource group: " + ws.resource_group,
     sep="\n",
@@ -89,7 +89,7 @@ print(
 #
 # If we have not deleted them in the 2 prior deployment notebooks, the web services we deployed on ACI and AKS should still be up and running. Let's check if that is indeed the case.
 
-# In[5]:
+# In[3]:
 
 
 ws.webservices
@@ -99,7 +99,7 @@ ws.webservices
 #
 # Let's now retrieve the web services of interest.
 
-# In[6]:
+# In[4]:
 
 
 # Retrieve the web services
@@ -109,11 +109,9 @@ aks_service = ws.webservices["aks-cpu-image-classif-web-svc"]
 
 # ## 3. Testing of the web services <a id="testing">
 #
-# In a real case scenario, we would only have one of these 2 services running. In this section, we show how to test that the web service running on ACI is working as expected. The commands we will use here are exactly the same as those we would use for our service running on AKS. We would just need to replace the `aci_service` object by the `aks_service` one.
-#
 # Let's now test our web service. For this, we first need to retrieve test images and to pre-process them into the format expected by our service. A service typically expects input data to be in a JSON serializable format. Here, we use our own `ims2strlist()` function to transform our .jpg images into strings of bytes.
 
-# In[7]:
+# In[5]:
 
 
 # Check the source code of the conversion functions
@@ -123,14 +121,13 @@ print(im2base64_source)
 print(im2strlist_source)
 
 
-# In[8]:
+# In[6]:
 
 
 # Extract test images paths
 im_url_root = "https://cvbp.blob.core.windows.net/public/images/"
 im_filenames = ["cvbp_milk_bottle.jpg", "cvbp_water_bottle.jpg"]
 
-local_im_paths = []
 for im_filename in im_filenames:
     # Retrieve test images from our storage blob
     r = requests.get(os.path.join(im_url_root, im_filename))
@@ -139,32 +136,36 @@ for im_filename in im_filenames:
     with open(os.path.join(data_path(), im_filename), "wb") as f:
         f.write(r.content)
 
-    # Extract local path to test images
-    local_im_paths.append(os.path.join(data_path(), im_filename))
+# Extract local path to test images
+local_im_paths = [
+    os.path.join(data_path(), im_filename) for im_filename in im_filenames
+]
 
 # Convert images to json object
 im_string_list = ims2strlist(local_im_paths)
-test_samples = json.dumps({"data": im_string_list})
+service_input = json.dumps({"data": im_string_list})
 
 
 # ### 3.A Using the *run* API <a id="run">
-# To facilitate the testing of both services, we create here an extra object `service`, which can take either the ACI or the AKS web service object. This would not be needed in a real case scenario, as we would have either the ACI- or the AKS-hosted service only.
+#
+# In a real case scenario, we would only have one of these 2 services running. In this section, we show how to test that the web service running on ACI is working as expected. The commands we will use here are exactly the same as those we would use for our service running on AKS. We would just need to replace the `aci_service` object by the `aks_service` one.
 
-# In[9]:
+# In[7]:
 
 
+# Select the web service to test
 service = aci_service
 # service = aks_service
 
 
-# In[10]:
+# In[8]:
 
 
 # Predict using the deployed model
-result = service.run(test_samples)
+result = service.run(service_input)
 
 
-# In[11]:
+# In[9]:
 
 
 # Plot the results
@@ -178,10 +179,12 @@ for k in range(len(result)):
 #
 # In the case of AKS, we need to provide an authentication key. So let's look at the 2 examples separately, with the same testing data as before.
 
-# In[12]:
+# In[10]:
 
 
+# ---------
 # On ACI
+# ---------
 
 # Extract service URL
 service_uri = aci_service.scoring_uri
@@ -195,15 +198,17 @@ resp = requests.post(service_uri, json=payload)
 
 # Alternative way of sending the test data
 # headers = {'Content-Type':'application/json'}
-# resp = requests.post(service_uri, test_samples, headers=headers)
+# resp = requests.post(service_uri, service_input, headers=headers)
 
 print(f"Prediction: {resp.text}")
 
 
-# In[13]:
+# In[11]:
 
 
+# ---------
 # On AKS
+# ---------
 
 # Service URL
 service_uri = aks_service.scoring_uri
@@ -230,7 +235,7 @@ headers["Authorization"] = f"Bearer {key}"
 # Send the service request
 resp = requests.post(service_uri, json=payload, headers=headers)
 # Alternative way of sending the test data
-# resp = requests.post(service_uri, test_samples, headers=headers)
+# resp = requests.post(service_uri, service_input, headers=headers)
 
 print(f"Predictions: {resp.text}")
 
@@ -245,24 +250,60 @@ print(f"Predictions: {resp.text}")
 # - Select the Application Insights type associated with our workspace
 #   * _If we have several, we can still go back to our workspace (in the portal) and click on "Overview" - This shows the elements associated with our workspace, in particular our Application Insights, on the upper right of the screen_
 # - Click on the App Insights resource
-#     - There, we can see a high level dashboard with information on successful and failed requests, server response time and availability
+#     - There, we can see a high level dashboard with information on successful and failed requests, server response time and availability (cf. Figure 1)
 # - Click on the "Server requests" graph
 # - In the "View in Analytics" drop-down, select "Request count" in the "Analytics" section
-#     - This displays the specific query ran against the service logs to extract the number of executed requests (successful or not).
+#     - This displays the specific query ran against the service logs to extract the number of executed requests (successful or not -- cf. Figure 2).
 # - Still in the "Logs" page, click on the eye icon next to "requests" on the "Schema"/left pane, and on "Table", on the right:
-#     - This shows the list of calls to the service, with their success statuses, durations, and other metrics. This table is especially useful to investigate problematic requests.
-#     - Results can also be visualized as a graph by clicking on the "Chart" tab. Metrics are plotted by default, but we can change them by clicking on one of the field name drop-downs.
+#     - This shows the list of calls to the service, with their success statuses, durations, and other metrics. This table is especially useful to investigate problematic requests (cf. Figure 3).
+#     - Results can also be visualized as a graph by clicking on the "Chart" tab. Metrics are plotted by default, but we can change them by clicking on one of the field name drop-downs (cf. Figures 4 to 6).
 # - Navigate across the different queries we ran through the different "New Query X" tabs.
 #
 # <table>
-# <tr><td><img src="media/webservice_performance_metrics.jpg" width="400"></td>
-# <td><img src="media/application_insights_all_charts.jpg" width="500"></td>
+# <tr>
+#     <td>
+#         <figure>
+#             <img src="media/webservice_performance_metrics.jpg"  width="400" alt="my alt text"/>
+#             <figcaption style="text-align:center">Figure 1: Web service performance metrics</figcaption>
+#         </figure>
+#     </td>
+#     <td>
+#         <figure>
+#             <img src="media/application_insights_all_charts.jpg" width="500">
+#             <figcaption style="text-align:center">Figure 2: Insights into failed requests</figcaption>
+#         </figure>
+#     </td>
 # </tr>
-# <tr><td><img src="media/all_requests_line_chart.jpg" width="400"></td>
-# <td><img src="media/failures_requests_line_chart.jpg" width="500"></td>
+#
+# <tr>
+#     <td>
+#         <figure>
+#             <img src="media/logs_failed_request_details.jpg" width="500">
+#             <figcaption style="text-align:center">Figure 3: Example log of a failed request</figcaption>
+#         </figure>
+#     </td>
+#     <td>
+#         <figure>
+#             <img src="media/all_requests_line_chart.jpg"  width="400" alt="my alt text"/>
+#             <figcaption style="text-align:center">Figure 4: Total request count over time</figcaption>
+#         </figure>
+#     </td>
 # </tr>
-# <tr><td><img src="media/success_status_bar_chart.jpg" width="450"></td>
-# <td><img src="media/logs_failed_request_details.jpg" width="500"></td>
+#
+#
+# <tr>
+#     <td>
+#         <figure>
+#             <img src="media/failures_requests_line_chart.jpg" width="500">
+#             <figcaption style="text-align:center">Figure 5: Failed request count over time</figcaption>
+#         </figure>
+#     </td>
+#     <td>
+#         <figure>
+#             <img src="media/success_status_bar_chart.jpg"  width="400" alt="my alt text"/>
+#             <figcaption style="text-align:center">Figure 6: Request success distribution</figcaption>
+#         </figure>
+#     </td>
 # </tr>
 # </table>
 
@@ -270,7 +311,7 @@ print(f"Predictions: {resp.text}")
 #
 # In a real-life scenario, it is likely that one of our web services would need to be up and running at all times. However, in the present demonstrative case, and now that we have verified that they work, we can delete them as well as all the resources we used.
 #
-# Overall, with a workspace, a web service running on ACI and another one running on a CPU-based AKS cluster, we incurred a cost of about $15 a day. About 70% was spent on virtual machines, 13% on the container registry (ACR), 12% on the container instances (ACI), and 5% on storage.
+# Overall, with a workspace, a web service running on ACI and another one running on a CPU-based AKS cluster, we incurred a cost of about $15 a day (as of May 2019). About 70% was spent on virtual machines, 13% on the container registry (ACR), 12% on the container instances (ACI), and 5% on storage.
 #
 # To get a better sense of pricing, we can refer to [this calculator](https://azure.microsoft.com/en-us/pricing/calculator/?service=virtual-machines). We can also navigate to the [Cost Management + Billing pane](https://ms.portal.azure.com/#blade/Microsoft_Azure_Billing/ModernBillingMenuBlade/BillingAccounts) on the portal, click on our subscription ID, and click on the Cost Analysis tab to check our credit usage.
 #
