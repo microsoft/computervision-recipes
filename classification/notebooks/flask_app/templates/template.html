@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image classifier output</title>
+    <style>
+    #image_predictions {
+      font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    #image_predictions td, #image_predictions th {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    #image_predictions tr:nth-child(even){background-color: #f2f2f2;}
+    #image_predictions tr:hover {background-color: #ddd;}
+    #image_predictions th {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      text-align: center;
+      background-color: #99ccff;
+      color: black;
+    }
+    </style>
+</head>
+<body>
+{% if all_filenames %}
+
+{% set results_list, res_length = return_predictions(all_filenames) %}
+
+<table id="image_predictions">
+  <tr>
+      <th>Uploaded image</th>
+      <th>Predicted class</th>
+      <th>Probability</th>
+  </tr>
+  {%for i in range(0, res_length) %}
+ <tr>
+    <td align="center"><img src="{{ url_for('send_file', file_name=all_filenames[i]) }}" width="300"></td>
+    <td align="center">{{results_list[i]['label']}}</td>
+    <td align="center">{{results_list[i]['probability']}}</td>
+ </tr>
+  {% endfor %}
+
+</table>
+{% else %}
+  <h1>no image for whatever reason</h1>
+{% endif %}
+
+</body>
+</html>
+<!-- Help from: https://www.w3schools.com/css/tryit.asp?filename=trycss_table_fancy
+and https://stackoverflow.com/questions/48139722/two-loops-in-html-table
+Color picker: https://www.w3schools.com/colors/colors_picker.asp
+https://blog.keras.io/building-a-simple-keras-deep-learning-rest-api.html <<< USE THIS
+-->

@@ -1,0 +1,17 @@
+name: mycondaenv
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+  - fastai
+dependencies:
+  - python=3.6
+  - pytorch==1.0.0
+  - fastai==1.0.48
+  - dataclasses
+  - spacy
+  - gunicorn
+  - pip:
+      - Flask==1.0.2
+      - requests==2.21.0
+      - Werkzeug==0.14.1

@@ -1,0 +1,38 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: flask-app-deployment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: flasknode
+    spec:
+      containers:
+      - name: flasknode
+        image: <acr_name>.azurecr.io/flaskappdockerimage:v1
+        ports:
+        - containerPort: 5000
+      imagePullSecrets:
+      - name: <acr_name>acrkey
+# Help from: https://testdriven.io/blog/running-flask-on-kubernetes/#creating-objects
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-app-deployment
+  labels:
+    service: flaskAppService
+spec:
+  loadBalancerIP: <static_ip_address>
+  type: LoadBalancer
+  selector:
+    app: flasknode
+  ports:
+  - port: 5000
+    targetPort: 5000
+
+# Need both sections so both the deployment and the service creation happen
+# help from: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/#create-a-pod-that-uses-your-secret
+# Help from: https://developer.ibm.com/tutorials/scalable-python-app-with-kubernetes/
