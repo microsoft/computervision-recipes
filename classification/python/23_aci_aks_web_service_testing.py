@@ -67,7 +67,7 @@ print(f"Azure ML SDK Version: {azureml.core.VERSION}")
 
 # ### 2.B Workspace retrieval <a id="workspace">
 #
-# We get our workspace from the configuration file we created in notebook ["20"](20_azure_workspace_setup.ipynb), and that was saved in the `.azureml/` folder.
+# We get our workspace from the configuration file we created in notebook ["20"](https://github.com/Microsoft/ComputerVisionBestPractices/blob/master/classification/notebooks/20_azure_workspace_setup.ipynb), and that was saved in the `.azureml/` folder.
 
 # In[2]:
 
