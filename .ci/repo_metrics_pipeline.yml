@@ -8,7 +8,6 @@ jobs:
   steps:
 
   - script: |
-      mkdir tools/repo_metrics
       cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
       sed -i ''s/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/$(github_token)/g'' tools/repo_metrics/config.py
       sed -i ''s/XXXXXXXXXXXXXXXXXXXXXXXXX/$(cosmosdb_connectionstring)/g'' tools/repo_metrics/config.py
