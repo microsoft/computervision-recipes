@@ -1,19 +1,7 @@
-pool:
-  name: cvbpbuildagents
-  vmImage: 'linuxagent-gpu'
+  pool:
+    vmImage: 'ubuntu-16.04'
 
 steps:
-
-- bash: |
-    echo "##vso[task.prependpath]/data/anaconda/bin"
-  displayName: Add Conda to PATH
-
-- bash: |
-    conda remove -q -n cvbp --all -y
-    conda env create -f classification/environment.yml
-    conda env list  
-    source activate cvbp
-  displayName: 'Set up conda environment'
 
 - script: |
       mkdir tools/repo_metrics
@@ -23,7 +11,7 @@ steps:
   displayName: Configure CosmosDB Connection
 
 - script: | 
-      source activate cvbp
+      pip install python-dateutil>=2.80 pymongo>=3.8.0 gitpython>2.1.11
       python tools/repo_metrics/track_metrics.py --github_repo "https://github.com/microsoft/ComputerVision" --save_to_database
       source deactivate
   displayName: Python script to record stats
