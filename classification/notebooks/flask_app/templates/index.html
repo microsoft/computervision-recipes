@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Image uploader</title>
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"
+          rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h3 class="text-muted">Let's upload a few files</h3>
+      </div>
+      <hr/>
+      <div>
+
+      <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file_list" multiple /><br />
+        <input type="submit" value="Upload">
+      </form>
+      </div>
+    </div>
+  </body>
+</html>
+
+<!--Inspired by: https://gist.github.com/liulixiang1988/cc3093b2d8cced6dcf38-->
