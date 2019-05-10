@@ -17,7 +17,6 @@ jobs:
   - script: | 
       pip install python-dateutil>=2.80 pymongo>=3.8.0 gitpython>2.1.11
       python tools/repo_metrics/track_metrics.py --github_repo "https://github.com/microsoft/ComputerVision" --save_to_database
-      source deactivate
     displayName: Python script to record stats
 
 
