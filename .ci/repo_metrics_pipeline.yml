@@ -1,16 +1,21 @@
   
   
-# jobs:
-# - job: Repometrics
-#   pool:
-#     vmImage: 'ubuntu-16.04'
-
 jobs:
-- job: LinuxGPU
+- job: Repometrics
   pool:
-    name: cvbpbuildagents
+    vmImage: 'ubuntu-16.04'
+
+# jobs:
+# - job: LinuxGPU
+#   pool:
+#     name: cvbpbuildagents
 
   steps:
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6'
+      architecture: 'x64'
 
   - script: |
       cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
@@ -19,7 +24,7 @@ jobs:
     displayName: Configure CosmosDB Connection
 
   - script: | 
-      pip install python-dateutil>=2.80 pymongo>=3.8.0 gitpython>2.1.11
+      python -m pip install python-dateutil>=2.80 pymongo>=3.8.0 gitpython>2.1.11
       python tools/repo_metrics/track_metrics.py --github_repo "https://github.com/microsoft/ComputerVision" --save_to_database
     displayName: Python script to record stats
 
