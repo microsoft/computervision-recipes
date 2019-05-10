@@ -36,13 +36,12 @@ get_ipython().run_line_magic("autoreload", "2")
 # Azure
 import azureml.core
 from azureml.core import Workspace
-from azureml.exceptions import ProjectSystemException, UserErrorException
 
 # Check core SDK version number
 print(f"Azure ML SDK Version: {azureml.core.VERSION}")
 
 
-# We are now ready to load an existing workspace, or create a new one and save it to a local configuration file (`./aml_config/config.json`). This will give us access to the workspace object (`ws`).
+# We are now ready to load an existing workspace, or create a new one and save it to a local configuration file (`./aml_config/config.json` or `./.azureml/config.json`). This will give us access to the workspace object (`ws`).
 #
 # We are typically in one of the following cases:
 # 1. We created our workspace from the Azure portal, as explained in the link above
@@ -51,48 +50,19 @@ print(f"Azure ML SDK Version: {azureml.core.VERSION}")
 # 4. We already have one (or several) workspace, but don't want to use that one here
 # 5. We do not have any workspace at all
 #
-# In cases 1 through 3, our workspace already exists, and we just need to load it. We do so either from the local configuration file (using `Worspace.from_config()`), if we have it, or directly from Azure (through `Workspace.create(exists_ok=True)`).
-#
-# For cases 4 and 5, we need to create a brand new workspace.
-#
-# Whether we retrieve an existing workspace from Azure or create a new one, we need to save its configuration into the `config.json` file, using `ws.write_config()`. This will be useful in the following deployment notebooks.
-#
-# In all cases, except #2, we need to provide 4 pieces of information:
+# Whatever our case, we just need to use the `Workspace.setup()` method. If we already have a configuration file, `setup()` extracts the information it needs from it. If we don't, `setup()` enters an interactive mode and asks for the following pieces of information:
 # - <b>subscription ID:</b> the ID of the Azure subscription we are using
 # - <b>resource group:</b> the name of the resource group in which our workspace resides
 # - <b>workspace region:</b> the geographical area in which our workspace resides (e.g. "eastus2" -- other examples are available [here](https://azure.microsoft.com/en-us/global-infrastructure/geographies/) <i>-- note the lack of spaces</i>)
 # - <b>workspace name:</b> the name of the workspace we want to create or retrieve.
 #
-# For case #2, we can comment the 4 next lines out.
+#
+# <i><b>Note:</b> The first time we use this functionality, a webbrowser page may get triggered, on which we will need to choose the email we want to use to connect to our Azure account.</i>
 
 # In[ ]:
 
 
-# Let's define these variables here - These pieces of information can be found on the portal
-subscription_id = os.getenv("SUBSCRIPTION_ID", default="<our_subscription_id>")
-resource_group = os.getenv("RESOURCE_GROUP", default="<our_resource_group>")
-workspace_name = os.getenv("WORKSPACE_NAME", default="<our_workspace_name>")
-workspace_region = os.getenv(
-    "WORKSPACE_REGION", default="<our_workspace_region>"
-)
-
-try:
-    # Let's load the workspace from the configuration file
-    ws = Workspace.from_config()
-    print("Workspace was loaded successfully from the configuration file")
-except (UserErrorException, ProjectSystemException):
-    # or directly from Azure, if it already exists (exist_ok=True).
-    # If it does not exist, let's create a workspace from scratch
-    ws = Workspace.create(
-        name=workspace_name,
-        subscription_id=subscription_id,
-        resource_group=resource_group,
-        location=workspace_region,
-        create_resource_group=True,
-        exist_ok=True,
-    )
-    ws.write_config()
-    print("Workspace was loaded successfully from Azure")
+ws = Workspace.setup()
 
 
 # Let's check that the workspace is properly loaded
