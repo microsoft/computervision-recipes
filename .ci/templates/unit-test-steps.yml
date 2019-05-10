@@ -13,10 +13,8 @@ steps:
 
 - bash: |
     source activate cvbp
-    cd classification
     python -m ipykernel install --user --name cvbp --display-name "cvbp"
     pytest tests/unit --junitxml=junit/test-unitttest.xml
-    cd ..
   displayName: 'Run Unit tests'
 
 - bash: |
