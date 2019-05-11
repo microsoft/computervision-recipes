@@ -262,47 +262,29 @@ print(f"Predictions: {resp.text}")
 # <table>
 # <tr>
 #     <td>
-#         <figure>
-#             <img src="media/webservice_performance_metrics.jpg"  width="400" alt="my alt text"/>
-#             <figcaption style="text-align:center">Figure 1: Web service performance metrics</figcaption>
-#         </figure>
+#         <img src="media/webservice_performance_metrics.jpg"  width="400"/>Figure 1: Web service performance metrics
 #     </td>
 #     <td>
-#         <figure>
-#             <img src="media/application_insights_all_charts.jpg" width="500">
-#             <figcaption style="text-align:center">Figure 2: Insights into failed requests</figcaption>
-#         </figure>
+#         <img src="media/application_insights_all_charts.jpg" width="500"/>Figure 2: Insights into failed requests
 #     </td>
 # </tr>
 #
 # <tr>
 #     <td>
-#         <figure>
-#             <img src="media/logs_failed_request_details.jpg" width="500">
-#             <figcaption style="text-align:center">Figure 3: Example log of a failed request</figcaption>
-#         </figure>
+#         <img src="media/logs_failed_request_details.jpg" width="500"/>Figure 3: Example log of a failed request
 #     </td>
 #     <td>
-#         <figure>
-#             <img src="media/all_requests_line_chart.jpg"  width="400" alt="my alt text"/>
-#             <figcaption style="text-align:center">Figure 4: Total request count over time</figcaption>
-#         </figure>
+#         <img src="media/all_requests_line_chart.jpg"  width="400" alt="my alt text"/>Figure 4: Total request count over time
 #     </td>
 # </tr>
 #
 #
 # <tr>
 #     <td>
-#         <figure>
-#             <img src="media/failures_requests_line_chart.jpg" width="500">
-#             <figcaption style="text-align:center">Figure 5: Failed request count over time</figcaption>
-#         </figure>
+#         <img src="media/failures_requests_line_chart.jpg" width="500"/>Figure 5: Failed request count over time
 #     </td>
 #     <td>
-#         <figure>
-#             <img src="media/success_status_bar_chart.jpg"  width="400" alt="my alt text"/>
-#             <figcaption style="text-align:center">Figure 6: Request success distribution</figcaption>
-#         </figure>
+#         <img src="media/success_status_bar_chart.jpg"  width="400" alt="my alt text"/>Figure 6: Request success distribution
 #     </td>
 # </tr>
 # </table>
