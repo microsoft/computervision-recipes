@@ -2,12 +2,9 @@
 # Licensed under the MIT License.
 
 from base64 import b64encode
-import math
 from pathlib import Path
 from typing import List, Tuple, Union 
 
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
@@ -83,37 +80,3 @@ def im_width_height(input: Union[str, np.array]) -> Tuple[int, int]:
     else:
         width, height = (input.shape[1], input.shape[0])
     return width, height
-
-
-def show_ims(
-    im_paths: Union[str, List[str]],
-    labels: Union[str, List[str]]=None,
-    size: int=3,
-    rows: int=1,
-):
-    """Show image files
-    Args:
-        im_paths (str or List[str]): Image filepaths
-        labels (str or List[str]): Image labels. If None, show image file name.
-        size (int): MatplotLib plot size.
-        rows (int): rows of the images
-    """
-    if isinstance(im_paths, (str, Path)):
-        if labels is not None and isinstance(labels, str):
-            labels = [labels]
-        ims = [mpimg.imread(im_paths)]
-        im_paths = [im_paths]
-    else:
-        ims = [mpimg.imread(im_path) for im_path in im_paths]
-    
-    cols = math.ceil(len(ims)/rows)
-    _, axes = plt.subplots(rows, cols, figsize=(size*cols, size*rows))
-    axes = np.array(axes).reshape(-1)
-
-    for i, (im_path, im) in enumerate(zip(im_paths, ims)):
-        if labels is None:
-            axes[i].set_title(Path(im_path).stem)
-        else:
-            axes[i].set_title(labels[i])
-        axes[i].set_axis_off()
-        axes[i].imshow(im)

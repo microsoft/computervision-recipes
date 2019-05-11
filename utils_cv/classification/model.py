@@ -2,14 +2,15 @@
 # Licensed under the MIT License.
 
 from time import time
-from typing import Any, List
+from typing import Any, List, Optional
 
-from fastai.basic_train import LearnerCallback
+import fastai.basic_train
+from fastai.basic_train import _loss_func2activ, LearnerCallback
 from fastai.core import PBar
 from fastai.torch_core import TensorOrNumList
 from fastai.vision import (
-    Learner, nn,
-    ImageDataBunch, imagenet_stats,
+    CallbackHandler, DataLoader, Learner, nn,
+    ImageDataBunch, imagenet_stats, PBar,
 )
 from fastprogress.fastprogress import format_time
 from IPython.display import display
@@ -48,10 +49,25 @@ def model_to_learner(
     return Learner(empty_data, model)
 
 
+def get_preds(
+    learn: Learner, dl: DataLoader, with_loss: bool = False, n_batch: Optional[int] = None, pbar: Optional[PBar] = None
+) -> List[Tensor]:
+    """Return predictions and targets on `dl` dataset.
+    This function is the same as fastai's Learner.get_preds except this allows an external DataLoader.
+    For more details about Learner.get_preds, see:
+    https://github.com/fastai/fastai/blob/master/fastai/basic_train.py
+    """
+    lf = learn.loss_func if with_loss else None
+    return fastai.basic_train.get_preds(
+        learn.model, dl, cb_handler=CallbackHandler(learn.callbacks),
+        activ=_loss_func2activ(learn.loss_func), loss_func=lf, n_batch=n_batch, pbar=pbar
+    )
+
+
 class TrainMetricsRecorder(LearnerCallback):
     _order = -20  # Needs to run before the recorder
 
-    def __init__(self, learn, n_batch: int = None, show_graph: bool = False):
+    def __init__(self, learn: Learner, n_batch: int = None, show_graph: bool = False):
         """Fastai Train hook to evaluate metrics on train and validation set for every epoch.
 
         This class works with the metrics functions whose signature is fn(input:Tensor, targs:Tensor),

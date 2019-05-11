@@ -1,9 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import math
+from pathlib import Path
 from typing import List, Union
 
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import numpy as np
 
 
 def line_graph(
@@ -38,3 +42,38 @@ def line_graph(
     plt.xlabel(x_name)
     plt.ylabel(y_name)
     plt.legend(loc=legend_loc)
+
+    
+def show_ims(
+    im_paths: Union[str, List[str]],
+    labels: Union[str, List[str]]=None,
+    size: int=3,
+    rows: int=1,
+):
+    """Show image files
+    Args:
+        im_paths (str or List[str]): Image filepaths
+        labels (str or List[str]): Image labels. If None, show image file name.
+        size (int): MatplotLib plot size.
+        rows (int): rows of the images
+    """
+    if isinstance(im_paths, (str, Path)):
+        if labels is not None and isinstance(labels, str):
+            labels = [labels]
+        ims = [mpimg.imread(im_paths)]
+        im_paths = [im_paths]
+    else:
+        ims = [mpimg.imread(im_path) for im_path in im_paths]
+    
+    cols = math.ceil(len(ims)/rows)
+    _, axes = plt.subplots(rows, cols, figsize=(size*cols, size*rows))
+    axes = np.array(axes).reshape(-1)
+    for ax in axes:
+        ax.set_axis_off()
+    
+    for i, (im_path, im) in enumerate(zip(im_paths, ims)):
+        if labels is None:
+            axes[i].set_title(Path(im_path).stem)
+        else:
+            axes[i].set_title(labels[i])
+        axes[i].imshow(im)
