@@ -26,9 +26,10 @@ dependencies:
 - bqplot
 - scikit-learn>=0.19.1
 - pip:
-  - azureml-sdk[notebooks,contrib]==1.0.21
+  - azureml-sdk[notebooks,contrib]>=1.0.30
   - black>=18.6b4
   - papermill>=0.15.0
   - ipywebrtc
   - pre-commit>=1.14.4
   - lxml>=4.3.2
+  - pyyaml>=5.1 
