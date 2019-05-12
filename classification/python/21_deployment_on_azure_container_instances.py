@@ -114,7 +114,8 @@ learn.export(os.path.join(output_folder, pickled_model_name))
 # In[4]:
 
 
-ws = Workspace.from_config()
+ws = Workspace.setup()
+# setup() refers to our config.json file by default
 
 # Print the workspace attributes
 print(

@@ -71,8 +71,8 @@ from azureml.core.webservice import AksWebservice, Webservice
 # In[2]:
 
 
-ws = Workspace.from_config()
-# from_config() refers to this config.json file by default
+ws = Workspace.setup()
+# setup() refers to our config.json file by default
 
 # Print the workspace attributes
 print(
