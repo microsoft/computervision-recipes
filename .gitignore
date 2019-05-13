@@ -90,6 +90,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# IDE
+.idea/
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -102,3 +105,34 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ycm config
+.ycm_extra_conf.py
+
+# papermill outputs
+output.ipynb
+
+# don't save any data
+image_classification/data/*
+
+# don't save .swp files
+*.swp
+
+# don't save .csv files
+*.csv
+
+# don't save data dir
+data
+
+# don't save pickles
+*.pkl
+
+# aml notebooks outputs
+*/notebooks/aml_config*
+*/notebooks/azureml-models
+*/notebooks/myenv.yml
+*/notebooks/outputs
+*/notebooks/score.py
+classification/FAQ.html
+classification/.DS_Store
+.DS_Store
