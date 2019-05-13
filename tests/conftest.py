@@ -101,6 +101,14 @@ def tiny_ic_data_path(tmp_session) -> str:
 
 
 @pytest.fixture(scope="session")
+def tiny_multilabel_ic_data_path(tmp_session) -> str:
+    """ Returns the path to the tiny fridge objects dataset. """
+    return unzip_url(
+        Urls.multilabel_fridge_objects_tiny_path, tmp_session, exist_ok=True
+    )
+
+
+@pytest.fixture(scope="session")
 def multilabel_result():
     """ Fake results to test evaluation metrics for multilabel classification. """
     y_pred = torch.tensor(

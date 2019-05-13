@@ -22,15 +22,16 @@ from utils_cv.classification.data import imagenet_labels
 IMAGENET_IM_SIZE = 224
 
 
-def hamming_score(
+def hamming_accuracy(
     y_pred: Tensor,
     y_true: Tensor,
     threshold: float = 0.2,
     sigmoid: bool = False,
 ) -> Tensor:
-    """ Callback for using hamming score as a evaluation metric.
+    """ Callback for using hamming accuracy as a evaluation metric.
 
-    Hamming loss is the fraction of wrong labels to the total number of labels.
+    Hamming accuracy is one minus the fraction of wrong labels to the total
+    number of labels.
 
     Args:
         y_pred: prediction output
@@ -39,25 +40,27 @@ def hamming_score(
         sigmoid: whether to apply the sigmoid activation
 
     Returns:
-        The hamming score function as a tensor of dtype float
+        The hamming accuracy function as a tensor of dtype float
     """
     if sigmoid:
         y_pred = y_pred.sigmoid()
     if threshold:
         y_pred = y_pred > threshold
-    return (y_pred.float() != y_true).sum() / torch.ones(y_pred.shape).sum()
+    return 1 - (
+        (y_pred.float() != y_true).sum() / torch.ones(y_pred.shape).sum()
+    )
 
 
-def zero_one_score(
+def zero_one_accuracy(
     y_pred: Tensor,
     y_true: Tensor,
     threshold: float = 0.2,
     sigmoid: bool = False,
 ) -> Tensor:
-    """ Callback for using zero-one score as a evaluation metric.
+    """ Callback for using zero-one accuracy as a evaluation metric.
 
-    The zero-one score will classify an entire set of labels for a given sample
-    incorrect if it does not entirely match the true set of labels.
+    The zero-one accuracy will classify an entire set of labels for a given
+    sample incorrect if it does not entirely match the true set of labels.
 
     Args:
         y_pred: prediction output
@@ -66,7 +69,7 @@ def zero_one_score(
         sigmoid: whether to apply the sigmoid activation
 
     Returns:
-        The zero-one score function as a tensor with dtype float
+        The zero-one accuracy function as a tensor with dtype float
     """
     if sigmoid:
         y_pred = y_pred.sigmoid()
@@ -76,21 +79,21 @@ def zero_one_score(
     zero_one_preds = (y_pred.float() != y_true).sum(dim=1)
     zero_one_preds[zero_one_preds >= 1] = 1
     num_labels = y_pred.shape[-1]
-    return zero_one_preds.sum().float() / len(y_pred.reshape(-1, num_labels))
+    return 1 - (
+        zero_one_preds.sum().float() / len(y_pred.reshape(-1, num_labels))
+    )
 
 
 def get_optimal_threshold(
     metric_function: Callable[[Tensor, Tensor, float], Tensor],
     y_pred: Tensor,
     y_true: Tensor,
-    samples: int = 21,
+    thresholds: List[float] = np.linspace(0, 1, 21),
 ) -> float:
     """ Gets the best threshold to use for the provided metric function.
 
-    This function can be used when evaluating a multilabel classification
-    problem to get the best threshold on for the predicted set. This method
-    samples the metric function at evenly distributed threshold intervals
-    to find the best threshold.
+    This method samples the metric function at evenly distributed threshold
+    intervals to find the best threshold.
 
     Args:
         metric_function: The metric function
@@ -99,14 +102,14 @@ def get_optimal_threshold(
         samples: The number of samples.
 
     Returns:
-        The threshold that minimizes the metric function.
+        The threshold that optimizes the metric function.
     """
     optimal_threshold = None
-    metric_min = 1
-    for threshold in np.linspace(0, 1, samples):
+    metric_max = -np.inf
+    for threshold in thresholds:
         metric = metric_function(y_pred, y_true, threshold=threshold)
-        if metric < metric_min:
-            metric_min = metric
+        if metric > metric_max:
+            metric_max = metric
             optimal_threshold = threshold
     return optimal_threshold
 

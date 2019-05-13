@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import pytest
+import numpy as np
 from torch import tensor
 from fastai.metrics import accuracy, error_rate
 from fastai.vision import cnn_learner, models
@@ -9,38 +10,51 @@ from fastai.vision import ImageList, imagenet_stats
 from utils_cv.classification.model import (
     TrainMetricsRecorder,
     model_to_learner,
-    hamming_score,
-    zero_one_score,
+    hamming_accuracy,
+    zero_one_accuracy,
     get_optimal_threshold,
 )
 
 
-def test_hamming_score_function(multilabel_result):
+def test_hamming_accuracy_function(multilabel_result):
     """ Test the hamming loss evaluation metric function. """
     y_pred, y_true = multilabel_result
-    assert hamming_score(y_pred, y_true) == tensor(0.1875)
-    assert hamming_score(y_pred, y_true, sigmoid=True) == tensor(0.375)
-    assert hamming_score(y_pred, y_true, threshold=1.0) == tensor(0.625)
+    assert hamming_accuracy(y_pred, y_true) == tensor(1.0 - 0.1875)
+    assert hamming_accuracy(y_pred, y_true, sigmoid=True) == tensor(
+        1.0 - 0.375
+    )
+    assert hamming_accuracy(y_pred, y_true, threshold=1.0) == tensor(
+        1.0 - 0.625
+    )
 
 
-def test_zero_one_score_function(multilabel_result):
+def test_zero_one_accuracy_function(multilabel_result):
     """ Test the zero-one loss evaluation metric function. """
     y_pred, y_true = multilabel_result
-    assert zero_one_score(y_pred, y_true) == tensor(0.75)
-    assert zero_one_score(y_pred, y_true, sigmoid=True) == tensor(0.75)
-    assert zero_one_score(y_pred, y_true, threshold=1.0) == tensor(1.0)
+    assert zero_one_accuracy(y_pred, y_true) == tensor(1.0 - 0.75)
+    assert zero_one_accuracy(y_pred, y_true, sigmoid=True) == tensor(
+        1.0 - 0.75
+    )
+    assert zero_one_accuracy(y_pred, y_true, threshold=1.0) == tensor(
+        1.0 - 1.0
+    )
 
 
 def test_get_optimal_threshold(multilabel_result):
     """ Test the get_optimal_threshold function. """
     y_pred, y_true = multilabel_result
-    assert get_optimal_threshold(hamming_score, y_pred, y_true) == 0.05
+    assert get_optimal_threshold(hamming_accuracy, y_pred, y_true) == 0.05
     assert (
-        get_optimal_threshold(hamming_score, y_pred, y_true, samples=11) == 0.1
+        get_optimal_threshold(
+            hamming_accuracy, y_pred, y_true, thresholds=np.linspace(0, 1, 11)
+        )
+        == 0.1
     )
-    assert get_optimal_threshold(zero_one_score, y_pred, y_true) == 0.05
+    assert get_optimal_threshold(zero_one_accuracy, y_pred, y_true) == 0.05
     assert (
-        get_optimal_threshold(zero_one_score, y_pred, y_true, samples=11)
+        get_optimal_threshold(
+            zero_one_accuracy, y_pred, y_true, thresholds=np.linspace(0, 1, 11)
+        )
         == 0.1
     )
 
