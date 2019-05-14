@@ -50,6 +50,9 @@ def classification_notebooks():
         "11_exploring_hyperparameters": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
+        "12_hard_negative_sampling": os.path.join(
+            folder_notebooks, "12_hard_negative_sampling.ipynb"
+        ),
         "21_deployment_on_azure_container_instances": os.path.join(
             folder_notebooks,
             "21_deployment_on_azure_container_instances.ipynb",

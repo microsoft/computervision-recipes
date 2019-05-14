@@ -17,7 +17,7 @@ class Urls:
     # for now hardcoding base url into Urls class
     base = "https://cvbp.blob.core.windows.net/public/datasets/image_classification/"
 
-    # Same link Keras is using
+    # ImageNet labels Keras is using
     imagenet_labels_json = "https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json"
 
     # traditional datasets
@@ -27,6 +27,7 @@ class Urls:
     fridge_objects_watermark_tiny_path = urljoin(
         base, "fridgeObjectsWatermarkTiny.zip"
     )
+    fridge_objects_negatives_path = urljoin(base, "fridgeObjectsNegative.zip")
 
     # multilabel datasets
     multilabel_fridge_objects_path = urljoin(
@@ -48,7 +49,7 @@ class Urls:
     flickr_logos_32_subset_path = urljoin(base, "flickrLogos32Subset.zip")
     lettuce_path = urljoin(base, "lettuce.zip")
     recycle_path = urljoin(base, "recycle_v3.zip")
-
+    
     @classmethod
     def all(cls) -> List[str]:
         return [v for k, v in cls.__dict__.items() if k.endswith("_path")]
