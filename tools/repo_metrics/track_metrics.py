@@ -15,8 +15,8 @@ from datetime import datetime
 from dateutil.parser import isoparse
 from pymongo import MongoClient
 from datetime import datetime
-from scripts.repo_metrics.git_stats import Github
-from scripts.repo_metrics.config import (
+from tools.repo_metrics.git_stats import Github
+from tools.repo_metrics.config import (
     GITHUB_TOKEN,
     CONNECTION_STRING,
     DATABASE,
