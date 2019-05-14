@@ -56,6 +56,14 @@ def get_preds(
     This function is the same as fastai's Learner.get_preds except this allows an external DataLoader.
     For more details about Learner.get_preds, see:
     https://github.com/fastai/fastai/blob/master/fastai/basic_train.py
+
+    Args:
+        learn: Learner object that will be used for prediction
+        dl: DataLoader the model will use to load samples
+        with_loss: If True, it will also return the loss on each prediction
+        n_batch: Number of batches to predict. If not specified, it will run the predictions for n batches
+            where n = sample size // BATCH_SIZE
+        pbar: ProgressBar object
     """
     lf = learn.loss_func if with_loss else None
     return fastai.basic_train.get_preds(
