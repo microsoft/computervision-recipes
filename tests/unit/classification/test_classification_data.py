@@ -4,7 +4,11 @@
 from PIL import Image
 from fastai.vision.data import ImageList
 
-from utils_cv.classification.data import imagenet_labels, downsize_imagelist
+from utils_cv.classification.data import (
+    imagenet_labels,
+    downsize_imagelist,
+    is_data_multilabel,
+)
 
 
 def test_imagenet_labels():
@@ -30,3 +34,12 @@ def test_downsize_imagelist(tiny_ic_data_path, tmp):
     assert len(im_list) == len(im_list2)
     for im_path in im_list2.items:
         assert min(Image.open(im_path).size) <= max_dim
+
+
+def test_is_data_multilabel(tiny_multilabel_ic_data_path, tiny_ic_data_path):
+    """
+    Tests that multilabel classification datasets and traditional
+    classification datasets are correctly identified
+    """
+    assert is_data_multilabel(tiny_multilabel_ic_data_path)
+    assert not is_data_multilabel(tiny_ic_data_path)
