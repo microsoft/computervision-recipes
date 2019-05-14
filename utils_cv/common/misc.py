@@ -18,6 +18,7 @@ def set_random_seed(s: int):
 
     try:
         import torch
+
         torch.manual_seed(s)
         if torch.cuda.is_available():
             torch.cuda.manual_seed(s)

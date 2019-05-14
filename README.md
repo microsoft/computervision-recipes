@@ -2,7 +2,15 @@
 
 This repository provides implementations and best practice guidelines for building Computer Vision systems. All examples are given as Jupyter notebooks, and use PyTorch as Deep Learning library.
 
-[![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/Build-UnitTest?branchName=staging)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=2&branchName=staging)
+## Build Status
+
+| Build Type | Branch | Status |  | Branch | Status | 
+| --- | --- | --- | --- | --- | --- | 
+| **Linux GPU** |  master | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/gpu-linux-unit?branchName=rijai-build)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=13&branchName=rijai-build)  | | staging | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/gpu-linux-unit?branchName=rijai-build)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=13&branchName=rijai-build) |
+| **Linux CPU** | master | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/cpu-linux-unit?branchName=rijai-build)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=18&branchName=rijai-build)| | staging | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/cpu-linux-unit?branchName=rijai-build)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=18&branchName=rijai-build)|
+| **Windows GPU** | master | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/gpu-windows-unit?branchName=rijai-build)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=16&branchName=rijai-build) | | staging | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/gpu-windows-unit?branchName=rijai-build)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=16&branchName=rijai-build)|
+| **Windows CPU** | master | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/cpu-windows-unit?branchName=rijai-build)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=17&branchName=rijai-build) | | staging | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/cpu-windows-unit?branchName=rijai-build)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=17&branchName=rijai-build)|
+
 
 ## Overview
 

@@ -5,6 +5,7 @@
 Helper module for drawing plots
 """
 import matplotlib.pyplot as plt
+import pandas as pd
 import numpy as np
 from sklearn.metrics import (
     precision_recall_curve,
@@ -13,6 +14,40 @@ from sklearn.metrics import (
     auc,
 )
 from sklearn.preprocessing import label_binarize
+from torch import Tensor
+from typing import Callable
+
+
+def plot_thresholds(
+    metric_function: Callable[[Tensor, Tensor, float], Tensor],
+    y_pred: Tensor,
+    y_true: Tensor,
+    samples: int = 21,
+    figsize: tuple = (12, 6),
+) -> None:
+    """ Plot the evaluation metric of the model at different thresholds.
+
+    This function will plot the metric for every 0.05 increments of the
+    threshold. This means that there will be a total of 20 increments.
+
+    Args:
+        metric_function: The metric function
+        y_pred: predicted probabilities.
+        y_true: True class indices.
+        figsize: Figure size (w, h)
+    """
+    metric_name = metric_function.__name__
+    metrics = []
+    for threshold in np.linspace(0, 1, samples):
+        metric = metric_function(y_pred, y_true, threshold=threshold)
+        metrics.append(metric)
+
+    ax = pd.DataFrame(metrics).plot(figsize=figsize)
+    ax.set_title(f"{metric_name} at different thresholds")
+    ax.set_ylabel(f"{metric_name}")
+    ax.set_xlabel("threshold")
+    ax.set_xticks(np.linspace(0, 20, 11))
+    ax.set_xticklabels(np.around(np.linspace(0, 1, 11), decimals=2))
 
 
 def plot_pr_roc_curves(
