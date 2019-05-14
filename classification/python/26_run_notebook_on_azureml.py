@@ -15,14 +15,13 @@
 
 
 # pm.record('training_loss', training_losses)
-# pm.record('training_accuracy', training_accuracy)
 
 
-# ### Advantages of using AzureML:
-# AzureML lets us do the following:
+# ### Advantages of using AzureML
+# AzureML lets us:
 # - Manage cloud resources for monitoring, logging, and organizing our machine learning experiments
 # - Train models either locally or by using cloud resources, including GPU-accelerated model training
-# - Easy to scale out when dataset grows - by just creating and pointing to new compute target
+# - Scale out easily when dataset grows by just creating and pointing to new compute target
 #
 # ### Prerequisities
 # For this notebook to run properly on our machine, we will need to have an Azure workspace. If we have not done so yet, we can run through the short [20_azure_workspace_setup.ipynb](https://github.com/microsoft/ComputerVision/blob/master/classification/notebooks/20_azure_workspace_setup.ipynb) notebook to create one.
@@ -41,17 +40,14 @@
 # In[1]:
 
 
-import sys
-
-sys.path.append("../")
-
 import azureml.core
+from azureml.contrib.notebook.notebook_run_config import NotebookRunConfig
 from azureml.core import Workspace, Experiment
 from azureml.core.compute import ComputeTarget, AmlCompute
-from azureml.core.runconfig import DEFAULT_GPU_IMAGE
 from azureml.core.conda_dependencies import CondaDependencies
+from azureml.core.runconfig import DEFAULT_GPU_IMAGE
 from azureml.core.runconfig import RunConfiguration
-from azureml.contrib.notebook.notebook_run_config import NotebookRunConfig
+
 import azureml.widgets as widgets
 
 print("azureml.core version: {}".format(azureml.core.VERSION))
@@ -61,16 +57,7 @@ print("azureml.core version: {}".format(azureml.core.VERSION))
 #
 # An [AzureML Workspace](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.workspace.workspace?view=azure-ml-py) is an Azure resource that organizes and coordinates the actions of many other Azure resources to assist in executing and sharing machine learning workflows. In particular, an Azure ML Workspace coordinates storage, databases, and compute resources providing added functionality for machine learning experimentation, deployment, inferencing, and the monitoring of deployed models.
 #
-# We are now ready to load an existing workspace, or create a new one and save it to a local configuration file (./.azureml/config.json). This will give us access to the workspace object (ws).
-# We are typically in one of the following cases:
-#
-# 1. We created our workspace from the Azure portal
-# 2. We created a workspace from a script or notebook and already have a `config.json` file
-# 3. We created a workspace from a script or notebook and, for any reason, don't have such a file
-# 4. We already have one (or several) workspace, but don't want to use that one here
-# 5. We do not have any workspace at all
-#
-# Whatever our case, we just need to use the `Workspace.setup()` method. If we already have a configuration file, `setup()` extracts the information it needs from it. If we don't, `setup()` enters an interactive mode and asks for the following pieces of information:
+# If we already have a configuration file, setup() extracts the information it needs from it. If we don't, setup() enters an interactive mode and asks for the following pieces of information:
 # - <b>subscription ID:</b> the ID of the Azure subscription we are using
 # - <b>resource group:</b> the name of the resource group in which our workspace resides
 # - <b>workspace region:</b> the geographical area in which our workspace resides (e.g. "eastus2" -- other examples are available [here](https://azure.microsoft.com/en-us/global-infrastructure/geographies/) <i>-- note the lack of spaces</i>)
@@ -122,7 +109,7 @@ except Exception:
 #
 # <b>IMPORTANT</b>: You must have Docker engine installed locally in order to use this execution mode. If your kernel is already running in a Docker container, such as Azure Notebooks, this mode will NOT work.
 
-# In[7]:
+# In[6]:
 
 
 NOTEBOOK_NAME = (
@@ -155,16 +142,18 @@ cfg = NotebookRunConfig(
     source_directory="../../",
     notebook="classification/notebooks/"
     + NOTEBOOK_NAME,  # pass in the path of notebook we want to run
-    output_notebook="classification/notebooks/out.ipynb",  # pass in the output notebook path and name
+    output_notebook="outputs/out.ipynb",  # pass in the output notebook path and name
     run_config=run_config,
 )
 
 
+# Here we create an experiment which takes in our workspace and experiment name as inputs. We start a run by submitting the run configuration that we created above. This means that the following code will trigger running our notebook '01_training_introduction.ipynb'.
+#
 # An experiment contains a series of trials called Runs. A run typically contains some tasks, such as training a model, etc. Through a run's methods, we can log several metrics such as training and test loss and accuracy, and even tag our run. The full description of the run class is available [here](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.run.run?view=azure-ml-py).
 #
 # `exp.submit()` will submit source_directory folder and designate notebook to run
 
-# In[8]:
+# In[7]:
 
 
 experiment_name = NOTEBOOK_NAME.strip(".ipynb")
@@ -174,11 +163,15 @@ run = exp.submit(cfg)
 widgets.RunDetails(run).show()
 
 
-# Here's how the widget shows the run details. We'll be able to see the logged metrics and charts automatically generated from the metrics. It will also give us a link to the portal at the end so you can view the results over there as well.
+# Here's how the widget shows the run details. We'll be able to see the logged metrics and charts automatically generated from the metrics by 01_training_intoduction.ipynb - Accuracy on validation, training accuracy and training loss. It will also give us a link to the portal at the end so we can view the results over there as well.
 #
-# ![widget.PNG](attachment:widget.PNG)
+# <img src="media/widget.png" width="800" alt="Widget results for papermill notebook run">
+#
+# The output.ipynb notebook can be seen by clicking on the Outputs tab on our Azure portal
+#
+# <img src="media/output.PNG" width="800" alt="Output.ipynb generated for papermill notebook run">
 
-# In[9]:
+# In[ ]:
 
 
 # run below after run is complete, otherwise metrics is empty
