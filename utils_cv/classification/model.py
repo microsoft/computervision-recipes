@@ -2,26 +2,116 @@
 # Licensed under the MIT License.
 
 from time import time
-from typing import Any, List
+from typing import Any, List, Callable
 
 from fastai.basic_train import LearnerCallback
 from fastai.core import PBar
 from fastai.torch_core import TensorOrNumList
-from fastai.vision import (
-    Learner, nn,
-    ImageDataBunch, imagenet_stats,
-)
+from fastai.vision import Learner, nn, ImageDataBunch, imagenet_stats
 from fastprogress.fastprogress import format_time
 from IPython.display import display
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import torch
 from torch import Tensor
+import numpy as np
 
 from utils_cv.classification.data import imagenet_labels
 
 # Default ImageNet models image size
 IMAGENET_IM_SIZE = 224
+
+
+def hamming_accuracy(
+    y_pred: Tensor,
+    y_true: Tensor,
+    threshold: float = 0.2,
+    sigmoid: bool = False,
+) -> Tensor:
+    """ Callback for using hamming accuracy as a evaluation metric.
+
+    Hamming accuracy is one minus the fraction of wrong labels to the total
+    number of labels.
+
+    Args:
+        y_pred: prediction output
+        y_true: true class labels
+        threshold: the threshold to consider a positive classification
+        sigmoid: whether to apply the sigmoid activation
+
+    Returns:
+        The hamming accuracy function as a tensor of dtype float
+    """
+    if sigmoid:
+        y_pred = y_pred.sigmoid()
+    if threshold:
+        y_pred = y_pred > threshold
+    return 1 - (
+        (y_pred.float() != y_true).sum() / torch.ones(y_pred.shape).sum()
+    )
+
+
+def zero_one_accuracy(
+    y_pred: Tensor,
+    y_true: Tensor,
+    threshold: float = 0.2,
+    sigmoid: bool = False,
+) -> Tensor:
+    """ Callback for using zero-one accuracy as a evaluation metric.
+
+    The zero-one accuracy will classify an entire set of labels for a given
+    sample incorrect if it does not entirely match the true set of labels.
+
+    Args:
+        y_pred: prediction output
+        y_true: true class labels
+        threshold: the threshold to consider a positive classification
+        sigmoid: whether to apply the sigmoid activation
+
+    Returns:
+        The zero-one accuracy function as a tensor with dtype float
+    """
+    if sigmoid:
+        y_pred = y_pred.sigmoid()
+    if threshold:
+        y_pred = y_pred > threshold
+
+    zero_one_preds = (y_pred.float() != y_true).sum(dim=1)
+    zero_one_preds[zero_one_preds >= 1] = 1
+    num_labels = y_pred.shape[-1]
+    return 1 - (
+        zero_one_preds.sum().float() / len(y_pred.reshape(-1, num_labels))
+    )
+
+
+def get_optimal_threshold(
+    metric_function: Callable[[Tensor, Tensor, float], Tensor],
+    y_pred: Tensor,
+    y_true: Tensor,
+    thresholds: List[float] = np.linspace(0, 1, 21),
+) -> float:
+    """ Gets the best threshold to use for the provided metric function.
+
+    This method samples the metric function at evenly distributed threshold
+    intervals to find the best threshold.
+
+    Args:
+        metric_function: The metric function
+        y_pred: predicted probabilities.
+        y_true: True class indices.
+        samples: The number of samples.
+
+    Returns:
+        The threshold that optimizes the metric function.
+    """
+    optimal_threshold = None
+    metric_max = -np.inf
+    for threshold in thresholds:
+        metric = metric_function(y_pred, y_true, threshold=threshold)
+        if metric > metric_max:
+            metric_max = metric
+            optimal_threshold = threshold
+    return optimal_threshold
 
 
 def model_to_learner(
@@ -100,23 +190,23 @@ class TrainMetricsRecorder(LearnerCallback):
         self, pbar: PBar, metrics: List, n_epochs: int, **kwargs: Any
     ):
         self.has_metrics = metrics and len(metrics) > 0
-        self.has_val = hasattr(self.learn.data, 'valid_ds')
+        self.has_val = hasattr(self.learn.data, "valid_ds")
 
         # Result table and graph variables
         self.learn.recorder.silent = (
             True
         )  # Mute recorder. This callback will printout results instead.
         self.pbar = pbar
-        self.names = ['epoch', 'train_loss']
+        self.names = ["epoch", "train_loss"]
         if self.has_val:
-            self.names.append('valid_loss')
+            self.names.append("valid_loss")
         # Add metrics names
         self.metrics_names = [m_fn.__name__ for m_fn in metrics]
         for m in self.metrics_names:
-            self.names.append('train_' + m)
+            self.names.append("train_" + m)
             if self.has_val:
-                self.names.append('valid_' + m)
-        self.names.append('time')
+                self.names.append("valid_" + m)
+        self.names.append("time")
         self.pbar.write(self.names, table=True)
 
         self.n_epochs = n_epochs
@@ -188,18 +278,18 @@ class TrainMetricsRecorder(LearnerCallback):
         str_stats = []
         for name, stat in zip(self.names, stats):
             str_stats.append(
-                '#na#'
+                "#na#"
                 if stat is None
                 else str(stat)
                 if isinstance(stat, int)
-                else f'{stat:.6f}'
+                else f"{stat:.6f}"
             )
         str_stats.append(format_time(time() - self.start_epoch))
         self.pbar.write(str_stats, table=True)
 
     def _plot(self, update=False):
         # init graph
-        if not hasattr(self, '_fig'):
+        if not hasattr(self, "_fig"):
             self._fig, self._axes = plt.subplots(
                 len(self.train_metrics[0]),
                 1,
@@ -222,27 +312,29 @@ class TrainMetricsRecorder(LearnerCallback):
             ax.plot(x_axis, tr_m, label="Train")
 
             # Plot validation set results
-            maybe_y_bounds = [-0.05, 1.05, min(Tensor(tr_m)), max(Tensor(tr_m))]
+            maybe_y_bounds = [
+                -0.05,
+                1.05,
+                min(Tensor(tr_m)),
+                max(Tensor(tr_m)),
+            ]
             if len(self.valid_metrics) > 0:
                 vl_m = [met[i] for met in self.valid_metrics]
                 ax.plot(x_axis, vl_m, label="Validation")
                 maybe_y_bounds.extend([min(Tensor(vl_m)), max(Tensor(vl_m))])
 
             x_bounds = (-0.05, self.n_epochs - 0.95)
-            y_bounds = (
-                min(maybe_y_bounds) - 0.05,
-                max(maybe_y_bounds) + 0.05,
-            )
+            y_bounds = (min(maybe_y_bounds) - 0.05, max(maybe_y_bounds) + 0.05)
             ax.set_xlim(x_bounds)
             ax.set_ylim(y_bounds)
 
             ax.set_ylabel(self.metrics_names[i])
             ax.set_xlabel("Epochs")
             ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-            ax.legend(loc='upper right')
+            ax.legend(loc="upper right")
 
         if update:
-            if not hasattr(self, '_display'):
+            if not hasattr(self, "_display"):
                 self._display = display(self._fig, display_id=True)
             else:
                 self._display.update(self._fig)
