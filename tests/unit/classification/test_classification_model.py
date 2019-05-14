@@ -8,11 +8,12 @@ from fastai.metrics import accuracy, error_rate
 from fastai.vision import cnn_learner, models
 from fastai.vision import ImageList, imagenet_stats
 from utils_cv.classification.model import (
-    TrainMetricsRecorder,
-    model_to_learner,
-    hamming_accuracy,
-    zero_one_accuracy,
     get_optimal_threshold,
+    get_preds,
+    hamming_accuracy,
+    model_to_learner,
+    TrainMetricsRecorder,
+    zero_one_accuracy,
 )
 
 
@@ -116,3 +117,14 @@ def test_train_metrics_recorder(tiny_ic_data):
     assert len(cb.train_metrics) == epochs
     assert len(cb.train_metrics[0]) == 1  # we used 1 metrics
     assert len(cb.valid_metrics) == 0  # no validation
+
+    
+def test_get_preds(tiny_ic_data):
+    model = models.resnet18
+    lr = 1e-4
+    epochs = 1
+    
+    learn = cnn_learner(tiny_ic_data, model)
+    learn.fit(epochs, lr)
+    pred_outs = get_preds(learn, tiny_ic_data.valid_dl)
+    assert len(pred_outs[0]) == len(tiny_ic_data.valid_ds)

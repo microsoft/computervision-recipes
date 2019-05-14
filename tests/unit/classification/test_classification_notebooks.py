@@ -104,6 +104,22 @@ def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
         ),
         kernel_name=KERNEL_NAME,
     )
+    
+    
+@pytest.mark.notebooks
+def test_12_notebook_run(classification_notebooks, tiny_ic_data_path):
+    notebook_path = classification_notebooks["12_hard_negative_sampling"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            DATA_PATH=tiny_ic_data_path,
+            EPOCHS_HEAD=1,
+            EPOCHS_BODY=1,
+        ),
+        kernel_name=KERNEL_NAME,
+    )
 
 
 @pytest.mark.notebooks

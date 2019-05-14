@@ -2,12 +2,15 @@
 # Licensed under the MIT License.
 
 from time import time
-from typing import Any, List, Callable
+from typing import Any, Callable, List, Optional
 
-from fastai.basic_train import LearnerCallback
-from fastai.core import PBar
+import fastai.basic_train
+from fastai.basic_train import _loss_func2activ, LearnerCallback
 from fastai.torch_core import TensorOrNumList
-from fastai.vision import Learner, nn, ImageDataBunch, imagenet_stats
+from fastai.vision import (
+    CallbackHandler, DataLoader, Learner, nn,
+    ImageDataBunch, imagenet_stats, PBar,
+)
 from fastprogress.fastprogress import format_time
 from IPython.display import display
 import matplotlib.pyplot as plt
@@ -138,10 +141,33 @@ def model_to_learner(
     return Learner(empty_data, model)
 
 
+def get_preds(
+    learn: Learner, dl: DataLoader, with_loss: bool = False, n_batch: Optional[int] = None, pbar: Optional[PBar] = None
+) -> List[Tensor]:
+    """Return predictions and targets on `dl` dataset.
+    This function is the same as fastai's Learner.get_preds except this allows an external DataLoader.
+    For more details about Learner.get_preds, see:
+    https://github.com/fastai/fastai/blob/master/fastai/basic_train.py
+
+    Args:
+        learn: Learner object that will be used for prediction
+        dl: DataLoader the model will use to load samples
+        with_loss: If True, it will also return the loss on each prediction
+        n_batch: Number of batches to predict. If not specified, it will run the predictions for n batches
+            where n = sample size // BATCH_SIZE
+        pbar: ProgressBar object
+    """
+    lf = learn.loss_func if with_loss else None
+    return fastai.basic_train.get_preds(
+        learn.model, dl, cb_handler=CallbackHandler(learn.callbacks),
+        activ=_loss_func2activ(learn.loss_func), loss_func=lf, n_batch=n_batch, pbar=pbar
+    )
+
+
 class TrainMetricsRecorder(LearnerCallback):
     _order = -20  # Needs to run before the recorder
 
-    def __init__(self, learn, n_batch: int = None, show_graph: bool = False):
+    def __init__(self, learn: Learner, n_batch: int = None, show_graph: bool = False):
         """Fastai Train hook to evaluate metrics on train and validation set for every epoch.
 
         This class works with the metrics functions whose signature is fn(input:Tensor, targs:Tensor),
@@ -160,7 +186,7 @@ class TrainMetricsRecorder(LearnerCallback):
 
         Examples:
             >>> learn = cnn_learner(data, model, metrics=[accuracy])
-            >>> train_metrics_cb = TrainMetricsRecorder(n_batch=1)
+            >>> train_metrics_cb = TrainMetricsRecorder(learn, n_batch=1)
             >>> learn.callbacks.append(train_metrics_cb)
             >>> learn.fit(epochs=10, lr=0.001)
             >>> train_metrics_cb.plot()
@@ -212,6 +238,11 @@ class TrainMetricsRecorder(LearnerCallback):
         self.n_epochs = n_epochs
         self.valid_metrics = []
         self.train_metrics = []
+        
+        # Reset graph
+        self._fig = None
+        self._axes = None
+        self._display = None
 
     def on_epoch_begin(self, **kwargs: Any):
         self.start_epoch = time()
@@ -286,22 +317,18 @@ class TrainMetricsRecorder(LearnerCallback):
             )
         str_stats.append(format_time(time() - self.start_epoch))
         self.pbar.write(str_stats, table=True)
-
+        
     def _plot(self, update=False):
+        if not self._fig:
         # init graph
-        if not hasattr(self, "_fig"):
             self._fig, self._axes = plt.subplots(
                 len(self.train_metrics[0]),
                 1,
                 figsize=(6, 4 * len(self.train_metrics[0])),
             )
-            self._axes = (
-                self._axes.flatten()
-                if len(self.train_metrics[0]) > 1
-                else [self._axes]
-            )
+            self._axes = (self._axes.flatten() if len(self.train_metrics[0]) > 1 else [self._axes])
             plt.close(self._fig)
-
+        
         # Plot each metrics as a subplot
         for i, ax in enumerate(self._axes):
             ax.clear()
@@ -334,7 +361,7 @@ class TrainMetricsRecorder(LearnerCallback):
             ax.legend(loc="upper right")
 
         if update:
-            if not hasattr(self, "_display"):
+            if not self._display:
                 self._display = display(self._fig, display_id=True)
             else:
                 self._display.update(self._fig)
