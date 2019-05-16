@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import os
 import copy
 from fastai.data_block import LabelList
 from ipywidgets import widgets, Layout, IntSlider
@@ -9,15 +8,21 @@ import numpy as np
 
 def _list_sort(list1D, reverse=False, comparison_fct=lambda x: x):
     indices = list(range(len(list1D)))
-    tmp = sorted(zip(list1D,indices), key=comparison_fct, reverse=reverse)
+    tmp = sorted(zip(list1D, indices), key=comparison_fct, reverse=reverse)
     list1D_sorted, sort_order = list(map(list, list(zip(*tmp))))
-    return (list1D_sorted, sort_order) 
+    return (list1D_sorted, sort_order)
 
 
 class DistanceWidget(object):
     IM_WIDTH = 500  # pixels
 
-    def __init__(self, dataset: LabelList, distances: np.ndarray, query_im_path = None, sort = True):
+    def __init__(
+        self,
+        dataset: LabelList,
+        distances: np.ndarray,
+        query_im_path=None,
+        sort=True,
+    ):
         """Helper class to draw and update Image classification results widgets.
 
         Args:
@@ -29,7 +34,9 @@ class DistanceWidget(object):
 
         if sort:
             distances, sort_order = _list_sort(distances, reverse=False)
-            dataset = copy.deepcopy(dataset) # create copy to not modify the input
+            dataset = copy.deepcopy(
+                dataset
+            )  # create copy to not modify the input
             dataset.x.items = [dataset.x.items[i] for i in sort_order]
             dataset.y.items = [dataset.y.items[i] for i in sort_order]
 
@@ -37,7 +44,7 @@ class DistanceWidget(object):
         self.distances = distances
         self.query_im_path = query_im_path
         self.vis_image_index = 0
-        
+
         self._create_ui()
 
     def show(self):
@@ -48,7 +55,9 @@ class DistanceWidget(object):
 
         self.w_image_header.value = f"Image index: {self.vis_image_index}"
         self.w_img.value = im._repr_png_()
-        self.w_distance.value = "{:.2f}".format(self.distances[self.vis_image_index])
+        self.w_distance.value = "{:.2f}".format(
+            self.distances[self.vis_image_index]
+        )
         self.w_filename.value = str(
             self.dataset.items[self.vis_image_index].name
         )
@@ -129,22 +138,22 @@ class DistanceWidget(object):
         self.w_distance = widgets.Text(
             value="", description="Distance:", layout=Layout(width="200px")
         )
-        info_widgets = [widgets.HTML(value="Image:"), 
-                        self.w_filename,
-                        self.w_path,
-                        self.w_distance]
+        info_widgets = [
+            widgets.HTML(value="Image:"),
+            self.w_filename,
+            self.w_path,
+            self.w_distance,
+        ]
 
-        # Show query image if path is provided 
+        # Show query image if path is provided
         if self.query_im_path:
             info_widgets.append(widgets.HTML(value="Query Image:"))
             w_query_img = widgets.Image(layout=Layout(width="200px"))
             w_query_img.value = open(self.query_im_path, "rb").read()
             info_widgets.append(w_query_img)
-        
+
         # Combine UIs into tab widget
-        w_info = widgets.VBox(
-            children=info_widgets
-        )
+        w_info = widgets.VBox(children=info_widgets)
         w_info.layout.padding = "20px"
         self.ui = widgets.Tab(
             children=[

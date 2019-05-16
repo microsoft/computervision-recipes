@@ -9,7 +9,7 @@
 
 import os
 import pytest
-from pathlib import Path
+import torch
 from typing import List
 from tempfile import TemporaryDirectory
 from utils_cv.common.data import unzip_url
@@ -19,7 +19,12 @@ from utils_cv.classification.data import Urls
 def path_classification_notebooks():
     """ Returns the path of the notebooks folder. """
     return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), os.path.pardir, "classification", "notebooks")
+        os.path.join(
+            os.path.dirname(__file__),
+            os.path.pardir,
+            "classification",
+            "notebooks",
+        )
     )
 
 
@@ -33,8 +38,11 @@ def classification_notebooks():
         "01_training_introduction": os.path.join(
             folder_notebooks, "01_training_introduction.ipynb"
         ),
-        "02_training_accuracy_vs_speed": os.path.join(
-            folder_notebooks, "02_training_accuracy_vs_speed.ipynb"
+        "02_multilabel_classification": os.path.join(
+            folder_notebooks, "02_multilabel_classification.ipynb"
+        ),
+        "03_training_accuracy_vs_speed": os.path.join(
+            folder_notebooks, "03_training_accuracy_vs_speed.ipynb"
         ),
         "10_image_annotation": os.path.join(
             folder_notebooks, "10_image_annotation.ipynb"
@@ -42,13 +50,15 @@ def classification_notebooks():
         "11_exploring_hyperparameters": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
+        "12_hard_negative_sampling": os.path.join(
+            folder_notebooks, "12_hard_negative_sampling.ipynb"
+        ),
         "21_deployment_on_azure_container_instances": os.path.join(
             folder_notebooks,
             "21_deployment_on_azure_container_instances.ipynb",
         ),
         "22_deployment_on_azure_kubernetes_service": os.path.join(
-            folder_notebooks,
-            "22_deployment_on_azure_kubernetes_service.ipynb",
+            folder_notebooks, "22_deployment_on_azure_kubernetes_service.ipynb"
         ),
     }
     return paths
@@ -91,3 +101,28 @@ def tiny_ic_multidata_path(tmp_session) -> List[str]:
 def tiny_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
     return unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True)
+
+
+@pytest.fixture(scope="session")
+def tiny_multilabel_ic_data_path(tmp_session) -> str:
+    """ Returns the path to the tiny fridge objects dataset. """
+    return unzip_url(
+        Urls.multilabel_fridge_objects_tiny_path, tmp_session, exist_ok=True
+    )
+
+
+@pytest.fixture(scope="session")
+def multilabel_result():
+    """ Fake results to test evaluation metrics for multilabel classification. """
+    y_pred = torch.tensor(
+        [
+            [0.9, 0.0, 0.0, 0.0],
+            [0.9, 0.0, 0.9, 0.9],
+            [0.0, 0.9, 0.0, 0.0],
+            [0.9, 0.9, 0.0, 0.0],
+        ]
+    ).float()
+    y_true = torch.tensor(
+        [[1, 0, 0, 1], [1, 1, 1, 1], [0, 1, 0, 0], [1, 1, 1, 0]]
+    ).float()
+    return y_pred, y_true
