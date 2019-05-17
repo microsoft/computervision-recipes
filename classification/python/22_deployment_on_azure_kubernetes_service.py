@@ -6,46 +6,40 @@
 # <i>Licensed under the MIT License.</i>
 #
 #
-# # Deployment of a model as a service with Azure Kubernetes Service
+# # Deployment of a model to Azure Kubernetes Service (AKS)
 #
 # ## Table of contents
 # 1. [Introduction](#intro)
-# 1. [Pre-requisites](#pre-reqs)
-# 1. [Library import](#libraries)
-# 1. [Azure workspace](#workspace)
 # 1. [Model deployment on AKS](#deploy)
+#   1. [Workspace retrieval](#workspace)
 #   1. [Docker image retrieval](#docker_image)
 #   1. [AKS compute target creation](#compute)
 #   1. [Monitoring activation](#monitor)
 #   1. [Service deployment](#svc_deploy)
-# 1. [Testing of the web service](#testing)
 # 1. [Clean up](#clean)
-#   1. [Monitoring deactivation and service deletion](#insights)
-#   1. [Workspace deletion](#del_workspace)
 # 1. [Next steps](#next)
 #
 #
 # ## 1. Introduction <a id="intro"/>
 #
-# In many real life scenarios, trained machine learning models need to be deployed to production. As we saw in the [first](21_deployment_on_azure_container_instances.ipynb) deployment notebook, this can be done by deploying on Azure Container Instances. In this tutorial, we will get familiar with another way of implementing a model into a production environment, this time using [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/concepts-clusters-workloads) (AKS).
+# In many real life scenarios, trained machine learning models need to be deployed to production. As we saw in the [prior](21_deployment_on_azure_container_instances.ipynb) deployment notebook, this can be done by deploying on Azure Container Instances. In this tutorial, we will get familiar with another way of implementing a model into a production environment, this time using [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/concepts-clusters-workloads) (AKS).
 #
-# AKS manages hosted Kubernetes environments. It makes it easy to deploy and manage containerized applications without container orchestration expertise. It also supports deployments with CPU clusters and deployments with GPU clusters. The latter have been shown to be [more economical and efficient](https://azure.microsoft.com/en-us/blog/gpus-vs-cpus-for-deployment-of-deep-learning-models/) when serving complex models such as deep neural networks, and/or when traffic to the web service is high (&gt; 100 requests/second).
-#
+# AKS manages hosted Kubernetes environments. It makes it easy to deploy and manage containerized applications without container orchestration expertise. It also supports deployments with CPU clusters and deployments with GPU clusters.
 #
 # At the end of this tutorial, we will have learned how to:
 #
 # - Deploy a model as a web service using AKS
 # - Monitor our new service.
 
-# ## 2. Pre-requisites <a id="pre-reqs"/>
+# ### Pre-requisites <a id="pre-reqs"/>
 #
 # This notebook relies on resources we created in [21_deployment_on_azure_container_instances.ipynb](21_deployment_on_azure_container_instances.ipynb):
 # - Our Azure Machine Learning workspace
 # - The Docker image that contains the model and scoring script needed for the web service to work.
 #
-# If we are missing any of these, we should go back and run the steps from the sections "2. Pre-requisites" to "5.D Environment setup" to generate them.
-
-# ## 3. Library import <a id="libraries"/>
+# If we are missing any of these, we should go back and run the steps from the sections "Pre-requisites" to "3.D Environment setup" to generate them.
+#
+# ### Library import <a id="libraries"/>
 #
 # Now that our prior resources are available, let's first import a few libraries we will need for the deployment on AKS.
 
@@ -62,7 +56,9 @@ from azureml.core.compute import AksCompute, ComputeTarget
 from azureml.core.webservice import AksWebservice, Webservice
 
 
-# ## 4. Azure workspace <a id="workspace"/>
+# ## 2. Model deployment on AKS <a id="deploy"/>
+#
+# ### 2.A Workspace retrieval <a id="workspace">
 #
 # Let's now load the workspace we used in the [prior notebook](21_deployment_on_azure_container_instances.ipynb).
 #
@@ -84,11 +80,9 @@ print(
 )
 
 
-# ## 5. Model deployment on AKS <a id="deploy">
+# ### 2.B Docker image retrieval <a id="docker_image">
 #
-# ### 5.A Docker image retrieval <a id="docker_image">
-#
-# As for the deployment on Azure Container Instances, we will use Docker containers. The Docker image we created in the prior notebook is very much suitable for our deployment on Azure Kubernetes Service, as it contains the libraries we need and the model we registered. Let's make sure this Docker image is still available (if not, we can just run the cells of section "5. Model deployment on Azure" of the [prior notebook](21_deployment_on_azure_container_instances.ipynb)).
+# We can reuse the Docker image we created in section 3. of the [previous tutorial](21_deployment_on_azure_container_instances.ipynb). Let's make sure that it is still available.
 
 # In[3]:
 
@@ -112,21 +106,17 @@ docker_image = ws.images["image-classif-resnet18-f48"]
 #
 # <i><b>Note:</b> We will not use the `registered_model` object anywhere here. We are running the next 2 cells just for verification purposes.</i>
 
-# In[5]:
+# In[6]:
 
 
 registered_model = docker_image.models[0]
-
-
-# In[6]:
-
 
 print(
     f"Existing model:\n --> Name: {registered_model.name}\n --> Version: {registered_model.version}\n --> ID: {registered_model.id} \n --> Creation time: {registered_model.created_time}\n --> URL: {registered_model.url}"
 )
 
 
-# ### 5.B AKS compute target creation<a id="compute"/>
+# ### 2.C AKS compute target creation<a id="compute"/>
 #
 # In the case of deployment on AKS, in addition to the Docker image, we need to define computational resources. This is typically a cluster of CPUs or a cluster of GPUs. If we already have a Kubernetes-managed cluster in our workspace, we can use it, otherwise, we can create a new one.
 #
@@ -142,9 +132,7 @@ for cp in ws.compute_targets:
     print(f"   --> {cp}: {ws.compute_targets[cp]}")
 
 
-# #### 5.B.a Creation of a new AKS cluster
-#
-# In the case where we have no compute resource available, we can create a new one. For this, we can choose between a CPU-based or a GPU-based cluster of virtual machines. There is a [wide variety](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general) of machine types that can be used. In the present example, however, we will not need the fastest machines that exist nor the most memory optimized ones. We will use typical default machines:
+# In the case where we have no compute resource available, we can create a new one. For this, we can choose between a CPU-based or a GPU-based cluster of virtual machines. The latter is typically better suited for web services with high traffic (i.e. &gt 100 requests per second) and high GPU utilization. There is a [wide variety](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general) of machine types that can be used. In the present example, however, we will not need the fastest machines that exist nor the most memory optimized ones. We will use typical default machines:
 # - [Standard D3 V2](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-general#dv2-series):
 #   - 4 vCPUs
 #   - 14 GB of memory
@@ -208,22 +196,6 @@ else:
 # We retrieved the <aks_cluster_name> AKS compute target
 # ```
 
-# #### 5.B.b Alternative: Attachment of an existing AKS cluster
-#
-# Within our overall subscription, we may already have created an AKS cluster. This cluster may not be visible when we run the `ws.compute_targets` command, though. This is because it is not attached to our present workspace. If we want to use that cluster instead, we need to attach it to our workspace, first. We can do this as follows:
-#
-#
-# ```python
-# existing_aks_name = '<name_of_the_existing_detached_aks_cluster>'
-# resource_id = '/subscriptions/<subscription_id/resourcegroups/<resource_group>/providers/Microsoft.ContainerService/managedClusters/<aks_cluster_full_name>'
-# # <aks_cluster_full_name> can be found by clicking on the aks cluster, in the Azure portal, as the "Resource ID" string
-# # <subscription_id> can be obtained through ws.subscription_id, and <resource_group> through ws.resource_group
-#
-# attach_config = AksCompute.attach_configuration(resource_id=resource_id)
-# aks_target = ComputeTarget.attach(workspace=ws, name=existing_aks_name, attach_configuration=attach_config)
-# aks_target.wait_for_completion(show_output = True)
-# ```
-
 # This compute target can be seen on the Azure portal, under the `Compute` tab.
 #
 # <img src="media/aks_compute_target_cpu.jpg" width="900">
@@ -239,7 +211,7 @@ print(
 
 # The set of resources we will use to deploy our web service on AKS is now provisioned and available.
 #
-# ### 5.C Monitoring activation <a id="monitor"/>
+# ### 2.D Monitoring activation <a id="monitor"/>
 #
 # Once our web app is up and running, it is very important to monitor it, and measure the amount of traffic it gets, how long it takes to respond, the type of exceptions that get raised, etc. We will do so through [Application Insights](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview), which is an application performance management service. To enable it on our soon-to-be-deployed web service, we first need to update our AKS configuration file:
 
@@ -250,7 +222,7 @@ print(
 aks_config = AksWebservice.deploy_configuration(enable_app_insights=True)
 
 
-# ### 5.D Service deployment <a id="svc_deploy"/>
+# ### 2.E Service deployment <a id="svc_deploy"/>
 #
 # We are now ready to deploy our web service. As in the [first](21_deployment_on_azure_container_instances.ipynb) notebook, we will deploy from the Docker image. It indeed contains our image classifier model and the conda environment needed for the scoring script to work properly. The parameters to pass to the `Webservice.deploy_from_image()` command are similar to those used for the deployment on ACI. The only major difference is the compute target (`aks_target`), i.e. the CPU cluster we just spun up.
 #
@@ -296,17 +268,11 @@ else:
 #
 # <img src="media/aks_webservice_cpu.jpg" width="900">
 
-# Our web service is up, and is running on AKS. We can now proceed to testing it.
+# Our web service is up, and is running on AKS.
 
-# ## 6. Testing of the web service <a id="testing"/>
+# ## 3. Clean up <a id="clean">
 #
-# Such testing is a whole task of its own, so we separated it from this notebook. We provide all the needed steps in [23_aci_aks_web_service_testing.ipynb](23_aci_aks_web_service_testing.ipynb). There, we test our service:
-# - From within our workspace (using `aks_service.run()`)
-# - From outside our workspace (using `requests.post()`).
-
-# ## 7. Clean up <a id="clean">
-#
-# In a real-life scenario, it is likely that the service we created would need to be up and running at all times. However, in the present demonstrative case, and once we have verified that our service works, we can delete it as well as all the resources we used.
+# In a real-life scenario, it is likely that the service we created would need to be up and running at all times. However, in the present demonstrative case, and once we have verified that our service works (cf. "Next steps" section below), we can delete it as well as all the resources we used.
 #
 # In this notebook, the only resource we added to our subscription, in comparison to what we had at the end of the notebook on ACI deployment, is the AKS cluster. There is no fee for cluster management. The only components we are paying for are:
 # - the cluster nodes
@@ -316,7 +282,6 @@ else:
 #
 # To get a better sense of pricing, we can refer to [this calculator](https://azure.microsoft.com/en-us/pricing/calculator/?service=kubernetes-service#kubernetes-service). We can also navigate to the [Cost Management + Billing pane](https://ms.portal.azure.com/#blade/Microsoft_Azure_Billing/ModernBillingMenuBlade/Overview) on the portal, click on our subscription ID, and click on the Cost Analysis tab to check our credit usage.
 #
-# ### 7.A Monitoring deactivation and service deletion <a id="insights"/>
 # If we plan on no longer using this web service, we can turn monitoring off, and delete the compute target, the service itself as well as the associated Docker image.
 
 # In[ ]:
@@ -338,7 +303,6 @@ else:
 
 # At this point, all the service resources we used in this notebook have been deleted. We are only now paying for our workspace.
 #
-# ### 7.B Workspace deletion  <a id="del_workspace"/>
 # If our goal is to continue using our workspace, we should keep it available. On the contrary, if we plan on no longer using it and its associated resources, we can delete it.
 #
 # <i><b>Note:</b> Deleting the workspace will delete all the experiments, outputs, models, Docker images, deployments, etc. that we created in that workspace.</i>
@@ -350,5 +314,5 @@ else:
 # This deletes our workspace, the container registry, the account storage, Application Insights and the key vault
 
 
-# ## 8. Next steps  <a id="next"/>
+# ## 4. Next steps  <a id="next"/>
 # In the [next notebook](23_aci_aks_web_service_testing.ipynb), we will test the web services we deployed on ACI and on AKS.
