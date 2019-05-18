@@ -1,6 +1,6 @@
 # Repository Metrics
 
-[![Build status](https://msdata.visualstudio.com/AlgorithmsAndDataScience/_apis/build/status/ComputerVisionBestPractices/ComputerVisionBestPractices%20repo%20stats)](https://msdata.visualstudio.com/AlgorithmsAndDataScience/_build/latest?definitionId=5206)
+[![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/repo-metrics?branchName=rijai_repometrics)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=27&branchName=rijai_repometrics)
 
 We developed a script that allows us to track the metrics of the ComputerVisionBestPractices repo. Some of the metrics we can track are listed here:
 
@@ -18,7 +18,7 @@ The first step is to set up the credentials, copy the configuration file and fil
 
 To track the current state of the repository and save it to CosmosDB:
 
-    python scripts/repo_metrics/track_metrics.py --github_repo "https://github.com/Microsoft/ComputerVisionBestPractices" --save_to_database
+    python scripts/repo_metrics/track_metrics.py --github_repo "https://github.com/Microsoft/ComputerVision" --save_to_database
 
 To track an event related to this repository and save it to CosmosDB:
 
