@@ -86,14 +86,14 @@ def compute_vector_distance(
 
 
 def compute_all_distances(
-    query_image: str, feature_dict: dict, distance: str = "l2"
+    query_features: np.array, feature_dict: dict, distance: str = "l2"
 ) -> dict:
     """
     Computes the distance between query_image
     and all the images present in feature_dict (query_image included)
 
     Args:
-        query_image: (str) Path of the query image
+        query_features: (np.array) Features for the query image
         feature_dict: (dict) Dictionary of features,
         where key = image path and value = array of floats
         distance: (str) Type of distance to compute
@@ -103,7 +103,6 @@ def compute_all_distances(
     and value = distance between the query_image and that image
 
     """
-    query_features = feature_dict[query_image]
     distances = {}
     for image, feature in feature_dict.items():
         distances[image] = compute_vector_distance(
@@ -126,7 +125,7 @@ def sort_distances(distances: list) -> list:
 
 
 def compute_topk_similar(
-    query_image: str, feature_dict: dict, distance: str = "l2", top_k: int = 10
+    query_features: np.array, feature_dict: dict, distance: str = "l2", top_k: int = 10
 ) -> list:
     """
     Computes the distances between query_image and all other images in feature_dict
@@ -134,8 +133,7 @@ def compute_topk_similar(
     Returns the k closest
 
     Args:
-        query_image: (str) Path of the query_image
-        (i.e. image from which all distances are computed)
+        query_features: (np.array) Features for the query image
         feature_dict: (dict) Dictionary of features,
         where key = image path and value = array of floats
         distance: (str) Type of distance to compute, default = "l2"
@@ -147,7 +145,7 @@ def compute_topk_similar(
     of the k closest images to query_image
 
     """
-    distances = compute_all_distances(query_image, feature_dict, distance)
+    distances = compute_all_distances(query_features, feature_dict, distance)
     distances = sort_distances(distances)
     return distances[:top_k]
 
