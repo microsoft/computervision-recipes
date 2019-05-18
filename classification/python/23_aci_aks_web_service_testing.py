@@ -21,7 +21,6 @@
 # 1. [Clean up](#clean)
 #   1. [Application Insights deactivation and web service termination](#del_app_insights)
 #   1. [Docker image deletion](#del_image)
-# 1. [Next steps](#next-steps)
 
 # ## 1. Introduction <a id="intro"/>
 # In the 2 prior notebooks, we deployed our machine learning model as a web service on [Azure Container Instances](https://github.com/Microsoft/ComputerVisionBestPractices/blob/master/classification/notebooks/21_deployment_on_azure_container_instances.ipynb) (ACI) and on [Azure Kubernetes Service](https://github.com/Microsoft/ComputerVision/blob/master/classification/notebooks/22_deployment_on_azure_kubernetes_service.ipynb) (AKS). In this notebook, we will learn how to test our service:
@@ -336,8 +335,3 @@ for docker_im in ws.images:
 
 docker_image = ws.images["image-classif-resnet18-f48"]
 # docker_image.delete()
-
-
-# ## 6. Next steps <a id="next-steps">
-#
-# In the next notebook, we will learn how to create a user interface that will allow our users to interact with our web service through the simple upload of images.
