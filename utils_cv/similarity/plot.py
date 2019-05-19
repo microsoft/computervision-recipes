@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 
 from PIL import Image, ImageOps
@@ -20,13 +21,15 @@ def plot_similars(similars: list, num_rows: int, num_cols: int):
     """
     for num, (image, distance) in enumerate(similars):
         plt.subplot(num_rows, num_cols, num + 1)
-        plt.rcParams["figure.dpi"] = 150
-        plt.rcParams["axes.titlepad"] = 2
+        plt.rcParams["figure.dpi"] = 500
+        plt.rcParams["axes.titlepad"] = 1
+        plt.subplots_adjust(hspace=0.5)
+
         plt.axis("off")
 
         title_color = "black"
         im_name = os.path.basename(image)
-        title = f"{im_name}\nrank: {num} - dist: {distance:0.3f}"
+        title = f"{im_name}\nrank: {num}\ndist: {distance:0.2f}"
 
         img = Image.open(image)
         if num == 0:
@@ -36,3 +39,37 @@ def plot_similars(similars: list, num_rows: int, num_cols: int):
 
         plt.title(title, fontsize=5, color=title_color)
         plt.imshow(img)
+
+
+def plot_rank(ranklist, sets_sizes, both=True):
+    """
+
+    Args:
+        num_comparative_images: (int) Maximum number of
+        comparative images across comparative sets
+        ranklist: (list) List of ranks of the positive example
+        across comparative sets
+        sets_sizes: (list) List of size of the comparative sets
+        both: (bool) True if users wants to plot both subplots
+
+    Returns:
+
+    """
+    plt.figure(dpi=100)
+    bins = np.arange(1, max(sets_sizes) + 2, 1) - 0.5
+    plt.hist(ranklist, bins=bins, alpha=0.5, label="Positive example rank")
+    plt.xticks(bins + 0.5)
+    plt.ylabel("Number of comparative sets")
+    plt.xlabel("Rank of positive example")
+    plt.title("Distribution of positive example rank across comparative sets")
+
+    if both:
+        plt.hist(
+            sets_sizes, bins=bins, alpha=0.5, label="# comparative images"
+        )
+        plt.xticks(bins + 0.5)
+        plt.legend()
+        plt.xlabel("Rank of positive example  /  Number of comparative images")
+        plt.title(
+            "Distribution of positive example rank \n& sets size across comparative sets"
+        )

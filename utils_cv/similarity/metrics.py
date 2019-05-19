@@ -2,8 +2,9 @@
 # Licensed under the MIT License.
 
 import numpy as np
-import os
 import scipy
+
+from pathlib import Path
 
 
 def compute_vector_distance(
@@ -125,7 +126,10 @@ def sort_distances(distances: list) -> list:
 
 
 def compute_topk_similar(
-    query_features: np.array, feature_dict: dict, distance: str = "l2", top_k: int = 10
+    query_features: np.array,
+    feature_dict: dict,
+    distance: str = "l2",
+    top_k: int = 10,
 ) -> list:
     """
     Computes the distances between query_image and all other images in feature_dict
@@ -164,9 +168,7 @@ def positive_image_median_rank(similarity_tuple_list: list) -> tuple:
     rank_list = []
     for similarity_tuple in similarity_tuple_list:
         # Extract the class of the reference image
-        reference_class = os.path.basename(similarity_tuple[0][0]).split("__")[
-            0
-        ]
+        reference_class = Path(similarity_tuple[0][0]).parts[-2]
         # Find the positive example in the list of similar images
         positive_im_path = [
             x
@@ -180,19 +182,19 @@ def positive_image_median_rank(similarity_tuple_list: list) -> tuple:
     return rank_list, np.median(rank_list)
 
 
-def recall_at_k(rank_list: list, threshold: int) -> float:
+def positive_in_top_k(rank_list: list, threshold: int) -> float:
     """
 
     Args:
         rank_list: (list) List of ranks of the positive example in each comparative set
-        threshold: (int) Threshold above which the rank should be
-        for the comparative set to be counted in t the recall
+        threshold: (int) Threshold below which the rank should be
+        for the comparative set to be counted
 
-    Returns: recall (float) Percentage of comparative sets
+    Returns: (float) Percentage of comparative sets
     for which the positive example's rank was better than
     or equal to the threshold
 
     """
     below_threshold = [x for x in rank_list if x <= threshold]
-    recall = 100.0 * len(below_threshold) / len(rank_list)
-    return recall
+    percent_in_top_k = round(100.0 * len(below_threshold) / len(rank_list), 1)
+    return percent_in_top_k

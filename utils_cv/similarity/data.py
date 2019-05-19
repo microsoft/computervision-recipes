@@ -49,11 +49,11 @@ def test_set_extractor(
             )
 
 
-def comparative_set_builder(test_path: Path) -> dict:
+def comparative_set_builder(test_im_list: list) -> dict:
     """
     Builds sets of comparative images
     Args:
-        test_path: (Path) Path to the test folder
+        test_im_list: (list) List of paths to validation images
 
     Returns: comparative_sets (dict) a dictionary
     where keys are each of the images in the test_folder,
@@ -63,17 +63,16 @@ def comparative_set_builder(test_path: Path) -> dict:
 
     """
     comparative_sets = dict()
-    test_im_list = test_path.ls()
     random.seed(971)
     for im_path in test_im_list:
         # ---- Extract one positive example, i.e. image from same class ----
         # Retrieve the image class name
-        class_name = os.path.basename(im_path).split("__")[0]
+        class_name = im_path.parts[-2]
         # List available images in the same class
         class_im_list = [
             str(f)
             for f in test_im_list
-            if (class_name in f.name and f != im_path)
+            if (class_name == f.parts[-2] and f != im_path)
         ]
         # Randomly select 1 positive image
         positive_index = random.sample(range(len(class_im_list)), 1)
@@ -82,12 +81,12 @@ def comparative_set_builder(test_path: Path) -> dict:
 
         # ---- Extract all negative examples that exist in the folder ----
         negative_examples = list(
-            set(test_im_list).difference(set(class_im_list))
+            set([str(f) for f in test_im_list]).difference(set(class_im_list))
         )
         negative_examples = [
-            neg_ex.as_posix()
+            Path(neg_ex).as_posix()
             for neg_ex in negative_examples
-            if class_name not in neg_ex.name
+            if class_name != Path(neg_ex).parts[-2]
         ]
 
         comparative_sets[im_path.as_posix()] = [
