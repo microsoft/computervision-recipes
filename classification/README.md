@@ -20,10 +20,15 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 | --- | --- |
 | [00_webcam.ipynb](notebooks/00_webcam.ipynb)| Demonstrates a trained model and inference an image from your computer's webcam.
 | [01_training_introduction.ipynb](notebooks/01_training_introduction.ipynb)| Introduces some of the basic concepts around model training and evaluation.|
-| [02_training_accuracy_vs_speed.ipynb](notebooks/02_training_accuracy_vs_speed.ipynb)| Trains a model with high accuracy vs one with a fast inferencing speed. *<font color="orange"> Use this to train on your own datasets! </font>* |
+| [02_multilabel_classification.ipynb](notebooks/02_multilabel_classification.ipynb)| Introduces the key differences when it comes to training a multilabel classification model.|
+| [03_training_accuracy_vs_speed.ipynb](notebooks/03_training_accuracy_vs_speed.ipynb)| Trains a model with high accuracy vs one with a fast inferencing speed. *<font color="orange"> Use this to train on your own datasets! </font>* |
 | [10_image_annotation.ipynb](notebooks/10_image_annotation.ipynb)| A simple UI to annotate images. |
 | [11_exploring_hyperparameters.ipynb](notebooks/11_exploring_hyperparameters.ipynb)| Finds optimal model parameters using grid search. |
-| [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Deploys a trained model as REST API using Azure Container Instances. |
+| [12_hard_negative_sampling.ipynb](notebooks/12_hard_negative_sampling.ipynb)| Use hard negatives to improve your model performance.  |
+| [20_azure_workspace_setup.ipynb](notebooks/20_azure_workspace_setup.ipynb)| Setup your Azure resources and Azure Machine Learning workspace. |
+| [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Deploys a trained model exposed on a REST API using Azure Container Instances. |
+| [22_deployment_on_azure_kubernetes_service.ipynb](notebooks/22_deployment_on_azure_kubernetes_service.ipynb)| Deploys a trained model exposed on a REST API using the Azure Kubernetes Service. |
+| [23_aci_aks_web_service_testing.ipynb](notebooks/23_aci_aks_web_service_testing.ipynb)| Test the deployed models on either ACI or AKS. |
 
 ## Getting Started
 

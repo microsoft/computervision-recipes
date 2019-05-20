@@ -3,10 +3,9 @@
 
 from base64 import b64encode
 from pathlib import Path
-from typing import Union, Tuple
+from typing import List, Tuple, Union 
 
 import numpy as np
-
 from PIL import Image
 
 

@@ -42,15 +42,31 @@ def test_01_notebook_run(classification_notebooks, tiny_ic_data_path):
 
 
 @pytest.mark.notebooks
-def test_02_notebook_run(classification_notebooks, tiny_ic_data_path):
-    notebook_path = classification_notebooks["02_training_accuracy_vs_speed"]
+def test_02_notebook_run(
+    classification_notebooks, tiny_multilabel_ic_data_path
+):
+    notebook_path = classification_notebooks["02_multilabel_classification"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__, DATA_PATH=tiny_multilabel_ic_data_path
+        ),
+        kernel_name=KERNEL_NAME,
+    )
+
+
+@pytest.mark.notebooks
+def test_03_notebook_run(classification_notebooks, tiny_ic_data_path):
+    notebook_path = classification_notebooks["03_training_accuracy_vs_speed"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_ic_data_path,
-            MODEL_TYPE="fast_inference",  # options: ['fast_inference', 'high_accuracy', 'small_size']
+            MULTILABEL=False,
+            MODEL_TYPE="fast_inference",  # options: ['fast_inference', 'high_performance', 'small_size']
             EPOCHS_HEAD=1,
             EPOCHS_BODY=1,
         ),
@@ -85,6 +101,22 @@ def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
             LEARNING_RATES=[1e-3],
             IM_SIZES=[199],
             EPOCHS=[1],
+        ),
+        kernel_name=KERNEL_NAME,
+    )
+    
+    
+@pytest.mark.notebooks
+def test_12_notebook_run(classification_notebooks, tiny_ic_data_path):
+    notebook_path = classification_notebooks["12_hard_negative_sampling"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            DATA_PATH=tiny_ic_data_path,
+            EPOCHS_HEAD=1,
+            EPOCHS_BODY=1,
         ),
         kernel_name=KERNEL_NAME,
     )
