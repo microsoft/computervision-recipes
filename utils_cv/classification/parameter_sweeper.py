@@ -14,9 +14,13 @@ from typing import Any, Dict, List, Tuple, Union
 from fastai.callbacks import EarlyStoppingCallback
 from fastai.metrics import accuracy
 from fastai.vision import (
-    cnn_learner, get_transforms,
-    ImageDataBunch, ImageList, imagenet_stats,
-    Learner, models,
+    cnn_learner,
+    get_transforms,
+    ImageDataBunch,
+    ImageList,
+    imagenet_stats,
+    Learner,
+    models,
 )
 from matplotlib.axes import Axes
 from matplotlib.text import Annotation
