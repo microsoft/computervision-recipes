@@ -20,14 +20,14 @@ Currently the main investment/priority is around image classification and to a l
 
 ## Getting Started
 
-Instructions on how to get started, as well as our example notebooks and discussions are provided in the [image classification](image_classification/README.md) subfolder.
+Instructions on how to get started, as well as our example notebooks and discussions are provided in the [classification](classification/README.md) subfolder.
 
 Note that for certain Computer Vision problems, ready-made or easily customizable solutions exist which do not require any custom coding or machine learning expertise. We strongly recommend evaluating if these can sufficiently solve your problem. If these solutions are not applicable, or the accuracy of these solutions is not sufficient, then resorting to more complex and time-consuming custom approaches may be necessary.
 
 The following Microsoft services offer simple solutions to address common Computer Vision tasks:
 
 - [Cognitive Services](https://azure.microsoft.com/en-us/services/cognitive-services/directory/vision/)
-provides pre-trained REST APIs which can be called for image classification, face recognition, OCR, video analytics, and much more. These APIs are easy to use and work out of the box (no training required), however customization is limited. See the various demos available for each domain to get a feel for the functionality (e.g., [computer vision](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/), [speach to text](https://azure.microsoft.com/en-us/services/cognitive-services/speech-to-text/) ).
+provides pre-trained REST APIs which can be called for image classification, face recognition, OCR, video analytics, and much more. These APIs are easy to use and work out of the box (no training required), however customization is limited. See the various demos available for each domain to get a feel for the functionality (e.g., [computer vision](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/), [speech to text](https://azure.microsoft.com/en-us/services/cognitive-services/speech-to-text/) ).
 
 - [Custom Vision Service](https://azure.microsoft.com/en-us/services/cognitive-services/custom-vision-service/)
 is a SaaS service to train and deploy a model as a REST API given a user-provided training set. All steps from image upload, annotation, to model deployment can be performed using either the UI or a Python SDK. Training image classification or object detection models are supported using only minimal machine learning knowledge. The Custom Vision Service offers more flexibility than using the pre-trained Cognitive Services APIs, but requires the user to bring and annotate their own data.
