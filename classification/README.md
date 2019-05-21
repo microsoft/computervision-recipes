@@ -18,7 +18,7 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 
 | Notebook name | Description |
 | --- | --- |
-| [00_webcam.ipynb](notebooks/00_webcam.ipynb)| Demonstrates a trained model and inference an image from your computer's webcam.
+| [00_webcam.ipynb](notebooks/00_webcam.ipynb)| Demonstrates a trained model and inferences an image from your computer's webcam.
 | [01_training_introduction.ipynb](notebooks/01_training_introduction.ipynb)| Introduces some of the basic concepts around model training and evaluation.|
 | [02_multilabel_classification.ipynb](notebooks/02_multilabel_classification.ipynb)| Introduces the key differences when it comes to training a multilabel classification model.|
 | [03_training_accuracy_vs_speed.ipynb](notebooks/03_training_accuracy_vs_speed.ipynb)| Trains a model with high accuracy vs one with a fast inferencing speed. *<font color="orange"> Use this to train on your own datasets! </font>* |
@@ -30,7 +30,7 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 | [22_deployment_on_azure_kubernetes_service.ipynb](notebooks/22_deployment_on_azure_kubernetes_service.ipynb)| Deploys a trained model exposed on a REST API using the Azure Kubernetes Service. |
 | [23_aci_aks_web_service_testing.ipynb](notebooks/23_aci_aks_web_service_testing.ipynb)| Test the deployed models on either ACI or AKS. |
 
-## Getting Started
+## Getting started
 
 To setup on your local machine:
 1. Install Anaconda with Python >= 3.6. [Miniconda](https://conda.io/miniconda.html) is a quick way to get started.
