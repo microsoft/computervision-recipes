@@ -37,7 +37,7 @@ To setup on your local machine:
 1. Clone the repository
     ```
     git clone https://github.com/Microsoft/ComputerVision
-    cd ComputerVision/image_classification
+    cd ComputerVision/classification
     git checkout staging # for now we work in the staging directory
     ```
 1. Install the conda environment, you'll find the `environment.yml` file in the `classification` subdirectory. From there:
