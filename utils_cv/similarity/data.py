@@ -63,7 +63,7 @@ def comparative_set_builder(test_im_list: list) -> dict:
 
     """
     comparative_sets = dict()
-    random.seed(971)
+    random.seed(975)
     for im_path in test_im_list:
         # ---- Extract one positive example, i.e. image from same class ----
         # Retrieve the image class name
