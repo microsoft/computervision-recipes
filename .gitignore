@@ -113,7 +113,8 @@ venv.bak/
 output.ipynb
 
 # don't save any data
-image_classification/data/*
+classification/data/*
+data/
 
 # don't save .swp files
 *.swp
