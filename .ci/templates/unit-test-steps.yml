@@ -14,7 +14,7 @@ steps:
 - bash: |
     source activate cvbp
     python -m ipykernel install --user --name cvbp --display-name "cvbp"
-    pytest tests/unit --junitxml=junit/test-unitttest.xml --cov=. --branch --cov-report=xml --cov-report=html
+    pytest tests/unit --junitxml=junit/test-unitttest.xml --cov=classification --cov-report=xml --cov-report=html
   displayName: 'Run Unit tests'
 
 - task: PublishCodeCoverageResults@1
