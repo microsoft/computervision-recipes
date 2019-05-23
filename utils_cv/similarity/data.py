@@ -2,51 +2,9 @@
 # Licensed under the MIT License.
 
 import numpy as np
-import operator
-import os
 import random
-import shutil
 
 from pathlib import Path
-
-
-def test_set_extractor(
-    path: Path, test_folder: str, num_im_per_class: int = 4
-):
-    """
-    Extracts a set of num_im_per_class images from each class for testing purposes
-
-    Args:
-        path: (Path) Path to the training dataset
-        test_folder: (str) Path to the folder into which the test images will be moved
-        num_im_per_class: (int) Number of images to move into the test folder per class
-
-    Returns: Nothing
-
-    """
-    # Remove possible /models sub-folder
-    cleaned_paths = [p for p in path.ls() if "models" not in p.name]
-    test_im_paths = dict()
-    random.seed(971)
-    # Count number of classes
-    for class_path in cleaned_paths:  # For each class
-        # Extract class name
-        class_name = os.path.basename(class_path)
-        # List available images
-        im_list = class_path.ls()
-        # Randomly select *num_im_per_class* images for testing
-        selected_ims = random.sample(range(len(im_list)), num_im_per_class)
-        # Add the selected images to a dictionary
-        test_im_paths[class_name] = operator.itemgetter(*selected_ims)(im_list)
-
-    for key in test_im_paths:  # For each class
-        for im_path in test_im_paths[key]:  # For each selected image
-            # Extract the file name
-            im_name = os.path.basename(im_path)
-            # Move the file to the test/ folder, with class name as prefix
-            shutil.move(
-                im_path, os.path.join(test_folder, f"{key}__{im_name}")
-            )
 
 
 def comparative_set_builder(test_im_list: list) -> dict:
