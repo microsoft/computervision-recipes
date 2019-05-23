@@ -32,4 +32,5 @@ dependencies:
   - ipywebrtc
   - pre-commit>=1.14.4
   - lxml>=4.3.2
-  - pyyaml>=5.1
+  - pyyaml>=5.1 
+  - nteract-scrapbook
