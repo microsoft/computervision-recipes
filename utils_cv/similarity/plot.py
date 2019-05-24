@@ -51,8 +51,6 @@ def plot_rank(ranklist, sets_sizes, both=True):
     number of comparative images in each set
 
     Args:
-        num_comparative_images: (int) Maximum number of
-        comparative images across comparative sets
         ranklist: (list) List of ranks of the positive example
         across comparative sets
         sets_sizes: (list) List of size of the comparative sets
