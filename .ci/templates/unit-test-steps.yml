@@ -29,3 +29,10 @@ steps:
   inputs:
     testResultsFiles: '**/test-unitttest.xml'
     testRunTitle: 'Test results for PyTest'
+
+- task: ComponentGovernanceComponentDetection@0
+  inputs:
+    scanType: 'Register'
+    verbosity: 'Verbose'
+    alertWarningLevel: 'High'
+
