@@ -58,6 +58,7 @@ from azureml.core import Experiment, Workspace
 from azureml.core.image import ContainerImage
 from azureml.core.model import Model
 from azureml.core.webservice import AciWebservice, Webservice
+from azureml.exceptions import WebserviceException
 
 # Computer Vision repository
 sys.path.extend([".", "../.."])
@@ -292,14 +293,19 @@ get_ipython().run_cell_magic(
 
 
 # Create a deployment-specific yaml file from image_classification/environment.yml
-generate_yaml(
-    directory=os.path.join(root_path(), "classification"),
-    ref_filename="environment.yml",
-    needed_libraries=["pytorch", "spacy", "fastai", "dataclasses"],
-    conda_filename="myenv.yml",
-)
+try:
+    generate_yaml(
+        directory=os.path.join(root_path(), "classification"),
+        ref_filename="environment.yml",
+        needed_libraries=["pytorch", "spacy", "fastai", "dataclasses"],
+        conda_filename="myenv.yml",
+    )
+    # Note: Take a look at the generate_yaml() function for details on how to create your yaml file from scratch
 
-# Note: Take a look at the generate_yaml() function for details on how to create your yaml file from scratch
+except FileNotFoundError:
+    raise FileNotFoundError(
+        "The *environment.yml* file is missing - Please make sure to retrieve it from the github repository"
+    )
 
 
 # There are different ways of creating a Docker image on Azure. Here, we create it separately from the service it will be used by. This way of proceeding gives us direct access to the Docker image object. Thus, if the service deployment fails, but the Docker image gets deployed successfully, we can try deploying the service again, without having to create a new image all over again.
@@ -308,30 +314,40 @@ generate_yaml(
 
 
 # Configure the Docker image
-image_config = ContainerImage.image_configuration(
-    execution_script="score.py",
-    runtime="python",
-    conda_file="myenv.yml",
-    description="Image with fast.ai Resnet18 model (fastai 1.0.48)",
-    tags={
-        "training set": "ImageNet",
-        "architecture": "CNN ResNet18",
-        "type": "Pretrained",
-    },
-)
+try:
+    image_config = ContainerImage.image_configuration(
+        execution_script="score.py",
+        runtime="python",
+        conda_file="myenv.yml",
+        description="Image with fast.ai Resnet18 model (fastai 1.0.48)",
+        tags={
+            "training set": "ImageNet",
+            "architecture": "CNN ResNet18",
+            "type": "Pretrained",
+        },
+    )
+except WebserviceException:
+    raise FileNotFoundError(
+        "The files *score.py* and/or *myenv.yaml* could not be found - Please run the cells above again"
+    )
 
 
 # In[19]:
 
 
 # Create the Docker image
-docker_image = ContainerImage.create(
-    name="image-classif-resnet18-f48",
-    models=[model],
-    image_config=image_config,
-    workspace=ws,
-)
-# The image name should not contain more than 32 characters, and should not contain any spaces, dots or underscores
+try:
+    docker_image = ContainerImage.create(
+        name="image-classif-resnet18-f48-2",
+        models=[model],
+        image_config=image_config,
+        workspace=ws,
+    )
+    # The image name should not contain more than 32 characters, and should not contain any spaces, dots or underscores
+except WebserviceException:
+    raise FileNotFoundError(
+        "The files *score.py* and/or *myenv.yaml* could not be found - Please run the cells above again"
+    )
 
 
 # In[20]:
@@ -363,17 +379,18 @@ print(ws.images["image-classif-resnet18-f48"].image_build_log_uri)
 #
 # In this notebook, we use [Azure Container Instances](https://docs.microsoft.com/en-us/azure/container-instances/container-instances-overview) (ACI) which are good for quick and [cost-effective](https://azure.microsoft.com/en-us/pricing/details/container-instances/) development/test deployment scenarios.
 #
-# To set them up properly, we need to indicate the number of CPU cores and the amount of memory we want to allocate to our web service. Optional tags and descriptions are also available for us to identify the instances in AzureML when looking at the `Compute` tab in the Azure Portal.
+# To set them up properly, we need to indicate the number of CPU cores and the amount of memory we want to allocate to our web service. Optional tags and descriptions are also available for us to identify the instances in AzureML when looking at the `Compute` tab in the Azure Portal. We also enable monitoring, through the `enable_app_insights` parameter. Once our web app is up and running, this will allow us to measure the amount of traffic it gets, how long it takes to respond, the type of exceptions that get raised, etc. We will do so through [Application Insights](https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview), which is an application performance management service.
 #
 # <i><b>Note:</b> For production workloads, it is better to use [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/) (AKS) instead. We will demonstrate how to do this in the [next notebook](22_deployment_on_azure_kubernetes_service.ipynb).<i>
 
 # In[22]:
 
 
-# Create a deployment configuration with 1 CPU and 5 gigabytes of RAM
+# Create a deployment configuration with 1 CPU and 5 gigabytes of RAM, and add monitoring to it
 aci_config = AciWebservice.deploy_configuration(
     cpu_cores=1,
     memory_gb=5,
+    enable_app_insights=True,
     tags={"webservice": "image classification model (fastai 1.0.48)"},
     description="This service classifies images into 1000 different groups.",
 )
