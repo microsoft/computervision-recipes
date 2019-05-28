@@ -53,12 +53,18 @@ def classification_notebooks():
         "12_hard_negative_sampling": os.path.join(
             folder_notebooks, "12_hard_negative_sampling.ipynb"
         ),
+        "20_azure_workspace_setup": os.path.join(
+            folder_notebooks, "20_azure_workspace_setup.ipynb"
+        ),
         "21_deployment_on_azure_container_instances": os.path.join(
             folder_notebooks,
             "21_deployment_on_azure_container_instances.ipynb",
         ),
         "22_deployment_on_azure_kubernetes_service": os.path.join(
             folder_notebooks, "22_deployment_on_azure_kubernetes_service.ipynb"
+        ),
+        "23_aci_aks_web_service_testing": os.path.join(
+            folder_notebooks, "23_aci_aks_web_service_testing.ipynb"
         ),
     }
     return paths
