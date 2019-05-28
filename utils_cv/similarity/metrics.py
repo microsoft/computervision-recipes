@@ -16,8 +16,7 @@ def compute_vector_distance(
     bias: list = [],
     learner: list = [],
 ) -> float:
-    """
-    Computes the distance between 2 vectors
+    """Computes the distance between 2 vectors
     Inspired by https://github.com/Azure/ImageSimilarityUsingCntk=
 
     Args:
@@ -89,8 +88,7 @@ def compute_vector_distance(
 def compute_all_distances(
     query_features: np.array, feature_dict: dict, distance: str = "l2"
 ) -> dict:
-    """
-    Computes the distance between query_image
+    """Computes the distance between query_image
     and all the images present in feature_dict (query_image included)
 
     Args:
@@ -113,8 +111,7 @@ def compute_all_distances(
 
 
 def sort_distances(distances: list) -> list:
-    """
-    Sorts image tuples by increasing distance
+    """Sorts image tuples by increasing distance
 
     Args:
         distances: (list) List of tuples (image path, distance to the query_image)
@@ -131,8 +128,7 @@ def compute_topk_similar(
     distance: str = "l2",
     top_k: int = 10,
 ) -> list:
-    """
-    Computes the distances between query_image and all other images in feature_dict
+    """Computes the distances between query_image and all other images in feature_dict
     Sorts them
     Returns the k closest
 
@@ -155,8 +151,7 @@ def compute_topk_similar(
 
 
 def positive_image_median_rank(similarity_tuple_list: list) -> tuple:
-    """
-    Computes the rank of the positive example for each set of sorted images
+    """Computes the rank of the positive example for each set of sorted images
     Returns the list of these ranks, and its median
     Args:
         similarity_tuple_list: (list) List of list of tuples
@@ -183,16 +178,16 @@ def positive_image_median_rank(similarity_tuple_list: list) -> tuple:
 
 
 def positive_in_top_k(rank_list: list, threshold: int) -> float:
-    """
+    """Computes the percentage of comparative sets
+    for which the positive example's rank was better than
+    or equal to the threshold
 
     Args:
         rank_list: (list) List of ranks of the positive example in each comparative set
         threshold: (int) Threshold below which the rank should be
         for the comparative set to be counted
 
-    Returns: (float) Percentage of comparative sets
-    for which the positive example's rank was better than
-    or equal to the threshold
+    Returns: (float) Percentage of comparative sets with rank <= threshold
 
     """
     below_threshold = [x for x in rank_list if x <= threshold]

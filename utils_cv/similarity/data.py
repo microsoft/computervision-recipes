@@ -8,8 +8,8 @@ from pathlib import Path
 
 
 def comparative_set_builder(test_im_list: list) -> dict:
-    """
-    Builds sets of comparative images
+    """Builds sets of comparative images
+
     Args:
         test_im_list: (list) List of paths to validation images
 
