@@ -12,7 +12,7 @@ steps:
   displayName: 'Create and activate conda environment'
 
 - script: |
-  az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
+    az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
 
 - bash: |
     echo $OSTYPE
