@@ -21,7 +21,7 @@ steps:
     echo $OSTYPE
     if [ ! -d .azureml ]; then  mkdir .azureml; fi;
     if [ ! -f .azureml/config.json ];
-    then echo -e "{\n    \"subscription_id\":\""$subscription_id"\",    \"resource_group\":\""$resource_group"\",    \"workspace_name\":\""$workspace_name"\",    \"location\":\""$location"\"\n}" > .azureml/config.json; fi;
+    then echo -e "{\n    \"subscription_id\":\""$subscriptionid"\",    \"resource_group\":\""$resourcegroup"\",    \"workspace_name\":\""$workspacename"\",    \"location\":\""$location"\"\n}" > .azureml/config.json; fi;
 
 - bash: |
     source activate cvbp
@@ -30,7 +30,7 @@ steps:
   displayName: 'Run Unit tests'
 
 - script: |
-    az ml workspace delete --all-resources --resource-group $(resource_group) --subscription-id $(subscription_id) --workspace-name $(workspace_name)
+    az ml workspace delete --all-resources --resource-group $(resourcegroup) --subscription-id $(subscriptionid) --workspace-name $(workspacename)
 
 - bash: |
       echo Remove Conda Environment
