@@ -4,7 +4,10 @@
 import os
 import shutil
 
-from utils_cv.similarity.plot import plot_rank, plot_comparative_set
+from utils_cv.similarity.plot import (
+    plot_comparative_set,
+    plot_rank_and_set_size,
+)
 from utils_cv.classification.data import Urls
 from utils_cv.common.data import unzip_url
 
@@ -12,7 +15,7 @@ from utils_cv.common.data import unzip_url
 def test_plot_rank():
     ranklist = [1, 2, 3, 2, 1, 5, 3, 5, 4]
     sets_sizes = [15, 20, 20, 20, 18, 19, 20, 15, 17, 18]
-    plot_rank(ranklist, sets_sizes, both=True)
+    plot_rank_and_set_size(ranklist, sets_sizes, both=True)
 
 
 def test_plot_comparative_set():

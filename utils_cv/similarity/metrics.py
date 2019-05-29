@@ -150,14 +150,14 @@ def compute_topk_similar(
     return distances[:top_k]
 
 
-def positive_image_median_rank(similarity_tuple_list: list) -> tuple:
+def positive_image_rank_list(similarity_tuple_list: list) -> list:
     """Computes the rank of the positive example for each set of sorted images
-    Returns the list of these ranks, and its median
+    Returns the list of these ranks
     Args:
         similarity_tuple_list: (list) List of list of tuples
         (image path, distance to the query_image)
 
-    Returns: (tuple) List of integer ranks and integer median of these ranks
+    Returns: (list) List of integer ranks
 
     """
     rank_list = []
@@ -174,7 +174,7 @@ def positive_image_median_rank(similarity_tuple_list: list) -> tuple:
         idx = [x[0] for x in similarity_tuple].index(positive_im_path[0])
         # Append that index to the list of indices, for each of the comparative sets we have
         rank_list.append(idx)
-    return rank_list, np.median(rank_list)
+    return rank_list
 
 
 def positive_in_top_k(rank_list: list, threshold: int) -> float:

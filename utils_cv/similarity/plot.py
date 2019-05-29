@@ -50,7 +50,7 @@ def plot_similars(
         plt.imshow(img)
 
 
-def plot_rank(ranklist: list, sets_sizes: list, both=True):
+def plot_rank_and_set_size(ranklist: list, sets_sizes: list, both=True):
     """Displays the distribution of rank of the positive image
     across comparative sets
     If both == True, also displays the distribution of

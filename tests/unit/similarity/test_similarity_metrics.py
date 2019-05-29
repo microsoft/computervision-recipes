@@ -3,7 +3,7 @@
 
 import os
 from utils_cv.similarity.metrics import (
-    positive_image_median_rank,
+    positive_image_rank_list,
     positive_in_top_k,
 )
 from utils_cv.common.data import data_path
@@ -16,8 +16,7 @@ def test_positive_image_median_rank():
         for im_name in im_list
     ]
     similarity_tuple_list = [similarity_tuple] * 3
-    assert positive_image_median_rank(similarity_tuple_list)[0] == [1, 1, 1]
-    assert positive_image_median_rank(similarity_tuple_list)[1] == 1
+    assert positive_image_rank_list(similarity_tuple_list) == [1, 1, 1]
 
 
 def test_positive_in_top_k():
