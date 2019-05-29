@@ -15,7 +15,7 @@ steps:
     az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
 
 - script: |
-    az ml workspace create --workspace-name $(workspace_name) --application-insights --container-registry --storage-account --exist-ok --keyvault --resource-group $(resource_group)
+    az ml workspace create --workspace-name $(workspacename) --application-insights --container-registry --storage-account --exist-ok --keyvault --resource-group $(resourcegroup)
 
 - bash: |
     echo $OSTYPE
