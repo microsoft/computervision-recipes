@@ -49,8 +49,7 @@ import os
 import sys
 
 # fast.ai
-from fastai.vision import *
-import torchvision.models as models
+from fastai.vision import models
 
 # Azure
 import azureml.core
@@ -237,7 +236,7 @@ run.get_file_names()
 # In[12]:
 
 
-model.download()
+model.download(exist_ok=True)
 
 
 # <i><b>Note:</b> If we ran the cells in both the "with an experiment" and "without experiment" sections, we got 2 iterations of the same model registered on Azure. This is not a problem as any operation that we perform on the "model" object, later on, will be associated with the latest version of the model that we registered. To clean things up, we can go to the portal, select the model we do not want and click the "Delete" button. In general, we would register the model using only one of these 2 methods. </i>
@@ -281,7 +280,7 @@ scoring_script = "score.py"
 get_ipython().run_cell_magic(
     "writefile",
     "$scoring_script",
-    '# Copyright (c) Microsoft. All rights reserved.\n# Licensed under the MIT license.\n\nimport json\n\nfrom base64 import b64decode\nfrom io import BytesIO\n\nfrom azureml.core.model import Model\nfrom fastai.vision import *\n\ndef init():\n    global model\n    model_path = Model.get_model_path(model_name=\'im_classif_resnet18\')\n    # ! We cannot use the *model_name* variable here otherwise the execution on Azure will fail !\n    \n    model_dir_path, model_filename = os.path.split(model_path)\n    model = load_learner(path=model_dir_path, fname=model_filename)\n\n\ndef run(raw_data):\n\n    # Expects raw_data to be a list within a json file\n    result = []    \n    \n    for im_string in json.loads(raw_data)[\'data\']:\n        im_bytes = b64decode(im_string)\n        try:\n            im = open_image(BytesIO(im_bytes))\n            pred_class, pred_idx, outputs = model.predict(im)\n            result.append({"label": str(pred_class), "probability": str(outputs[pred_idx].item())})\n        except Exception as e:\n            result.append({"label": str(e), "probability": \'\'})\n    return result',
+    '# Copyright (c) Microsoft. All rights reserved.\n# Licensed under the MIT license.\n\nimport os\nimport json\n\nfrom base64 import b64decode\nfrom io import BytesIO\n\nfrom azureml.core.model import Model\nfrom fastai.vision import load_learner, open_image\n\ndef init():\n    global model\n    model_path = Model.get_model_path(model_name=\'im_classif_resnet18\')\n    # ! We cannot use the *model_name* variable here otherwise the execution on Azure will fail !\n    \n    model_dir_path, model_filename = os.path.split(model_path)\n    model = load_learner(path=model_dir_path, fname=model_filename)\n\n\ndef run(raw_data):\n\n    # Expects raw_data to be a list within a json file\n    result = []    \n    \n    for im_string in json.loads(raw_data)[\'data\']:\n        im_bytes = b64decode(im_string)\n        try:\n            im = open_image(BytesIO(im_bytes))\n            pred_class, pred_idx, outputs = model.predict(im)\n            result.append({"label": str(pred_class), "probability": str(outputs[pred_idx].item())})\n        except Exception as e:\n            result.append({"label": str(e), "probability": \'\'})\n    return result',
 )
 
 
@@ -292,7 +291,7 @@ get_ipython().run_cell_magic(
 # In[17]:
 
 
-# Create a deployment-specific yaml file from image_classification/environment.yml
+# Create a deployment-specific yaml file from classification/environment.yml
 try:
     generate_yaml(
         directory=os.path.join(root_path(), "classification"),
@@ -338,7 +337,7 @@ except WebserviceException:
 # Create the Docker image
 try:
     docker_image = ContainerImage.create(
-        name="image-classif-resnet18-f48-2",
+        name="image-classif-resnet18-f48",
         models=[model],
         image_config=image_config,
         workspace=ws,
@@ -449,14 +448,14 @@ service.wait_for_deployment(show_output=True)
 #
 # In the case where the deployment is not successful, we can look at the image and service logs to debug. [These instructions](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-troubleshoot-deployment) can also be helpful.
 
-# In[ ]:
+# In[25]:
 
 
 # Access the service logs
 # print(service.get_logs())
 
 
-# In[25]:
+# In[26]:
 
 
 # Retrieve the service status
@@ -487,7 +486,7 @@ print(
 #
 # Once we have verified that our web service works well on ACI (cf. "Next steps" section below), we can delete it. This helps reduce [costs](https://azure.microsoft.com/en-us/pricing/details/container-instances/), since the container group we were paying for no longer exists, and allows us to keep our workspace clean.
 
-# In[ ]:
+# In[27]:
 
 
 # service.delete()
@@ -497,7 +496,7 @@ print(
 #
 # We may decide to use our Docker image in a separate ACI or even in an AKS deployment. In that case, we should keep it available in our workspace. However, if we no longer have a use for it, we can delete it.
 
-# In[ ]:
+# In[28]:
 
 
 # docker_image.delete()
@@ -507,7 +506,7 @@ print(
 #
 # <i><b>Note:</b> Deleting the workspace will delete all the experiments, outputs, models, Docker images, deployments, etc. that we created in that workspace</i>
 
-# In[ ]:
+# In[29]:
 
 
 # ws.delete(delete_dependent_resources=True)
