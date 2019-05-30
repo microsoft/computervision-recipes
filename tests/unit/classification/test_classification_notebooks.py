@@ -199,16 +199,3 @@ def test_22_notebook_run(classification_notebooks, tiny_ic_data_path):
         os.remove("output.ipynb")
     except OSError:
         pass
-
-    # There should be only one file, but the name may be changed
-    file_list = glob.glob("./*.pkl")
-    for filePath in file_list:
-        try:
-            os.remove(filePath)
-        except OSError:
-            pass
-
-    # TODO should use temp folder for safe cleanup. Notebook should accept the folder paths via papermill param.
-    shutil.rmtree(os.path.join(os.getcwd(), "azureml-models"))
-    shutil.rmtree(os.path.join(os.getcwd(), "models"))
-    shutil.rmtree(os.path.join(os.getcwd(), "outputs"))
