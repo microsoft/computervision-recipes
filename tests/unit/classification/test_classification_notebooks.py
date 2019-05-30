@@ -199,3 +199,21 @@ def test_22_notebook_run(classification_notebooks, tiny_ic_data_path):
         os.remove("output.ipynb")
     except OSError:
         pass
+
+
+@pytest.mark.notebooks
+def test_23_notebook_run(classification_notebooks, tiny_ic_data_path):
+    notebook_path = classification_notebooks["23_aci_aks_web_service_testing"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__, DATA_PATH=tiny_ic_data_path
+        ),
+        kernel_name=KERNEL_NAME,
+    )
+
+    try:
+        os.remove("output.ipynb")
+    except OSError:
+        pass
