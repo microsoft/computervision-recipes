@@ -26,8 +26,6 @@ from matplotlib.axes import Axes
 from matplotlib.text import Annotation
 import pandas as pd
 
-from utils_cv.classification.data import Urls
-from utils_cv.common.data import data_path, unzip_urls
 
 Time = float
 parameter_flag = "PARAMETERS"
@@ -320,21 +318,6 @@ class ParameterSweeper:
                 self.param_order.index("one_cycle_policy")
             ],
         )
-
-    @classmethod
-    def download_benchmark_datasets(
-        cls, dest: Union[Path, str] = data_path()
-    ) -> List[Path]:
-        """ Download benchmark datasets to {dest}. """
-        benchmark_urls = [
-            Urls.fridge_objects_path,
-            Urls.fashion_texture_path,
-            Urls.flickr_logos_32_subset_path,
-            Urls.food_101_subset_path,
-            Urls.lettuce_path,
-            Urls.recycle_path,
-        ]
-        return unzip_urls(benchmark_urls, dest)
 
     def _learn(
         self, data_path: Path, params: Tuple[Any], stop_early: bool
