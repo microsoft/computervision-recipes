@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 from pathlib import Path
 import matplotlib.pyplot as plt
 from utils_cv.common.plot import line_graph, show_ims
