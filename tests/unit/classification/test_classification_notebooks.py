@@ -184,7 +184,7 @@ def test_21_notebook_run(classification_notebooks, tiny_ic_data_path):
 @pytest.mark.notebooks
 def test_22_notebook_run(classification_notebooks, tiny_ic_data_path):
     notebook_path = classification_notebooks[
-        "22_deployment_on_azure_container_instances"
+        "22_deployment_on_azure_kubernetes_service"
     ]
     pm.execute_notebook(
         notebook_path,
