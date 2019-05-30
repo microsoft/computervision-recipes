@@ -43,13 +43,6 @@ class Urls:
         base, "multilabelFridgeObjectsWatermarkTiny.zip"
     )
 
-    # TODO remove
-    food_101_subset_path = urljoin(base, "food101Subset.zip")
-    fashion_texture_path = urljoin(base, "fashionTexture.zip")
-    flickr_logos_32_subset_path = urljoin(base, "flickrLogos32Subset.zip")
-    lettuce_path = urljoin(base, "lettuce.zip")
-    recycle_path = urljoin(base, "recycle_v3.zip")
-    
     @classmethod
     def all(cls) -> List[str]:
         return [v for k, v in cls.__dict__.items() if k.endswith("_path")]
