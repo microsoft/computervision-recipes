@@ -17,8 +17,8 @@ steps:
 - script: |
     az extension add --name azure-cli-ml
 
-- script: |
-    az ml workspace create --workspace-name $(workspacename) --exist-ok --resource-group $(resourcegroup)
+#- script: |
+#    az ml workspace create --workspace-name $(workspacename) --exist-ok --resource-group $(resourcegroup)
 
 - bash: |
     echo $OSTYPE
