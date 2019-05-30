@@ -22,11 +22,13 @@ steps:
 
 - bash: |
     echo $OSTYPE
+    echo $workspacename
     if [ ! -d .azureml ]; then  mkdir .azureml; fi;
     if [ -f .azureml/config.json ];
     then rm .azureml/config.json; fi;
     if [ ! -f .azureml/config.json ];
     then echo -e "{\n    \"subscription_id\":\""$subscriptionid"\",    \"resource_group\":\""$resourcegroup"\",    \"workspace_name\":\""$workspacename"\",    \"location\":\""$location"\"\n}" > .azureml/config.json; fi;
+    cat .azureml/config.json
 
 - bash: |
     source activate cvbp
