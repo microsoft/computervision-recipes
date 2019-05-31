@@ -37,7 +37,7 @@
 # ### Library import <a id="libraries"></a>
 # Throughout this notebook, we will be using a variety of libraries. We are listing them here for better readibility.
 
-# In[1]:
+# In[ ]:
 
 
 # For automatic reloading of modified libraries
@@ -77,7 +77,7 @@ print(f"Azure ML SDK Version: {azureml.core.VERSION}")
 #
 # Let's first retrieve the model.
 
-# In[2]:
+# In[ ]:
 
 
 learn = model_to_learner(models.resnet18(pretrained=True), IMAGENET_IM_SIZE)
@@ -85,7 +85,7 @@ learn = model_to_learner(models.resnet18(pretrained=True), IMAGENET_IM_SIZE)
 
 # To be able to use this model, we need to export it to our local machine. We store it in an `outputs/` subfolder.
 
-# In[3]:
+# In[ ]:
 
 
 output_folder = os.path.join(os.getcwd(), "outputs")
@@ -104,7 +104,7 @@ learn.export(os.path.join(output_folder, pickled_model_name))
 #
 # In [prior notebook](20_azure_workspace_setup.ipynb) notebook, we created a workspace. This is a critical object from which we will build all the pieces we need to deploy our model as a web service. Let's start by retrieving it.
 
-# In[4]:
+# In[ ]:
 
 
 ws = Workspace.setup()
@@ -134,7 +134,7 @@ print(
 #
 # We leverage the `register` method from the Azure ML `Model` object. For that, we just need the location of the model we saved on our local machine, its name and our workspace object.
 
-# In[5]:
+# In[ ]:
 
 
 model = Model.register(
@@ -158,7 +158,7 @@ model = Model.register(
 #
 # Let's first create a new experiment. If an experiment with the same name already exists in our workspace, the run we will generate will be recorded under that already existing experiment.
 
-# In[6]:
+# In[ ]:
 
 
 # Create a new/Retrieve an existing experiment
@@ -169,7 +169,7 @@ print(
 )
 
 
-# In[7]:
+# In[ ]:
 
 
 # Initialize the run
@@ -183,7 +183,7 @@ run = experiment.start_logging(snapshot_directory=None)
 
 # We can now attach our local model to our workspace and experiment.
 
-# In[8]:
+# In[ ]:
 
 
 # Upload the model (.pkl) file to Azure
@@ -193,7 +193,7 @@ run.upload_file(
 )
 
 
-# In[9]:
+# In[ ]:
 
 
 # Register the model with the workspace
@@ -217,7 +217,7 @@ model = run.register_model(
 
 # We can also check that it is programatically accessible
 
-# In[10]:
+# In[ ]:
 
 
 print(
@@ -225,7 +225,7 @@ print(
 )
 
 
-# In[11]:
+# In[ ]:
 
 
 run.get_file_names()
@@ -233,7 +233,7 @@ run.get_file_names()
 
 # If we are also interested in verifying which model we uploaded, we can download it to our local machine
 
-# In[12]:
+# In[ ]:
 
 
 model.download(exist_ok=True)
@@ -243,14 +243,14 @@ model.download(exist_ok=True)
 
 # We are all done with our model registration, so we can close our run.
 
-# In[13]:
+# In[ ]:
 
 
 # Close the run
 run.complete()
 
 
-# In[14]:
+# In[ ]:
 
 
 # Access the portal
@@ -268,13 +268,13 @@ run
 #
 # This file must also be stored in the current directory.
 
-# In[15]:
+# In[ ]:
 
 
 scoring_script = "score.py"
 
 
-# In[16]:
+# In[ ]:
 
 
 get_ipython().run_cell_magic(
@@ -288,7 +288,7 @@ get_ipython().run_cell_magic(
 #
 # In order to make predictions on the Azure platform, it is important to create an environment as similar as possible to the one in which the model was trained. Here, we use a fast.ai pretrained model that also requires pytorch and a few other libraries. To re-create this environment, we use a [Docker container](https://www.docker.com/resources/what-container). We configure it via a yaml file that will contain all the conda dependencies needed by the model. This yaml file is a subset of  `<repo_root>/classification/environment.yml`.
 
-# In[17]:
+# In[ ]:
 
 
 # Create a deployment-specific yaml file from classification/environment.yml
@@ -309,7 +309,7 @@ except FileNotFoundError:
 
 # There are different ways of creating a Docker image on Azure. Here, we create it separately from the service it will be used by. This way of proceeding gives us direct access to the Docker image object. Thus, if the service deployment fails, but the Docker image gets deployed successfully, we can try deploying the service again, without having to create a new image all over again.
 
-# In[18]:
+# In[ ]:
 
 
 # Configure the Docker image
@@ -331,7 +331,7 @@ except WebserviceException:
     )
 
 
-# In[19]:
+# In[ ]:
 
 
 # Create the Docker image
@@ -349,7 +349,7 @@ except WebserviceException:
     )
 
 
-# In[20]:
+# In[ ]:
 
 
 get_ipython().run_cell_magic(
@@ -368,7 +368,7 @@ get_ipython().run_cell_magic(
 #
 # It happens, sometimes, that the deployment of the Docker image fails. Re-running the previous command typically solves the problem. If it doesn't, however, we can run the following one and inspect the deployment logs.
 
-# In[21]:
+# In[ ]:
 
 
 print(ws.images["image-classif-resnet18-f48"].image_build_log_uri)
@@ -382,7 +382,7 @@ print(ws.images["image-classif-resnet18-f48"].image_build_log_uri)
 #
 # <i><b>Note:</b> For production workloads, it is better to use [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/aks/) (AKS) instead. We will demonstrate how to do this in the [next notebook](22_deployment_on_azure_kubernetes_service.ipynb).<i>
 
-# In[22]:
+# In[ ]:
 
 
 # Create a deployment configuration with 1 CPU and 5 gigabytes of RAM, and add monitoring to it
@@ -414,7 +414,7 @@ aci_config = AciWebservice.deploy_configuration(
 #
 # <i><b>Note:</b> The web service creation can take a few minutes</i>
 
-# In[23]:
+# In[ ]:
 
 
 # Define how to deploy the web service
@@ -432,7 +432,7 @@ service = Webservice.deploy_from_image(
 # to re-use the same Docker image in case the deployment of this service fails, or even for other
 # types of deployments, as we will see in the next notebook.
 
-# In[24]:
+# In[ ]:
 
 
 # Deploy the web service
@@ -448,14 +448,14 @@ service.wait_for_deployment(show_output=True)
 #
 # In the case where the deployment is not successful, we can look at the image and service logs to debug. [These instructions](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-troubleshoot-deployment) can also be helpful.
 
-# In[25]:
+# In[ ]:
 
 
 # Access the service logs
 # print(service.get_logs())
 
 
-# In[26]:
+# In[ ]:
 
 
 # Retrieve the service status
@@ -486,7 +486,7 @@ print(
 #
 # Once we have verified that our web service works well on ACI (cf. "Next steps" section below), we can delete it. This helps reduce [costs](https://azure.microsoft.com/en-us/pricing/details/container-instances/), since the container group we were paying for no longer exists, and allows us to keep our workspace clean.
 
-# In[27]:
+# In[ ]:
 
 
 # service.delete()
@@ -496,7 +496,7 @@ print(
 #
 # We may decide to use our Docker image in a separate ACI or even in an AKS deployment. In that case, we should keep it available in our workspace. However, if we no longer have a use for it, we can delete it.
 
-# In[28]:
+# In[ ]:
 
 
 # docker_image.delete()
@@ -506,7 +506,7 @@ print(
 #
 # <i><b>Note:</b> Deleting the workspace will delete all the experiments, outputs, models, Docker images, deployments, etc. that we created in that workspace</i>
 
-# In[29]:
+# In[ ]:
 
 
 # ws.delete(delete_dependent_resources=True)
