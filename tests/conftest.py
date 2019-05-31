@@ -126,3 +126,17 @@ def multilabel_result():
         [[1, 0, 0, 1], [1, 1, 1, 1], [0, 1, 0, 0], [1, 1, 1, 0]]
     ).float()
     return y_pred, y_true
+
+
+@pytest.fixture(scope="session")
+def testing_im_list(tmp_session):
+    """ Set of 5 images from the can/ folder of the Fridge Objects dataset
+     used to test positive example rank calculations"""
+    im_paths = unzip_url(
+        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+    )
+    can_im_paths = os.listdir(os.path.join(im_paths, "can"))
+    can_im_paths = [
+        os.path.join(im_paths, "can", im_name) for im_name in can_im_paths
+    ][0:5]
+    return can_im_paths

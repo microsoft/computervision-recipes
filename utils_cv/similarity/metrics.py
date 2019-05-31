@@ -163,12 +163,10 @@ def positive_image_rank_list(similarity_tuple_list: list) -> list:
     rank_list = []
     for similarity_tuple in similarity_tuple_list:
         # Extract the class of the reference image
-        reference_class = Path(similarity_tuple[0][0]).parts[-2]
+        ref_class = Path(similarity_tuple[0][0]).parts[-2]
         # Find the positive example in the list of similar images
         positive_im_path = [
-            x
-            for x in [x[0] for x in similarity_tuple[1:]]
-            if reference_class in x
+            x for x in [x[0] for x in similarity_tuple[1:]] if ref_class in x
         ]
         # Extract the index of the positive image
         idx = [x[0] for x in similarity_tuple].index(positive_im_path[0])
