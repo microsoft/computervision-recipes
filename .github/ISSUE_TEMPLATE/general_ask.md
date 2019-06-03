@@ -2,7 +2,7 @@
 name: General ask
 about: Technical/non-technical asks about the repo
 title: "[ASK]"
-labels: ''
+labels: 'ask'
 assignees: ''
 
 ---
