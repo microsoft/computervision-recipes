@@ -26,7 +26,7 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 | [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Deploys a trained model exposed on a REST API using Azure Container Instances (ACI). |
 | [22_deployment_on_azure_kubernetes_service.ipynb](notebooks/22_deployment_on_azure_kubernetes_service.ipynb)| Deploys a trained model exposed on a REST API using the Azure Kubernetes Service (AKS). |
 | [23_aci_aks_web_service_testing.ipynb](notebooks/23_aci_aks_web_service_testing.ipynb)| Tests the deployed models on either ACI or AKS. |
-|[24_run_notebook_on_azureml.ipynb](notebooks/24_run_notebook_on_azureml.ipynb) | Submits an existing jupyter notebook to AzureML.
+|[24_run_notebook_on_azureml.ipynb](notebooks/24_run_notebook_on_azureml.ipynb) | Submits an existing jupyter notebook to Azure Machine Learning service.
 
 ## Getting started
 
@@ -91,7 +91,7 @@ All metrics and parameters logged with `pm.record` will be stored on the run as 
 
 Since we take a strong dependency on fast.ai, variable naming should follow the standards of fast.ai which are described in this [abbreviation guide](https://docs.fast.ai/dev/abbr.html). For example, in computer vision cases, an image should always be abbreviated with `im` and not `i`, `img`, `imag`, `image`, etc. The one exception to this guide is that variable names should be as self-explanatory as possible. For example, the meaning of the variable `batch_size` is clearer than `bs` to refer to batch size.
 
-More general [coding guidelines](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines) are avialable in the [Microsoft/Recommenders](https://github.com/Microsoft/Recommenders) github repo.
+More general [coding guidelines](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines) are available in the [Microsoft/Recommenders](https://github.com/Microsoft/Recommenders) github repo.
 
 The main variables and abbreviations are given in the table below:
 
