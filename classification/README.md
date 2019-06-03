@@ -26,6 +26,7 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 | [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Deploys a trained model exposed on a REST API using Azure Container Instances (ACI). |
 | [22_deployment_on_azure_kubernetes_service.ipynb](notebooks/22_deployment_on_azure_kubernetes_service.ipynb)| Deploys a trained model exposed on a REST API using the Azure Kubernetes Service (AKS). |
 | [23_aci_aks_web_service_testing.ipynb](notebooks/23_aci_aks_web_service_testing.ipynb)| Tests the deployed models on either ACI or AKS. |
+|[24_run_notebook_on_azureml.ipynb](notebooks/24_run_notebook_on_azureml.ipynb) | Submits an existing jupyter notebook to AzureML.
 
 ## Getting started
 
@@ -56,6 +57,35 @@ To get started on your local machine:
     jupyter notebook
     ```
 1. Start with the [00_webcam](notebooks/00_webcam.ipynb) image classification notebook under the `notebooks` folder. Make sure to change the kernel to "Python (cvbp)".
+
+## Azure-enhanced notebooks
+
+Azure products and services are used in certain notebooks to enhance the efficiency of developing classification systems at scale.
+
+To successfully run these notebooks, the users **need an Azure subscription** or can [use Azure for free](https://azure.microsoft.com/en-us/free/).
+The Azure products featured in the notebooks include:
+
+* [Azure Machine Learning service](https://azure.microsoft.com/en-us/services/machine-learning-service/) - Azure Machine Learning service is a cloud service used to train, deploy, automate, and manage machine learning models, all at the broad scale that the cloud provides. It is used across various notebooks for the AI model development related tasks like:
+  * Tracking and monitoring metrics to enhance the model creation process
+  * Scaling up and out on Compute like DSVM and Azure Machine Learning Compute
+  * Deploying a web service to Azure Kubernetes Service
+
+* [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-deploy-and-where#aks) - You can use Azure Machine Learning service to host your classification model in a web service deployment on Azure Kubernetes Service (AKS). AKS is good for high-scale production deployments and provides autoscaling, and fast response times.
+
+* [Azure Container Instance](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-deploy-and-where#aci)- You can use Azure Machine Learning service to host your classification model in a web service deployment on Azure Container Instance (ACI). ACI is good for low scale, CPU-based workloads.
+
+### Submit an existing notebook to Azure Machine Learning
+
+ The [24_run_notebook_on_azureml.ipynb](notebooks/24_run_notebook_on_azureml.ipynb) notebook provides a scaffold to directly submit an existing notebook to AzureML compute targets. After setting up a compute target and creating a run configuration, simply replace the notebook file name and submit the notebook directly.
+
+```python
+cfg = NotebookRunConfig(source_directory='../../',
+                        notebook='classification/notebooks/' + NOTEBOOK_NAME, # Path of notebook to run
+                        output_notebook='outputs/out.ipynb', # Path and name of the output notebook
+                        run_config=run_config)
+```
+
+All metrics and parameters logged with `pm.record` will be stored on the run as tracked metrics. The initial notebook that was submitted, will be stored as an output notebook ```out.ipynb``` in the outputs tab of the Azure Portal.
 
 ## Coding guidelines
 
