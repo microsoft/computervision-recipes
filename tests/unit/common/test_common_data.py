@@ -66,7 +66,9 @@ def test_unzip_url_exist_ok(tmp_path):
     )
     assert len(os.listdir(fridge_object_path)) == 0
     shutil.rmtree(tmp_path / "fridgeObjects")
-    fridge_object_path = unzip_url(Urls.recycle_path, tmp_path, exist_ok=True)
+    fridge_object_path = unzip_url(
+        Urls.fridge_objects_watermark_path, tmp_path, exist_ok=True
+    )
     assert len(os.listdir(fridge_object_path)) > 0
 
 
