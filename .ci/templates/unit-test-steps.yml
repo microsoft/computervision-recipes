@@ -7,19 +7,19 @@ steps:
 
 - bash: |
     conda env create -f classification/environment.yml
-    source activate cvbp
+    source activate cv
     conda env list  
   displayName: 'Create and activate conda environment'
 
 - bash: |
-    source activate cvbp
-    python -m ipykernel install --user --name cvbp --display-name "cvbp"
+    source activate cv
+    python -m ipykernel install --user --name cv --display-name "cv"
     pytest tests/unit --junitxml=junit/test-unitttest.xml
   displayName: 'Run Unit tests'
 
 - bash: |
       echo Remove Conda Environment
-      conda remove -n cvbp --all -q --force -y
+      conda remove -n cv --all -q --force -y
       conda env list
       echo Done Cleanup
   displayName: 'Cleanup Task'

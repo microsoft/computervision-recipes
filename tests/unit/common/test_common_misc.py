@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import os
 from pathlib import Path
 from utils_cv.common.misc import copy_files, set_random_seed
