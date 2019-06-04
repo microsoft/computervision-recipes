@@ -1,0 +1,473 @@
+import argparse
+import re
+import subprocess
+import textwrap
+from shutil import which
+from prompt_toolkit import prompt
+from prompt_toolkit import print_formatted_text, HTML
+
+
+# variables
+UBUNTU_DSVM_IMAGE = (
+    "microsoft-dsvm:linux-data-science-vm-ubuntu:linuxdsvmubuntu:latest"
+)
+VM_SIZE = "Standard_NC6s_v3"
+
+# list of cmds
+account_list_cmd = "az account list -o table"
+sub_id_list_cmd = 'az account list --query []."id" -o tsv'
+region_list_cmd = 'az account list-locations --query []."name" -o tsv'
+silent_login_cmd = 'az login --query "[?n]|[0]"'
+set_account_sub_cmd = "az account set -s {}"
+provision_rg_cmd = "az group create --name {} --location {}"
+provision_vm_cmd = (
+    "az vm create --resource-group {} --name {} --size {} --image {} "
+    "--admin-username {} --admin-password {} --authentication-type password"
+)
+vm_ip_cmd = (
+    "az vm show -d --resource-group {}-rg --name {} "
+    '--query "publicIps" -o json'
+)
+connect_cmd = "ssh -L 8000:localhost:8000 {}@{}"
+
+
+def is_installed(cli_app: str) -> bool:
+    """Check whether `name` is on PATH and marked as executable."""
+    return which(cli_app) is not None
+
+
+def validate_password(password: str) -> bool:
+    """ Checks that the password is valid.
+
+    Args:
+        password: password string
+
+    Returns: True if valid, else false.
+    """
+
+    if len(password) < 12 or len(password) > 123:
+        print_formatted_text(
+            HTML(
+                (
+                    "<ansired>Input must be between 12 and 123 characters. "
+                    "Please try again.</ansired>"
+                )
+            )
+        )
+        return False
+
+    if (
+        len([c for c in password if c.islower()]) <= 0
+        or len([c for c in password if c.isupper()]) <= 0
+    ):
+        print_formatted_text(
+            HTML(
+                (
+                    "<ansired>Input must contain a upper and a lower case "
+                    "character. Please try again.</ansired>"
+                )
+            )
+        )
+        return False
+
+    if len([c for c in password if c.isdigit()]) <= 0:
+        print_formatted_text(
+            HTML(
+                "<ansired>Input must contain a digit. Please try again.</ansired>"
+            )
+        )
+        return False
+
+    if len(re.findall("[\W_]", password)) <= 0:
+        print_formatted_text(
+            HTML(
+                (
+                    "<ansired>Input must contain a special character. "
+                    "Please try again.</ansired>"
+                )
+            )
+        )
+        return False
+
+    return True
+
+
+def validate_vm_name(vm_name) -> bool:
+    """ Checks that the vm name is valid.
+
+    Args:
+        vm_name: the name of the vm to check
+
+    Returns: True if valid, else false.
+    """
+    # we minus 3 for max length because we generate the rg using: "{vm_name}-rg"
+    if len(vm_name) < 1 or len(vm_name) > (64 - 3):
+        print_formatted_text(
+            HTML(
+                (
+                    f"<ansired>Input must be between 1 and {64-3} characters. "
+                    "Please try again.</ansired>"
+                )
+            )
+        )
+        return False
+
+    if not bool(re.match("^[A-Za-z0-9-]*$", vm_name)):
+        print_formatted_text(
+            HTML(
+                (
+                    "<ansired>You can only use alphanumeric characters and "
+                    "hyphens. Please try again.</ansired>"
+                )
+            )
+        )
+        return False
+
+    return True
+
+
+def prompt_subscription_id() -> str:
+    """ Prompt for subscription id. """
+    subscription_id = None
+    subscription_is_valid = False
+    results = subprocess.run(
+        sub_id_list_cmd.split(" "), stdout=subprocess.PIPE
+    )
+    subscription_ids = results.stdout.decode("utf-8").strip().split("\n")
+    while not subscription_is_valid:
+        subscription_id = prompt(
+            ("Enter your subscription id " "(copy & paste it from above): ")
+        )
+        if subscription_id in subscription_ids:
+            subscription_is_valid = True
+        else:
+            print_formatted_text(
+                HTML(
+                    (
+                        "<ansired>The subscription id you entered is not "
+                        "valid. Please try again.</ansired>"
+                    )
+                )
+            )
+    return subscription_id
+
+
+def prompt_vm_name() -> str:
+    """ Prompt for VM name. """
+    vm_name = None
+    vm_name_is_valid = False
+    while not vm_name_is_valid:
+        vm_name = prompt(
+            f"Enter a name for your vm (ex. 'cv-datascience-vm'): "
+        )
+        vm_name_is_valid = validate_vm_name(vm_name)
+    return vm_name
+
+
+def prompt_region() -> str:
+    """ Prompt for region. """
+    region = None
+    region_is_valid = False
+    results = subprocess.run(
+        region_list_cmd.split(" "), stdout=subprocess.PIPE
+    )
+    valid_regions = results.stdout.decode("utf-8").strip().split("\n")
+    while not region_is_valid:
+        region = prompt(f"Enter a region for your vm (ex. 'eastus'): ")
+        if region in valid_regions:
+            region_is_valid = True
+        else:
+            print_formatted_text(
+                HTML(
+                    textwrap.dedent(
+                        """\
+                        <ansired>The region you entered is invalid. You can run
+                        `az account list-locations` to see a list of the valid
+                        regions. Please try again.</ansired>\
+                        """
+                    )
+                )
+            )
+    return region
+
+
+def prompt_username() -> str:
+    """ Prompt username. """
+    username = None
+    username_is_valid = False
+    while not username_is_valid:
+        username = prompt("Enter a username: ")
+        if len(username) > 0:
+            username_is_valid = True
+        else:
+            print_formatted_text(
+                HTML(
+                    "<ansired>Username cannot be empty. Please try again.</ansired>"
+                )
+            )
+    return username
+
+
+def prompt_password() -> str:
+    """ Prompt for password. """
+    password = None
+
+    password_is_valid = False
+    while not password_is_valid:
+        password = prompt("Enter a password: ", is_password=True)
+        if not validate_password(password):
+            continue
+
+        password_match = prompt(
+            "Enter your password again: ", is_password=True
+        )
+        if password == password_match:
+            password_is_valid = True
+        else:
+            print_formatted_text(
+                HTML(
+                    (
+                        "<ansired>Your passwords do not match. Please try "
+                        "again.</ansired>"
+                    )
+                )
+            )
+
+    return password
+
+
+def prompt_connect():
+    """ Prompt ssh & tunnel connection. """
+    connect = None
+    connect_valid = False
+    while not connect_valid:
+        connect = prompt(
+            "Would you like to ssh & tunnel into your machine? [y/n]: "
+        )
+        connect_valid = True if connect in ("y", "n", "Y", "N") else False
+    return True if connect in ("y", "Y") else False
+
+
+def create_dsvm():
+    """ Interaction session to create a data science vm. """
+
+    # print intro dialogue
+    print_formatted_text(
+        HTML(
+            textwrap.dedent(
+                """
+            Azure Data Science Virtual Machine Builder
+
+            This utility will help you create an Azure Data Science Ubuntu Virtual
+            Machine that you will be able to run your notebooks in. The VM will
+            be based on the Ubuntu DVSM Image hosted and will utilize the VM
+            SKU Standard_NC6s_v3 which uses the NVIDIA Tesla V100 GPUs.
+
+            For more information about Ubuntu DSVMs, see here:
+            https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/dsvm-ubuntu-intro
+
+            Pricing information on the SKU can be found here:
+            https://azure.microsoft.com/en-us/pricing/details/virtual-machines
+
+            To use this utility, you must have an Azure subscription which you can
+            get from azure.microsoft.com.
+
+            Please answer the question below and we'll help setup your virtual
+            machine for you.
+            """
+            )
+        )
+    )
+
+    # validate user activity
+    prompt("Press enter to continue...\n")
+
+    # state variables
+    logged_in = False
+
+    # check that az cli is installed
+    if not is_installed("az"):
+        print(
+            textwrap.dedent(
+                """\
+            You must have the Azure CLI installed. For more information on
+            installing the Azure CLI, see here:
+            https://docs.microsoft.com/en-us/cli/azure/?view=azure-cli-latest
+        """
+            )
+        )
+        exit(0)
+
+    # check if we are logged in
+    print("Checking to see if you are already logged in...")
+    results = subprocess.run(
+        account_list_cmd.split(" "),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    logged_in = False if results.stderr else True
+
+    # login to the az cli and suppress output
+    if not logged_in:
+        subprocess.run(silent_login_cmd.split(" "))
+        print("\n")
+    else:
+        print_formatted_text(
+            HTML(
+                (
+                    "<ansigreen>Looks like you're already logged "
+                    "in.</ansigreen>\n"
+                )
+            )
+        )
+
+    # show account sub list
+    print("Here is a list of your subscriptions:")
+    results = subprocess.run(
+        account_list_cmd.split(" "), stdout=subprocess.PIPE
+    )
+    print_formatted_text(
+        HTML(f"<ansigreen>{results.stdout.decode('utf-8')}</ansigreen>")
+    )
+
+    # prompt fields
+    subscription_id = prompt_subscription_id()
+    vm_name = prompt_vm_name()
+    region = prompt_region()
+    username = prompt_username()
+    password = prompt_password()
+
+    # set sub id
+    subprocess.run(set_account_sub_cmd.format(subscription_id).split(" "))
+
+    # provision rg
+    print_formatted_text(
+        HTML(("\n<ansiyellow>Creating the resource group.</ansiyellow>"))
+    )
+    results = subprocess.run(
+        provision_rg_cmd.format(f"{vm_name}-rg", region).split(" "),
+        stdout=subprocess.PIPE,
+    )
+    if "Succeeded" in results.stdout.decode("utf-8"):
+        print_formatted_text(
+            HTML(
+                (
+                    "<ansigreen>Your resource group was "
+                    "successfully created.</ansigreen>\n"
+                )
+            )
+        )
+
+    # create vm
+    print_formatted_text(
+        HTML(
+            (
+                "<ansiyellow>Creating the Data Science VM. "
+                "This may take up a few minutes...</ansiyellow>"
+            )
+        )
+    )
+    results = subprocess.run(
+        provision_vm_cmd.format(
+            f"{vm_name}-rg",
+            vm_name,
+            VM_SIZE,
+            UBUNTU_DSVM_IMAGE,
+            username,
+            password,
+        ).split(" "),
+        stdout=subprocess.PIPE,
+    )
+
+    # get vm ip
+    results = subprocess.run(
+        vm_ip_cmd.format(vm_name, vm_name).split(" "), stdout=subprocess.PIPE
+    )
+    vm_ip = results.stdout.decode("utf-8").strip().strip('"')
+    if len(vm_ip) > 0:
+        print_formatted_text(
+            HTML("<ansigreen>VM creation succeeded.</ansigreen>\n")
+        )
+
+    # show ssh command
+    connect_cmd_with_arguments = connect_dsvm(vm_ip, username)
+
+    # exit message
+    print_formatted_text(
+        HTML(
+            textwrap.dedent(
+                f"""
+            DSVM creation is complete. We recommend saving the details below.
+
+            <ansiyellow>
+            VM information:
+                - ip: {vm_ip}
+                - vm_name: {vm_name}
+                - region: {region}
+                - username: {username}
+                - password: ****
+                - resource_group: {vm_name}-rg
+                - subscription_id: {subscription_id}
+            </ansiyellow>
+
+            Please remember that virtual machines will incur a cost on your
+            Azure subscription. Remember to stop your machine if you are not
+            using it to minimize the cost.
+
+            Start / Stop VM:
+            <ansiyellow>
+                $az vm stop -g {vm_name}-rg -n {vm_name}
+                $az vm start -g {vm_name}-rg -n {vm_name}
+            </ansiyellow>
+            Connect via ssh and tunnel:
+            <ansiyellow>
+                ${connect_cmd_with_arguments}
+            </ansiyellow>
+            Delete VM & Resource Group (all data on the VM will be lost):
+            <ansiyellow>
+                $az group delete -n {vm_name}-rg
+            </ansiyellow>
+            """
+            )
+        )
+    )
+
+
+def connect_dsvm(ip: str, username: str) -> str:
+    """ Shows how to connect to the VM
+
+    Args:
+        ip: The public IP address of the VM
+        username: The username to authenticate
+
+    Returns: The ssh command to run.
+    """
+    connect_cmd_with_arguments = connect_cmd.format(username, ip)
+    print("Open the ssh tunnel using the following command:")
+    print_formatted_text(
+        HTML(f"<ansiyellow>${connect_cmd_with_arguments}</ansiyellow>")
+    )
+    return connect_cmd_with_arguments
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Data Science VM Utilities.")
+    parser.add_argument("action", choices=("create", "connect"))
+    parser.add_argument("--ip")
+    parser.add_argument("--username")
+    args = parser.parse_args()
+
+    if not args.action:
+        parser.error("Use `--help` to see how to use.")
+
+    if args.action == "connect" and not args.ip:
+        parser.error("action == 'connect' requires --ip")
+
+    if args.action == "connect" and not args.username:
+        parser.error("action == 'connect' requires --username")
+
+    if args.action == "create":
+        create_dsvm()
+
+    elif args.action == "connect":
+        connect_dsvm(args.ip, args.username)
