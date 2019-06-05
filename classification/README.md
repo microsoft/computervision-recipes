@@ -57,6 +57,14 @@ To get started on your local machine:
     ```
 1. Start with the [00_webcam](notebooks/00_webcam.ipynb) image classification notebook under the `notebooks` folder. Make sure to change the kernel to "Python (cvbp)".
 
+## Using a Virtual Machine
+
+You may want to use a virtual machine to run the notebooks. Doing so will give you a lot more flexibility -- whether it is using a GPU enabled machine or simply working in Linux. 
+
+To do so, you can use the 'create_dsvm.py' tool located inside of the 'tools' folder in the root directory of the repo. Simply run `python tools/create_dsvm.py` at the root level of the repo.
+
+Once your virtual machine has been created, ssh and tunnel into it machine and run the "Getting started" steps inside of it. The 'create_dsvm' tool will show you how to properly perform the tunneling.
+
 ## Coding guidelines
 
 Since we take a strong dependency on fast.ai, variable naming should follow the standards of fast.ai which are described in this [abbreviation guide](https://docs.fast.ai/dev/abbr.html). For example, in computer vision cases, an image should always be abbreviated with `im` and not `i`, `img`, `imag`, `image`, etc. The one exception to this guide is that variable names should be as self-explanatory as possible. For example, the meaning of the variable `batch_size` is clearer than `bs` to refer to batch size.
