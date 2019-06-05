@@ -341,7 +341,7 @@ def create_dsvm() -> None:
         exit(0)
 
     # check if we are logged in
-    print("Checking to see if you are already logged in...")
+    print("Checking to see if you are logged in...")
     results = subprocess.run(
         account_list_cmd.split(" "),
         stdout=subprocess.PIPE,
