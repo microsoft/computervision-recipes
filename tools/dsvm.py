@@ -451,9 +451,11 @@ def create_dsvm():
 
     # get vm ip
     results = subprocess.run(
-        vm_ip_cmd.format(vm_name, vm_name).split(" "), stdout=subprocess.PIPE
+        vm_ip_cmd.format(vm_name, vm_name).split(" "),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
-    if len(results.stdout.decode("utf-8")) > 0:
+    if len(results.stderr.decode("utf-8")) > 0:
         exit()
     vm_ip = results.stdout.decode("utf-8").strip().strip('"')
     if len(vm_ip) > 0:
