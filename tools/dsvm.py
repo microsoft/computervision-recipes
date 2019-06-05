@@ -1,4 +1,3 @@
-import argparse
 import json
 import re
 import subprocess
@@ -32,7 +31,6 @@ vm_ip_cmd = (
     "az vm show -d --resource-group {}-rg --name {} "
     '--query "publicIps" -o json'
 )
-connect_cmd = "ssh -L 8000:localhost:8000 {}@{}"
 quota_cmd = (
     "az vm list-usage --location {} --query "
     "[?contains(localName,'{}')].{{max:limit,current:currentValue}}"
@@ -254,7 +252,7 @@ def prompt_use_gpu() -> str:
     while not valid_response:
         use_gpu = prompt(
             (
-                "Do you want to use a GPU-enabled VM (It will incur a"
+                "Do you want to use a GPU-enabled VM (It will incur a "
                 "higher cost) [y/n]: "
             )
         )
@@ -283,7 +281,7 @@ def check_quota(region: str, vm_family: str) -> int:
     return int(quota[0]["max"]) - int(quota[0]["current"])
 
 
-def create_dsvm():
+def create_dsvm() -> None:
     """ Interaction session to create a data science vm. """
 
     # print intro dialogue
@@ -318,8 +316,9 @@ def create_dsvm():
             To use this utility, you must have an Azure subscription which you can
             get from azure.microsoft.com.
 
-            Please answer the question below and we'll help setup your virtual
-            machine for you.
+            Answer the questions below to setup your machine.
+
+            ------------------------------------------
             """
             )
         )
@@ -463,16 +462,12 @@ def create_dsvm():
             HTML("<ansigreen>VM creation succeeded.</ansigreen>\n")
         )
 
-    # show ssh command
-    connect_cmd_with_arguments = connect_dsvm(vm_ip, username)
-
     # exit message
     print_formatted_text(
         HTML(
             textwrap.dedent(
                 f"""
             DSVM creation is complete. We recommend saving the details below.
-
             <ansiyellow>
             VM information:
                 - vm_name:         {vm_name}
@@ -483,65 +478,27 @@ def create_dsvm():
                 - resource_group:  {vm_name}-rg
                 - subscription_id: {subscription_id}
             </ansiyellow>
-
-            Please remember that virtual machines will incur a cost on your
-            Azure subscription. Remember to stop your machine if you are not
-            using it to minimize the cost.
-
-            Start / Stop VM:
+            To start/stop VM:
             <ansiyellow>
                 $az vm stop -g {vm_name}-rg -n {vm_name}
                 $az vm start -g {vm_name}-rg -n {vm_name}
             </ansiyellow>
-            Connect via ssh and tunnel:
+            To connect via ssh and tunnel:
             <ansiyellow>
-                ${connect_cmd_with_arguments}
+                $ssh -L 8000:localhost:8000 {username}@{vm_ip}
             </ansiyellow>
-            Delete VM and Resource Group (all data on the VM will be lost):
+            To delete the VM (this command is unrecoverable):
             <ansiyellow>
                 $az group delete -n {vm_name}-rg
             </ansiyellow>
+            Please remember that virtual machines will incur a cost on your
+            Azure subscription. Remember to stop your machine if you are not
+            using it to minimize the cost.\
             """
             )
         )
     )
 
 
-def connect_dsvm(ip: str, username: str) -> str:
-    """ Shows how to connect to the VM
-
-    Args:
-        ip: The public IP address of the VM
-        username: The username to authenticate
-
-    Returns: The ssh command to run.
-    """
-    connect_cmd_with_arguments = connect_cmd.format(username, ip)
-    print("Open the ssh tunnel using the following command:")
-    print_formatted_text(
-        HTML(f"<ansiyellow>${connect_cmd_with_arguments}</ansiyellow>")
-    )
-    return connect_cmd_with_arguments
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Data Science VM Utilities.")
-    parser.add_argument("action", choices=("create", "connect"))
-    parser.add_argument("--ip")
-    parser.add_argument("--username")
-    args = parser.parse_args()
-
-    if not args.action:
-        parser.error("Use `--help` to see how to use.")
-
-    if args.action == "connect" and not args.ip:
-        parser.error("action == 'connect' requires --ip")
-
-    if args.action == "connect" and not args.username:
-        parser.error("action == 'connect' requires --username")
-
-    if args.action == "create":
-        create_dsvm()
-
-    elif args.action == "connect":
-        connect_dsvm(args.ip, args.username)
+    create_dsvm()
