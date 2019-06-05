@@ -1,15 +1,15 @@
 # 
 # To create the conda environment:
-# $ conda env create -f environment.yaml
+# $ conda env create -f environment.yml
 # 
 # To update the conda environment:
-# $ conda env update -f environment.yaml
+# $ conda env update -f environment.yml
 # 
 # To register the conda environment in Jupyter:
-# $ conda activate cvbp
-# $ python -m ipykernel install --user --name cvbp
+# $ conda activate cv
+# $ python -m ipykernel install --user --name cv
 # 
-name: cvbp
+name: cv
 channels:
 - defaults
 - conda-forge
