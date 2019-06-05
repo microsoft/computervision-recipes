@@ -1,4 +1,5 @@
 import argparse
+import json
 import re
 import subprocess
 import textwrap
@@ -11,7 +12,10 @@ from prompt_toolkit import print_formatted_text, HTML
 UBUNTU_DSVM_IMAGE = (
     "microsoft-dsvm:linux-data-science-vm-ubuntu:linuxdsvmubuntu:latest"
 )
-VM_SIZE = "Standard_NC6s_v3"
+vm_options = dict(
+    gpu=dict(size="Standard_NC6s_v3", family="NCSv3", cores=6),
+    cpu=dict(size="Standard_DS3_v2", family="DSv2", cores=4),
+)
 
 # list of cmds
 account_list_cmd = "az account list -o table"
@@ -29,6 +33,10 @@ vm_ip_cmd = (
     '--query "publicIps" -o json'
 )
 connect_cmd = "ssh -L 8000:localhost:8000 {}@{}"
+quota_cmd = (
+    "az vm list-usage --location {} --query "
+    "[?contains(localName,'{}')].{{max:limit,current:currentValue}}"
+)
 
 
 def is_installed(cli_app: str) -> bool:
@@ -202,7 +210,10 @@ def prompt_username() -> str:
         else:
             print_formatted_text(
                 HTML(
-                    "<ansired>Username cannot be empty. Please try again.</ansired>"
+                    (
+                        "<ansired>Username cannot be empty. "
+                        "Please try again.</ansired>"
+                    )
                 )
             )
     return username
@@ -236,16 +247,40 @@ def prompt_password() -> str:
     return password
 
 
-def prompt_connect():
-    """ Prompt ssh & tunnel connection. """
-    connect = None
-    connect_valid = False
-    while not connect_valid:
-        connect = prompt(
-            "Would you like to ssh & tunnel into your machine? [y/n]: "
+def prompt_use_gpu() -> str:
+    """ Prompt for GPU or CPU. """
+    use_gpu = None
+    valid_response = False
+    while not valid_response:
+        use_gpu = prompt(
+            (
+                "Do you want to use a GPU-enabled VM (It will incur a"
+                "higher cost) [y/n]: "
+            )
         )
-        connect_valid = True if connect in ("y", "n", "Y", "N") else False
-    return True if connect in ("y", "Y") else False
+        if use_gpu in ("Y", "y", "N", "n"):
+            valid_response = True
+        else:
+            print_formatted_text(
+                HTML("<ansired>Enter 'y' or 'n'. Please try again.</ansired>")
+            )
+    return True if use_gpu in ("Y", "y") else False
+
+
+def check_quota(region: str, vm_family: str) -> int:
+    """ Checks if the subscription has quote in the specified region.
+
+    Args:
+        region: the region to check
+        vm_family: the vm family to check
+
+    Returns: the available quota
+    """
+    results = subprocess.run(
+        quota_cmd.format(region, vm_family).split(" "), stdout=subprocess.PIPE
+    )
+    quota = json.loads("".join(results.stdout.decode("utf-8")))
+    return int(quota[0]["max"]) - int(quota[0]["current"])
 
 
 def create_dsvm():
@@ -260,13 +295,24 @@ def create_dsvm():
 
             This utility will help you create an Azure Data Science Ubuntu Virtual
             Machine that you will be able to run your notebooks in. The VM will
-            be based on the Ubuntu DVSM Image hosted and will utilize the VM
-            SKU Standard_NC6s_v3 which uses the NVIDIA Tesla V100 GPUs.
+            be based on the Ubuntu DSVM image.
 
             For more information about Ubuntu DSVMs, see here:
             https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/dsvm-ubuntu-intro
 
-            Pricing information on the SKU can be found here:
+            This utility will let you select a GPU machine or a CPU machine.
+
+            The GPU machine specs:
+                - size: Standard_NC6s_v3 (NVIDIA Tesla V100 GPUs)
+                - family: NC6s
+                - cores: 6
+
+            The CPU machine specs:
+                - size: Standard_DS3_v2 (Intel Xeon® E5-2673 v3 2.4 GHz (Haswell))
+                - family: DSv2
+                - cores: 4
+
+            Pricing information on the SKUs can be found here:
             https://azure.microsoft.com/en-us/pricing/details/virtual-machines
 
             To use this utility, you must have an Azure subscription which you can
@@ -279,11 +325,8 @@ def create_dsvm():
         )
     )
 
-    # validate user activity
+    # validate active user
     prompt("Press enter to continue...\n")
-
-    # state variables
-    logged_in = False
 
     # check that az cli is installed
     if not is_installed("az"):
@@ -334,8 +377,35 @@ def create_dsvm():
     subscription_id = prompt_subscription_id()
     vm_name = prompt_vm_name()
     region = prompt_region()
+    use_gpu = prompt_use_gpu()
     username = prompt_username()
     password = prompt_password()
+
+    # set GPU
+    vm = vm_options["gpu"] if use_gpu else vm_options["cpu"]
+
+    # check quota
+    if check_quota(region, vm["family"]) < vm["cores"]:
+        print_formatted_text(
+            HTML(
+                textwrap.dedent(
+                    f"""\
+                <ansired>
+                The subscription '{subscription_id}' does not have enough
+                cores of {vm['family']} in the region: {region}.
+
+                To request more cores:
+                https://docs.microsoft.com/en-us/azure/azure-supportability/resource-manager-core-quotas-request
+
+                (If you selected GPU, you may try using CPU instead.)
+
+                Exiting...
+                </ansired>\
+                """
+                )
+            )
+        )
+        exit()
 
     # set sub id
     subprocess.run(set_account_sub_cmd.format(subscription_id).split(" "))
@@ -371,7 +441,7 @@ def create_dsvm():
         provision_vm_cmd.format(
             f"{vm_name}-rg",
             vm_name,
-            VM_SIZE,
+            vm["size"],
             UBUNTU_DSVM_IMAGE,
             username,
             password,
@@ -383,6 +453,8 @@ def create_dsvm():
     results = subprocess.run(
         vm_ip_cmd.format(vm_name, vm_name).split(" "), stdout=subprocess.PIPE
     )
+    if len(results.stdout.decode("utf-8")) > 0:
+        exit()
     vm_ip = results.stdout.decode("utf-8").strip().strip('"')
     if len(vm_ip) > 0:
         print_formatted_text(
@@ -401,12 +473,12 @@ def create_dsvm():
 
             <ansiyellow>
             VM information:
-                - ip: {vm_ip}
-                - vm_name: {vm_name}
-                - region: {region}
-                - username: {username}
-                - password: ****
-                - resource_group: {vm_name}-rg
+                - vm_name:         {vm_name}
+                - ip:              {vm_ip}
+                - region:          {region}
+                - username:        {username}
+                - password:        ****
+                - resource_group:  {vm_name}-rg
                 - subscription_id: {subscription_id}
             </ansiyellow>
 
@@ -423,7 +495,7 @@ def create_dsvm():
             <ansiyellow>
                 ${connect_cmd_with_arguments}
             </ansiyellow>
-            Delete VM & Resource Group (all data on the VM will be lost):
+            Delete VM and Resource Group (all data on the VM will be lost):
             <ansiyellow>
                 $az group delete -n {vm_name}-rg
             </ansiyellow>
