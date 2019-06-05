@@ -63,7 +63,7 @@ You may want to use a virtual machine to run the notebooks. Doing so will give y
 
 To do so, you can use the 'create_dsvm.py' tool located inside of the 'tools' folder in the root directory of the repo. Simply run `python tools/create_dsvm.py` at the root level of the repo.
 
-Once your virtual machine has been created, ssh and tunnel into it machine and run the "Getting started" steps inside of it. The 'create_dsvm' tool will show you how to properly perform the tunneling.
+Once your virtual machine has been created, ssh and tunnel into the machine, then run the "Getting started" steps inside of it. The 'create_dsvm' tool will show you how to properly perform the tunneling too.
 
 ## Coding guidelines
 
