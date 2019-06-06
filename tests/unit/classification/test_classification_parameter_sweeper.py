@@ -2,7 +2,12 @@
 # Licensed under the MIT License.
 
 import pytest
-from utils_cv.classification.parameter_sweeper import *
+import pandas as pd
+from utils_cv.classification.parameter_sweeper import (
+    ParameterSweeper,
+    clean_sweeper_df,
+    plot_sweeper_df,
+)
 
 
 def _test_sweeper_run(df: pd.DataFrame, df_length: int):

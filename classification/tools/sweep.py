@@ -11,8 +11,9 @@ sys.path.append(
 )
 import argparse
 import time
+from typing import Dict, List, Any
 
-from utils_cv.classification.parameter_sweeper import *
+from utils_cv.classification.parameter_sweeper import ParameterSweeper
 from argparse import RawTextHelpFormatter, Namespace
 
 argparse_desc_msg = """

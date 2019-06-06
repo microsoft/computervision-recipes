@@ -2,42 +2,55 @@
 # coding: utf-8
 
 # <i>Copyright (c) Microsoft Corporation. All rights reserved.</i>
-# 
+#
 # <i>Licensed under the MIT License.</i>
 
-# # Introduction to Training Image Classification Models
-
-# In this notebook, we will give an introduction to using [fast.ai](https://www.fast.ai/) for image classification. We will use a small dataset of four differenet beverages to train and evaluate a model. We'll also cover one of the most common ways to store your data in your file system for image classification modelling.
+# # Training an Image Classification Model
+#
+# In this notebook, we give an introduction to training an image classification model using [fast.ai](https://www.fast.ai/). Using a small dataset of four different beverage packages, we demonstrate training and evaluating a CNN image classification model. We also cover one of the most common ways to store data on a file system for this type of problem.
+#
+# ## Initialization
 
 # In[1]:
 
 
 # Ensure edits to libraries are loaded and plotting is shown in the notebook.
-get_ipython().run_line_magic('reload_ext', 'autoreload')
-get_ipython().run_line_magic('autoreload', '2')
-get_ipython().run_line_magic('matplotlib', 'inline')
+get_ipython().run_line_magic("reload_ext", "autoreload")
+get_ipython().run_line_magic("autoreload", "2")
+get_ipython().run_line_magic("matplotlib", "inline")
 
 
-# Import fastai. For now, we'll import all (`from fastai.vision import *`) so that we can easily use different utilies provided by the fastai library.
+# Import all functions we need.
 
 # In[2]:
 
 
 import sys
+
 sys.path.append("../../")
 
 import numpy as np
 from pathlib import Path
+import papermill as pm
+import scrapbook as sb
 
 # fastai and torch
 import fastai
-from fastai.vision import *
+from fastai.vision import (
+    models,
+    ImageList,
+    imagenet_stats,
+    partial,
+    cnn_learner,
+    ClassificationInterpretation,
+    to_np,
+)
 from fastai.metrics import accuracy
 
 # local modules
 from utils_cv.classification.model import TrainMetricsRecorder
 from utils_cv.classification.plot import plot_pr_roc_curves
-from utils_cv.classification.results_widget import ResultsWidget
+from utils_cv.classification.widget import ResultsWidget
 from utils_cv.classification.data import Urls
 from utils_cv.common.data import unzip_url
 from utils_cv.common.gpu import which_processor
@@ -46,30 +59,31 @@ print(f"Fast.ai version = {fastai.__version__}")
 which_processor()
 
 
-# This shows your machine's GPUs (if has any) and which computing device fastai/torch is using. The output cells here show the run results on [Azure DSVM](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/) Standard NC6.
+# This shows your machine's GPUs (if has any) and the computing device `fastai/torch` is using. We suggest using an  [Azure DSVM](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/) Standard NC6 for an as needed GPU compute resource.
 
-# Set some parameters. We'll use the `unzip_url` helper function to download and unzip our data.
+# Next, set some model runtime parameters. We use the `unzip_url` helper function to download and unzip the data used in this example notebook.
 
-# In[13]:
+# In[3]:
 
 
-DATA_PATH     = unzip_url(Urls.fridge_objects_path, exist_ok=True)
-EPOCHS        = 5
+DATA_PATH = unzip_url(Urls.fridge_objects_path, exist_ok=True)
+EPOCHS = 5
 LEARNING_RATE = 1e-4
-IMAGE_SIZE    = 299
-BATCH_SIZE    = 16
-ARCHITECTURE  = models.resnet50
+IMAGE_SIZE = 299
+
+BATCH_SIZE = 16
+ARCHITECTURE = models.resnet50
 
 
 # ---
+#
+# # Prepare Image Classification Dataset
+#
+# In this notebook, we use a toy dataset called *Fridge Objects*, which consists of 134 images of 4 classes of beverage container `{can, carton, milk bottle, water bottle}` photos taken on different backgrounds. The helper function downloads and unzips data set to the `image_classification/data` directory.
+#
+# Set that directory in the `path` variable for ease of use throughout the notebook.
 
-# ## 1. Prepare Image Classification Dataset
-
-# In this notebook, we'll use a toy dataset called *Fridge Objects*, which consists of 134 images of can, carton, milk bottle and water bottle photos taken with different backgrounds. With our helper function, the data set will be downloaded and unzip to `image_classification/data`.
-# 
-# Let's set that directory to our `path` variable, which we'll use throughout the notebook, and checkout what's inside:
-
-# In[14]:
+# In[4]:
 
 
 path = Path(DATA_PATH)
@@ -81,9 +95,9 @@ path.ls()
 # - `/milk_bottle`
 # - `/carton`
 # - `/can`
-
-# The most common data format for multiclass image classification is to have a folder titled the label with the images inside:
-# 
+#
+# This is most common data format for multiclass image classification. Each folder title corresponds to the image label for the images contained inside:
+#
 # ```
 # /images
 # +-- can (class 1)
@@ -96,109 +110,112 @@ path.ls()
 # |   +-- ...
 # +-- ...
 # ```
-# 
-# and our data is already structured in that format!
+#
+# We have already set the data to this format structure.
 
-# ## 2. Load Images
+# # Load Images
+#
+# In `fastai`, an `ImageDataBunch` can easily use multiple images (mini-batches) during training time. We create the `ImageDataBunch` by using [data_block apis](https://docs.fast.ai/data_block.html).
+#
+# For training and validation, we randomly split the data in an `8:2` ratio, holding 80% of the data for training and 20% for validation.
+#
 
-# To use fastai, we want to create `ImageDataBunch` so that the library can easily use multiple images (mini-batches) during training time. We create an ImageDataBunch by using fastai's [data_block apis](https://docs.fast.ai/data_block.html).
-# 
-# For training and validation, we randomly split the data by 8:2, where 80% of the data is for training and the rest for validation. 
-
-# In[15]:
-
-
-data = (ImageList.from_folder(path) 
-        .split_by_rand_pct(valid_pct=0.2, seed=10) 
-        .label_from_folder() 
-        .transform(size=IMAGE_SIZE) 
-        .databunch(bs=BATCH_SIZE) 
-        .normalize(imagenet_stats))
+# In[5]:
 
 
-# Lets take a look at our data using the databunch we created.
-
-# In[16]:
-
-
-data.show_batch(rows=3, figsize=(15,11))
-
-
-# Lets see all available classes:
-
-# In[17]:
+data = (
+    ImageList.from_folder(path)
+    .split_by_rand_pct(valid_pct=0.2, seed=10)
+    .label_from_folder()
+    .transform(size=IMAGE_SIZE)
+    .databunch(bs=BATCH_SIZE)
+    .normalize(imagenet_stats)
+)
 
 
-print(f'number of classes: {data.c}')
+# We examine some sample data using the `databunch` we created.
+
+# In[6]:
+
+
+data.show_batch(rows=3, figsize=(15, 11))
+
+
+# Show all available classes:
+
+# In[7]:
+
+
+print(f"number of classes: {data.c}")
 print(data.classes)
 
 
-# We can also see how many images we have in our training and validation set.
+# Show the number of images in the training and validation set.
 
-# In[18]:
+# In[8]:
 
 
 data.batch_stats
 
 
-# In this notebook, we don't use test set. You can add it by using [add_test](https://docs.fast.ai/data_block.html#LabelLists.add_test). Please note that in the **fastai** framework, test datasets have no labels - this is the unknown data to be predicted. If you want to validate your model on a test dataset with labels, you probably need to use it as a validation set.
+# In a standard analysis, we would split the data into a train/validate/test data sets. For this example, we do not use a test set but this could be added using the [add_test](https://docs.fast.ai/data_block.html#LabelLists.add_test) method. Note that in the `fastai` framework, test sets do not include labels as this should be the unknown data to be predicted. The validation data set is a test set that includes labels that can be used to measure the model performance on new observations not used to train the model.
 
-# ## 3. Train a Model
+# # Train a Model
 
-# For the model, we use a convolutional neural network (CNN). Specifically, we'll use **ResNet50** architecture. You can find more details about ResNet from [here](https://arxiv.org/abs/1512.03385).
-# 
-# When training a model, there are many hypter parameters to select, such as the learning rate, the model architecture, layers to tune, and many more. With fastai, we can use the `create_cnn` function that allows us to specify the model architecture and performance indicator (metric). At this point, we already benefit from transfer learning since we download the parameters used to train on [ImageNet](http://www.image-net.org/).
-# 
-# Note, we use a custom callback `TrainMetricsRecorder` to track the accuracy on the training set during training, since fast.ai's default [recorder class](https://docs.fast.ai/basic_train.html#Recorder) only supports tracking accuracy on the validation set.
+# For this image classifier, we use a **ResNet50** convolutional neural network (CNN) architecture. You can find more details about ResNet from [here](https://arxiv.org/abs/1512.03385).
+#
+# When training CNN, there are almost an infinite number of ways to construct the model architecture. We need to determine how many and what type of layers to include and how many nodes make up each layer. Other hyperparameters that control the training of those layers are also important and add to the overall complexity of neural net methods. With `fastai`, we use the `create_cnn` function to specify the model architecture and performance metric. We will use a transfer learning approach to reuse the CNN architecture and initialize the model parameters used to train on [ImageNet](http://www.image-net.org/).
+#
+# In this work, we use a custom callback `TrainMetricsRecorder` to track the model accuracy on the training set as we tune the model. This is for instruction only, as the standard approach in `fast.ai` [recorder class](https://docs.fast.ai/basic_train.html#Recorder) only supports tracking model accuracy on the validation set.
 
-# In[19]:
+# In[9]:
 
 
 learn = cnn_learner(
     data,
     ARCHITECTURE,
     metrics=[accuracy],
-    callback_fns=[partial(TrainMetricsRecorder, show_graph=True)]
+    callback_fns=[partial(TrainMetricsRecorder, show_graph=True)],
 )
 
 
-# Unfreeze our CNN since we're training all the layers.
+# Use the `unfreeze` method to allow us to retrain all the CNN layers with the <i>Fridge Objects</i> data set.
 
-# In[20]:
+# In[10]:
 
 
 learn.unfreeze()
 
 
-# We can call the `fit` function to train the dnn.
+# The `fit` function trains the CNN using the parameters specified above.
 
-# In[21]:
+# In[11]:
 
 
 learn.fit(EPOCHS, LEARNING_RATE)
 
 
-# In[22]:
+# In[12]:
 
 
 # You can plot loss by using the default callback Recorder.
 learn.recorder.plot_losses()
 
 
-# ## 4. Evaluate the Model
+# # Validate the model
+#
+# To validate the model, calculate the model accuracy using the validation set.
 
-# To evaluate our model, lets take a look at the accuracy on the validation set.
-
-# In[23]:
+# In[13]:
 
 
 _, metric = learn.validate(learn.data.valid_dl, metrics=[accuracy])
-print(f'Accuracy on validation set: {100*float(metric):3.2f}')
+print(f"Accuracy on validation set: {100*float(metric):3.2f}")
 
 
-# Now, analyze the classification results by using `ClassificationInterpretation` module.
+# The `ClassificationInterpretation` module is used to analyze the model classification results.
 
-# In[24]:
+# In[14]:
 
 
 interp = ClassificationInterpretation.from_learner(learn)
@@ -206,25 +223,27 @@ interp = ClassificationInterpretation.from_learner(learn)
 pred_scores = to_np(interp.probs)
 
 
-# To see details of each sample and prediction results, we use our widget helper class `ResultsWidget`. The widget shows each test image along with its ground truth label and model's prediction scores. We can use this tool to see how our model predicts each image and debug the model if needed.
-# 
+# To see these details use the widget helper class `ResultsWidget`. The widget shows test images along with the ground truth label and model prediction score. With this tool, it's possible to see how the model predicts each image and debug the model if needed.
+#
 # <img src="https://cvbp.blob.core.windows.net/public/images/ic_widget.png" width="600"/>
 # <center><i>Image Classification Result Widget</i></center>
 
-# In[25]:
+# In[15]:
 
 
 w_results = ResultsWidget(
     dataset=learn.data.valid_ds,
     y_score=pred_scores,
-    y_label=[data.classes[x] for x in np.argmax(pred_scores, axis=1)]
+    y_label=[data.classes[x] for x in np.argmax(pred_scores, axis=1)],
 )
 display(w_results.show())
 
 
-# We can plot precision-recall and ROC curves for each class as well. Please note that these plots are not too interesting here, since the dataset is easy and thus the accuracy is close to 100%.
+# Aside from accuracy, precision and recall are other metrics that are also important in classification settings. These are linked metrics that quantify how well the model classifies an image against how it fails. Since they are linked, there is a trade-off between optimizing for precision and optimizing for recall. They can be plotted against each other to graphically show how they are linked.
+#
+# In multiclass settings, we plot precision-recall and [ROC](https://en.wikipedia.org/wiki/Receiver_operating_characteristic) curves for each class. In this example, the dataset is not complex and the accuracy is close to 100%. In more difficult settings, these figures will be more interesting.
 
-# In[26]:
+# In[16]:
 
 
 # True labels of the validation set. We convert to numpy array for plotting.
@@ -232,20 +251,43 @@ true_labels = to_np(interp.y_true)
 plot_pr_roc_curves(true_labels, pred_scores, data.classes)
 
 
-# Let's take a close look how our model confused some of the samples (if any). The most common way to do that is to use a confusion matrix.
+# A confusion matrix details the number of images on which the model succeeded or failed. For each class, the matrix lists correct classifications along the diagonal, and incorrect ones off-diagonal. This allows a detailed look on how the model confused the prediction of some classes.
 
-# In[27]:
+# In[17]:
 
 
 interp.plot_confusion_matrix()
 
 
-# When evaluating our results, we want to see where the model messes up, and whether or not we can do better. So we're interested in seeing images where the model predicted the image incorrectly but with high confidence (images with the highest loss).
+# When evaluating our results, we want to see where the model makes mistakes and if we can help it improve.
 
-# In[28]:
-
-
-interp.plot_top_losses(9, figsize=(15,11))
+# In[18]:
 
 
-# That's pretty much it! Now you can bring your own dataset and train your model on them easily. 
+interp.plot_top_losses(9, figsize=(15, 11))
+
+
+# In[19]:
+
+
+# The following code is used by the notebook "24_run_notebook_on_azureml.ipynb" to log metrics when using papermill or scrapbook
+# to run this notebook. We can comment out this cell when we are running this notebook directly.
+
+training_losses = [x.numpy().ravel()[0] for x in learn.recorder.losses]
+training_accuracy = [x[0].numpy().ravel()[0] for x in learn.recorder.metrics]
+
+# pm.record may get deprecated and completely replaced by sb.glue:
+# https://github.com/nteract/scrapbook#papermills-deprecated-record-feature
+try:
+    sb.glue("training_loss", training_losses)
+    sb.glue("training_accuracy", training_accuracy)
+    sb.glue("Accuracy on validation set:", 100 * float(metric))
+except Exception:
+    pm.record("training_loss", training_losses)
+    pm.record("training_accuracy", training_accuracy)
+    pm.record("Accuracy on validation set:", 100 * float(metric))
+
+
+# # Conclusion
+#
+# Using the concepts introduced in this notebook, you can bring your own dataset and train an image classifier to detect objects of interest for your specific setting.
