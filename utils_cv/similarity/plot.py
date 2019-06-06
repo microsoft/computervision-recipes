@@ -13,7 +13,7 @@ def plot_similars(
     similars: list,
     num_rows: int,
     num_cols: int,
-    reference_color: str = "orange",
+    ref_color: str = "orange",
     im_info_font_size: int = 5,
 ):
     """Displays the images which paths are provided as input
@@ -22,7 +22,7 @@ def plot_similars(
         similars: (list) List of tuples (image path, distance to the query_image)
         num_rows: (int) number of rows on which to display the images
         num_cols: (int) number of columns on which to display the images
-        reference_color: (str) Color of frame and text of reference image
+        ref_color: (str) Color of frame and text of reference image
         im_info_font_size: (int) Size of image titles - Defaults to 5
 
     Returns: Nothing, but generates a plot
@@ -33,7 +33,6 @@ def plot_similars(
         plt.rcParams["figure.dpi"] = 500
         plt.rcParams["axes.titlepad"] = 1
         plt.subplots_adjust(hspace=0.5)
-
         plt.axis("off")
 
         title_color = "black"
@@ -42,25 +41,27 @@ def plot_similars(
 
         img = Image.open(image)
         if num == 0:
-            img = ImageOps.expand(img, border=15, fill=reference_color)
-            title_color = reference_color
+            img = ImageOps.expand(img, border=15, fill=ref_color)
+            title_color = ref_color
             title = f"Reference:\n{im_name}"
 
         plt.title(title, fontsize=im_info_font_size, color=title_color)
         plt.imshow(img)
 
 
-def plot_rank_and_set_size(ranklist: list, sets_sizes: list, both=True):
+def plot_rank_and_set_size(
+    ranklist: list, sets_sizes: list, show_set_size=True
+):
     """Displays the distribution of rank of the positive image
     across comparative sets
-    If both == True, also displays the distribution of
+    If show_set_size == True, also displays the distribution of
     number of comparative images in each set
 
     Args:
         ranklist: (list) List of ranks of the positive example
         across comparative sets
         sets_sizes: (list) List of size of the comparative sets
-        both: (bool) True if users wants to plot both subplots
+        show_set_size: (bool) True if users wants to plot both subplots
 
     Returns: Nothing but generates a plot
 
@@ -73,7 +74,7 @@ def plot_rank_and_set_size(ranklist: list, sets_sizes: list, both=True):
     plt.xlabel("Rank of positive example")
     plt.title("Distribution of positive example rank across comparative sets")
 
-    if both:
+    if show_set_size:
         plt.hist(
             sets_sizes, bins=bins, alpha=0.5, label="# comparative images"
         )
@@ -88,7 +89,7 @@ def plot_rank_and_set_size(ranklist: list, sets_sizes: list, both=True):
 def plot_comparative_set(
     compar_set: list,
     compar_num: int,
-    reference_color: str = "orange",
+    ref_color: str = "orange",
     pos_example_color: str = "green",
     im_info_font_size: int = 5,
 ):
@@ -100,7 +101,7 @@ def plot_comparative_set(
     Args:
         compar_set: (list of strings) List of image paths
         compar_num: (int) Number of comparative images to display
-        reference_color: (str) Color of frame and text of reference image
+        ref_color: (str) Color of frame and text of reference image
         pos_example_color: (str) Color of frame and text of positive example
         im_info_font_size: (int) Size of image titles - Defaults to 5
 
@@ -112,7 +113,6 @@ def plot_comparative_set(
         im_class = Path(im_path).parts[-2]
         plt.subplot(1, compar_num + 1, num + 1)
         plt.rcParams["axes.titlepad"] = 3
-
         plt.axis("off")
 
         title_color = "black"
@@ -120,8 +120,8 @@ def plot_comparative_set(
 
         img = Image.open(im_path)
         if num == 0:
-            img = ImageOps.expand(img, border=18, fill=reference_color)
-            title_color = reference_color
+            img = ImageOps.expand(img, border=18, fill=ref_color)
+            title_color = ref_color
             title = f"Reference:\n{im_class}: {im_name}"
         elif num == 1:
             img = ImageOps.expand(img, border=18, fill=pos_example_color)

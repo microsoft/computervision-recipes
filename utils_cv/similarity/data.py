@@ -6,12 +6,14 @@ import random
 
 from pathlib import Path
 
+from fastai.data_block import LabelList
 
-def comparative_set_builder(test_im_list: list) -> dict:
+
+def comparative_set_builder(validation_bunch: LabelList) -> dict:
     """Builds sets of comparative images
 
     Args:
-        test_im_list: (list) List of paths to validation images
+        validation_bunch: (databunch) Fast.ai's databunch containing the validation images
 
     Returns: comparative_sets (dict) a dictionary
     where keys are each of the images in the test_folder,
@@ -22,15 +24,22 @@ def comparative_set_builder(test_im_list: list) -> dict:
     """
     comparative_sets = dict()
     random.seed(975)
-    for im_path in test_im_list:
+
+    all_classes = [
+        validation_bunch.y[idx].obj for idx in range(len(validation_bunch))
+    ]
+    all_paths = list(validation_bunch.x.items)
+
+    for idx in range(len(validation_bunch)):
         # ---- Extract one positive example, i.e. image from same class ----
         # Retrieve the image class name
-        class_name = im_path.parts[-2]
+        class_name = all_classes[idx]
+        im_path = all_paths[idx]
         # List available images in the same class
         class_im_list = [
-            str(f)
-            for f in test_im_list
-            if (class_name == f.parts[-2] and f != im_path)
+            str(all_paths[k])
+            for k in range(len(all_paths))
+            if (class_name == all_classes[k] and all_paths[k] != im_path)
         ]
         # Randomly select 1 positive image
         positive_index = random.sample(range(len(class_im_list)), 1)
@@ -39,12 +48,15 @@ def comparative_set_builder(test_im_list: list) -> dict:
 
         # ---- Extract all negative examples that exist in the folder ----
         negative_examples = list(
-            set([str(f) for f in test_im_list]).difference(set(class_im_list))
+            set([str(f) for f in all_paths]).difference(set(class_im_list))
         )
+        negative_indices = [
+            all_paths.index(Path(neg_ex)) for neg_ex in negative_examples
+        ]
         negative_examples = [
-            Path(neg_ex).as_posix()
-            for neg_ex in negative_examples
-            if class_name != Path(neg_ex).parts[-2]
+            Path(negative_examples[k]).as_posix()
+            for k in range(len(negative_examples))
+            if all_classes[negative_indices[k]] != class_name
         ]
 
         comparative_sets[im_path.as_posix()] = [
