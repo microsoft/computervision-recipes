@@ -129,6 +129,7 @@ data
 *.pkl
 
 # aml notebooks outputs
+*/notebooks/.azureml/
 */notebooks/aml_config*
 */notebooks/azureml-models
 */notebooks/myenv.yml
