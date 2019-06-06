@@ -2,9 +2,9 @@
 
 This directory provides examples and best practices for building image similarity systems. Our goal is to enable the users to bring their own datasets and train a high-accuracy model easily and quickly. To this end, we provide example notebooks with pre-set default parameters shown to work well on a variety of datasets, and extensive documentation of common pitfalls, best practices, etc.
 
-The majority of state-of-the-art systems for image similarity use DNNs to compute a representation of an image (e.g. a vector of 512 floating point values), and define similarity between two images by measuring the L2 distance, for instance, between the respective DNN representations.
+The majority of state-of-the-art systems for image similarity use DNNs to compute a representation of an image (e.g. a vector of 512 floating point values), and define similarity between two images by measuring the L2 distance between the respective DNN representations.
 
-The main difference between modern image similarity approaches is how the DNN is trained. A simple but quite powerful approach is to use a standard image classification loss - this is the approach taken in this repository, and explained in the [classification](../classification/README.md) folder. More accurate similarity measures are based on DNNs which are trained explicitly for image similarity, such as the [FaceNet](https://arxiv.org/pdf/1503.03832.pdf) work which uses a Siamese network architecture. FaceNet-like approaches will be added to this repository at a later point.
+A major difference between modern image similarity approaches is how the DNN is trained. A simple but quite powerful approach is to use a standard image classification loss - this is the approach taken in this repository, and explained in the [classification](../classification/README.md) folder. More accurate similarity measures are based on DNNs which are trained explicitly for image similarity, such as the [FaceNet](https://arxiv.org/pdf/1503.03832.pdf) work which uses a Siamese network architecture. FaceNet-like approaches will be added to this repository at a later point.
 
 
 ## Notebooks
