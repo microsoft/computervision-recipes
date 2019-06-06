@@ -18,7 +18,7 @@ We provide several notebooks to show how image similarity algorithms can be desi
 
 ## Getting Started
 
-To setup on your local machine follow the [Getting Started](../classification/#getting-started) section in the image classification folder. Furthermore, basic image classification knowledge explained by the notebooks [01_training_introduction.ipynb](../classification/notebooks/01_training_introduction.ipynb) and [02_training_accuracy_vs_speed.ipynb](../classification/notebooks/02_training_accuracy_vs_speed.ipynb) is assumed.
+To setup on your local machine follow the [Getting Started](../classification/#getting-started) section in the image classification folder. Furthermore, basic image classification knowledge explained by the notebooks [01_training_introduction.ipynb](../classification/notebooks/01_training_introduction.ipynb) and [03_training_accuracy_vs_speed.ipynb](../classification/notebooks/03_training_accuracy_vs_speed.ipynb) is assumed.
 
 
 ## Coding guidelines
