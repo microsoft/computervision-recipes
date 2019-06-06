@@ -4,8 +4,8 @@ This repository provides implementations and best practice guidelines for buildi
 
 ## Build Status
 
-| Build Type | Branch | Status |  | Branch | Status | 
-| --- | --- | --- | --- | --- | --- | 
+| Build Type | Branch | Status |  | Branch | Status |
+| --- | --- | --- | --- | --- | --- |
 | **Linux GPU** |  master | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-linux-gpu?branchName=master)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=13&branchName=master)  | | staging | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-linux-gpu?branchName=staging)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=13&branchName=staging) |
 | **Linux CPU** | master | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-linux-cpu?branchName=master)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=18&branchName=master)| | staging | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-linux-cpu?branchName=staging)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=18&branchName=staging)|
 | **Windows GPU** | master | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-windows-gpu?branchName=master)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=16&branchName=master) | | staging | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-windows-gpu?branchName=staging)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=16&branchName=staging)|
@@ -35,11 +35,14 @@ is a SaaS service to train and deploy a model as a REST API given a user-provide
 - [Azure Machine Learning service (AzureML)](https://azure.microsoft.com/en-us/services/machine-learning-service/)
 is a more general machine learning service that helps users accelerate training and deploying machine learning models. While not specific for Computer Vision workloads, the AzureML Python SDK can be used for scalable and reliable training and deploying machine learning solutions to the cloud. While AzureML offers significantly more flexibility than other options, it also requires significantly more machine learning and programming knowledge.
 
+- [Azure AI Reference architectures](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/ai/training-python-models) While not Computer Vision specific, these reference architectures cover general Machine Learning aspects such as model deployment or batch scoring.
+
+
 ## Computer Vision Domains
 
 Most applications in Computer Vision (CV) fall into one of these 4 categories:
 
-- **Image classification**: Given an input image, predict what object is present in the image. This is typically the easiest CV problem to solve, however classification requires objects to be reasonably large in the image. 
+- **Image classification**: Given an input image, predict what object is present in the image. This is typically the easiest CV problem to solve, however classification requires objects to be reasonably large in the image.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_ic_vis.jpg" height="150" alt="Image classification visualization"/>  
 
