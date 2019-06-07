@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from pathlib import PosixPath
+from pathlib import Path
 import random
 import shutil
 from typing import List, Union 
@@ -39,7 +39,7 @@ def copy_files(fpaths: Union[str, List[str]], dst: str, infer_subdir: bool = Fal
             Otherwise, just copy the files to dst
         remove: Remove copied files from the original directory
     """
-    if isinstance(fpaths, (str, PosixPath)):
+    if isinstance(fpaths, (str, Path)):
         fpaths = [fpaths]
     
     for fpath in fpaths:
