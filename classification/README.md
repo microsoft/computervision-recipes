@@ -95,7 +95,6 @@ The main variables and abbreviations are given in the table below:
 | `list1D`                 | List of items, not necessarily strings
 | -`s`    | Multiple of something (plural) should be indicated by appending an `s` to an abbreviation.
 
-
 ## Frequently asked questions
 
 Answers to Frequently Asked Questions such as "How many images do I need to train a model?" or "How to annotate images?" can be found in the [FAQ.md](FAQ.md) file.

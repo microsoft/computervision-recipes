@@ -58,6 +58,15 @@ Most applications in Computer Vision (CV) fall into one of these 4 categories:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_iseg_vis.jpg" height="150" alt="Image segmentation visualization"/>
 
-
 ## Contributing
 This project welcomes contributions and suggestions. Please see our [contribution guidelines](CONTRIBUTING.md).
+
+## Data/Telemetry
+The Azure Machine Learning service notebooks in this repository collect usage data and send it to Microsoft to help improve our products and services. Read Microsoft's [privacy statement to learn more](https://privacy.microsoft.com/en-US/privacystatement)
+
+To opt out of tracking, please go to the raw `.ipynb` files and remove the following line of code:
+
+```sh
+    "![Impressions](https://PixelServer20190423114238.azurewebsites.net/api/impressions/ComputerVision/classification/notebooks/21_deployment_on_azure_container_instances.png)"
+```
+This URL will be slightly different depending on the file.
