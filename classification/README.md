@@ -98,5 +98,3 @@ The main variables and abbreviations are given in the table below:
 ## Frequently asked questions
 
 Answers to Frequently Asked Questions such as "How many images do I need to train a model?" or "How to annotate images?" can be found in the [FAQ.md](FAQ.md) file.
-
-![Impressions](https://PixelServer20190423114238.azurewebsites.net/api/impressions/ComputerVision/classification/README.png)
