@@ -4,17 +4,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pdb
+from typing import Tuple
 
 from pathlib import Path
 from PIL import Image, ImageOps
-
 
 def plot_similars(
     similars: list,
     num_rows: int,
     num_cols: int,
-    ref_color: str = "orange",
-    im_info_font_size: int = 5,
+    figsize:Tuple[int,int] = None,
+    im_info_font_size: int = None,
 ):
     """Displays the images which paths are provided as input
 
@@ -22,17 +23,18 @@ def plot_similars(
         similars: (list) List of tuples (image path, distance to the query_image)
         num_rows: (int) number of rows on which to display the images
         num_cols: (int) number of columns on which to display the images
-        ref_color: (str) Color of frame and text of reference image
-        im_info_font_size: (int) Size of image titles - Defaults to 5
+        figsize: (Tuple) Figure width and height in inches
+        im_info_font_size: (int) Size of image titles (defaults to 5)
 
     Returns: Nothing, but generates a plot
 
     """
-    for num, (image, distance) in enumerate(similars):
+    axs = plt.subplots(num_rows, num_cols, figsize=figsize)
+    for num, (image, distance) in enumerate(similars[:num_rows*num_cols]):
         plt.subplot(num_rows, num_cols, num + 1)
-        plt.rcParams["figure.dpi"] = 500
-        plt.rcParams["axes.titlepad"] = 1
-        plt.subplots_adjust(hspace=0.5)
+        #plt.rcParams["figure.dpi"] = 100 #higher dpi so that text is clearer
+        #plt.rcParams["axes.titlepad"] = 1
+        plt.subplots_adjust(hspace=0.2)
         plt.axis("off")
 
         title_color = "black"
@@ -40,13 +42,14 @@ def plot_similars(
         title = f"{im_name}\nrank: {num}\ndist: {distance:0.2f}"
 
         img = Image.open(image)
-        if num == 0:
-            img = ImageOps.expand(img, border=15, fill=ref_color)
-            title_color = ref_color
+        if num == 0 and distance < 0.01:
+            title_color = "orange"
+            img = ImageOps.expand(img, border=15, fill=title_color)
             title = f"Reference:\n{im_name}"
 
         plt.title(title, fontsize=im_info_font_size, color=title_color)
         plt.imshow(img)
+        plt.figsize=(1,1)
 
 
 def plot_rank_and_set_size(

@@ -126,7 +126,6 @@ def compute_topk_similar(
     query_features: np.array,
     feature_dict: dict,
     distance: str = "l2",
-    top_k: int = 10,
 ) -> list:
     """Computes the distances between query_image and all other images in feature_dict
     Sorts them
@@ -147,7 +146,7 @@ def compute_topk_similar(
     """
     distances = compute_all_distances(query_features, feature_dict, distance)
     distances = sort_distances(distances)
-    return distances[:top_k]
+    return distances
 
 
 def positive_image_rank_list(similarity_tuple_list: list) -> list:
