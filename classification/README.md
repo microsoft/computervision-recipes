@@ -61,9 +61,28 @@ To get started on your local machine:
 
 You may want to use a virtual machine to run the notebooks. Doing so will give you a lot more flexibility -- whether it is using a GPU enabled machine or simply working in Linux. 
 
-To do so, you can use the 'create_dsvm.py' tool located inside of the 'tools' folder in the root directory of the repo. Simply run `python tools/create_dsvm.py` at the root level of the repo.
+__Data Science Virtual Machine Builder__
 
-Once your virtual machine has been created, ssh and tunnel into the machine, then run the "Getting started" steps inside of it. The 'create_dsvm' tool will show you how to properly perform the tunneling too.
+One easy way to create your VM is to use the 'create_dsvm.py' tool located inside of the 'tools' folder in the root directory of the repo. Simply run `python tools/create_dsvm.py` at the root level of the repo. This tool preconfigures your virtual machine with the appropriate settings for working with this repository.
+
+__Using the Azure Portal or CLI__
+
+You can also spin up a VM directly using the Azure portal. For this repository,
+you will want to create a Data Science Virtual Machine (DSVM). To do so, follow
+[this](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/dsvm-ubuntu-intro)
+link that shows you how to provision your VM through the portal.
+
+You can alternatively use the Azure command line (CLI) as well. Follow
+[this](https://docs.microsoft.com/en-us/cli/azure/azure-cli-vm-tutorial?view=azure-cli-latest)
+link to learn more about the Azure CLI and how it can be used to provision
+resources.
+
+Once your virtual machine has been created, ssh and tunnel into the machine, then run the "Getting started" steps inside of it. The 'create_dsvm' tool will show you how to properly perform the tunneling too. If you created your virtual machine using the portal or the CLI, you can tunnel your jupyter notebook ports using the following command:
+```
+$ssh -L local_port:remote_address:remote_port username@server.com
+```
+
+
 
 ## Coding guidelines
 
