@@ -44,12 +44,13 @@ get_ipython().run_line_magic("autoreload", "2")
 
 # Regular python libraries
 import inspect
+import json
 import os
 import requests
 import sys
 
 # fast.ai
-from fastai.vision import *
+from fastai.vision import open_image
 
 # Azure
 import azureml.core

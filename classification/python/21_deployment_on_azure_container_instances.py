@@ -49,8 +49,7 @@ import os
 import sys
 
 # fast.ai
-from fastai.vision import *
-import torchvision.models as models
+from fastai.vision import models
 
 # Azure
 import azureml.core
@@ -281,7 +280,7 @@ scoring_script = "score.py"
 get_ipython().run_cell_magic(
     "writefile",
     "$scoring_script",
-    '# Copyright (c) Microsoft. All rights reserved.\n# Licensed under the MIT license.\n\nimport json\n\nfrom base64 import b64decode\nfrom io import BytesIO\n\nfrom azureml.core.model import Model\nfrom fastai.vision import *\n\ndef init():\n    global model\n    model_path = Model.get_model_path(model_name=\'im_classif_resnet18\')\n    # ! We cannot use the *model_name* variable here otherwise the execution on Azure will fail !\n    \n    model_dir_path, model_filename = os.path.split(model_path)\n    model = load_learner(path=model_dir_path, fname=model_filename)\n\n\ndef run(raw_data):\n\n    # Expects raw_data to be a list within a json file\n    result = []    \n    \n    for im_string in json.loads(raw_data)[\'data\']:\n        im_bytes = b64decode(im_string)\n        try:\n            im = open_image(BytesIO(im_bytes))\n            pred_class, pred_idx, outputs = model.predict(im)\n            result.append({"label": str(pred_class), "probability": str(outputs[pred_idx].item())})\n        except Exception as e:\n            result.append({"label": str(e), "probability": \'\'})\n    return result',
+    '# Copyright (c) Microsoft. All rights reserved.\n# Licensed under the MIT license.\n\nimport os\nimport json\n\nfrom base64 import b64decode\nfrom io import BytesIO\n\nfrom azureml.core.model import Model\nfrom fastai.vision import load_learner, open_image\n\ndef init():\n    global model\n    model_path = Model.get_model_path(model_name=\'im_classif_resnet18\')\n    # ! We cannot use the *model_name* variable here otherwise the execution on Azure will fail !\n    \n    model_dir_path, model_filename = os.path.split(model_path)\n    model = load_learner(path=model_dir_path, fname=model_filename)\n\n\ndef run(raw_data):\n\n    # Expects raw_data to be a list within a json file\n    result = []    \n    \n    for im_string in json.loads(raw_data)[\'data\']:\n        im_bytes = b64decode(im_string)\n        try:\n            im = open_image(BytesIO(im_bytes))\n            pred_class, pred_idx, outputs = model.predict(im)\n            result.append({"label": str(pred_class), "probability": str(outputs[pred_idx].item())})\n        except Exception as e:\n            result.append({"label": str(e), "probability": \'\'})\n    return result',
 )
 
 
@@ -292,7 +291,7 @@ get_ipython().run_cell_magic(
 # In[17]:
 
 
-# Create a deployment-specific yaml file from image_classification/environment.yml
+# Create a deployment-specific yaml file from classification/environment.yml
 try:
     generate_yaml(
         directory=os.path.join(root_path(), "classification"),
@@ -338,7 +337,7 @@ except WebserviceException:
 # Create the Docker image
 try:
     docker_image = ContainerImage.create(
-        name="image-classif-resnet18-f48-2",
+        name="image-classif-resnet18-f48",
         models=[model],
         image_config=image_config,
         workspace=ws,

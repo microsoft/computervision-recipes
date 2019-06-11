@@ -11,7 +11,7 @@
 #
 # ## Table of Contents
 #
-# * [Testing parameter](#hyperparam)
+# * [Testing hyperparameters](#hyperparam)
 #   * [Using Python](#python)
 #   * [Using the CLI](#cli)
 #   * [Visualizing the results](#visualize)
@@ -20,7 +20,7 @@
 
 # ## Testing hyperparameters  <a name="hyperparam"></a>
 #
-# Lets say we want to learn more about __how different learning rates and different image sizes affect our model's accuracy when restricted to 10 epochs__, and we want to build an experiment to test out these hyperparameters. We also want to try these parameters out on two different variations of the dataset - one where the images are kept raw (maybe there is a watermark on the image) and one where the images have been altered (the same dataset where there was some attempt to remove the watermark).
+# Let's say we want to learn more about __how different learning rates and different image sizes affect our model's accuracy when restricted to 10 epochs__, and we want to build an experiment to test out these hyperparameters. We also want to try these parameters out on two different variations of the dataset - one where the images are kept raw (maybe there is a watermark on the image) and one where the images have been altered (the same dataset where there was some attempt to remove the watermark).
 #
 # In this notebook, we'll walk through how we use the Parameter Sweeper module with the following:
 #
@@ -58,7 +58,11 @@ import sys
 sys.path.append("../../")
 from utils_cv.classification.data import Urls
 from utils_cv.common.data import unzip_url
-from utils_cv.classification.parameter_sweeper import *
+from utils_cv.classification.parameter_sweeper import (
+    ParameterSweeper,
+    clean_sweeper_df,
+    plot_sweeper_df,
+)
 
 
 # To use the Parameter Sweeper tool for single label classification, we'll need to make sure that the data is stored such that images are sorted into their classes inside of a subfolder. In this notebook, we'll use the Fridge Objects dataset, which is already stored in the correct format. We also want to use the Fridge Objects Watermarked dataset. We want to see whether the original images (which are watermarked) will perform just as well as the non-watermarked images.
@@ -88,7 +92,7 @@ EPOCHS = [10]
 sweeper = ParameterSweeper()
 
 
-# Before we start testing, it's a good idea to see what the default parameters Are. We can use a the property `parameters` to easily see those default values.
+# Before we start testing, it's a good idea to see what the default parameters are. We can use a the property `parameters` to easily see those default values.
 
 # In[6]:
 
