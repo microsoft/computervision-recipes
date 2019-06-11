@@ -17,9 +17,14 @@ def test_plot_rank():
 
 def test_plot_comparative_set(tiny_ic_data_path):
     compar_set = os.listdir(os.path.join(tiny_ic_data_path, "can"))
-    compar_set = [
-        os.path.join(tiny_ic_data_path, "can", im_name)
-        for im_name in compar_set
-    ]
+    compar_set = [os.path.join(tiny_ic_data_path, "can", im_name) for im_name in compar_set]
     compar_num = 5 if 5 < len(compar_set) else len(compar_set)
-    plot_comparative_set(compar_set, compar_num)
+    plot_comparative_set(compar_set[0], compar_set)
+
+
+# def plot_comparative_set(
+#     query_im_path: str,
+#     ref_im_paths: List[str],
+#     num_cols: int,
+#     figsize:Tuple[int,int] = None,
+#     im_info_font_size: int = None,

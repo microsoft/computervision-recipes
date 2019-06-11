@@ -19,7 +19,7 @@ from utils_cv.classification.data import Urls
 
 
 def path_classification_notebooks():
-    """ Returns the path of the notebooks folder. """
+    """ Returns the path of the classification notebooks folder. """
     return os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
@@ -29,6 +29,20 @@ def path_classification_notebooks():
         )
     )
 
+
+def path_similarity_notebooks():
+    """ Returns the path of the similarity notebooks folder. """
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.path.pardir,
+            "similarity",
+            "notebooks",
+        )
+    )
+
+
+# ----- Module fixtures ----------------------------------------------------------
 
 @pytest.fixture(scope="module")
 def classification_notebooks():
@@ -64,7 +78,21 @@ def classification_notebooks():
         ),
     }
     return paths
+	
+	
+@pytest.fixture(scope="module")
+def similarity_notebooks():
+    folder_notebooks = path_similarity_notebooks()
 
+    # Path for the notebooks
+    paths = {
+        "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
+        "01": os.path.join(folder_notebooks, "01_training_and_evaluation_introduction.ipynb"),
+    }
+    return paths
+
+
+# ----- Function fixtures ----------------------------------------------------------
 
 @pytest.fixture(scope="function")
 def tmp(tmp_path_factory):
@@ -80,6 +108,8 @@ def tmp(tmp_path_factory):
     with TemporaryDirectory(dir=tmp_path_factory.getbasetemp()) as td:
         yield td
 
+
+# ----- Session fixtures ----------------------------------------------------------
 
 @pytest.fixture(scope="session")
 def tmp_session(tmp_path_factory):
