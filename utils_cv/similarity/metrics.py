@@ -7,11 +7,11 @@ import scipy
 from pathlib import Path
 
 
-def compute_vector_distance(
+def vector_distance(
     vec1: np.ndarray,
     vec2: np.ndarray,
     method: str,
-    boL2Normalize: bool = True,
+    l2_normalize: bool = True,
     weights: list = [],
     bias: list = [],
     learner: list = [],
@@ -27,7 +27,7 @@ def compute_vector_distance(
         One of ["l1", "l2", "normalizedl2", "cosine", "correlation",
         "chisquared", "normalizedchisquared", "hamming",
         "mahalanobis", "weightedl1", "weightedl2", "weightedl2prob":
-        boL2Normalize: (boolean) Flag indicating whether the vectors
+        l2_normalize: (boolean) Flag indicating whether the vectors
         should be normalized before the distance between them is computed
         weights: (list of floats) Weights to assign to the vectors components
         bias: (list of floats) Biases to add to the computed distance
@@ -37,9 +37,10 @@ def compute_vector_distance(
 
     """
     # Pre-processing
-    if boL2Normalize:
+    if l2_normalize:
         vec1 = vec1 / np.linalg.norm(vec1, 2)
         vec2 = vec2 / np.linalg.norm(vec2, 2)
+
     # Distance computation
     vecDiff = vec1 - vec2
     method = method.lower()
@@ -63,10 +64,6 @@ def compute_vector_distance(
         dist = scipy.chiSquared(a, b)
     elif method == "hamming":
         dist = scipy.spatial.distance.hamming(vec1 > 0, vec2 > 0)
-    # elif method == "mahalanobis":
-    #     # assumes covariance matric is provided, e..g. using:
-    #     # sampleCovMat = np.cov(np.transpose(np.array(feats)))
-    #     dist = scipy.spatial.distance.mahalanobis(vec1, vec2, sampleCovMat)
     elif method == "weightedl1":
         feat = np.float32(abs(vecDiff))
         dist = np.dot(weights, feat) + bias
@@ -85,7 +82,7 @@ def compute_vector_distance(
     return dist
 
 
-def compute_all_distances(
+def compute_distances(
     query_features: np.array, feature_dict: dict, distance: str = "l2"
 ) -> dict:
     """Computes the distance between query_image
@@ -104,7 +101,7 @@ def compute_all_distances(
     """
     distances = {}
     for image, feature in feature_dict.items():
-        distances[image] = compute_vector_distance(
+        distances[image] = vector_distance(
             query_features, feature, distance
         )
     return distances
@@ -122,7 +119,7 @@ def sort_distances(distances: list) -> list:
     return sorted(distances.items(), key=lambda x: x[1])
 
 
-def compute_topk_similar(
+def compute_similars(
     query_features: np.array,
     feature_dict: dict,
     distance: str = "l2",
@@ -144,7 +141,7 @@ def compute_topk_similar(
     of the k closest images to query_image
 
     """
-    distances = compute_all_distances(query_features, feature_dict, distance)
+    distances = compute_distances(query_features, feature_dict, distance)
     distances = sort_distances(distances)
     return distances
 

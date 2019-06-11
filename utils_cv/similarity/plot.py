@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pdb
-from typing import Tuple
+from typing import List, Tuple
 
 from pathlib import Path
 from PIL import Image, ImageOps
@@ -24,12 +24,12 @@ def plot_similars(
         num_rows: (int) number of rows on which to display the images
         num_cols: (int) number of columns on which to display the images
         figsize: (Tuple) Figure width and height in inches
-        im_info_font_size: (int) Size of image titles (defaults to 5)
+        im_info_font_size: (int) Size of image titles
 
     Returns: Nothing, but generates a plot
 
     """
-    axs = plt.subplots(num_rows, num_cols, figsize=figsize)
+    plt.subplots(num_rows, num_cols, figsize=figsize)
     for num, (image, distance) in enumerate(similars[:num_rows*num_cols]):
         plt.subplot(num_rows, num_cols, num + 1)
         #plt.rcParams["figure.dpi"] = 100 #higher dpi so that text is clearer
@@ -90,45 +90,45 @@ def plot_rank_and_set_size(
 
 
 def plot_comparative_set(
-    compar_set: list,
-    compar_num: int,
-    ref_color: str = "orange",
-    pos_example_color: str = "green",
-    im_info_font_size: int = 5,
+    query_im_path: str,
+    ref_im_paths: List[str],
+    num_cols: int,
+    figsize:Tuple[int,int] = None,
+    im_info_font_size: int = None,
 ):
     """For a given comparative set, displays:
     1. the reference image
     2. the associated positive example
-    3. 5 negative examples
+    3. negative examples
 
     Args:
-        compar_set: (list of strings) List of image paths
-        compar_num: (int) Number of comparative images to display
-        ref_color: (str) Color of frame and text of reference image
-        pos_example_color: (str) Color of frame and text of positive example
-        im_info_font_size: (int) Size of image titles - Defaults to 5
+        query_im_path: comparative set query image path
+        ref_im_paths: comparative set reference image paths
+        num_cols: (int) Number of comparative images to display
+        figsize: (Tuple) Figure width and height in inches
+        im_info_font_size: (int) Size of image titles
 
     Returns: Nothing but generates a plot
 
     """
-    comparative_set = compar_set[0 : compar_num + 1]
-    for num, im_path in enumerate(comparative_set):
-        im_class = Path(im_path).parts[-2]
-        plt.subplot(1, compar_num + 1, num + 1)
-        plt.rcParams["axes.titlepad"] = 3
+    plt.subplots(figsize=figsize)
+    
+    all_im_paths = [query_im_path] + ref_im_paths
+    for num, im_path in enumerate(all_im_paths[:num_cols]):
+        plt.subplot(1, num_cols, num + 1)
         plt.axis("off")
 
         title_color = "black"
+        im_class = Path(im_path).parts[-2]
         im_name = os.path.basename(im_path)
-
         img = Image.open(im_path)
         if num == 0:
-            img = ImageOps.expand(img, border=18, fill=ref_color)
-            title_color = ref_color
+            title_color = "orange"
+            img = ImageOps.expand(img, border=18, fill=title_color)
             title = f"Reference:\n{im_class}: {im_name}"
         elif num == 1:
-            img = ImageOps.expand(img, border=18, fill=pos_example_color)
-            title_color = pos_example_color
+            title_color = "green"
+            img = ImageOps.expand(img, border=18, fill=title_color)
             title = f"Positive example:\n{im_class}: {im_name}"
         else:
             title = f"Negative example:\n{im_class}: {im_name}"
