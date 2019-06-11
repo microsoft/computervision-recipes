@@ -40,12 +40,9 @@ def compute_feature(im, learn, embedding_layer):
 
 def compute_features(data, learn, embedding_layer):
     featurizer = SaveFeatures(embedding_layer) 
-
-    # Compute DNN embeddings for the reference set
     _ = learn.get_preds(data)
     ref_features = featurizer.features
     ref_im_paths = [str(x) for x in list(data.items)]
-    ref_feature_dict = dict(zip(ref_im_paths, ref_features))
-    return ref_feature_dict
+    return dict(zip(ref_im_paths, ref_features))
 
 

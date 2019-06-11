@@ -2,9 +2,9 @@
 # Licensed under the MIT License.
 
 import numpy as np
-import scipy
-
 from pathlib import Path
+import pdb
+import scipy
 
 
 def vector_distance(
@@ -158,32 +158,29 @@ def positive_image_rank_list(similarity_tuple_list: list) -> list:
     """
     rank_list = []
     for similarity_tuple in similarity_tuple_list:
-        # Extract the class of the reference image
-        ref_class = Path(similarity_tuple[0][0]).parts[-2]
         # Find the positive example in the list of similar images
-        positive_im_path = [
-            x for x in [x[0] for x in similarity_tuple[1:]] if ref_class in x
-        ]
+        query_class = Path(similarity_tuple[0][0]).parts[-2]
+        positive_im_path = [x[0] for x in similarity_tuple[1:] if query_class in x[0]] #.parts[-2]
+
         # Extract the index of the positive image
         idx = [x[0] for x in similarity_tuple].index(positive_im_path[0])
-        # Append that index to the list of indices, for each of the comparative sets we have
         rank_list.append(idx)
+
     return rank_list
 
 
-def positive_in_top_k(rank_list: list, threshold: int) -> float:
+def recall_at_k(rank_list: list, k: int) -> float:
     """Computes the percentage of comparative sets
-    for which the positive example's rank was better than
-    or equal to the threshold
+    where the positive image has a rank of <= k
 
     Args:
         rank_list: (list) List of ranks of the positive example in each comparative set
         threshold: (int) Threshold below which the rank should be
         for the comparative set to be counted
 
-    Returns: (float) Percentage of comparative sets with rank <= threshold
+    Returns: (float) Percentage of comparative sets with rank <= k
 
     """
-    below_threshold = [x for x in rank_list if x <= threshold]
+    below_threshold = [x for x in rank_list if x <= k]
     percent_in_top_k = round(100.0 * len(below_threshold) / len(rank_list), 1)
     return percent_in_top_k

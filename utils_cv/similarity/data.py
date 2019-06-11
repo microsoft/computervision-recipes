@@ -25,10 +25,6 @@ def comparative_set_builder(data: LabelList) -> dict:
     random.seed(975)
     comparative_sets = dict()
     
-    # all_classes = [
-    #     data.y[idx].obj for idx in range(len(data))
-    # ]
-
     all_paths = list(data.x.items)
     all_classes = [category.obj for category in data.y]
     
@@ -64,9 +60,6 @@ def comparative_set_builder(data: LabelList) -> dict:
         ]
 
         comparative_sets[str(im_path)] = [positive_example] + negative_examples
-        # comparative_sets.append(
-        #     {str(im_path): [positive_example] + negative_examples}
-        # )
 
     return comparative_sets
 

@@ -52,47 +52,10 @@ def plot_similars(
         plt.figsize=(1,1)
 
 
-def plot_rank_and_set_size(
-    ranklist: list, sets_sizes: list, show_set_size=True
-):
-    """Displays the distribution of rank of the positive image
-    across comparative sets
-    If show_set_size == True, also displays the distribution of
-    number of comparative images in each set
-
-    Args:
-        ranklist: (list) List of ranks of the positive example
-        across comparative sets
-        sets_sizes: (list) List of size of the comparative sets
-        show_set_size: (bool) True if users wants to plot both subplots
-
-    Returns: Nothing but generates a plot
-
-    """
-    plt.figure(dpi=100)
-    bins = np.arange(1, max(sets_sizes) + 2, 1) - 0.5
-    plt.hist(ranklist, bins=bins, alpha=0.5, label="Positive example rank")
-    plt.xticks(bins + 0.5)
-    plt.ylabel("Number of comparative sets")
-    plt.xlabel("Rank of positive example")
-    plt.title("Distribution of positive example rank across comparative sets")
-
-    if show_set_size:
-        plt.hist(
-            sets_sizes, bins=bins, alpha=0.5, label="# comparative images"
-        )
-        plt.xticks(bins + 0.5)
-        plt.legend()
-        plt.xlabel("Rank of positive example  /  Number of comparative images")
-        plt.title(
-            "Distribution of positive example rank \n& sets size across comparative sets"
-        )
-
-
 def plot_comparative_set(
     query_im_path: str,
     ref_im_paths: List[str],
-    num_cols: int,
+    num_cols: int = 5,
     figsize:Tuple[int,int] = None,
     im_info_font_size: int = None,
 ):
@@ -135,3 +98,40 @@ def plot_comparative_set(
 
         plt.title(title, fontsize=im_info_font_size, color=title_color)
         plt.imshow(img)
+
+
+def plot_rank_and_set_size(
+    ranklist: list, sets_sizes: list, show_set_size=True
+):
+    """Displays the distribution of rank of the positive image
+    across comparative sets
+    If show_set_size == True, also displays the distribution of
+    number of comparative images in each set
+
+    Args:
+        ranklist: (list) List of ranks of the positive example
+        across comparative sets
+        sets_sizes: (list) List of size of the comparative sets
+        show_set_size: (bool) True if users wants to plot both subplots
+
+    Returns: Nothing but generates a plot
+
+    """
+    plt.figure(dpi=100)
+    bins = np.arange(1, max(sets_sizes) + 2, 1) - 0.5
+    plt.hist(ranklist, bins=bins, alpha=0.5, label="Positive example rank")
+    plt.xticks(bins + 0.5)
+    plt.ylabel("Number of comparative sets")
+    plt.xlabel("Rank of positive example")
+    plt.title("Distribution of positive example rank across comparative sets")
+
+    if show_set_size:
+        plt.hist(
+            sets_sizes, bins=bins, alpha=0.5, label="# comparative images"
+        )
+        plt.xticks(bins + 0.5)
+        plt.legend()
+        plt.xlabel("Rank of positive example  /  Number of comparative images")
+        plt.title(
+            "Distribution of positive example rank \n& sets size across comparative sets"
+        )
