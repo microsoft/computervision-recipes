@@ -39,7 +39,7 @@ is a more general machine learning service that helps users accelerate training 
 
 Most applications in Computer Vision (CV) fall into one of these 4 categories:
 
-- **Image classification**: Given an input image, predict what objects are present. This is typically the easiest CV problem to solve, however classification requires objects to be reasonably large in the image.
+- **Image classification**: Given an input image, predict what object is present in the image. This is typically the easiest CV problem to solve, however classification requires objects to be reasonably large in the image. 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_ic_vis.jpg" height="150" alt="Image classification visualization"/>  
 
