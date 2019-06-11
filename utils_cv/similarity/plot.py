@@ -10,6 +10,9 @@ from typing import List, Tuple
 from pathlib import Path
 from PIL import Image, ImageOps
 
+from utils_cv.similarity.metrics import recall_at_k
+
+
 def plot_similars(
     similars: list,
     num_rows: int,
@@ -100,8 +103,36 @@ def plot_comparative_set(
         plt.imshow(img)
 
 
+def plot_recalls(
+    rank_list, 
+    figsize:Tuple[int,int] = None
+):
+    """Display recall at various values of k.
+
+    Args:
+        rank_list: 
+        figsize: Figure width and height in inches
+
+    Returns: Nothing but generates a plot
+
+    """
+    plt.subplots(figsize=figsize)
+
+    k_vec = range(1, max(rank_list))
+    recalls = [recall_at_k(rank_list, k) for k in k_vec]
+    plt.plot(k_vec, recalls, color='darkorange', lw=2)
+    plt.xlim([0.0, max(k_vec)])
+    plt.ylim([0.0, 101])
+    plt.ylabel('Recall')
+    plt.xlabel('Top-K')
+    plt.title('Recall@k curve')
+
+
 def plot_rank_and_set_size(
-    ranklist: list, sets_sizes: list, show_set_size=True
+    ranklist: list, 
+    sets_sizes: list, 
+    show_set_size=False,
+    figsize:Tuple[int,int] = None,
 ):
     """Displays the distribution of rank of the positive image
     across comparative sets
@@ -109,15 +140,17 @@ def plot_rank_and_set_size(
     number of comparative images in each set
 
     Args:
-        ranklist: (list) List of ranks of the positive example
-        across comparative sets
+        ranklist: (list) List of ranks of the positive example across comparative sets
         sets_sizes: (list) List of size of the comparative sets
         show_set_size: (bool) True if users wants to plot both subplots
+        figsize: (Tuple) Figure width and height in inches
 
     Returns: Nothing but generates a plot
 
     """
     plt.figure(dpi=100)
+    plt.subplots(figsize=figsize)
+    
     bins = np.arange(1, max(sets_sizes) + 2, 1) - 0.5
     plt.hist(ranklist, bins=bins, alpha=0.5, label="Positive example rank")
     plt.xticks(bins + 0.5)
