@@ -116,7 +116,7 @@ def sort_distances(distances: list) -> list:
     Returns: distances[:top_k] (list) List of tuples of the k closest images to query_image
 
     """
-    return sorted(distances.items(), key=lambda x: x[1])
+    return sorted(distances.items(), key=lambda x: x[0])
 
 
 def compute_similars(
