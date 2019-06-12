@@ -4,17 +4,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from typing import List, Tuple
-from pathlib import Path
+from typing import Tuple  # List
+
+# from pathlib import Path
 
 from PIL import Image, ImageOps
 
-#from utils_cv.similarity.data import ComparativeSet
+# from utils_cv.similarity.data import ComparativeSet
 from utils_cv.similarity.metrics import recall_at_k
 
 
 def plot_distances(
-    similars: list,
+    distances: list,
     num_rows: int,
     num_cols: int,
     figsize: Tuple[int, int] = None,
@@ -23,17 +24,22 @@ def plot_distances(
     """Displays the images which paths are provided as input
 
     Args:
-        similars: (list) List of tuples (image path, distance to the query_image)
-        num_rows: (int) number of rows on which to display the images
-        num_cols: (int) number of columns on which to display the images
-        figsize: (Tuple) Figure width and height in inches
-        im_info_font_size: (int) Size of image titles
+        distances: List of tuples (image path, distance to the query_image)
+        num_rows: number of rows on which to display the images
+        num_cols: number of columns on which to display the images
+        figsize: Figure width and height in inches
+        im_info_font_size: Size of image titles
 
     Returns: Nothing, but generates a plot
 
     """
+    distanceVals = [d for (im, d) in distances]
+    sortOrder = np.argsort(distanceVals)
+
     plt.subplots(num_rows, num_cols, figsize=figsize)
-    for num, (image, distance) in enumerate(similars[: num_rows * num_cols]):
+    for num, index in enumerate(sortOrder[: num_rows * num_cols]):
+        image, distance = distances[index]
+
         plt.subplot(num_rows, num_cols, num + 1)
         # plt.rcParams["figure.dpi"] = 100 #higher dpi so that text is clearer
         # plt.rcParams["axes.titlepad"] = 1
@@ -56,7 +62,7 @@ def plot_distances(
 
 
 def plot_comparative_set(
-    cs, #: ComparativeSet,
+    cs,  #: ComparativeSet,
     num_cols: int = 5,
     figsize: Tuple[int, int] = None,
     im_info_font_size: int = None,
@@ -96,8 +102,8 @@ def plot_comparative_set(
     plt.imshow(im)
 
     # plot negative image
-    for num, neg_im_path in enumerate(cs.neg_im_paths[:num_cols-2]):
-        plt.subplot(1, num_cols, num+3)
+    for num, neg_im_path in enumerate(cs.neg_im_paths[: num_cols - 2]):
+        plt.subplot(1, num_cols, num + 3)
         plt.axis("off")
         im = Image.open(neg_im_path)
         title = f"Negative example:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
