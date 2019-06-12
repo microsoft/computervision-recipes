@@ -2,9 +2,7 @@
 # Licensed under the MIT License.
 
 import numpy as np
-import scipy
 
-from pathlib import Path
 
 class SaveFeatures:
     """Hook to save the features in the intermediate layers
@@ -13,8 +11,9 @@ class SaveFeatures:
 
     Args:
         model_layer (nn.Module): Model layer
-        
+
     """
+
     features = None
 
     def __init__(self, model_layer):
@@ -33,16 +32,14 @@ class SaveFeatures:
 
 
 def compute_feature(im, learn, embedding_layer):
-    featurizer = SaveFeatures(embedding_layer) 
+    featurizer = SaveFeatures(embedding_layer)
     _ = learn.predict(im)
     return featurizer.features
 
 
 def compute_features(data, learn, embedding_layer):
-    featurizer = SaveFeatures(embedding_layer) 
+    featurizer = SaveFeatures(embedding_layer)
     _ = learn.get_preds(data)
     ref_features = featurizer.features
     ref_im_paths = [str(x) for x in list(data.items)]
     return dict(zip(ref_im_paths, ref_features))
-
-

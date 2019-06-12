@@ -3,7 +3,7 @@
 
 import numpy as np
 from pathlib import Path
-import pdb
+
 import scipy
 
 
@@ -101,9 +101,7 @@ def compute_distances(
     """
     distances = {}
     for image, feature in feature_dict.items():
-        distances[image] = vector_distance(
-            query_features, feature, distance
-        )
+        distances[image] = vector_distance(query_features, feature, distance)
     return distances
 
 
@@ -120,9 +118,7 @@ def sort_distances(distances: list) -> list:
 
 
 def compute_similars(
-    query_features: np.array,
-    feature_dict: dict,
-    distance: str = "l2",
+    query_features: np.array, feature_dict: dict, distance: str = "l2"
 ) -> list:
     """Computes the distances between query_image and all other images in feature_dict
     Sorts them
@@ -160,7 +156,9 @@ def positive_image_rank_list(similarity_tuple_list: list) -> list:
     for similarity_tuple in similarity_tuple_list:
         # Find the positive example in the list of similar images
         query_class = Path(similarity_tuple[0][0]).parts[-2]
-        positive_im_path = [x[0] for x in similarity_tuple[1:] if query_class in x[0]] #.parts[-2]
+        positive_im_path = [
+            x[0] for x in similarity_tuple[1:] if query_class in x[0]
+        ]  # .parts[-2]
 
         # Extract the index of the positive image
         idx = [x[0] for x in similarity_tuple].index(positive_im_path[0])

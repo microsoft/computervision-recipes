@@ -4,10 +4,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import pdb
 from typing import List, Tuple
-
 from pathlib import Path
+
 from PIL import Image, ImageOps
 
 from utils_cv.similarity.metrics import recall_at_k
@@ -17,7 +16,7 @@ def plot_similars(
     similars: list,
     num_rows: int,
     num_cols: int,
-    figsize:Tuple[int,int] = None,
+    figsize: Tuple[int, int] = None,
     im_info_font_size: int = None,
 ):
     """Displays the images which paths are provided as input
@@ -33,10 +32,10 @@ def plot_similars(
 
     """
     plt.subplots(num_rows, num_cols, figsize=figsize)
-    for num, (image, distance) in enumerate(similars[:num_rows*num_cols]):
+    for num, (image, distance) in enumerate(similars[: num_rows * num_cols]):
         plt.subplot(num_rows, num_cols, num + 1)
-        #plt.rcParams["figure.dpi"] = 100 #higher dpi so that text is clearer
-        #plt.rcParams["axes.titlepad"] = 1
+        # plt.rcParams["figure.dpi"] = 100 #higher dpi so that text is clearer
+        # plt.rcParams["axes.titlepad"] = 1
         plt.subplots_adjust(hspace=0.2)
         plt.axis("off")
 
@@ -52,14 +51,14 @@ def plot_similars(
 
         plt.title(title, fontsize=im_info_font_size, color=title_color)
         plt.imshow(img)
-        plt.figsize=(1,1)
+        plt.figsize = (1, 1)
 
 
 def plot_comparative_set(
     query_im_path: str,
     ref_im_paths: List[str],
     num_cols: int = 5,
-    figsize:Tuple[int,int] = None,
+    figsize: Tuple[int, int] = None,
     im_info_font_size: int = None,
 ):
     """For a given comparative set, displays:
@@ -78,7 +77,7 @@ def plot_comparative_set(
 
     """
     plt.subplots(figsize=figsize)
-    
+
     all_im_paths = [query_im_path] + ref_im_paths
     for num, im_path in enumerate(all_im_paths[:num_cols]):
         plt.subplot(1, num_cols, num + 1)
@@ -103,14 +102,11 @@ def plot_comparative_set(
         plt.imshow(img)
 
 
-def plot_recalls(
-    rank_list, 
-    figsize:Tuple[int,int] = None
-):
+def plot_recalls(rank_list, figsize: Tuple[int, int] = None):
     """Display recall at various values of k.
 
     Args:
-        rank_list: 
+        rank_list:
         figsize: Figure width and height in inches
 
     Returns: Nothing but generates a plot
@@ -118,21 +114,21 @@ def plot_recalls(
     """
     plt.subplots(figsize=figsize)
 
-    k_vec = range(1, max(rank_list)+1)
+    k_vec = range(1, max(rank_list) + 1)
     recalls = [recall_at_k(rank_list, k) for k in k_vec]
-    plt.plot(k_vec, recalls, color='darkorange', lw=2)
+    plt.plot(k_vec, recalls, color="darkorange", lw=2)
     plt.xlim([0.0, max(k_vec)])
     plt.ylim([0.0, 101])
-    plt.ylabel('Recall')
-    plt.xlabel('Top-K')
-    plt.title('Recall@k curve')
+    plt.ylabel("Recall")
+    plt.xlabel("Top-K")
+    plt.title("Recall@k curve")
 
 
 def plot_rank_and_set_size(
-    ranklist: list, 
-    sets_sizes: list, 
+    ranklist: list,
+    sets_sizes: list,
     show_set_size=False,
-    figsize:Tuple[int,int] = None,
+    figsize: Tuple[int, int] = None,
 ):
     """Displays the distribution of rank of the positive image
     across comparative sets
@@ -149,7 +145,7 @@ def plot_rank_and_set_size(
 
     """
     plt.subplots(figsize=figsize)
-    
+
     bins = np.arange(1, max(sets_sizes) + 2, 1) - 0.5
     plt.hist(ranklist, bins=bins, alpha=0.5, label="Positive example rank")
     plt.xticks(bins + 0.5)

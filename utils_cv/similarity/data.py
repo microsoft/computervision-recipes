@@ -1,10 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import numpy as np
-import random, pdb
-
 from pathlib import Path
+import random
 
 from fastai.data_block import LabelList
 
@@ -24,17 +22,16 @@ def comparative_set_builder(data: LabelList) -> dict:
     """
     random.seed(975)
     comparative_sets = dict()
-    
+
     all_paths = list(data.x.items)
     all_classes = [category.obj for category in data.y]
-    
 
     for idx in range(len(data)):
         # ---- Extract one positive example, i.e. image from same class ----
         # Retrieve the image path and class name
         im_path = all_paths[idx]
         class_name = all_classes[idx]
-        
+
         # List available images in the same class
         class_im_list = [
             str(all_paths[k])
@@ -44,7 +41,7 @@ def comparative_set_builder(data: LabelList) -> dict:
 
         # Randomly select 1 positive image
         positive_index = random.sample(range(len(class_im_list)), 1)
-        positive_example = str(Path(class_im_list[positive_index[0]])) 
+        positive_example = str(Path(class_im_list[positive_index[0]]))
 
         # ---- Extract all negative examples that exist in the folder ----
         negative_examples = list(
@@ -54,7 +51,7 @@ def comparative_set_builder(data: LabelList) -> dict:
             all_paths.index(Path(neg_ex)) for neg_ex in negative_examples
         ]
         negative_examples = [
-            str(Path(negative_examples[k])) 
+            str(Path(negative_examples[k]))
             for k in range(len(negative_examples))
             if all_classes[negative_indices[k]] != class_name
         ]
@@ -62,6 +59,3 @@ def comparative_set_builder(data: LabelList) -> dict:
         comparative_sets[str(im_path)] = [positive_example] + negative_examples
 
     return comparative_sets
-
-
-
