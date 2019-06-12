@@ -33,10 +33,8 @@ def gpu_info():
                 gpu["total_memory"] = info[1].strip()
                 gpu["used_memory"] = info[2].strip()
                 gpus.append(gpu)
-    except subprocess.CalledProcessError as e:
-        warnings.warn(e.stdout)
-    except FileNotFoundError:
-        warnings.warn("GPU info is not available.")
+    except:
+        pass
 
     return gpus
 
@@ -44,11 +42,14 @@ def gpu_info():
 def which_processor():
     """Check if fastai/torch is using GPU or CPU"""
     if is_available():
-        print(f"Fast.ai (Torch) is using GPU: {get_device_name(0)}")
-        gpu = gpu_info()[current_device()]
-        free = int(gpu["total_memory"]) - int(gpu["used_memory"])
-        print(
-            f"Available / Total memory = {free} / {gpu['total_memory']} (MiB)"
-        )
+        device_nr = current_device()
+        print(f"Fast.ai (Torch) is using GPU: {get_device_name(device_nr)}")
+        info = gpu_info()
+        if len(info) > device_nr:
+            gpu = info[device_nr]
+            free = int(gpu["total_memory"]) - int(gpu["used_memory"])
+            print(
+                f"Available / Total memory = {free} / {gpu['total_memory']} (MiB)"
+            )
     else:
         print("Cuda is not available. Fast.ai/Torch is using CPU")
