@@ -148,7 +148,6 @@ def plot_rank_and_set_size(
     Returns: Nothing but generates a plot
 
     """
-    plt.figure(dpi=100)
     plt.subplots(figsize=figsize)
     
     bins = np.arange(1, max(sets_sizes) + 2, 1) - 0.5
