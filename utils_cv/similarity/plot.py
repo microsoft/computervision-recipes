@@ -9,6 +9,7 @@ from pathlib import Path
 
 from PIL import Image, ImageOps
 
+from utils_cv.similarity.data import ComparativeSet
 from utils_cv.similarity.metrics import recall_at_k
 
 
@@ -55,8 +56,7 @@ def plot_similars(
 
 
 def plot_comparative_set(
-    query_im_path: str,
-    ref_im_paths: List[str],
+    cs: ComparativeSet,
     num_cols: int = 5,
     figsize: Tuple[int, int] = None,
     im_info_font_size: int = None,
@@ -67,8 +67,7 @@ def plot_comparative_set(
     3. negative examples
 
     Args:
-        query_im_path: comparative set query image path
-        ref_im_paths: comparative set reference image paths
+        comparative_set: comparative set to display
         num_cols: (int) Number of comparative images to display
         figsize: (Tuple) Figure width and height in inches
         im_info_font_size: (int) Size of image titles
@@ -78,28 +77,32 @@ def plot_comparative_set(
     """
     plt.subplots(figsize=figsize)
 
-    all_im_paths = [query_im_path] + ref_im_paths
-    for num, im_path in enumerate(all_im_paths[:num_cols]):
-        plt.subplot(1, num_cols, num + 1)
+    # plot query image
+    plt.subplot(1, num_cols, 1)
+    plt.axis("off")
+    im = Image.open(cs.query_im_path)
+    im = ImageOps.expand(im, border=18, fill="orange")
+    title = f"Reference:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+    plt.title(title, fontsize=im_info_font_size, color="orange")
+    plt.imshow(im)
+
+    # plot query image
+    plt.subplot(1, num_cols, 2)
+    plt.axis("off")
+    im = Image.open(cs.pos_im_path)
+    im = ImageOps.expand(im, border=18, fill="green")
+    title = f"Positive example:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+    plt.title(title, fontsize=im_info_font_size, color="green")
+    plt.imshow(im)
+
+    # plot negative image
+    for num, neg_im_path in enumerate(cs.neg_im_paths[:num_cols-2]):
+        plt.subplot(1, num_cols, num+3)
         plt.axis("off")
-
-        title_color = "black"
-        im_class = Path(im_path).parts[-2]
-        im_name = os.path.basename(im_path)
-        img = Image.open(im_path)
-        if num == 0:
-            title_color = "orange"
-            img = ImageOps.expand(img, border=18, fill=title_color)
-            title = f"Reference:\n{im_class}: {im_name}"
-        elif num == 1:
-            title_color = "green"
-            img = ImageOps.expand(img, border=18, fill=title_color)
-            title = f"Positive example:\n{im_class}: {im_name}"
-        else:
-            title = f"Negative example:\n{im_class}: {im_name}"
-
-        plt.title(title, fontsize=im_info_font_size, color=title_color)
-        plt.imshow(img)
+        im = Image.open(neg_im_path)
+        title = f"Negative example:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+        plt.title(title, fontsize=im_info_font_size, color="black")
+        plt.imshow(im)
 
 
 def plot_recalls(rank_list, figsize: Tuple[int, int] = None):

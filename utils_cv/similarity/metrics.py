@@ -3,14 +3,17 @@
 
 import numpy as np
 from pathlib import Path
+from typing import List
 
 import scipy
+
+from utils_cv.similarity.data import ComparativeSet
 
 
 def vector_distance(
     vec1: np.ndarray,
     vec2: np.ndarray,
-    method: str,
+    method: str = 'l2',
     l2_normalize: bool = True,
     weights: list = [],
     bias: list = [],
@@ -82,89 +85,78 @@ def vector_distance(
     return dist
 
 
-def compute_distances(
-    query_features: np.array, feature_dict: dict, distance: str = "l2"
-) -> dict:
-    """Computes the distance between query_image
-    and all the images present in feature_dict (query_image included)
+# def compute_distances(
+#     query_features: np.array, feature_dict: dict, distance: str = "l2"
+# ) -> dict:
+#     """Computes the distance between query_image
+#     and all the images present in feature_dict (query_image included)
 
-    Args:
-        query_features: (np.array) Features for the query image
-        feature_dict: (dict) Dictionary of features,
-        where key = image path and value = array of floats
-        distance: (str) Type of distance to compute
+#     Args:
+#         query_features: (np.array) Features for the query image
+#         feature_dict: (dict) Dictionary of features,
+#         where key = image path and value = array of floats
+#         distance: (str) Type of distance to compute
 
-    Returns: distances (dict) dictionary
-    where key = path of each image from feature_dict,
-    and value = distance between the query_image and that image
+#     Returns: distances (dict) dictionary
+#     where key = path of each image from feature_dict,
+#     and value = distance between the query_image and that image
 
-    """
-    distances = {}
-    for image, feature in feature_dict.items():
-        distances[image] = vector_distance(query_features, feature, distance)
-    return distances
-
-
-def sort_distances(distances: list) -> list:
-    """Sorts image tuples by increasing distance
-
-    Args:
-        distances: (list) List of tuples (image path, distance to the query_image)
-
-    Returns: distances[:top_k] (list) List of tuples of the k closest images to query_image
-
-    """
-    return sorted(distances.items(), key=lambda x: x[0])
+#     """
+#     distances = {}
+#     for image, feature in feature_dict.items():
+#         distances[image] = vector_distance(query_features, feature, distance)
+#     return distances
 
 
-def compute_similars(
-    query_features: np.array, feature_dict: dict, distance: str = "l2"
+# def sort_distances(distances: list) -> list:
+#     """Sorts image tuples by increasing distance
+
+#     Args:
+#         distances: (list) List of tuples (image path, distance to the query_image)
+
+#     Returns: distances[:top_k] (list) List of tuples of the k closest images to query_image
+
+#     """
+#     return sorted(distances.items(), key=lambda x: x[0])
+
+
+# def compute_similars(
+#     query_features: np.array, feature_dict: dict, distance: str = "l2"
+# ) -> list:
+#     """Computes the distances between query_image and all other images in feature_dict
+#     Sorts them
+#     Returns the k closest
+
+#     Args:
+#         query_features: (np.array) Features for the query image
+#         feature_dict: (dict) Dictionary of features,
+#         where key = image path and value = array of floats
+#         distance: (str) Type of distance to compute, default = "l2"
+#         top_k: (int) Number of closest images to return, default =10
+#         distances: (list) List of tuples (image path, distance to the query_image)
+
+#     Returns: distances[:top_k] (list) List of tuples
+#     (image path, distance to the query_image)
+#     of the k closest images to query_image
+
+#     """
+#     distances = compute_distances(query_features, feature_dict, distance)
+#     distances = sort_distances(distances)
+#     return distances
+
+
+def positive_image_rank_list(
+    comparative_sets: List[ComparativeSet]
 ) -> list:
-    """Computes the distances between query_image and all other images in feature_dict
-    Sorts them
-    Returns the k closest
-
-    Args:
-        query_features: (np.array) Features for the query image
-        feature_dict: (dict) Dictionary of features,
-        where key = image path and value = array of floats
-        distance: (str) Type of distance to compute, default = "l2"
-        top_k: (int) Number of closest images to return, default =10
-        distances: (list) List of tuples (image path, distance to the query_image)
-
-    Returns: distances[:top_k] (list) List of tuples
-    (image path, distance to the query_image)
-    of the k closest images to query_image
-
-    """
-    distances = compute_distances(query_features, feature_dict, distance)
-    distances = sort_distances(distances)
-    return distances
-
-
-def positive_image_rank_list(similarity_tuple_list: list) -> list:
     """Computes the rank of the positive example for each set of sorted images
     Returns the list of these ranks
     Args:
-        similarity_tuple_list: (list) List of list of tuples
-        (image path, distance to the query_image)
+        comparative_sets: List of comparative sets
 
     Returns: (list) List of integer ranks
 
     """
-    rank_list = []
-    for similarity_tuple in similarity_tuple_list:
-        # Find the positive example in the list of similar images
-        query_class = Path(similarity_tuple[0][0]).parts[-2]
-        positive_im_path = [
-            x[0] for x in similarity_tuple[1:] if query_class in x[0]
-        ]  # .parts[-2]
-
-        # Extract the index of the positive image
-        idx = [x[0] for x in similarity_tuple].index(positive_im_path[0])
-        rank_list.append(idx)
-
-    return rank_list
+    return [cs.pos_rank() for cs in comparative_sets]
 
 
 def recall_at_k(rank_list: list, k: int) -> float:

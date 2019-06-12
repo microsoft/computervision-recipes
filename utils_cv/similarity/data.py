@@ -2,9 +2,37 @@
 # Licensed under the MIT License.
 
 from pathlib import Path
+import numpy as np
 import random
 
 from fastai.data_block import LabelList
+
+from utils_cv.similarity.metrics import vector_distance
+
+class ComparativeSet:
+    pos_dist = None 
+    neg_dists = None
+
+    def __init__(self, query_im_path, pos_im_path, neg_im_paths, pos_label, neg_labels):
+        self.query_im_path = query_im_path
+        self.pos_im_path = pos_im_path
+        self.neg_im_paths = neg_im_paths
+        self.pos_label = pos_label
+        self.neg_labels = neg_labels
+
+    def __repr__(self):
+        return(f"ComparativeSet with {len(self.neg_im_paths)} negative images and positive label `{self.pos_label}`.")
+
+    def compute_distances(self, features):
+        query_feature = features[self.query_im_path]
+        pos_feature = features[self.pos_im_path]
+        neg_features = [features[path] for path in self.neg_im_paths]
+        self.pos_dist = vector_distance(query_feature, pos_feature)
+        self.neg_dists = np.array([vector_distance(query_feature, f) for f in neg_features])
+
+    def pos_rank(self):
+        assert self.pos_dist is not None, "Distances not computed yet."
+        return sum(self.pos_dist < self.neg_dists)
 
 
 def comparative_set_builder(data: LabelList) -> dict:
@@ -21,7 +49,7 @@ def comparative_set_builder(data: LabelList) -> dict:
 
     """
     random.seed(975)
-    comparative_sets = dict()
+    comparative_sets = [] 
 
     all_paths = list(data.x.items)
     all_classes = [category.obj for category in data.y]
@@ -55,7 +83,13 @@ def comparative_set_builder(data: LabelList) -> dict:
             for k in range(len(negative_examples))
             if all_classes[negative_indices[k]] != class_name
         ]
+        negative_labels = [
+            all_classes[negative_indices[k]]
+            for k in range(len(negative_examples))
+        ]
 
-        comparative_sets[str(im_path)] = [positive_example] + negative_examples
+        #comparative_sets[str(im_path)] = [positive_example] + negative_examples
+        comparative_set = ComparativeSet(str(im_path), positive_example, negative_examples, class_name, negative_labels)                                       
+        comparative_sets.append(comparative_set)
 
     return comparative_sets
