@@ -118,7 +118,7 @@ def plot_recalls(
     """
     plt.subplots(figsize=figsize)
 
-    k_vec = range(1, max(rank_list))
+    k_vec = range(1, max(rank_list)+1)
     recalls = [recall_at_k(rank_list, k) for k in k_vec]
     plt.plot(k_vec, recalls, color='darkorange', lw=2)
     plt.xlim([0.0, max(k_vec)])
