@@ -7,8 +7,7 @@ from typing import List
 
 import scipy
 
-from utils_cv.similarity.data import ComparativeSet
-
+#from utils_cv.similarity.data import ComparativeSet
 
 def vector_distance(
     vec1: np.ndarray,
@@ -85,27 +84,29 @@ def vector_distance(
     return dist
 
 
-# def compute_distances(
-#     query_features: np.array, feature_dict: dict, distance: str = "l2"
-# ) -> dict:
-#     """Computes the distance between query_image
-#     and all the images present in feature_dict (query_image included)
+def compute_distances(
+    query_features: np.array, feature_dict: dict, ref_im_paths = None, method: str = "l2"
+) -> dict:
+    """Computes the distance between query_image
+    and all the images present in feature_dict (query_image included)
 
-#     Args:
-#         query_features: (np.array) Features for the query image
-#         feature_dict: (dict) Dictionary of features,
-#         where key = image path and value = array of floats
-#         distance: (str) Type of distance to compute
+    Args:
+        query_features: Features for the query image
+        feature_dict: Dictionary of features, where key = image path and value = array of floats
+        method: distance method
 
-#     Returns: distances (dict) dictionary
-#     where key = path of each image from feature_dict,
-#     and value = distance between the query_image and that image
+    Returns: distances (dict) dictionary
+    where key = path of each image from feature_dict,
+    and value = distance between the query_image and that image
 
-#     """
-#     distances = {}
-#     for image, feature in feature_dict.items():
-#         distances[image] = vector_distance(query_features, feature, distance)
-#     return distances
+    """
+    if not ref_im_paths:
+        ref_im_paths = list(feature_dict.keys())
+    distances = []
+    for im_path, feature in feature_dict.items():
+        distance = vector_distance(query_features, feature, method)
+        distances.append((im_path, distance))
+    return distances
 
 
 # def sort_distances(distances: list) -> list:
@@ -146,7 +147,7 @@ def vector_distance(
 
 
 def positive_image_rank_list(
-    comparative_sets: List[ComparativeSet]
+    comparative_sets #List[ComparativeSet]
 ) -> list:
     """Computes the rank of the positive example for each set of sorted images
     Returns the list of these ranks

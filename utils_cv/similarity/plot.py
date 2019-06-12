@@ -9,11 +9,11 @@ from pathlib import Path
 
 from PIL import Image, ImageOps
 
-from utils_cv.similarity.data import ComparativeSet
+#from utils_cv.similarity.data import ComparativeSet
 from utils_cv.similarity.metrics import recall_at_k
 
 
-def plot_similars(
+def plot_distances(
     similars: list,
     num_rows: int,
     num_cols: int,
@@ -56,7 +56,7 @@ def plot_similars(
 
 
 def plot_comparative_set(
-    cs: ComparativeSet,
+    cs, #: ComparativeSet,
     num_cols: int = 5,
     figsize: Tuple[int, int] = None,
     im_info_font_size: int = None,
