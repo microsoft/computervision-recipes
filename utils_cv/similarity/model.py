@@ -3,6 +3,8 @@
 
 import numpy as np
 
+from fastai.vision import open_image
+
 
 class SaveFeatures:
     """Hook to save the features in the intermediate layers
@@ -33,13 +35,27 @@ class SaveFeatures:
 
 def compute_feature(im, learn, embedding_layer):
     featurizer = SaveFeatures(embedding_layer)
+    featurizer.features = None
     _ = learn.predict(im)
-    return featurizer.features
+    feats = featurizer.features[:]
+    featurizer.features = None
+    return feats
 
 
 def compute_features(data, learn, embedding_layer):
+    feat_dict = {}
+    im_paths = [str(x) for x in list(data.items)]
+    for im_path in im_paths:
+        im = open_image(im_path, convert_mode='RGB')
+        feat_dict[im_path] = compute_feature(im, learn, embedding_layer)
+    return feat_dict
+
+def compute_features_batched(data, learn, embedding_layer):
+    error("Looks like there is a bug below")
     featurizer = SaveFeatures(embedding_layer)
+    featurizer.features = None
     _ = learn.get_preds(data)
-    ref_features = featurizer.features
-    ref_im_paths = [str(x) for x in list(data.items)]
-    return dict(zip(ref_im_paths, ref_features))
+    feats = featurizer.features[:]
+    im_paths = [str(x) for x in list(data.items)]
+    featurizer.features = None
+    return dict(zip(im_paths, feats))
