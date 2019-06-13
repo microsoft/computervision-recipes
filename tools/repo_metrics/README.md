@@ -1,6 +1,6 @@
 # Repository Metrics
 
-[![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/repo-metrics?branchName=rijai_repometrics)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=27&branchName=rijai_repometrics)
+[![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/repo-metrics?branchName=master)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=27&branchName=master)
 
 We developed a script that allows us to track the metrics of the ComputerVisionBestPractices repo. Some of the metrics we can track are listed here:
 
