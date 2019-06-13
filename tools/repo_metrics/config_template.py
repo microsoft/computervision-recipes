@@ -7,7 +7,7 @@ GITHUB_TOKEN = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 # CosmosDB Mongo API
 CONNECTION_STRING = "mongodb://XXXXXXXXXXXXXXXXXXXXXXXXX.documents.azure.com:10255/?ssl=true&replicaSet=globaldb"
-DATABASE = "cvbp_stats"
+DATABASE = "cv_stats"
 COLLECTION_GITHUB_STATS = "github_stats"
 COLLECTION_EVENTS = "events"
 
