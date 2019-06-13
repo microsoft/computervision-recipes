@@ -10,7 +10,7 @@ from fastai.data_block import LabelList
 from utils_cv.similarity.metrics import vector_distance
 
 class ComparativeSet:
-    pos_dist = None 
+    pos_dist = None
     neg_dists = None
 
     def __init__(self, query_im_path, pos_im_path, neg_im_paths, pos_label, neg_labels):
@@ -32,7 +32,7 @@ class ComparativeSet:
 
     def pos_rank(self):
         assert self.pos_dist is not None, "Distances not computed yet."
-        return sum(self.pos_dist < self.neg_dists)
+        return sum(self.pos_dist > self.neg_dists)+1
 
 
 def comparative_set_builder(data: LabelList) -> dict:
@@ -49,7 +49,7 @@ def comparative_set_builder(data: LabelList) -> dict:
 
     """
     random.seed(975)
-    comparative_sets = [] 
+    comparative_sets = []
 
     all_paths = list(data.x.items)
     all_classes = [category.obj for category in data.y]
@@ -89,7 +89,7 @@ def comparative_set_builder(data: LabelList) -> dict:
         ]
 
         #comparative_sets[str(im_path)] = [positive_example] + negative_examples
-        comparative_set = ComparativeSet(str(im_path), positive_example, negative_examples, class_name, negative_labels)                                       
+        comparative_set = ComparativeSet(str(im_path), positive_example, negative_examples, class_name, negative_labels)
         comparative_sets.append(comparative_set)
 
     return comparative_sets
