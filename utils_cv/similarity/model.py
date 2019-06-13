@@ -37,7 +37,8 @@ def compute_feature(im, learn, embedding_layer):
     featurizer = SaveFeatures(embedding_layer)
     featurizer.features = None
     _ = learn.predict(im)
-    feats = featurizer.features[:]
+    feats = featurizer.features[0][:]
+    assert(len(feats) > 1)
     featurizer.features = None
     return feats
 
@@ -49,6 +50,7 @@ def compute_features(data, learn, embedding_layer):
         im = open_image(im_path, convert_mode='RGB')
         feat_dict[im_path] = compute_feature(im, learn, embedding_layer)
     return feat_dict
+
 
 def compute_features_batched(data, learn, embedding_layer):
     error("Looks like there is a bug below")
