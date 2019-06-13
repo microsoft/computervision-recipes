@@ -51,17 +51,19 @@ def compute_features(data, learn, embedding_layer):
         feat_dict[im_path] = compute_feature(im, learn, embedding_layer)
     return feat_dict
 
-
-# def compute_features_batched1(dataset_type, learn, embedding_layer):
+# Use this function to featurize a set training or test set of a learner
+# def compute_features_batched1(data, dataset_type, learn, embedding_layer):
 #     assert dataset_type==DatasetType.Valid or dataset_type==DatasetType.Train
 #     featurizer = SaveFeatures(embedding_layer)
 #     _ = learn.get_preds(dataset_type)
 #     feats = featurizer.features[:]
-#     #im_paths = [str(x) for x in list(data.items)]
+#
+#     # Get corresponding image paths
+#     im_paths = [str(x) for x in list(data.items)]
+#     assert(len(feats) == len(im_paths))
 #     return dict(zip(im_paths, feats))
-#
-#     from utils_cv.classification.model import get_preds
-#
+
+# Buggy. Use this function to featurize a provided dataset
 # def compute_features_batched2(data, device_data_loader, learn, embedding_layer):
 #     featurizer = SaveFeatures(embedding_layer)
 #     utils_cv.classification.model.get_preds(learn, device_data_loader)
