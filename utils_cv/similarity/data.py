@@ -4,12 +4,18 @@
 from pathlib import Path
 import numpy as np
 import random
+from typing import List
 
 from fastai.data_block import LabelList
 
 from utils_cv.similarity.metrics import vector_distance
 
+
 class ComparativeSet:
+    """Class to represent a comparative set with a query image, 1 positive image
+       and multiple negative images.
+
+    """
     pos_dist = None
     neg_dists = None
 
@@ -35,17 +41,15 @@ class ComparativeSet:
         return sum(self.pos_dist > self.neg_dists)+1
 
 
-def comparative_set_builder(data: LabelList) -> dict:
+def comparative_set_builder(
+    data: LabelList
+) -> List[ComparativeSet]:
     """Builds sets of comparative images
 
     Args:
-        data: (LabelList) Fast.ai's databunch containing the validation images
+        data: Fastai's image labellist
 
-    Returns: comparative_sets (dict) a dictionary
-    where keys are each of the images in the test_folder,
-    and values are lists of 1 positive and
-    (num_im_per_class x number of other classes) negative examples.
-    Each key is considered as the reference image of a comparative set.
+    Returns: List of comparative_sets
 
     """
     random.seed(975)
