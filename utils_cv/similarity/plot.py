@@ -132,10 +132,9 @@ def plot_recalls(
     plt.title("Recall@k curve")
 
 
-def plot_rank_and_set_size(
+def plot_ranks_distribution(
     rank_list: List[int],
-    sets_sizes: List[int],
-    show_set_size: bool = False,
+    x_axis_max: int = None,
     figsize: Tuple[int, int] = None,
 ):
     """Displays the distribution of rank of the positive image
@@ -146,28 +145,17 @@ def plot_rank_and_set_size(
     Args:
         rank_list: List of ranks of the positive example across comparative sets
         sets_sizes: List of size of the comparative sets
-        show_set_size: True if users wants to plot both subplots
         figsize: Figure width and height in inches
 
     Returns: Nothing but generates a plot
 
     """
     plt.subplots(figsize=figsize)
-
-    bins = np.arange(1, max(sets_sizes) + 2, 1) - 0.5
+    if x_axis_max is None:
+        x_axis_max = max(rank_list) + 1
+    bins = np.arange(1, x_axis_max + 2, 1) - 0.5
     plt.hist(rank_list, bins=bins, alpha=0.5, label="Positive example rank")
     plt.xticks(bins + 0.5)
     plt.ylabel("Number of comparative sets")
     plt.xlabel("Rank of positive example")
     plt.title("Distribution of positive example rank across comparative sets")
-
-    if show_set_size:
-        plt.hist(
-            sets_sizes, bins=bins, alpha=0.5, label="# comparative images"
-        )
-        plt.xticks(bins + 0.5)
-        plt.legend()
-        plt.xlabel("Rank of positive example  /  Number of comparative images")
-        plt.title(
-            "Distribution of positive example rank \n& sets size across comparative sets"
-        )
