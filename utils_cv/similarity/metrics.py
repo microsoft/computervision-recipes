@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from pathlib import Path
 from typing import List
 
 import numpy as np
@@ -11,7 +10,7 @@ import scipy
 def vector_distance(
     vec1: np.ndarray,
     vec2: np.ndarray,
-    method: str = 'l2',
+    method: str = "l2",
     l2_normalize: bool = True,
     weights: list = [],
     bias: list = [],
@@ -80,9 +79,7 @@ def vector_distance(
 
 
 def compute_distances(
-    query_feature: np.array,
-    feature_dict: dict,
-    method: str = "l2"
+    query_feature: np.array, feature_dict: dict, method: str = "l2"
 ) -> List:
     """Computes the distance between query_image and all the images present in
        feature_dict (query_image included)
@@ -102,9 +99,7 @@ def compute_distances(
     return distances
 
 
-def positive_image_rank_list(
-    comparative_sets
-) -> List[int]:
+def positive_image_ranks(comparative_sets) -> List[int]:
     """Computes the rank of the positive example for each comparative set
 
     Args:
@@ -116,24 +111,19 @@ def positive_image_rank_list(
     return [cs.pos_rank() for cs in comparative_sets]
 
 
-def recall_at_k(
-    rank_list: List[int],
-    k: int
-) -> float:
+def recall_at_k(ranks: List[int], k: int) -> float:
     """Computes the percentage of comparative sets where the positive image has a rank of <= k
 
     Args:
-        rank_list: List of ranks of the positive example in each comparative set
+        ranks: List of ranks of the positive example in each comparative set
         k: Threshold below which the rank should be counted as true positive
 
     Returns: Percentage of comparative sets with rank <= k
 
     """
-    below_threshold = [x for x in rank_list if x <= k]
-    percent_in_top_k = round(100.0 * len(below_threshold) / len(rank_list), 1)
+    below_threshold = [x for x in ranks if x <= k]
+    percent_in_top_k = round(100.0 * len(below_threshold) / len(ranks), 1)
     return percent_in_top_k
-
-
 
 
 # def sort_distances(distances: list) -> list:

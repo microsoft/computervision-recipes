@@ -84,7 +84,7 @@ def plot_comparative_set(
     plt.axis("off")
     im = Image.open(cs.query_im_path)
     im = ImageOps.expand(im, border=18, fill="orange")
-    title = f"Reference:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+    title = f"Query:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
     plt.title(title, fontsize=im_info_font_size, color="orange")
     plt.imshow(im)
 
@@ -93,7 +93,7 @@ def plot_comparative_set(
     plt.axis("off")
     im = Image.open(cs.pos_im_path)
     im = ImageOps.expand(im, border=18, fill="green")
-    title = f"Positive example:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+    title = f"Positive:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
     plt.title(title, fontsize=im_info_font_size, color="green")
     plt.imshow(im)
 
@@ -102,19 +102,18 @@ def plot_comparative_set(
         plt.subplot(1, num_cols, num + 3)
         plt.axis("off")
         im = Image.open(neg_im_path)
-        title = f"Negative example:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+        title = (
+            f"Negative:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+        )
         plt.title(title, fontsize=im_info_font_size, color="black")
         plt.imshow(im)
 
 
-def plot_recalls(
-    rank_list: List[int],
-    figsize: Tuple[int, int] = None
-):
+def plot_recalls(ranks: List[int], figsize: Tuple[int, int] = None):
     """Display recall at various values of k.
 
     Args:
-        rank_list: List of ranks of the positive example across comparative sets
+        ranks: List of ranks of the positive example across comparative sets
         figsize: Figure width and height in inches
 
     Returns: Nothing but generates a plot
@@ -122,8 +121,8 @@ def plot_recalls(
     """
     plt.subplots(figsize=figsize)
 
-    k_vec = range(1, max(rank_list) + 1)
-    recalls = [recall_at_k(rank_list, k) for k in k_vec]
+    k_vec = range(1, max(ranks) + 1)
+    recalls = [recall_at_k(ranks, k) for k in k_vec]
     plt.plot(k_vec, recalls, color="darkorange", lw=2)
     plt.xlim([0.0, max(k_vec)])
     plt.ylim([0.0, 101])
@@ -133,9 +132,7 @@ def plot_recalls(
 
 
 def plot_ranks_distribution(
-    rank_list: List[int],
-    x_axis_max: int = None,
-    figsize: Tuple[int, int] = None,
+    ranks: List[int], x_axis_max: int = None, figsize: Tuple[int, int] = None
 ):
     """Displays the distribution of rank of the positive image
     across comparative sets.
@@ -143,7 +140,7 @@ def plot_ranks_distribution(
     number of comparative images in each set.
 
     Args:
-        rank_list: List of ranks of the positive example across comparative sets
+        ranks: List of ranks of the positive example across comparative sets
         sets_sizes: List of size of the comparative sets
         figsize: Figure width and height in inches
 
@@ -152,9 +149,9 @@ def plot_ranks_distribution(
     """
     plt.subplots(figsize=figsize)
     if x_axis_max is None:
-        x_axis_max = max(rank_list) + 1
+        x_axis_max = max(ranks) + 1
     bins = np.arange(1, x_axis_max + 2, 1) - 0.5
-    plt.hist(rank_list, bins=bins, alpha=0.5, label="Positive example rank")
+    plt.hist(ranks, bins=bins, alpha=0.5, label="Positive example rank")
     plt.xticks(bins + 0.5)
     plt.ylabel("Number of comparative sets")
     plt.xlabel("Rank of positive example")
