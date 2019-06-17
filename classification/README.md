@@ -43,7 +43,7 @@ To get started on your local machine:
 1. Activate the conda environment and register it with Jupyter:
     ```
     conda activate cvbp
-    python -m ipykernel install --user --name cvbp --display-name "Python (cvbp)"
+    python -m ipykernel install --user --name cv --display-name "Python (cv)"
     ```
     If you would like to use [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/), install `jupyter-webrtc` widget:
     ```
