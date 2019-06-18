@@ -1,31 +1,37 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-# import os
+import os, pdb
 
+import numpy as np
+
+from utils_cv.similarity.data import comparative_set_builder
+from utils_cv.similarity.model import compute_features_learner #, DatasetType
 from utils_cv.similarity.plot import (
-    # plot_comparative_set,
-    plot_rank_and_set_size,
+    plot_comparative_set,
+    plot_distances,
+    plot_recalls,
+    plot_ranks_distribution,
 )
 
 
-def test_plot_rank():
-    ranklist = [1, 2, 3, 2, 1, 5, 3, 5, 4]
-    sets_sizes = [15, 20, 20, 20, 18, 19, 20, 15, 17, 18]
-    plot_rank_and_set_size(ranklist, sets_sizes, show_set_size=True)
+def test_plot_distances(tiny_ic_data_path):
+    im_root_path = os.path.join(tiny_ic_data_path, "can")
+    im_paths = [os.path.join(im_root_path, s) for s in os.listdir(im_root_path)[:3]]
+    distances = [(im_path, 1.0) for im_path in im_paths]
+    plot_distances(distances, num_rows=1, num_cols=7, figsize=(15,5))
 
 
-def test_plot_comparative_set(tiny_ic_data_path):
-    pass
-    # compar_set = os.listdir(os.path.join(tiny_ic_data_path, "can"))
-    # compar_set = [os.path.join(tiny_ic_data_path, "can", im_name) for im_name in compar_set]
-    # compar_num = 5 if 5 < len(compar_set) else len(compar_set)
-    # plot_comparative_set(compar_set[0], compar_set)
+def test_plot_comparative_set(tiny_ic_databunch):
+    comparative_sets = comparative_set_builder(tiny_ic_databunch.valid_ds, num_sets = 2, num_negatives=50)
+    plot_comparative_set(comparative_sets[1])
 
 
-# def plot_comparative_set(
-#     query_im_path: str,
-#     ref_im_paths: List[str],
-#     num_cols: int,
-#     figsize:Tuple[int,int] = None,
-#     im_info_font_size: int = None,
+def test_plot_recalls():
+    ranks = [1, 2, 3, 2, 1, 5, 3, 5, 4]
+    plot_recalls(ranks)
+
+
+def test_plot_ranks_distribution():
+    ranks = [1, 2, 3, 2, 1, 5, 3, 5, 4]
+    plot_ranks_distribution(ranks)

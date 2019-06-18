@@ -78,8 +78,8 @@ def classification_notebooks():
         ),
     }
     return paths
-	
-	
+
+
 @pytest.fixture(scope="module")
 def similarity_notebooks():
     folder_notebooks = path_similarity_notebooks()
@@ -144,6 +144,18 @@ def tiny_multilabel_ic_data_path(tmp_session) -> str:
 
 
 @pytest.fixture(scope="session")
+def tiny_ic_databunch(tmp_session):
+    """ Returns a databunch object for the tiny fridge objects dataset. """
+    im_paths = unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True)
+    return (ImageList.from_folder(im_paths)
+        .split_by_rand_pct(valid_pct=0.1, seed=20)
+        .label_from_folder()
+        .transform(size=300)
+        .databunch(bs=16)
+        .normalize(imagenet_stats))
+
+
+@pytest.fixture(scope="session")
 def multilabel_result():
     """ Fake results to test evaluation metrics for multilabel classification. """
     y_pred = torch.tensor(
@@ -160,42 +172,15 @@ def multilabel_result():
     return y_pred, y_true
 
 
-@pytest.fixture(scope="session")
-def testing_im_list(tmp_session):
-    """ Set of 5 images from the can/ folder of the Fridge Objects dataset
-     used to test positive example rank calculations"""
-    im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
-    )
-    can_im_paths = os.listdir(os.path.join(im_paths, "can"))
-    can_im_paths = [
-        os.path.join(im_paths, "can", im_name) for im_name in can_im_paths
-    ][0:5]
-    return can_im_paths
-
-
-@pytest.fixture(scope="session")
-def testing_databunch(tmp_session):
-    """ Builds a databunch from the Fridge Objects
-    and returns its validation component that is used
-    to test comparative_set_builder"""
-    im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
-    )
-    can_im_paths = os.listdir(os.path.join(im_paths, "can"))
-    can_im_paths = [
-        os.path.join(im_paths, "can", im_name) for im_name in can_im_paths
-    ][0:5]
-    random.seed(642)
-    data = (
-        ImageList.from_folder(im_paths)
-        .split_by_rand_pct(valid_pct=0.2, seed=20)
-        .label_from_folder()
-        .transform(size=300)
-        .databunch(bs=16)
-        .normalize(imagenet_stats)
-    )
-
-    validation_bunch = data.valid_ds
-
-    return validation_bunch
+# @pytest.fixture(scope="session")
+# def testing_im_list(tmp_session):
+#     """ Set of 5 images from the can/ folder of the Fridge Objects dataset
+#      used to test positive example rank calculations"""
+#     im_paths = unzip_url(
+#         Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+#     )
+#     can_im_paths = os.listdir(os.path.join(im_paths, "can"))
+#     can_im_paths = [
+#         os.path.join(im_paths, "can", im_name) for im_name in can_im_paths
+#     ][0:5]
+#     return can_im_paths
