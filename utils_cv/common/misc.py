@@ -29,12 +29,12 @@ def set_random_seed(s: int):
         pass
 
     
-def copy_files(fpaths: Union[str, List[str]], dst_root: str, infer_subdir: bool = False, remove: bool = False):
+def copy_files(fpaths: Union[str, List[str]], dst_dir: str, infer_subdir: bool = False, remove: bool = False):
     """Copy list of files into destination
     
     Args:
         fpaths: File path to copy
-        dst_root: Destination directory
+        dst_dir: Destination directory
         infer_subdir: If True, try to infer directory structure of the files and copy.
             Otherwise, just copy the files to dst
         remove: Remove copied files from the original directory
@@ -44,7 +44,7 @@ def copy_files(fpaths: Union[str, List[str]], dst_root: str, infer_subdir: bool 
     
     for fpath in fpaths:
         if infer_subdir:
-            dst = os.path.join(dst_root, os.path.basename(os.path.dirname(fpath)))
+            dst = os.path.join(dst_dir, os.path.basename(os.path.dirname(fpath)))
             
         if not os.path.isdir(dst):
             os.makedirs(dst)
