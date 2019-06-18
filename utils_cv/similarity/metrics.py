@@ -99,7 +99,9 @@ def compute_distances(
     return distances
 
 
-def positive_image_ranks(comparative_sets) -> List[int]:
+def positive_image_ranks(
+    comparative_sets
+) -> List[int]:
     """Computes the rank of the positive example for each comparative set
 
     Args:
@@ -111,7 +113,10 @@ def positive_image_ranks(comparative_sets) -> List[int]:
     return [cs.pos_rank() for cs in comparative_sets]
 
 
-def recall_at_k(ranks: List[int], k: int) -> float:
+def recall_at_k(
+    ranks: List[int],
+    k: int
+) -> float:
     """Computes the percentage of comparative sets where the positive image has a rank of <= k
 
     Args:
@@ -124,40 +129,3 @@ def recall_at_k(ranks: List[int], k: int) -> float:
     below_threshold = [x for x in ranks if x <= k]
     percent_in_top_k = round(100.0 * len(below_threshold) / len(ranks), 1)
     return percent_in_top_k
-
-
-# def sort_distances(distances: list) -> list:
-#     """Sorts image tuples by increasing distance
-
-#     Args:
-#         distances: (list) List of tuples (image path, distance to the query_image)
-
-#     Returns: distances[:top_k] (list) List of tuples of the k closest images to query_image
-
-#     """
-#     return sorted(distances.items(), key=lambda x: x[0])
-
-
-# def compute_similars(
-#     query_features: np.array, feature_dict: dict, distance: str = "l2"
-# ) -> list:
-#     """Computes the distances between query_image and all other images in feature_dict
-#     Sorts them
-#     Returns the k closest
-
-#     Args:
-#         query_features: (np.array) Features for the query image
-#         feature_dict: (dict) Dictionary of features,
-#         where key = image path and value = array of floats
-#         distance: (str) Type of distance to compute, default = "l2"
-#         top_k: (int) Number of closest images to return, default =10
-#         distances: (list) List of tuples (image path, distance to the query_image)
-
-#     Returns: distances[:top_k] (list) List of tuples
-#     (image path, distance to the query_image)
-#     of the k closest images to query_image
-
-#     """
-#     distances = compute_distances(query_features, feature_dict, distance)
-#     distances = sort_distances(distances)
-#     return distances
