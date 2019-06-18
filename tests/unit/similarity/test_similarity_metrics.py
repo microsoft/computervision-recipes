@@ -27,8 +27,8 @@ def test_compute_distances():
     assert vector_distance(query_feature, feature_dict["b"]) == approx(distances[1][1])
 
 
-def test_positive_image_ranks(testing_databunch):
-    comparative_sets = comparative_set_builder(testing_databunch, num_sets = 3, num_negatives=50)
+def test_positive_image_ranks(tiny_ic_databunch):
+    comparative_sets = comparative_set_builder(tiny_ic_databunch.valid_ds, num_sets = 3, num_negatives=50)
     comparative_sets[0].pos_dist = 1.0
     comparative_sets[0].neg_dists = np.array([0, 5.7, 2.1])
     comparative_sets[1].pos_dist = -0.1

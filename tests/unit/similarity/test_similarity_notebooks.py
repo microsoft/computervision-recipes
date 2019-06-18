@@ -21,7 +21,6 @@ def test_00_notebook_run(similarity_notebooks):
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__),
         kernel_name=KERNEL_NAME,
     )
 
