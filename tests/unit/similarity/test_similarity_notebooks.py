@@ -4,11 +4,9 @@
 # This test is based on the test suite implemented for Recommenders project
 # https://github.com/Microsoft/Recommenders/tree/master/tests
 
-import os
-import glob
 import papermill as pm
 import pytest
-import shutil
+
 
 # Unless manually modified, python3 should be
 # the name of the current jupyter kernel
@@ -23,7 +21,6 @@ def test_00_notebook_run(similarity_notebooks):
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__),
         kernel_name=KERNEL_NAME,
     )
 

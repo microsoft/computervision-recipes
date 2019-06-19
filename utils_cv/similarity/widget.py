@@ -27,9 +27,10 @@ class DistanceWidget(object):
         """Helper class to draw and update Image classification results widgets.
 
         Args:
-            dataset (LabelList): Data used for prediction, containing ImageList x and CategoryList y.
-            distances (np.ndarray): distance for each image to the query.
-            sort (boolean): set to true to sort images by their smallest distance.
+            dataset: Data used for prediction, containing ImageList x and CategoryList y.
+            distances: Distance for each image to the query.
+            query_im_path: Path to query image.
+            sort: set to true to sort images by their smallest distance.
         """
         assert len(dataset) == len(distances)
 
