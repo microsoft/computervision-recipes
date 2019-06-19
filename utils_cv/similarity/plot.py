@@ -1,16 +1,14 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
+from typing import List, Tuple
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-from typing import Tuple  # List
-
-# from pathlib import Path
-
 from PIL import Image, ImageOps
 
-# from utils_cv.similarity.data import ComparativeSet
+from utils_cv.similarity.data import ComparativeSet
 from utils_cv.similarity.metrics import recall_at_k
 
 
@@ -25,8 +23,8 @@ def plot_distances(
 
     Args:
         distances: List of tuples (image path, distance to the query_image)
-        num_rows: number of rows on which to display the images
-        num_cols: number of columns on which to display the images
+        num_rows: Number of rows on which to display the images
+        num_cols: Number of columns on which to display the images
         figsize: Figure width and height in inches
         im_info_font_size: Size of image titles
 
@@ -62,21 +60,19 @@ def plot_distances(
 
 
 def plot_comparative_set(
-    cs,  #: ComparativeSet,
+    cs: ComparativeSet,
     num_cols: int = 5,
     figsize: Tuple[int, int] = None,
     im_info_font_size: int = None,
 ):
-    """For a given comparative set, displays:
-    1. the reference image
-    2. the associated positive example
-    3. negative examples
+    """Displays the reference image, the associated positive example,
+       and the negative examples of a specified comparative set.
 
     Args:
-        comparative_set: comparative set to display
-        num_cols: (int) Number of comparative images to display
-        figsize: (Tuple) Figure width and height in inches
-        im_info_font_size: (int) Size of image titles
+        comparative_set: Comparative set to display
+        num_cols: Number of comparative images to display
+        figsize: Figure width and height in inches
+        im_info_font_size: Size of image titles
 
     Returns: Nothing but generates a plot
 
@@ -88,7 +84,7 @@ def plot_comparative_set(
     plt.axis("off")
     im = Image.open(cs.query_im_path)
     im = ImageOps.expand(im, border=18, fill="orange")
-    title = f"Reference:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+    title = f"Query:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
     plt.title(title, fontsize=im_info_font_size, color="orange")
     plt.imshow(im)
 
@@ -97,7 +93,7 @@ def plot_comparative_set(
     plt.axis("off")
     im = Image.open(cs.pos_im_path)
     im = ImageOps.expand(im, border=18, fill="green")
-    title = f"Positive example:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+    title = f"Positive:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
     plt.title(title, fontsize=im_info_font_size, color="green")
     plt.imshow(im)
 
@@ -106,16 +102,18 @@ def plot_comparative_set(
         plt.subplot(1, num_cols, num + 3)
         plt.axis("off")
         im = Image.open(neg_im_path)
-        title = f"Negative example:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+        title = (
+            f"Negative:\n{cs.pos_label}: {os.path.basename(cs.query_im_path)}"
+        )
         plt.title(title, fontsize=im_info_font_size, color="black")
         plt.imshow(im)
 
 
-def plot_recalls(rank_list, figsize: Tuple[int, int] = None):
+def plot_recalls(ranks: List[int], figsize: Tuple[int, int] = None):
     """Display recall at various values of k.
 
     Args:
-        rank_list:
+        ranks: List of ranks of the positive example across comparative sets
         figsize: Figure width and height in inches
 
     Returns: Nothing but generates a plot
@@ -123,8 +121,8 @@ def plot_recalls(rank_list, figsize: Tuple[int, int] = None):
     """
     plt.subplots(figsize=figsize)
 
-    k_vec = range(1, max(rank_list) + 1)
-    recalls = [recall_at_k(rank_list, k) for k in k_vec]
+    k_vec = range(1, max(ranks) + 1)
+    recalls = [recall_at_k(ranks, k) for k in k_vec]
     plt.plot(k_vec, recalls, color="darkorange", lw=2)
     plt.xlim([0.0, max(k_vec)])
     plt.ylim([0.0, 101])
@@ -133,42 +131,28 @@ def plot_recalls(rank_list, figsize: Tuple[int, int] = None):
     plt.title("Recall@k curve")
 
 
-def plot_rank_and_set_size(
-    ranklist: list,
-    sets_sizes: list,
-    show_set_size=False,
-    figsize: Tuple[int, int] = None,
+def plot_ranks_distribution(
+    ranks: List[int], x_axis_max: int = None, figsize: Tuple[int, int] = None
 ):
     """Displays the distribution of rank of the positive image
-    across comparative sets
+    across comparative sets.
     If show_set_size == True, also displays the distribution of
-    number of comparative images in each set
+    number of comparative images in each set.
 
     Args:
-        ranklist: (list) List of ranks of the positive example across comparative sets
-        sets_sizes: (list) List of size of the comparative sets
-        show_set_size: (bool) True if users wants to plot both subplots
-        figsize: (Tuple) Figure width and height in inches
+        ranks: List of ranks of the positive example across comparative sets
+        sets_sizes: List of size of the comparative sets
+        figsize: Figure width and height in inches
 
     Returns: Nothing but generates a plot
 
     """
     plt.subplots(figsize=figsize)
-
-    bins = np.arange(1, max(sets_sizes) + 2, 1) - 0.5
-    plt.hist(ranklist, bins=bins, alpha=0.5, label="Positive example rank")
+    if x_axis_max is None:
+        x_axis_max = max(ranks) + 1
+    bins = np.arange(1, x_axis_max + 2, 1) - 0.5
+    plt.hist(ranks, bins=bins, alpha=0.5, label="Positive example rank")
     plt.xticks(bins + 0.5)
     plt.ylabel("Number of comparative sets")
     plt.xlabel("Rank of positive example")
     plt.title("Distribution of positive example rank across comparative sets")
-
-    if show_set_size:
-        plt.hist(
-            sets_sizes, bins=bins, alpha=0.5, label="# comparative images"
-        )
-        plt.xticks(bins + 0.5)
-        plt.legend()
-        plt.xlabel("Rank of positive example  /  Number of comparative images")
-        plt.title(
-            "Distribution of positive example rank \n& sets size across comparative sets"
-        )

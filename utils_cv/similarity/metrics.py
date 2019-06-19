@@ -1,18 +1,16 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import numpy as np
-from pathlib import Path
 from typing import List
 
+import numpy as np
 import scipy
 
-#from utils_cv.similarity.data import ComparativeSet
 
 def vector_distance(
     vec1: np.ndarray,
     vec2: np.ndarray,
-    method: str = 'l2',
+    method: str = "l2",
     l2_normalize: bool = True,
     weights: list = [],
     bias: list = [],
@@ -22,20 +20,16 @@ def vector_distance(
     Inspired by https://github.com/Azure/ImageSimilarityUsingCntk=
 
     Args:
-        vec1: (array) First of the 2 vectors
-        between which the distance will be computed
-        vec2: (array) Second of these 2 vectors
-        method: (str) Type of distance to be computed
-        One of ["l1", "l2", "normalizedl2", "cosine", "correlation",
-        "chisquared", "normalizedchisquared", "hamming",
-        "mahalanobis", "weightedl1", "weightedl2", "weightedl2prob":
-        l2_normalize: (boolean) Flag indicating whether the vectors
-        should be normalized before the distance between them is computed
-        weights: (list of floats) Weights to assign to the vectors components
-        bias: (list of floats) Biases to add to the computed distance
-        learner: (model object) Model from which predictions are computed
+        vec1: First of the 2 vectors between which the distance will be computed
+        vec2: Second of these 2 vectors
+        method: Type of distance to be computed, e.g. "l1" or "l2"
+        l2_normalize: Flag indicating whether the vectors should be normalized
+        to be of unit length before the distance between them is computed
+        weights: Weights to assign to the vectors components
+        bias: Biases to add to the computed distance
+        learner: Model from which predictions are computed
 
-    Returns: (float) Distance between the 2 input vectors
+    Returns: Distance between the 2 input vectors
 
     """
     # Pre-processing
@@ -85,93 +79,53 @@ def vector_distance(
 
 
 def compute_distances(
-    query_features: np.array, feature_dict: dict, ref_im_paths = None, method: str = "l2"
-) -> dict:
-    """Computes the distance between query_image
-    and all the images present in feature_dict (query_image included)
+    query_feature: np.array, feature_dict: dict, method: str = "l2"
+) -> List:
+    """Computes the distance between query_image and all the images present in
+       feature_dict (query_image included)
 
     Args:
-        query_features: Features for the query image
+        query_feature: Features for the query image
         feature_dict: Dictionary of features, where key = image path and value = array of floats
         method: distance method
 
-    Returns: distances (dict) dictionary
-    where key = path of each image from feature_dict,
-    and value = distance between the query_image and that image
+    Returns: List of (image path, distance) pairs.
 
     """
-    if not ref_im_paths:
-        ref_im_paths = list(feature_dict.keys())
     distances = []
     for im_path, feature in feature_dict.items():
-        distance = vector_distance(query_features, feature, method)
+        distance = vector_distance(query_feature, feature, method)
         distances.append((im_path, distance))
     return distances
 
 
-# def sort_distances(distances: list) -> list:
-#     """Sorts image tuples by increasing distance
+def positive_image_ranks(
+    comparative_sets
+) -> List[int]:
+    """Computes the rank of the positive example for each comparative set
 
-#     Args:
-#         distances: (list) List of tuples (image path, distance to the query_image)
-
-#     Returns: distances[:top_k] (list) List of tuples of the k closest images to query_image
-
-#     """
-#     return sorted(distances.items(), key=lambda x: x[0])
-
-
-# def compute_similars(
-#     query_features: np.array, feature_dict: dict, distance: str = "l2"
-# ) -> list:
-#     """Computes the distances between query_image and all other images in feature_dict
-#     Sorts them
-#     Returns the k closest
-
-#     Args:
-#         query_features: (np.array) Features for the query image
-#         feature_dict: (dict) Dictionary of features,
-#         where key = image path and value = array of floats
-#         distance: (str) Type of distance to compute, default = "l2"
-#         top_k: (int) Number of closest images to return, default =10
-#         distances: (list) List of tuples (image path, distance to the query_image)
-
-#     Returns: distances[:top_k] (list) List of tuples
-#     (image path, distance to the query_image)
-#     of the k closest images to query_image
-
-#     """
-#     distances = compute_distances(query_features, feature_dict, distance)
-#     distances = sort_distances(distances)
-#     return distances
-
-
-def positive_image_rank_list(
-    comparative_sets #List[ComparativeSet]
-) -> list:
-    """Computes the rank of the positive example for each set of sorted images
-    Returns the list of these ranks
     Args:
         comparative_sets: List of comparative sets
 
-    Returns: (list) List of integer ranks
+    Returns: List of integer ranks
 
     """
     return [cs.pos_rank() for cs in comparative_sets]
 
 
-def recall_at_k(rank_list: list, k: int) -> float:
-    """Computes the percentage of comparative sets
-    where the positive image has a rank of <= k
+def recall_at_k(
+    ranks: List[int],
+    k: int
+) -> float:
+    """Computes the percentage of comparative sets where the positive image has a rank of <= k
 
     Args:
-        rank_list: (list) List of ranks of the positive example in each comparative set
-        threshold: (int) Threshold below which the rank should be
-        for the comparative set to be counted
+        ranks: List of ranks of the positive example in each comparative set
+        k: Threshold below which the rank should be counted as true positive
 
-    Returns: (float) Percentage of comparative sets with rank <= k
+    Returns: Percentage of comparative sets with rank <= k
 
     """
-    below_threshold = [x for x in rank_list if x <= k]
-    percent_in_top_k = round(100.0 * len(below_threshold) / len(rank_list), 1)
+    below_threshold = [x for x in ranks if x <= k]
+    percent_in_top_k = round(100.0 * len(below_threshold) / len(ranks), 1)
     return percent_in_top_k
