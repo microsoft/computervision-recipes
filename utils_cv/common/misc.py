@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 import random
 import shutil
-from typing import List, Union 
+from typing import List, Union
 
 import numpy as np
 
@@ -28,10 +28,15 @@ def set_random_seed(s: int):
     except ImportError:
         pass
 
-    
-def copy_files(fpaths: Union[str, List[str]], dst_dir: str, infer_subdir: bool = False, remove: bool = False):
+
+def copy_files(
+    fpaths: Union[str, List[str]],
+    dst_dir: str,
+    infer_subdir: bool = False,
+    remove: bool = False,
+):
     """Copy list of files into destination
-    
+
     Args:
         fpaths: File path to copy
         dst_dir: Destination directory
@@ -41,14 +46,18 @@ def copy_files(fpaths: Union[str, List[str]], dst_dir: str, infer_subdir: bool =
     """
     if isinstance(fpaths, (str, Path)):
         fpaths = [fpaths]
-    
+
     for fpath in fpaths:
         if infer_subdir:
-            dst = os.path.join(dst_dir, os.path.basename(os.path.dirname(fpath)))
-            
+            dst = os.path.join(
+                dst_dir, os.path.basename(os.path.dirname(fpath))
+            )
+        else:
+            dst = dst_dir
+
         if not os.path.isdir(dst):
             os.makedirs(dst)
         shutil.copy(fpath, dst)
-        
+
         if remove:
             os.remove(fpath)
