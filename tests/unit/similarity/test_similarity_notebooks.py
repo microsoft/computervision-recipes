@@ -29,7 +29,7 @@ def test_00_notebook_run(similarity_notebooks):
 @pytest.mark.notebooks
 def test_01_notebook_run(similarity_notebooks, tiny_ic_data_path):
     notebook_path = similarity_notebooks["01"]
-    out = pm.execute_notebook(
+    pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
