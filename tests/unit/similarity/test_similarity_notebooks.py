@@ -6,6 +6,7 @@
 
 import papermill as pm
 import pytest
+import scrapbook as sb
 
 
 # Unless manually modified, python3 should be
@@ -36,3 +37,8 @@ def test_01_notebook_run(similarity_notebooks, tiny_ic_data_path):
         ),
         kernel_name=KERNEL_NAME,
     )
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+
+    # Conservative assert: check if rank is smaller than or equal 5
+    # (Typically mediam_rank should be 1, and random rank is 50)
+    assert nb_output.scraps['median_rank'].data <= 5
