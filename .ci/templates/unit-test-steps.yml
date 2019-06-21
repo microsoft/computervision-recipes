@@ -9,7 +9,7 @@ steps:
     conda env create -f classification/environment.yml --verbose
     source activate cv
     conda env list  
-    pip install papermill lxml ipywebrtc nteract-scrapbook  # to fix error with Windows CPU target
+    pip install papermill lxml nteract-scrapbook ipywebrtc  # to fix error with Windows CPU target
   displayName: 'Create and activate conda environment'
 
 - bash: |
