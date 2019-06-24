@@ -12,6 +12,7 @@ import subprocess
 import logging
 import os
 import sys
+import time
 
 from azureml.core import Run
 
@@ -39,13 +40,7 @@ def create_arg_parser():
                         help="Test results")
     args = parser.parse_args()
 
-    return args 
-
-import logging
-import os
-import subprocess
-import sys
-import time
+    return args
 
 test_logger = logging.getLogger(__name__)
 
@@ -97,18 +92,18 @@ if __name__ == "__main__":
                     "--junitxml=reports/test-unit.xml"])
     '''
     logger.debug("args.junitxml", args.xmlname)
-    logger.debug("junit=", "--junitxml="+args.xmlname)
+    logger.debug("junit=", "--junitxml=" + args.xmlname)
     logger.info('pytest run:',
                 ["pytest",
                  args.testfolder,
                  "-m",
                  args.testmarkers,
-                 "--junitxml="+args.xmlname])
+                 "--junitxml=" + args.xmlname])
     check_output_custom(["pytest",
-                    args.testfolder,
-                    "-m",
-                    args.testmarkers,
-                    "--junitxml="+args.xmlname])
+                         args.testfolder,
+                         "-m",
+                         args.testmarkers,
+                         "--junitxml="+args.xmlname])
     #
     # Leveraged code from this  notebook:
     # https://msdata.visualstudio.com/Vienna/_search?action=contents&text=upload_folder&type=code&lp=code-Project&filters=ProjectFilters%7BVienna%7DRepositoryFilters%7BAzureMlCli%7D&pageSize=25&sortOptions=%5B%7B%22field%22%3A%22relevance%22%2C%22sortOrder%22%3A%22desc%22%7D%5D&result=DefaultCollection%2FVienna%2FAzureMlCli%2FGBmaster%2F%2Fsrc%2Fazureml-core%2Fazureml%2Fcore%2Frun.py
