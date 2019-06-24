@@ -51,7 +51,8 @@ steps:
 # - template: env-setup.yml 
 
 - script: 
-    python tests/ci/submit_azureml_pytest.py --subid $(subscriptionid) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)
+    ls && \
+    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)
   displayName: 'submit_azureml_pytest'
 
 - task: PublishTestResults@2
