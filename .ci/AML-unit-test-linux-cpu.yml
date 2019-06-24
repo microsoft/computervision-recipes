@@ -27,6 +27,10 @@ variables:
   value : 'unit-test-linux-cpu'
 - name  : 'condafile'
   value : 'classification/environment.yml'
+- name  : 'rg'
+  value : 'computervision'
+- name  : 'wsname'
+  value : 'CVWS'
 trigger: none
 
 pr: none
@@ -55,7 +59,7 @@ steps:
     pip install paramiko==2.4.2;
     pip install azureml-sdk;
     pip install azure-cli;
-    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)
+    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)  --rg $(rg) --wsname $(wsname)
   displayName: 'submit_azureml_pytest'
 
 - task: PublishTestResults@2
