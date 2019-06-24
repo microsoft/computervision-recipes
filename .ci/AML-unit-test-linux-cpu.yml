@@ -51,8 +51,7 @@ steps:
 
 - script:
     ls;
-    ls -al;
-    - script: 
+    ls -al; 
     pip install paramiko==2.4.2;
     pip install azureml-sdk;
     pip install azure-cli;
