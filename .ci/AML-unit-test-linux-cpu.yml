@@ -42,6 +42,7 @@ steps:
   inputs:
     versionSpec: '3.6'
     architecture: 'x64'
+    addToPath: true
   displayName: 'Use Python 3.6'
 
 - script: | 
