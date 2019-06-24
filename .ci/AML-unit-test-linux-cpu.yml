@@ -29,9 +29,9 @@ variables:
   value : 'classification/environment.yml'
 trigger: none
 
-pr:
-- staging 
-- master
+pr: none
+#- staging 
+#- master
   
 pool:
  vmImage: 'ubuntu-16.04'
