@@ -46,12 +46,12 @@ steps:
   displayName: 'Use Python 3.6'
 
 - script: | 
-   az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
+    az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
   displayName: 'Login to Azure'
 
 - script:
-    ls
-    ls -al
+    ls;
+    ls -al;
     python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)
   displayName: 'submit_azureml_pytest'
 
