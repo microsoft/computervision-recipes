@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 from utils_cv.common.image import (
@@ -53,6 +52,9 @@ def test_ims2strlist(tiny_ic_data_path):
     ]
     im_string_list = ims2strlist(im_list)
     assert isinstance(im_string_list, list)
+    assert len(im_string_list) == len(im_list)
+    for im_str in im_string_list:
+        assert isinstance(im_str, str)
 
 
 def test_im2base64(tiny_ic_data_path):
