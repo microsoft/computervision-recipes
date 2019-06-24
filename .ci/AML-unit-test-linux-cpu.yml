@@ -45,7 +45,7 @@ steps:
   displayName: 'Use Python 3.6'
 
 - script: | 
-   az login --service-principal -u $(ClientID) -p $(ClientSecret) --tenant $(TenantID)
+   az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(spenant)
   displayName: 'Login to Azure'
 
 # - template: env-setup.yml 
@@ -55,7 +55,7 @@ steps:
   displayName: ' generate_conda_file.py'
 
 - script: 
-    python tests/ci/submit_azureml_pytest.py --subid $(SubscriptionID) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)
+    python tests/ci/submit_azureml_pytest.py --subid $(subscriptionid) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)
   displayName: 'submit_azureml_pytest'
 
 - task: PublishTestResults@2
