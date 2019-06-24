@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 #
 variables:
-- group: AzureKeyVaultSecrets
+- group: cvpb-keyvault
 - name  : 'test'
   value : 'run_pytest.py'
 - name  : 'testfolder'
