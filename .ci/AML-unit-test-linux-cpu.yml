@@ -28,9 +28,9 @@ variables:
 - name  : 'condafile'
   value : 'classification/environment.yml'
 - name  : 'rg'
-  value : 'computervision'
+  value : 'cvbp_project_resources'
 - name  : 'wsname'
-  value : 'CVWS'
+  value : 'cvws'
 trigger: none
 
 pr: none
