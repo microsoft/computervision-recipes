@@ -54,6 +54,7 @@ steps:
 - task: Bash@3
   inputs: 
     script: 
+      ls
       ls -al
       cd .ci
       python submit_azureml_pytest.py --subid $(subscriptionid) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)
