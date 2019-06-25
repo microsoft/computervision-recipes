@@ -4,9 +4,9 @@
 variables:
 - group: AzureMLConfig
 - name  : 'test'
-  value : 'run_pytest.py'
+  value : '.ci/run_pytest.py'
 - name  : 'testfolder'
-  value : '../tests/unit/amlexample'
+  value : 'tests/unit/amlexample'
 - name  : 'testmarkers'
   value : '"not notebooks and not spark and not gpu"'
 - name  : 'junitxml'
