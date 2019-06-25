@@ -33,7 +33,11 @@ def test_01_notebook_run(similarity_notebooks, tiny_ic_data_path):
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
-            PM_VERSION=pm.__version__, DATA_PATH=tiny_ic_data_path
+            PM_VERSION=pm.__version__,
+            DATA_PATH=tiny_ic_data_path,
+            EPOCHS_HEAD = 2,
+            EPOCHS_BODY = 2,
+            IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
     )
