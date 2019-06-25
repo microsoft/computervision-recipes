@@ -374,8 +374,8 @@ if __name__ == "__main__":
                                    docker_proc_type=docker_proc_type,
                                    conda_env_file=args.condafile)
 
-    print("exp: In Azure, look for experiment named ", args.expname)
-
+    logger.info("exp: In Azure, look for experiment named {}".format(args.expname))
+    logger.info("args.test is {} testfolder {}".format(args.test, args.testfolder))
     # create new or use existing experiment
     experiment = Experiment(workspace=workspace, name=args.expname)
     run = submit_experiment_to_azureml(test=args.test,
