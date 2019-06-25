@@ -9,7 +9,6 @@
 
 import os
 import pytest
-import random
 import torch
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List

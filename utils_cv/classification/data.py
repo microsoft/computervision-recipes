@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Union
 from urllib.parse import urljoin
 
-from fastai.vision import ImageList
+from fastai.vision import ItemList
 from PIL import Image
 from tqdm import tqdm
 
@@ -59,7 +59,7 @@ def imagenet_labels() -> list:
 
 
 def downsize_imagelist(
-    im_list: ImageList, out_dir: Union[Path, str], dim: int = 500
+    im_list: ItemList, out_dir: Union[Path, str], dim: int = 500
 ):
     """Aspect-ratio preserving down-sizing of each image in the ImageList {im_list}
     so that min(width,height) is at most {dim} pixels.
