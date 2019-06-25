@@ -55,7 +55,7 @@ def test_02_notebook_run(
         parameters=dict(
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_multilabel_ic_data_path,
-            IM_SIZE=-50,
+            IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
     )
