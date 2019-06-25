@@ -100,6 +100,14 @@ if __name__ == "__main__":
                  "-m",
                  args.testmarkers,
                  "--junitxml=" + args.xmlname])
+    '''
+    Usually use subprocess.run but am trying to debug.
+        subprocess.run(["pytest",
+                    args.testfolder,
+                    "-m",
+                    args.testmarkers,
+                    "--junitxml="+args.xmlname])
+    '''
     junit_str = "--junitxml=" + args.xmlname
     check_output_custom(["pytest",
                          args.testfolder,
