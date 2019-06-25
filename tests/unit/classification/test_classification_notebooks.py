@@ -46,7 +46,7 @@ def test_01_notebook_run(classification_notebooks, tiny_ic_data_path):
 
 @pytest.mark.notebooks
 def test_02_notebook_run(
-    classification_notebooks, tiny_multilabel_ic_data_path
+    classification_notebooks, multilabel_ic_data_path
 ):
     notebook_path = classification_notebooks["02_multilabel_classification"]
     pm.execute_notebook(
@@ -54,7 +54,7 @@ def test_02_notebook_run(
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
-            DATA_PATH=tiny_multilabel_ic_data_path,
+            DATA_PATH=multilabel_ic_data_path,
             IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
