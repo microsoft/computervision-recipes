@@ -8,13 +8,13 @@ steps:
 - bash: |
     conda env create -f classification/environment.yml
     source activate cv
-    conda env list  
+    conda env list
   displayName: 'Create and activate conda environment'
 
 - bash: |
     source activate cv
     python -m ipykernel install --user --name cv --display-name "cv"
-    pytest tests/unit --junitxml=junit/test-unitttest.xml
+    pytest --durations 100 tests/unit --junitxml=junit/test-unitttest.xml
   displayName: 'Run Unit tests'
 
 - bash: |
