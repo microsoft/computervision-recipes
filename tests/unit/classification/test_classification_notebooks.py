@@ -35,7 +35,10 @@ def test_01_notebook_run(classification_notebooks, tiny_ic_data_path):
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
-            PM_VERSION=pm.__version__, DATA_PATH=tiny_ic_data_path
+            PM_VERSION=pm.__version__,
+            DATA_PATH=tiny_ic_data_path,
+            EPOCHS=1,
+            IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
     )
@@ -43,14 +46,17 @@ def test_01_notebook_run(classification_notebooks, tiny_ic_data_path):
 
 @pytest.mark.notebooks
 def test_02_notebook_run(
-    classification_notebooks, tiny_multilabel_ic_data_path
+    classification_notebooks, multilabel_ic_data_path
 ):
     notebook_path = classification_notebooks["02_multilabel_classification"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
-            PM_VERSION=pm.__version__, DATA_PATH=tiny_multilabel_ic_data_path
+            PM_VERSION=pm.__version__,
+            DATA_PATH=multilabel_ic_data_path,
+            EPOCHS=1,
+            IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
     )
@@ -69,6 +75,7 @@ def test_03_notebook_run(classification_notebooks, tiny_ic_data_path):
             MODEL_TYPE="fast_inference",  # options: ['fast_inference', 'high_performance', 'small_size']
             EPOCHS_HEAD=1,
             EPOCHS_BODY=1,
+            IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
     )
@@ -99,13 +106,13 @@ def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
             DATA=[tiny_ic_data_path],
             REPS=1,
             LEARNING_RATES=[1e-3],
-            IM_SIZES=[199],
+            IM_SIZES=[50],
             EPOCHS=[1],
         ),
         kernel_name=KERNEL_NAME,
     )
-    
-    
+
+
 @pytest.mark.notebooks
 def test_12_notebook_run(classification_notebooks, tiny_ic_data_path):
     notebook_path = classification_notebooks["12_hard_negative_sampling"]
@@ -117,6 +124,7 @@ def test_12_notebook_run(classification_notebooks, tiny_ic_data_path):
             DATA_PATH=tiny_ic_data_path,
             EPOCHS_HEAD=1,
             EPOCHS_BODY=1,
+            IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
     )

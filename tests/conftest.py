@@ -149,6 +149,14 @@ def tiny_multilabel_ic_data_path(tmp_session) -> str:
 
 
 @pytest.fixture(scope="session")
+def multilabel_ic_data_path(tmp_session) -> str:
+    """ Returns the path to the tiny fridge objects dataset. """
+    return unzip_url(
+        Urls.multilabel_fridge_objects_path, tmp_session, exist_ok=True
+    )
+
+
+@pytest.fixture(scope="session")
 def tiny_ic_databunch(tmp_session):
     """ Returns a databunch object for the tiny fridge objects dataset. """
     im_paths = unzip_url(
