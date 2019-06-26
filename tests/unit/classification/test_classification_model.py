@@ -6,11 +6,12 @@ import numpy as np
 import urllib.request
 from torch import tensor
 from fastai.metrics import accuracy, error_rate
-from fastai.vision import cnn_learner, models, open_image
+from fastai.vision import cnn_learner, DatasetType, ImageList, imagenet_stats, models, open_image
 from utils_cv.classification.model import (
     get_optimal_threshold,
     get_preds,
     hamming_accuracy,
+    IMAGENET_IM_SIZE,
     model_to_learner,
     TrainMetricsRecorder,
     zero_one_accuracy,
@@ -61,8 +62,10 @@ def test_get_optimal_threshold(multilabel_result):
 
 
 def test_model_to_learner(tmp):
+    model = models.resnet18
+
     # Test if the function loads an ImageNet model (ResNet) trainer
-    learn = model_to_learner(models.resnet34(pretrained=True))
+    learn = model_to_learner(model(pretrained=True))
     assert len(learn.data.classes) == 1000  # Check Image net classes
     assert isinstance(learn.model, models.ResNet)
 
@@ -71,8 +74,28 @@ def test_model_to_learner(tmp):
     imagefile = os.path.join(tmp, "cvbp_cup.jpg")
     urllib.request.urlretrieve(IM_URL, imagefile)
 
-    category, ind, prob = learn.predict(open_image(imagefile, convert_mode='RGB'))
+    category, ind, predict_output = learn.predict(open_image(imagefile, convert_mode='RGB'))
     assert learn.data.classes[ind] == str(category) == "coffee_mug"
+
+    # Test if .predict() yield the same output when use .get_preds()
+    one_data = (
+        ImageList.from_folder(tmp)
+        .split_none()
+        .label_const()  # cannot use label_empty because of fastai bug: # https://github.com/fastai/fastai/issues/1908
+        .transform(tfms=None, size=IMAGENET_IM_SIZE)
+        .databunch(bs=1)
+        .normalize(imagenet_stats)
+    )
+    learn.data.train_dl = one_data.train_dl
+    get_preds_output = learn.get_preds(ds_type=DatasetType.Train)
+
+    assert np.all(
+        np.isclose(
+            np.array(get_preds_output[0].tolist()[0]),  # Note, get_preds() produces a batch (list) output
+            np.array(predict_output.tolist()),
+            rtol=1e-05, atol=1e-08
+        )
+    )
 
 
 def test_train_metrics_recorder(tiny_ic_databunch):

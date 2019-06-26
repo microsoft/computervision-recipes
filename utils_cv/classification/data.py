@@ -67,7 +67,7 @@ def downsize_imagelist(
     subdirectory structure.
 
     Args:
-        im_list: Fastai ImageList object.
+        im_list: Fastai ItemList object containing image paths.
         out_dir: Output root location.
         dim: maximum image dimension (width/height) after resize
     """

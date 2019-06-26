@@ -27,18 +27,21 @@ def test_data_path():
 
 
 def test_get_files_in_directory(tiny_ic_data_path):
-    # directories should not be included
-    assert len(get_files_in_directory(tiny_ic_data_path)) == 0
-
     im_dir = os.path.join(tiny_ic_data_path, "can")
 
     # test a file ends with the same "jpg" but not the actual ".jpg"
     Path(os.path.join(im_dir, "image.not_jpg")).touch()
+    # directories should not be included
+    os.makedirs(os.path.join(im_dir, "test_get_files_in_directory"), exist_ok=True)
 
-    assert len(get_files_in_directory(im_dir)) == 23
+    assert len(get_files_in_directory(im_dir)) == 23  # 22 jpg + 1 not_job files
     assert len(get_files_in_directory(im_dir, suffixes=[".jpg"])) == 22
     assert len(get_files_in_directory(im_dir, suffixes=[".not_jpg"])) == 1
     assert len(get_files_in_directory(im_dir, suffixes=[".nonsense"])) == 0
+
+    # cleanup
+    os.remove(os.path.join(im_dir, "image.not_jpg"))
+    os.rmdir(os.path.join(im_dir, "test_get_files_in_directory"))
 
 
 def _test_url_data(url: str, path: Union[Path, str], dir_name: str):
