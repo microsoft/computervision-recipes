@@ -10,6 +10,7 @@
 import os
 import pytest
 import torch
+from fastai.vision import cnn_learner, models
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List
 from tempfile import TemporaryDirectory
@@ -178,6 +179,18 @@ def multilabel_result():
         [[1, 0, 0, 1], [1, 1, 1, 1], [0, 1, 0, 0], [1, 1, 1, 0]]
     ).float()
     return y_pred, y_true
+
+
+@pytest.fixture(scope="session")
+def model_pred_scores(tiny_ic_databunch):
+    """Return a simple learner and prediction results on tiny ic data"""
+    model = models.resnet18
+    lr = 1e-4
+    epochs = 1
+
+    learn = cnn_learner(tiny_ic_databunch, model)
+    learn.fit(epochs, lr)
+    return learn, learn.get_preds()
 
 
 # @pytest.fixture(scope="session")

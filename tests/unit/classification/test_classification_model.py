@@ -6,7 +6,7 @@ import numpy as np
 import urllib.request
 from torch import tensor
 from fastai.metrics import accuracy, error_rate
-from fastai.vision import cnn_learner, models, open_image
+from fastai.vision import cnn_learner, DatasetType, models, open_image
 from utils_cv.classification.model import (
     get_optimal_threshold,
     get_preds,
@@ -109,13 +109,10 @@ def test_train_metrics_recorder(tiny_ic_databunch):
     assert len(cb.valid_metrics) == 0  # no validation
 
     
-def test_get_preds(tiny_ic_databunch):
-    model = models.resnet18
-    lr = 1e-4
-    epochs = 1
-    
-    learn = cnn_learner(tiny_ic_databunch, model)
-    learn.fit(epochs, lr)
-    pred_outs = get_preds(learn, tiny_ic_databunch.valid_dl)
-    assert len(pred_outs[0]) == len(tiny_ic_databunch.valid_ds)
-    # TODO test w/ learn.get_preds
+def test_get_preds(model_pred_scores):
+    learn, ref_pred_outs = model_pred_scores
+    pred_outs = get_preds(learn, learn.data.valid_dl)
+    assert len(pred_outs[0]) == len(learn.data.valid_ds)
+
+    # Check if the output is the same as learn.get_preds
+    assert pred_outs[0].tolist() == ref_pred_outs[0].tolist()
