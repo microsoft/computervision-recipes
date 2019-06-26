@@ -6,7 +6,7 @@ import numpy as np
 import urllib.request
 from torch import tensor
 from fastai.metrics import accuracy, error_rate
-from fastai.vision import cnn_learner, DatasetType, models, open_image
+from fastai.vision import cnn_learner, models, open_image
 from utils_cv.classification.model import (
     get_optimal_threshold,
     get_preds,
@@ -102,11 +102,15 @@ def test_train_metrics_recorder(tiny_ic_databunch):
 
     # no validation set
     learn = cnn_learner(tiny_ic_databunch, model, metrics=accuracy)
+    valid_dl = learn.data.valid_dl
     learn.data.valid_dl = None
     cb = test_callback(learn)
     assert len(cb.train_metrics) == epochs
     assert len(cb.train_metrics[0]) == 1  # we used 1 metrics
     assert len(cb.valid_metrics) == 0  # no validation
+
+    # Since tiny_ic_databunch is being used in other tests too, should put the validation data back.
+    learn.data.valid_dl = valid_dl
 
     
 def test_get_preds(model_pred_scores):
