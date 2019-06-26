@@ -79,7 +79,7 @@ def tiny_ic_data(tiny_ic_data_path):
         ImageList.from_folder(tiny_ic_data_path)
         .split_by_rand_pct(valid_pct=0.2, seed=10)
         .label_from_folder()
-        .transform(size=299)
+        .transform(size=50)
         .databunch(bs=16)
         .normalize(imagenet_stats)
     )
@@ -118,12 +118,12 @@ def test_train_metrics_recorder(tiny_ic_data):
     assert len(cb.train_metrics[0]) == 1  # we used 1 metrics
     assert len(cb.valid_metrics) == 0  # no validation
 
-    
+
 def test_get_preds(tiny_ic_data):
     model = models.resnet18
     lr = 1e-4
     epochs = 1
-    
+
     learn = cnn_learner(tiny_ic_data, model)
     learn.fit(epochs, lr)
     pred_outs = get_preds(learn, tiny_ic_data.valid_dl)
