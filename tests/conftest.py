@@ -9,8 +9,8 @@
 
 import os
 import pytest
-import random
 import torch
+from fastai.vision import cnn_learner, models
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List
 from tempfile import TemporaryDirectory
@@ -43,6 +43,7 @@ def path_similarity_notebooks():
 
 
 # ----- Module fixtures ----------------------------------------------------------
+
 
 @pytest.fixture(scope="module")
 def classification_notebooks():
@@ -87,12 +88,15 @@ def similarity_notebooks():
     # Path for the notebooks
     paths = {
         "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
-        "01": os.path.join(folder_notebooks, "01_training_and_evaluation_introduction.ipynb"),
+        "01": os.path.join(
+            folder_notebooks, "01_training_and_evaluation_introduction.ipynb"
+        ),
     }
     return paths
 
 
 # ----- Function fixtures ----------------------------------------------------------
+
 
 @pytest.fixture(scope="function")
 def tmp(tmp_path_factory):
@@ -110,6 +114,7 @@ def tmp(tmp_path_factory):
 
 
 # ----- Session fixtures ----------------------------------------------------------
+
 
 @pytest.fixture(scope="session")
 def tmp_session(tmp_path_factory):
@@ -154,13 +159,17 @@ def multilabel_ic_data_path(tmp_session) -> str:
 @pytest.fixture(scope="session")
 def tiny_ic_databunch(tmp_session):
     """ Returns a databunch object for the tiny fridge objects dataset. """
-    im_paths = unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True)
-    return (ImageList.from_folder(im_paths)
+    im_paths = unzip_url(
+        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+    )
+    return (
+        ImageList.from_folder(im_paths)
         .split_by_rand_pct(valid_pct=0.1, seed=20)
         .label_from_folder()
-        .transform(size=300)
+        .transform(size=50)
         .databunch(bs=16)
-        .normalize(imagenet_stats))
+        .normalize(imagenet_stats)
+    )
 
 
 @pytest.fixture(scope="session")
@@ -178,6 +187,18 @@ def multilabel_result():
         [[1, 0, 0, 1], [1, 1, 1, 1], [0, 1, 0, 0], [1, 1, 1, 0]]
     ).float()
     return y_pred, y_true
+
+
+@pytest.fixture(scope="session")
+def model_pred_scores(tiny_ic_databunch):
+    """Return a simple learner and prediction scores on tiny ic data"""
+    model = models.resnet18
+    lr = 1e-4
+    epochs = 1
+
+    learn = cnn_learner(tiny_ic_databunch, model)
+    learn.fit(epochs, lr)
+    return learn, learn.get_preds()[0].tolist()
 
 
 # @pytest.fixture(scope="session")
