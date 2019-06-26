@@ -114,9 +114,9 @@ def test_train_metrics_recorder(tiny_ic_databunch):
 
     
 def test_get_preds(model_pred_scores):
-    learn, ref_pred_outs = model_pred_scores
+    learn, ref_pred_scores = model_pred_scores
     pred_outs = get_preds(learn, learn.data.valid_dl)
     assert len(pred_outs[0]) == len(learn.data.valid_ds)
 
     # Check if the output is the same as learn.get_preds
-    assert pred_outs[0].tolist() == ref_pred_outs[0].tolist()
+    assert pred_outs[0].tolist() == ref_pred_scores

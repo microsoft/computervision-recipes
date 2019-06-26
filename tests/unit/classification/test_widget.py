@@ -8,7 +8,7 @@ def test_annotation_widget(tiny_ic_data_path, tmp):
 
     w_anno_ui = AnnotationWidget(
         labels=["can", "carton", "milk_bottle", "water_bottle"],
-        im_dir=tiny_ic_data_path,
+        im_dir=os.path.join(tiny_ic_data_path, "can"),
         anno_path=ANNO_PATH,
         im_filenames=None,  # Set to None to annotate all images in IM_DIR
     )

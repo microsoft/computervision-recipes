@@ -183,14 +183,14 @@ def multilabel_result():
 
 @pytest.fixture(scope="session")
 def model_pred_scores(tiny_ic_databunch):
-    """Return a simple learner and prediction results on tiny ic data"""
+    """Return a simple learner and prediction scores on tiny ic data"""
     model = models.resnet18
     lr = 1e-4
     epochs = 1
 
     learn = cnn_learner(tiny_ic_databunch, model)
     learn.fit(epochs, lr)
-    return learn, learn.get_preds()
+    return learn, learn.get_preds()[0].tolist()
 
 
 # @pytest.fixture(scope="session")
