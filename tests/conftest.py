@@ -166,7 +166,7 @@ def tiny_ic_databunch(tmp_session):
         ImageList.from_folder(im_paths)
         .split_by_rand_pct(valid_pct=0.1, seed=20)
         .label_from_folder()
-        .transform(size=300)
+        .transform(size=50)
         .databunch(bs=16)
         .normalize(imagenet_stats)
     )
