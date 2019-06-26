@@ -12,22 +12,16 @@ def vector_distance(
     vec2: np.ndarray,
     method: str = "l2",
     l2_normalize: bool = True,
-    weights: list = [],
-    bias: list = [],
-    learner: list = [],
 ) -> float:
     """Computes the distance between 2 vectors
     Inspired by https://github.com/Azure/ImageSimilarityUsingCntk=
 
     Args:
-        vec1: First of the 2 vectors between which the distance will be computed
-        vec2: Second of these 2 vectors
+        vec1: First vector between which the distance will be computed
+        vec2: Second vector
         method: Type of distance to be computed, e.g. "l1" or "l2"
         l2_normalize: Flag indicating whether the vectors should be normalized
         to be of unit length before the distance between them is computed
-        weights: Weights to assign to the vectors components
-        bias: Biases to add to the computed distance
-        learner: Model from which predictions are computed
 
     Returns: Distance between the 2 input vectors
 
@@ -60,19 +54,6 @@ def vector_distance(
         dist = scipy.chiSquared(a, b)
     elif method == "hamming":
         dist = scipy.spatial.distance.hamming(vec1 > 0, vec2 > 0)
-    elif method == "weightedl1":
-        feat = np.float32(abs(vecDiff))
-        dist = np.dot(weights, feat) + bias
-        dist = -float(dist)
-        # assert(abs(dist - learnerL1.decision_function([feat])) < 0.000001)
-    elif method == "weightedl2":
-        feat = (vecDiff) ** 2
-        dist = np.dot(weights, feat) + bias
-        dist = -float(dist)
-    elif method == "weightedl2prob":
-        feat = (vecDiff) ** 2
-        dist = learner.predict_proba([feat])[0][1]
-        dist = float(dist)
     else:
         raise Exception("Distance method unknown: " + method)
     return dist
@@ -99,9 +80,7 @@ def compute_distances(
     return distances
 
 
-def positive_image_ranks(
-    comparative_sets
-) -> List[int]:
+def positive_image_ranks(comparative_sets) -> List[int]:
     """Computes the rank of the positive example for each comparative set
 
     Args:
@@ -113,10 +92,7 @@ def positive_image_ranks(
     return [cs.pos_rank() for cs in comparative_sets]
 
 
-def recall_at_k(
-    ranks: List[int],
-    k: int
-) -> float:
+def recall_at_k(ranks: List[int], k: int) -> float:
     """Computes the percentage of comparative sets where the positive image has a rank of <= k
 
     Args:
