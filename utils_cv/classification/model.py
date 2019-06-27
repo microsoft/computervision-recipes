@@ -134,6 +134,7 @@ def model_to_learner(
     # To use the learner for prediction tasks without retraining, we have to pass an empty DataBunch.
     # single_from_classes is deprecated, but this is the easiest go-around method.
     # Create ImageNet data spec as an empty DataBunch.
+    # Related thread: https://forums.fast.ai/t/solved-get-prediction-from-the-imagenet-model-without-creating-a-databunch/36197/5
     empty_data = ImageDataBunch.single_from_classes(
         "", classes=imagenet_labels(), size=im_size
     ).normalize(imagenet_stats)

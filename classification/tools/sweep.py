@@ -4,25 +4,24 @@
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(
+    os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
+)
 import argparse
 import time
-import shutil
+from typing import Dict, List, Any
 
-from utils_ic.parameter_sweeper import *
-from utils_ic.datasets import data_path
+from utils_cv.classification.parameter_sweeper import ParameterSweeper
 from argparse import RawTextHelpFormatter, Namespace
-from pathlib import Path
 
 argparse_desc_msg = """
 This script is used to benchmark the different hyperparameters when it comes to doing image classification.
 
 This script will run all permutations of the parameters that are passed in.
 
-This script will either run these tests on:
-- an input dataset defined by --input
-- a set of benchmarking datasets defined by --benchmark, which will create a
-  temporary data directory with all benchmarking datasets loaded into it, and delete it at the end.
+This script will either run these tests on an input dataset defined by --input
 
 This script uses accuracy as the evaluation metric.
 
@@ -41,9 +40,6 @@ $ python sweep.py -dl False -ocp True False -r 5 -i <input_data> -o ocp_dl.csv
 
 # Test different architectures and image sizes
 $ python sweep.py -a squeezenet1_1 resenet18 resnet50 -is 299 499 -i <input_data> -o arch_im_sizes.csv
-
-# Test different training schedules over 3 runs on the benchmark dataset
-$ python sweep.py -ts body_only head_first_then_body -r 3 --benchmark -o training_schedule.csv
 
 ---
 
@@ -169,20 +165,13 @@ def _get_parser(default_params: Dict[str, List[Any]]) -> Namespace:
         help="one cycle policy - options: [True, False]",
         type=_str_to_bool,
     )
-    i_parser = parser.add_mutually_exclusive_group(required=True)
-    i_parser.add_argument(
+    parser.add_argument(
         "--inputs",
         "-i",
         dest="inputs",
         nargs="+",
-        help="A list of data paths to run the tests on. The datasets must be structured so that each class is in a separate folder. <--benchmark> must be False",
+        help="A list of data paths to run the tests on. The datasets must be structured so that each class is in a separate folder.",
         type=str,
-    )
-    i_parser.add_argument(
-        "--benchmark",
-        dest="benchmark",
-        action="store_true",
-        help="Whether or not to use curated benchmark datasets to test. <--input> must be empty",
     )
     parser.add_argument(
         "--early-stopping",
@@ -246,19 +235,11 @@ if __name__ == "__main__":
     )
 
     data = args.inputs
-    if not data:
-        data = ParameterSweeper.download_benchmark_datasets(
-            Path(data_path()) / "benchmark_data"
-        )
 
     df = sweeper.run(
         datasets=data, reps=args.repeat, early_stopping=args.early_stopping
     )
     df.to_csv(args.output)
-
-    if args.benchmark:
-        for path in args.inputs:
-            shutil.rmtree(path)
 
     end = time.time()
     print(time_msg(time=round(end - start, 1)))

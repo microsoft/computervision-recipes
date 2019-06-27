@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Union
 from urllib.parse import urljoin
 
-from fastai.vision import ImageList
+from fastai.vision import ItemList
 from PIL import Image
 from tqdm import tqdm
 
@@ -43,13 +43,6 @@ class Urls:
         base, "multilabelFridgeObjectsWatermarkTiny.zip"
     )
 
-    # TODO remove
-    food_101_subset_path = urljoin(base, "food101Subset.zip")
-    fashion_texture_path = urljoin(base, "fashionTexture.zip")
-    flickr_logos_32_subset_path = urljoin(base, "flickrLogos32Subset.zip")
-    lettuce_path = urljoin(base, "lettuce.zip")
-    recycle_path = urljoin(base, "recycle_v3.zip")
-    
     @classmethod
     def all(cls) -> List[str]:
         return [v for k, v in cls.__dict__.items() if k.endswith("_path")]
@@ -66,7 +59,7 @@ def imagenet_labels() -> list:
 
 
 def downsize_imagelist(
-    im_list: ImageList, out_dir: Union[Path, str], dim: int = 500
+    im_list: ItemList, out_dir: Union[Path, str], dim: int = 500
 ):
     """Aspect-ratio preserving down-sizing of each image in the ImageList {im_list}
     so that min(width,height) is at most {dim} pixels.
@@ -74,7 +67,7 @@ def downsize_imagelist(
     subdirectory structure.
 
     Args:
-        im_list: Fastai ImageList object.
+        im_list: Fastai ItemList object containing image paths.
         out_dir: Output root location.
         dim: maximum image dimension (width/height) after resize
     """
