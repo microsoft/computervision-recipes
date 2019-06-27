@@ -8,7 +8,7 @@ We recommend using PyTorch as a Deep Learning platform for its ease of use, simp
 
 We provide several notebooks to show how image classification algorithms are designed, evaluated and operationalized. Notebooks starting with `0` are intended to be run sequentially, as there are dependencies between them. These notebooks contain introductory "required" material. Notebooks starting with `1` can be considered optional and contain more complex and specialized topics.
 
-While all notebooks can be executed in Windows, we have found the computer vision tools are often faster and more stable on the Linux operating system. Additionally, using GPU dramatically improves training speeds. We suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm), [price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). 
+While all notebooks can be executed in Windows, we have found that fast.ai is much faster on the Linux operating system. Additionally, using GPU dramatically improves training speeds. We suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm), [price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). 
 
 We have also found that some browsers do not render Jupyter widgets correctly. If you have issues, try using an alternative browser, such as  Edge or Chrome.
 
@@ -34,7 +34,6 @@ To get started on your local machine:
     ```
     git clone https://github.com/Microsoft/ComputerVision
     cd ComputerVision/classification
-    git checkout staging # for now we work in the staging directory
     ```
 1. Install the conda environment, you'll find the `environment.yml` file in the `classification` subdirectory. From there:
     ```
