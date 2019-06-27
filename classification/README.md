@@ -4,6 +4,12 @@ This directory provides examples and best practices for building image classific
 
 We recommend using PyTorch as a Deep Learning platform for its ease of use, simplicity when debugging, and popularity in the data science community. For Computer Vision functionality, we also rely heavily on [fast.ai](https://github.com/fastai/fastai), a PyTorch data science library which comes with rich deep learning features and extensive documentation. We highly recommend watching the [2019 fast.ai lecture series](https://course.fast.ai/videos/?lesson=1) video to understand the underlying technology. Fast.ai's [documentation](https://docs.fast.ai/) is also a valuable resource.
 
+
+## Frequently asked questions
+
+Answers to Frequently Asked Questions such as "How many images do I need to train a model?" or "How to annotate images?" can be found in the [FAQ.md](FAQ.md) file.
+
+
 ## Notebooks
 
 We provide several notebooks to show how image classification algorithms are designed, evaluated and operationalized. Notebooks starting with `0` are intended to be run sequentially, as there are dependencies between them. These notebooks contain introductory "required" material. Notebooks starting with `1` can be considered optional and contain more complex and specialized topics.
@@ -94,6 +100,4 @@ The main variables and abbreviations are given in the table below:
 | `list1D`                 | List of items, not necessarily strings
 | -`s`    | Multiple of something (plural) should be indicated by appending an `s` to an abbreviation.
 
-## Frequently asked questions
 
-Answers to Frequently Asked Questions such as "How many images do I need to train a model?" or "How to annotate images?" can be found in the [FAQ.md](FAQ.md) file.
