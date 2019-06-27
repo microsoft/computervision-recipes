@@ -14,11 +14,12 @@ def test_generate_yaml():
     """Tests creation of deployment-specific yaml file
     from existing image_classification/environment.yml"""
     generate_yaml(
-        directory=os.path.join(root_path(), "classification"),
+        directory=os.path.join(str(root_path()), "classification"),
         ref_filename="environment.yml",
         needed_libraries=["fastai", "pytorch"],
         conda_filename="mytestyml.yml",
     )
 
+    # TODO should test the contents of the generated yaml
     assert os.path.exists(os.path.join(os.getcwd(), "mytestyml.yml"))
     os.remove(os.path.join(os.getcwd(), "mytestyml.yml"))

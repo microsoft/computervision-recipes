@@ -35,11 +35,14 @@ is a SaaS service to train and deploy a model as a REST API given a user-provide
 - [Azure Machine Learning service (AzureML)](https://azure.microsoft.com/en-us/services/machine-learning-service/)
 is a more general machine learning service that helps users accelerate training and deploying machine learning models. While not specific for Computer Vision workloads, the AzureML Python SDK can be used for scalable and reliable training and deploying machine learning solutions to the cloud. While AzureML offers significantly more flexibility than other options, it also requires significantly more machine learning and programming knowledge.
 
+- [Azure AI Reference architectures](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/ai/training-python-models) While not Computer Vision specific, these reference architectures cover general Machine Learning aspects such as model deployment or batch scoring.
+
+
 ## Computer Vision Domains
 
 Most applications in Computer Vision (CV) fall into one of these 4 categories:
 
-- **Image classification**: Given an input image, predict what objects are present. This is typically the easiest CV problem to solve, however classification requires objects to be reasonably large in the image.
+- **Image classification**: Given an input image, predict what object is present in the image. This is typically the easiest CV problem to solve, however classification requires objects to be reasonably large in the image.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_ic_vis.jpg" height="150" alt="Image classification visualization"/>  
 
@@ -55,6 +58,15 @@ Most applications in Computer Vision (CV) fall into one of these 4 categories:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_iseg_vis.jpg" height="150" alt="Image segmentation visualization"/>
 
-
 ## Contributing
 This project welcomes contributions and suggestions. Please see our [contribution guidelines](CONTRIBUTING.md).
+
+## Data/Telemetry
+The Azure Machine Learning service notebooks in this repository collect usage data and send it to Microsoft to help improve our products and services. Read Microsoft's [privacy statement to learn more](https://privacy.microsoft.com/en-US/privacystatement)
+
+To opt out of tracking, please go to the raw `.ipynb` files and remove the following line of code:
+
+```sh
+    "![Impressions](https://PixelServer20190423114238.azurewebsites.net/api/impressions/ComputerVision/classification/notebooks/21_deployment_on_azure_container_instances.png)"
+```
+This URL will be slightly different depending on the file.

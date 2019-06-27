@@ -113,7 +113,8 @@ venv.bak/
 output.ipynb
 
 # don't save any data
-image_classification/data/*
+classification/data/*
+data/
 
 # don't save .swp files
 *.swp
@@ -128,6 +129,7 @@ data
 *.pkl
 
 # aml notebooks outputs
+*/notebooks/.azureml/
 */notebooks/aml_config*
 */notebooks/azureml-models
 */notebooks/myenv.yml

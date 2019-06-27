@@ -1,15 +1,15 @@
 # 
 # To create the conda environment:
-# $ conda env create -f environment.yaml
+# $ conda env create -f environment.yml
 # 
 # To update the conda environment:
-# $ conda env update -f environment.yaml
+# $ conda env update -f environment.yml
 # 
 # To register the conda environment in Jupyter:
-# $ conda activate cvbp
-# $ python -m ipykernel install --user --name cvbp
+# $ conda activate cv
+# $ python -m ipykernel install --user --name cv
 # 
-name: cvbp
+name: cv
 channels:
 - defaults
 - conda-forge
@@ -25,11 +25,13 @@ dependencies:
 - pytest>=3.6.4
 - bqplot
 - scikit-learn>=0.19.1
+- pip>=19.0.3
 - pip:
   - azureml-sdk[notebooks,contrib]>=1.0.30
   - black>=18.6b4
   - papermill>=0.15.0
   - ipywebrtc
+  - nvidia-ml-py3
   - pre-commit>=1.14.4
   - lxml>=4.3.2
-  - pyyaml>=5.1
+  - nteract-scrapbook
