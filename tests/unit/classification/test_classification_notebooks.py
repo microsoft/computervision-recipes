@@ -45,9 +45,7 @@ def test_01_notebook_run(classification_notebooks, tiny_ic_data_path):
 
 
 @pytest.mark.notebooks
-def test_02_notebook_run(
-    classification_notebooks, multilabel_ic_data_path
-):
+def test_02_notebook_run(classification_notebooks, multilabel_ic_data_path):
     notebook_path = classification_notebooks["02_multilabel_classification"]
     pm.execute_notebook(
         notebook_path,

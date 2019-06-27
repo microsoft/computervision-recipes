@@ -6,7 +6,14 @@ import numpy as np
 import urllib.request
 from torch import tensor
 from fastai.metrics import accuracy, error_rate
-from fastai.vision import cnn_learner, DatasetType, ImageList, imagenet_stats, models, open_image
+from fastai.vision import (
+    cnn_learner,
+    DatasetType,
+    ImageList,
+    imagenet_stats,
+    models,
+    open_image,
+)
 from utils_cv.classification.model import (
     get_optimal_threshold,
     get_preds,
@@ -74,7 +81,9 @@ def test_model_to_learner(tmp):
     imagefile = os.path.join(tmp, "cvbp_cup.jpg")
     urllib.request.urlretrieve(IM_URL, imagefile)
 
-    category, ind, predict_output = learn.predict(open_image(imagefile, convert_mode='RGB'))
+    category, ind, predict_output = learn.predict(
+        open_image(imagefile, convert_mode="RGB")
+    )
     assert learn.data.classes[ind] == str(category) == "coffee_mug"
 
     # Test if .predict() yield the same output when use .get_preds()
@@ -91,9 +100,12 @@ def test_model_to_learner(tmp):
 
     assert np.all(
         np.isclose(
-            np.array(get_preds_output[0].tolist()[0]),  # Note, get_preds() produces a batch (list) output
+            np.array(
+                get_preds_output[0].tolist()[0]
+            ),  # Note, get_preds() produces a batch (list) output
             np.array(predict_output.tolist()),
-            rtol=1e-05, atol=1e-08
+            rtol=1e-05,
+            atol=1e-08,
         )
     )
 
@@ -111,7 +123,9 @@ def test_train_metrics_recorder(tiny_ic_databunch):
         return tmr
 
     # multiple metrics
-    learn = cnn_learner(tiny_ic_databunch, model, metrics=[accuracy, error_rate])
+    learn = cnn_learner(
+        tiny_ic_databunch, model, metrics=[accuracy, error_rate]
+    )
     cb = test_callback(learn)
     assert len(cb.train_metrics) == len(cb.valid_metrics) == epochs
     assert (
@@ -135,7 +149,7 @@ def test_train_metrics_recorder(tiny_ic_databunch):
     # Since tiny_ic_databunch is being used in other tests too, should put the validation data back.
     learn.data.valid_dl = valid_dl
 
-    
+
 def test_get_preds(model_pred_scores):
     learn, ref_pred_scores = model_pred_scores
     pred_outs = get_preds(learn, learn.data.valid_dl)

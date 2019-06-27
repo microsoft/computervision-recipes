@@ -34,7 +34,10 @@ def plot_thresholds(
         metric_function: The metric function
         y_pred: predicted probabilities.
         y_true: True class indices.
+<<<<<<< HEAD
         samples: Number of threshold samples
+=======
+>>>>>>> master
         figsize: Figure size (w, h)
     """
     metric_name = metric_function.__name__
