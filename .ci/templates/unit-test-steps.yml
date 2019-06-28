@@ -14,8 +14,7 @@ steps:
 - bash: |
     source activate cv
     python -m ipykernel install --user --name cv --display-name "cv"
-    pytest --durations 100 tests/unit --junitxml=junit/test-unitttest.xml
-    pytest --durations 100 tests/integration --junitxml=junit/test-unitttest.xml
+    pytest --durations 100 tests --junitxml=junit/test-unitttest.xml
   displayName: 'Run unit and (only on Linux GPU) integration tests'
 
 - bash: |
