@@ -46,7 +46,7 @@ def test_02_notebook_run(classification_notebooks):
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
         assert len(nb_output.scraps["training_accuracies"].data) == 10
         assert nb_output.scraps["training_accuracies"].data[-1] > 0.85
-        assert nb_output.scraps["acc_hl"].data > 0.85
+        assert nb_output.scraps["acc_hl"].data > 0.80
         assert nb_output.scraps["acc_zol"].data > 0.6
 
 
@@ -79,15 +79,14 @@ def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
 
                 # Speed up testing since otherwise would take ~12 minutes on V100
                 DATA=[tiny_ic_data_path],
-                REPS=2,
+                REPS=1,
                 IM_SIZES=[60,100],
-                EPOCHS=[5],
             ),
             kernel_name=KERNEL_NAME,
         )
 
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-        assert nb_output.scraps["nr_elements"].data == 12
+        assert nb_output.scraps["nr_elements"].data == 6
         assert nb_output.scraps["max_accuray"].data > 0.70
         assert nb_output.scraps["min_accuray"].data < 0.40
         assert nb_output.scraps["max_duration"].data > 1.2 * nb_output.scraps["min_duration"].data
