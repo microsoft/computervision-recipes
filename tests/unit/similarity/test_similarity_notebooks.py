@@ -25,6 +25,11 @@ def test_00_notebook_run(similarity_notebooks):
         kernel_name=KERNEL_NAME,
     )
 
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert len(nb_output.scraps["query_feature"].data) == 512
+    assert min(nb_output.scraps["query_feature"].data) == 0
+    assert min([dist for (path,dist) in nb_output.scraps["distances"].data]) < 1e-3
+
 
 @pytest.mark.notebooks
 def test_01_notebook_run(similarity_notebooks, tiny_ic_data_path):
