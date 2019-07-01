@@ -8,6 +8,7 @@ import os
 import glob
 import papermill as pm
 import pytest
+import scrapbook as sb
 import shutil
 
 # Unless manually modified, python3 should be
@@ -26,6 +27,10 @@ def test_00_notebook_run(classification_notebooks):
         parameters=dict(PM_VERSION=pm.__version__),
         kernel_name=KERNEL_NAME,
     )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert nb_output.scraps["predicted_label"].data == "coffee_mug"
+    assert nb_output.scraps["predicted_confidence"].data > 0.5
 
 
 @pytest.mark.notebooks
@@ -70,7 +75,7 @@ def test_03_notebook_run(classification_notebooks, tiny_ic_data_path):
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_ic_data_path,
             MULTILABEL=False,
-            MODEL_TYPE="fast_inference",  # options: ['fast_inference', 'high_performance', 'small_size']
+            MODEL_TYPE="fast_inference",
             EPOCHS_HEAD=1,
             EPOCHS_BODY=1,
             IM_SIZE=50,
@@ -91,6 +96,9 @@ def test_10_notebook_run(classification_notebooks, tiny_ic_data_path):
         ),
         kernel_name=KERNEL_NAME,
     )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert nb_output.scraps["num_images"].data == 6
 
 
 @pytest.mark.notebooks
