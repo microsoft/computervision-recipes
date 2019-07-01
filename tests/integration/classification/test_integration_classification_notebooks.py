@@ -28,7 +28,7 @@ def test_01_notebook_run(classification_notebooks):
 
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
         assert len(nb_output.scraps["training_accuracies"].data) == 10
-        assert nb_output.scraps["training_accuracies"].data[-1] > 0.85
+        assert nb_output.scraps["training_accuracies"].data[-1] > 0.80
         assert nb_output.scraps["validation_accuracy"].data > 0.80
 
 
@@ -45,9 +45,9 @@ def test_02_notebook_run(classification_notebooks):
 
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
         assert len(nb_output.scraps["training_accuracies"].data) == 10
-        assert nb_output.scraps["training_accuracies"].data[-1] > 0.85
+        assert nb_output.scraps["training_accuracies"].data[-1] > 0.80
         assert nb_output.scraps["acc_hl"].data > 0.80
-        assert nb_output.scraps["acc_zol"].data > 0.6
+        assert nb_output.scraps["acc_zol"].data > 0.5
 
 
 @pytest.mark.notebooks
@@ -63,7 +63,7 @@ def test_03_notebook_run(classification_notebooks):
 
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
         assert len(nb_output.scraps["training_accuracies"].data) == 12
-        assert nb_output.scraps["training_accuracies"].data[-1] > 0.85
+        assert nb_output.scraps["training_accuracies"].data[-1] > 0.80
         assert nb_output.scraps["validation_accuracy"].data > 0.80
 
 
@@ -105,6 +105,6 @@ def test_12_notebook_run(classification_notebooks):
 
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
         assert len(nb_output.scraps["train_acc"].data) == 12
-        assert nb_output.scraps["train_acc"].data[-1] > 0.85
+        assert nb_output.scraps["train_acc"].data[-1] > 0.80
         assert nb_output.scraps["valid_acc"].data[-1] > 0.80
         assert len(nb_output.scraps["negative_sample_ids"].data) > 0
