@@ -25,4 +25,4 @@ def test_01_notebook_run(similarity_notebooks):
         )
 
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-        assert nb_output.scraps["median_rank"].data <= 2
+        assert nb_output.scraps["median_rank"].data <= 10
