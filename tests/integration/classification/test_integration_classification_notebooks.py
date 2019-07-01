@@ -81,13 +81,14 @@ def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
                 DATA=[tiny_ic_data_path],
                 REPS=2,
                 IM_SIZES=[60,100],
+                EPOCHS=[5],
             ),
             kernel_name=KERNEL_NAME,
         )
 
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
         assert nb_output.scraps["nr_elements"].data == 12
-        assert nb_output.scraps["max_accuray"].data > 0.75
+        assert nb_output.scraps["max_accuray"].data > 0.70
         assert nb_output.scraps["min_accuray"].data < 0.40
         assert nb_output.scraps["max_duration"].data > 1.2 * nb_output.scraps["min_duration"].data
 
