@@ -1,10 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from pathlib import Path
 import numpy as np
 import random
-from typing import List
+from typing import List, Dict
 
 from fastai.data_block import LabelList
 
@@ -16,41 +15,55 @@ class ComparativeSet:
        and multiple negative images.
 
     """
+
     pos_dist = None
     neg_dists = None
+    distance_method = "l2"
 
-    def __init__(self, query_im_path, pos_im_path, neg_im_paths, pos_label, neg_labels):
+    def __init__(
+        self,
+        query_im_path: str,
+        pos_im_path: str,
+        neg_im_paths: List[str],
+        pos_label: str,
+        neg_labels: List[str],
+    ):
         self.query_im_path = query_im_path
         self.pos_im_path = pos_im_path
         self.neg_im_paths = neg_im_paths
         self.pos_label = pos_label
         self.neg_labels = neg_labels
-        assert(len(neg_im_paths) > 1)
-        assert(len(neg_im_paths) == len(neg_labels))
-        assert(isinstance(query_im_path, str))
-        assert(isinstance(pos_im_path, str))
-        assert(isinstance(neg_im_paths[0], str))
-        assert(isinstance(neg_im_paths, list))
+        assert len(neg_im_paths) > 1
+        assert len(neg_im_paths) == len(neg_labels)
+        assert isinstance(query_im_path, str)
+        assert isinstance(pos_im_path, str)
+        assert isinstance(neg_im_paths[0], str)
+        assert isinstance(neg_im_paths, list)
 
     def __repr__(self):
-        return(f"ComparativeSet with {len(self.neg_im_paths)} negative images and positive label `{self.pos_label}`.")
+        return f"ComparativeSet with {len(self.neg_im_paths)} negative images and positive label `{self.pos_label}`."
 
-    def compute_distances(self, features):
+    def compute_distances(self, features: List[Dict[str, np.array]]):
         query_feature = features[self.query_im_path]
         pos_feature = features[self.pos_im_path]
         neg_features = [features[path] for path in self.neg_im_paths]
-        self.pos_dist = vector_distance(query_feature, pos_feature)
-        self.neg_dists = np.array([vector_distance(query_feature, f) for f in neg_features])
+        self.pos_dist = vector_distance(
+            query_feature, pos_feature, method=self.distance_method
+        )
+        self.neg_dists = np.array(
+            [vector_distance(query_feature, f) for f in neg_features]
+        )
+
+    def set_distance_method(self, method: str):
+        self.distance_method = method
 
     def pos_rank(self):
         assert self.pos_dist is not None, "Distances not computed yet."
-        return sum(self.pos_dist > self.neg_dists)+1
+        return sum(self.pos_dist > self.neg_dists) + 1
 
 
 def comparative_set_builder(
-    data: LabelList,
-    num_sets: int,
-    num_negatives: int = 100,
+    data: LabelList, num_sets: int, num_negatives: int = 100
 ) -> List[ComparativeSet]:
     """Builds sets of comparative images
 
@@ -78,7 +91,9 @@ def comparative_set_builder(
             for i in range(len(all_paths))
             if (query_label == all_labels[i] and all_paths[i] != query_im_path)
         ]
-        neg_candidates_indices = [i for i in range(len(all_paths)) if (query_label != all_labels[i])]
+        neg_candidates_indices = [
+            i for i in range(len(all_paths)) if (query_label != all_labels[i])
+        ]
         neg_candidates_paths = [all_paths[i] for i in neg_candidates_indices]
         neg_candidates_labels = [all_labels[i] for i in neg_candidates_indices]
 
@@ -87,12 +102,20 @@ def comparative_set_builder(
         positive_im_path = pos_candidates_paths[pos_index]
 
         # Randomly select negative images
-        neg_indices = np.random.randint(len(neg_candidates_paths), size=num_negatives)
+        neg_indices = np.random.randint(
+            len(neg_candidates_paths), size=num_negatives
+        )
         negative_im_paths = [neg_candidates_paths[i] for i in neg_indices]
         negative_labels = [neg_candidates_labels[i] for i in neg_indices]
 
         # Create and add comparative set to list
-        comparative_set = ComparativeSet(query_im_path, positive_im_path, negative_im_paths, query_label, negative_labels)
+        comparative_set = ComparativeSet(
+            query_im_path,
+            positive_im_path,
+            negative_im_paths,
+            query_label,
+            negative_labels,
+        )
         comparative_sets.append(comparative_set)
 
     return comparative_sets
