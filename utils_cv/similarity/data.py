@@ -55,6 +55,8 @@ class ComparativeSet:
         )
 
     def set_distance_method(self, method: str):
+        # for now, assert that l2 is the only distance method used.
+        assert method == "l2"
         self.distance_method = method
 
     def pos_rank(self):
