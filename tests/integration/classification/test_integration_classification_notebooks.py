@@ -29,7 +29,7 @@ def test_01_notebook_run(classification_notebooks):
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
         assert len(nb_output.scraps["training_accuracies"].data) == 10
         assert nb_output.scraps["training_accuracies"].data[-1] > 0.80
-        assert nb_output.scraps["validation_accuracy"].data > 0.80
+        assert nb_output.scraps["validation_accuracy"].data > 0.75
 
 
 @pytest.mark.notebooks
