@@ -48,12 +48,13 @@ To get started on your local machine:
 
 
 Once you've setup your environment, you can explore our notebooks on the following computer vision domains:
+
 | Domains | Description | 
 | --- | --- |
-| [classification](classification) | Classify the labels in an image. |
-| [siminilarity](similarity) | Find and sort similar images. |
-| object detection [coming_soon] | Detect objects in an image. | 
-| segmentation [coming_soon] | Pixel-wise classification of an image. | 
+| [/classification](classification) | Classify the labels in an image. |
+| [/similarity](similarity) | Find and sort similar images. |
+| /object detection [coming_soon] | Detect objects in an image. | 
+| /segmentation [coming_soon] | Pixel-wise classification of an image. | 
 
 ## Services
 
