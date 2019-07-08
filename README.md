@@ -44,7 +44,7 @@ To get started on your local machine:
     ```
     jupyter notebook
     ```
-1. At this point, you should be able to run the notebooks in this repo. You can start with the [00_webcam](classification/notebooks/00_webcam.ipynb) image classification notebook under `classification/notebooks`. Make sure to change the kernel to "Python (cvbp)".
+1. At this point, you should be able to run the notebooks in this repo. You can start with the [00_webcam](classification/notebooks/00_webcam.ipynb) image classification notebook under `classification/notebooks`. Make sure to change the kernel to "Python (cv)".
 
 
 Once you've setup your environment, you can explore our notebooks on the following computer vision domains:
