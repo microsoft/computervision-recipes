@@ -6,7 +6,7 @@ steps:
   displayName: Add Conda to PATH
 
 - bash: |
-    conda env create -f classification/environment.yml
+    conda env create -f environment.yml
     source activate cv
     conda env list
   displayName: 'Create and activate conda environment'
