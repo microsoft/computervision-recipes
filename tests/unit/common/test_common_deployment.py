@@ -14,7 +14,7 @@ def test_generate_yaml():
     """Tests creation of deployment-specific yaml file
     from existing image_classification/environment.yml"""
     generate_yaml(
-        directory=os.path.join(str(root_path()), "classification"),
+        directory=str(root_path()),
         ref_filename="environment.yml",
         needed_libraries=["fastai", "pytorch"],
         conda_filename="mytestyml.yml",

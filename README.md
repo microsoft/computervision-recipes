@@ -18,11 +18,41 @@ The goal of this repository is to help speed up development of Computer Vision a
 
 Currently the main investment/priority is around image classification and to a lesser extend image segmentation. We are also actively working on providing a basic (but often sufficiently accurate) example for image similarity. Object detection is scheduled to start once image classification is completed. See the [projects](https://github.com/Microsoft/ComputerVision/projects) and [milestones](https://github.com/Microsoft/ComputerVision/milestones) pages in this repository for more details.
 
-## Getting Started
+## Getting started
 
-Instructions on how to get started, as well as our example notebooks and discussions are provided in the [classification](classification/README.md) subfolder.
+To get started on your local machine:
 
-Note that for certain Computer Vision problems, ready-made or easily customizable solutions exist which do not require any custom coding or machine learning expertise. We strongly recommend evaluating if these can sufficiently solve your problem. If these solutions are not applicable, or the accuracy of these solutions is not sufficient, then resorting to more complex and time-consuming custom approaches may be necessary.
+1. Install Anaconda with Python >= 3.6. [Miniconda](https://conda.io/miniconda.html) is a quick way to get started.
+1. Clone the repository
+    ```
+    git clone https://github.com/Microsoft/ComputerVision
+    ```
+1. Install the conda environment, you'll find the `environment.yml` file in the root directory. To build the conda environment:
+    ```
+    conda env create -f environment.yml
+    ```
+1. Activate the conda environment and register it with Jupyter:
+    ```
+    conda activate cv
+    python -m ipykernel install --user --name cv --display-name "Python (cv)"
+    ```
+    If you would like to use [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/), install `jupyter-webrtc` widget:
+    ```
+    jupyter labextension install jupyter-webrtc
+    ``` 
+1. Start the Jupyter notebook server
+    ```
+    jupyter notebook
+    ```
+1. At this point, you should be able to run the notebooks in this repo. Explore our notebooks on the following computer vision domains. Make sure to change the kernel to "Python (cv)".
+    - [/classification](classification#notebooks)
+    - [/similarity](similarity#notebooks)
+    - /object detection [coming_soon]
+    - /segmentation [coming_soon]
+
+## Services
+
+Note that for certain Computer Vision problems, you may not need to build your own models. Instead, ready-made or easily customizable solutions exist which do not require any custom coding or machine learning expertise. We strongly recommend evaluating if these can sufficiently solve your problem. If these solutions are not applicable, or the accuracy of these solutions is not sufficient, then resorting to more complex and time-consuming custom approaches may be necessary.
 
 The following Microsoft services offer simple solutions to address common Computer Vision tasks:
 

@@ -32,35 +32,6 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 | [22_deployment_on_azure_kubernetes_service.ipynb](notebooks/22_deployment_on_azure_kubernetes_service.ipynb)| Deploys a trained model exposed on a REST API using the Azure Kubernetes Service (AKS). |
 | [23_aci_aks_web_service_testing.ipynb](notebooks/23_aci_aks_web_service_testing.ipynb)| Tests the deployed models on either ACI or AKS. |
 
-## Getting started
-
-To get started on your local machine:
-1. Install Anaconda with Python >= 3.6. [Miniconda](https://conda.io/miniconda.html) is a quick way to get started.
-1. Clone the repository
-    ```
-    git clone https://github.com/Microsoft/ComputerVision
-    cd ComputerVision/classification
-    ```
-1. Install the conda environment, you'll find the `environment.yml` file in the `classification` subdirectory. From there:
-    ```
-    conda env create -f environment.yml
-    ```
-1. Activate the conda environment and register it with Jupyter:
-    ```
-    conda activate cv
-    python -m ipykernel install --user --name cv --display-name "Python (cv)"
-    ```
-    If you would like to use [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/), install `jupyter-webrtc` widget:
-    ```
-    jupyter labextension install jupyter-webrtc
-    ``` 
-1. Start the Jupyter notebook server
-    ```
-    cd notebooks
-    jupyter notebook
-    ```
-1. Start with the [00_webcam](notebooks/00_webcam.ipynb) image classification notebook under the `notebooks` folder. Make sure to change the kernel to "Python (cvbp)".
-
 ## Azure-enhanced notebooks
 
 Azure products and services are used in certain notebooks to enhance the efficiency of developing classification systems at scale.
