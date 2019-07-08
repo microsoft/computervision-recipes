@@ -4,8 +4,8 @@ This repository provides implementations and best practice guidelines for buildi
 
 ## Build Status
 
-| Build Type | Branch | Status |  | Branch | Status | 
-| --- | --- | --- | --- | --- | --- | 
+| Build Type | Branch | Status |  | Branch | Status |
+| --- | --- | --- | --- | --- | --- |
 | **Linux GPU** |  master | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-linux-gpu?branchName=master)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=13&branchName=master)  | | staging | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-linux-gpu?branchName=staging)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=13&branchName=staging) |
 | **Linux CPU** | master | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-linux-cpu?branchName=master)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=18&branchName=master)| | staging | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-linux-cpu?branchName=staging)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=18&branchName=staging)|
 | **Windows GPU** | master | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-windows-gpu?branchName=master)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=16&branchName=master) | | staging | [![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/unit-test-windows-gpu?branchName=staging)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=16&branchName=staging)|
@@ -39,7 +39,7 @@ To get started on your local machine:
     If you would like to use [JupyterLab](https://jupyterlab.readthedocs.io/en/stable/), install `jupyter-webrtc` widget:
     ```
     jupyter labextension install jupyter-webrtc
-    ``` 
+    ```
 1. Start the Jupyter notebook server
     ```
     jupyter notebook
@@ -92,7 +92,7 @@ Most applications in Computer Vision (CV) fall into one of these 4 categories:
 This project welcomes contributions and suggestions. Please see our [contribution guidelines](CONTRIBUTING.md).
 
 ## Data/Telemetry
-The Azure Machine Learning service notebooks in this repository collect usage data and send it to Microsoft to help improve our products and services. Read Microsoft's [privacy statement to learn more](https://privacy.microsoft.com/en-US/privacystatement)
+The Azure Machine Learning image classification notebooks ([20_azure_workspace_setup](classification/notebooks/20_azure_workspace_setup.ipynb), [21_deployment_on_azure_container_instances](classification/notebooks/21_deployment_on_azure_container_instances.ipynb), [22_deployment_on_azure_kubernetes_service](classification/notebooks/22_deployment_on_azure_kubernetes_service.ipynb), and [23_aci_aks_web_service_testing](classification/notebooks/23_aci_aks_web_service_testing.ipynb)) collect usage data and send it to Microsoft to help improve our products and services. Read Microsoft's [privacy statement to learn more](https://privacy.microsoft.com/en-US/privacystatement).
 
 To opt out of tracking, please go to the raw `.ipynb` files and remove the following line of code:
 
