@@ -44,17 +44,11 @@ To get started on your local machine:
     ```
     jupyter notebook
     ```
-1. At this point, you should be able to run the notebooks in this repo. You can start with the [00_webcam](classification/notebooks/00_webcam.ipynb) image classification notebook under `classification/notebooks`. Make sure to change the kernel to "Python (cv)".
-
-
-Once you've setup your environment, you can explore our notebooks on the following computer vision domains:
-
-| Domains | Description | 
-| --- | --- |
-| [/classification](classification) | Classify the labels in an image. |
-| [/similarity](similarity) | Find and sort similar images. |
-| /object detection [coming_soon] | Detect objects in an image. | 
-| /segmentation [coming_soon] | Pixel-wise classification of an image. | 
+1. At this point, you should be able to run the notebooks in this repo. Explore our notebooks on the following computer vision domains. Make sure to change the kernel to "Python (cv)".
+    - [/classification](classification#notebooks)
+    - [/similarity](similarity#notebooks)
+    - /object detection [coming_soon]
+    - /segmentation [coming_soon]
 
 ## Services
 
