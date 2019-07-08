@@ -6,7 +6,6 @@ The majority of state-of-the-art systems for image similarity use DNNs to comput
 
 A major difference between modern image similarity approaches is how the DNN is trained. A simple but quite powerful approach is to use a standard image classification loss - this is the approach taken in this repository, and explained in the [classification](../classification/README.md) folder. More accurate similarity measures are based on DNNs which are trained explicitly for image similarity, such as the [FaceNet](https://arxiv.org/pdf/1503.03832.pdf) work which uses a Siamese network architecture. FaceNet-like approaches will be added to this repository at a later point.
 
-
 ## Notebooks
 
 We provide several notebooks to show how image similarity algorithms can be designed and evaluated.
@@ -15,11 +14,6 @@ We provide several notebooks to show how image similarity algorithms can be desi
 | --- | --- |
 | [00_webcam.ipynb](./notebooks/00_webcam.ipynb)| Quick start notebook which demonstrates how to build an image retrieval system using a single image or webcam as input.
 | [01_training_and_evaluation_introduction.ipynb](./notebooks/01_training_and_evaluation_introduction.ipynb)| Notebook which explains the basic concepts around model training and evaluation, based on using DNNs trained for image classification.|
-
-## Getting Started
-
-To setup on your local machine follow the [Getting Started](../classification/#getting-started) section in the image classification folder. Furthermore, basic image classification knowledge explained by the notebooks [01_training_introduction.ipynb](../classification/notebooks/01_training_introduction.ipynb) and [03_training_accuracy_vs_speed.ipynb](../classification/notebooks/03_training_accuracy_vs_speed.ipynb) is assumed.
-
 
 ## Coding guidelines
 
