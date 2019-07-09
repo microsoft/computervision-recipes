@@ -59,6 +59,10 @@ steps:
     pip install paramiko==2.4.2;
     pip install azureml-sdk;
     pip install azure-cli;
+    az --version
+    az ml -h
+    pytest --version
+
     python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)  --rg $(rg) --wsname $(wsname)
   displayName: 'submit_azureml_pytest'
 
