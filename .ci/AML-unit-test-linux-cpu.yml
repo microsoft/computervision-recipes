@@ -6,7 +6,7 @@ variables:
 - name  : 'test'
   value : '.ci/run_pytest.py'
 - name  : 'testfolder'
-  value : 'tests/unit/amlexample'
+  value : 'tests/unit'
 - name  : 'testmarkers'
   value : '"not notebooks and not spark and not gpu"'
 - name  : 'junitxml'
@@ -62,7 +62,6 @@ steps:
     az --version
     az ml -h
     pytest --version
-
     python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)  --rg $(rg) --wsname $(wsname)
   displayName: 'submit_azureml_pytest'
 
