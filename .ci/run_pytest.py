@@ -12,7 +12,6 @@ import subprocess
 import logging
 import os
 import sys
-import time
 
 from azureml.core import Run
 
@@ -76,12 +75,12 @@ def check_output_custom(commands, cwd=None, stderr=subprocess.STDOUT, shell=Fals
 
 
 if __name__ == "__main__":
-    logger = logging.getLogger("submit_azureml_pytest.py")
+    logger = logging.getLogger('submit_azureml_pytest.py')
     args = create_arg_parser()
 
-    logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
-    logger.debug('junit_xml', args.xmlname)
+    logger.debug('junit_xml {}'.format(args.xmlname))
 
     # Run.get_context() is needed to save context as pytest causes corruption
     # of env vars
@@ -92,40 +91,18 @@ if __name__ == "__main__":
                     "-m", "not notebooks and not spark and not gpu",
                     "--junitxml=reports/test-unit.xml"])
     '''
-    logger.debug("args.junitxml", args.xmlname)
-    logger.debug("junit=", "--junitxml=" + args.xmlname)
-    logger.info('pytest run:',
-                ["pytest",
-                 args.testfolder,
-                 "-m",
-                 args.testmarkers,
-                 "--junitxml=" + args.xmlname])
-    '''
-    Usually use subprocess.run but am trying to debug.
-        subprocess.run(["pytest",
-                    args.testfolder,
-                    "-m",
-                    args.testmarkers,
-                    "--junitxml="+args.xmlname])
-    '''
-    junit_str = "--junitxml=" + args.xmlname
-    pytest_cmd = ['pytest', args.testfolder, '-m', args.testmarkers, '--junitxml={}'.format(args.xmlname)]
+    logger.debug('args.junitxml {}'.format(args.xmlname))
+    logger.debug('junit= --junitxml={}'.format(args.xmlname))
+    pytest_cmd = ['pytest', args.testfolder, '-m', args.testmarkers,
+                  '--junitxml={}'.format(args.xmlname)]
     logger.info('pytest run:{}'.format(' '.join(pytest_cmd)))
 
-    # check_output_custom(pytest_cmd)
     subprocess.run(pytest_cmd)
-    '''
-    check_output_custom(["pytest",
-                         args.testfolder,
-                         "-m",
-                         args.testmarkers,
-                         junit_str])
-    '''
+
     #
     # Leveraged code from this  notebook:
     # https://msdata.visualstudio.com/Vienna/_search?action=contents&text=upload_folder&type=code&lp=code-Project&filters=ProjectFilters%7BVienna%7DRepositoryFilters%7BAzureMlCli%7D&pageSize=25&sortOptions=%5B%7B%22field%22%3A%22relevance%22%2C%22sortOrder%22%3A%22desc%22%7D%5D&result=DefaultCollection%2FVienna%2FAzureMlCli%2FGBmaster%2F%2Fsrc%2Fazureml-core%2Fazureml%2Fcore%2Frun.py
-    logger.debug("os.listdir files", os.listdir("."))
-    logger.debug("os.listdir reports", os.listdir("./reports"))
+    logger.debug('os.listdir files {}'.format(os.listdir('.')))
 
     #  files for AzureML
     name_of_upload = "reports"

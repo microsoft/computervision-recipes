@@ -31,7 +31,7 @@ Example:
     >>> python tests/ci/refac.py --clustername 'cluster-d3-v2'
                                  --subid '12345678-9012-3456-abcd-123456789012'
                                  --pr '666'
-                                 --reponame 'Recommenders'
+                                 --reponame 'Computervision'
                                  --branch 'staging'
 """
 import argparse
@@ -71,10 +71,10 @@ def setup_workspace(workspace_name, subscription_id, resource_group, cli_auth,
     Returns:
         ws: workspace reference
     """
-    logger.debug('setup: workspace_name is {0}'.format(workspace_name))
-    logger.debug('setup: resource_group is {0}'.format(resource_group))
-    logger.debug('setup: subid is {0}'.format(subscription_id))
-    logger.debug('setup: location is {0}'.format(location))
+    logger.debug('setup: workspace_name is {}'.format(workspace_name))
+    logger.debug('setup: resource_group is {}'.format(resource_group))
+    logger.debug('setup: subid is {}'.format(subscription_id))
+    logger.debug('setup: location is {}'.format(location))
 
     try:
             # use existing workspace if there is one
@@ -122,7 +122,7 @@ def setup_persistent_compute_target(workspace, cluster_name, vm_size,
     # setting vmsize and num nodes creates a persistent AzureML
     # compute resource
 
-    logger.debug("setup: cluster_name", cluster_name)
+    logger.debug("setup: cluster_name {}".format(cluster_name))
     # https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-set-up-training-targets
 
     try:
@@ -131,8 +131,9 @@ def setup_persistent_compute_target(workspace, cluster_name, vm_size,
     except ComputeTargetException:
         logger.debug('setup: create cluster')
         compute_config = AmlCompute.provisioning_configuration(
-                       vm_size=vm_size,
-                       max_nodes=max_nodes)
+            vm_size=vm_size,
+            max_nodes=max_nodes)
+
         cpu_cluster = ComputeTarget.create(workspace,
                                            cluster_name,
                                            compute_config)
@@ -173,7 +174,7 @@ def create_run_config(cpu_cluster, docker_proc_type, conda_env_file):
     # True means the user will manually configure the environment
     run_amlcompute.environment.python.user_managed_dependencies = False
     run_amlcompute.environment.python.conda_dependencies = CondaDependencies(
-            conda_dependencies_file_path=conda_env_file)
+        conda_dependencies_file_path=conda_env_file)
     return run_amlcompute
 
 
@@ -190,7 +191,7 @@ def create_experiment(workspace, experiment_name):
         exp - AzureML experiment
     """
 
-    logger.debug('create: experiment_name {0}'.format(experiment_name))
+    logger.debug('create: experiment_name {}'.format(experiment_name))
     exp = Experiment(workspace=workspace, name=experiment_name)
     return(exp)
 
@@ -219,8 +220,8 @@ def submit_experiment_to_azureml(test, test_folder, test_markers, junitxml,
           run : AzureML run or trial
     """
 
-    logger.debug('submit: testfolder {0}'.format(test_folder))
-    logger.debug('junitxml: {0}'.format(junitxml))
+    logger.debug('submit: testfolder {}'.format(test_folder))
+    logger.debug('junitxml: {}'.format(junitxml))
     project_folder = "."
 
     script_run_config = ScriptRunConfig(source_directory=project_folder,
@@ -240,7 +241,7 @@ def submit_experiment_to_azureml(test, test_folder, test_markers, junitxml,
     # test logs can also be found on azure
     # go to azure portal to see log in azure ws and look for experiment name
     # and look for individual run
-    logger.debug('files {0}'.format(run.get_file_names))
+    logger.debug('files {}'.format(run.get_file_names))
 
     return run
 
@@ -280,7 +281,7 @@ def create_arg_parser():
     # Azure resource group
     parser.add_argument("--rg",
                         action="store",
-                        default="recommender",
+                        default="cvpb_project_resources",
                         help="Azure Resource Group")
     # AzureML workspace Name
     parser.add_argument("--wsname",
@@ -316,7 +317,7 @@ def create_arg_parser():
     # AzureML experiment name
     parser.add_argument("--expname",
                         action="store",
-                        default="persistentAML",
+                        default="defaultExpName",
                         help="experiment name on Azure")
     # Azure datacenter location
     parser.add_argument("--location",
@@ -325,7 +326,7 @@ def create_arg_parser():
     # github repo, stored in AzureML experiment for info purposes
     parser.add_argument("--reponame",
                         action="store",
-                        default="--reponame MyGithubRepo",
+                        default="computervision",
                         help="GitHub repo being tested")
     # github branch, stored in AzureML experiment for info purposes
     parser.add_argument("--branch",
@@ -365,17 +366,18 @@ if __name__ == "__main__":
                                 location=args.location)
 
     cpu_cluster = setup_persistent_compute_target(
-                      workspace=workspace,
-                      cluster_name=args.clustername,
-                      vm_size=args.vmsize,
-                      max_nodes=args.maxnodes)
+        workspace=workspace,
+        cluster_name=args.clustername,
+        vm_size=args.vmsize,
+        max_nodes=args.maxnodes)
 
     run_config = create_run_config(cpu_cluster=cpu_cluster,
                                    docker_proc_type=docker_proc_type,
                                    conda_env_file=args.condafile)
 
-    logger.info("exp: In Azure, look for experiment named {}".format(args.expname))
-    logger.info("args.test is {} testfolder {}".format(args.test, args.testfolder))
+    logger.info('exp: In Azure, look for experiment named {}'.format(
+                args.expname))
+
     # create new or use existing experiment
     experiment = Experiment(workspace=workspace, name=args.expname)
     run = submit_experiment_to_azureml(test=args.test,
