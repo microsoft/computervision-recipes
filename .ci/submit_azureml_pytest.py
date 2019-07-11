@@ -28,11 +28,11 @@ Args:
 Example:
     Usually, this script is run by a DevOps pipeline. It can also be
     run from cmd line.
-    >>> python tests/ci/refac.py --clustername 'cluster-d3-v2'
-                                 --subid '12345678-9012-3456-abcd-123456789012'
-                                 --pr '666'
-                                 --reponame 'Computervision'
-                                 --branch 'staging'
+    >>> python tests/.ci/yourtesthere.py --clustername 'cluster-d3-v2'
+                                         --subid '12345678-9012-3456-abcd-123456789012'
+                                         --pr '666'
+                                         --reponame 'Computervision'
+                                         --branch 'staging'
 """
 import argparse
 import logging
@@ -152,8 +152,8 @@ def create_run_config(cpu_cluster, docker_proc_type, conda_env_file):
         cpu_cluster      (str) : Names the cluster for the test
                                  In the case of unit tests, any of
                                  the following:
-                                 - Reco_cpu_test
-                                 - Reco_gpu_test
+                                 - reponame_cpu_test
+                                 - reponame_gpu_test
         docker_proc_type (str) : processor type, cpu or gpu
         conda_env_file   (str) : filename which contains info to
                                  set up conda env
@@ -286,7 +286,7 @@ def create_arg_parser():
     # AzureML workspace Name
     parser.add_argument("--wsname",
                         action="store",
-                        default="RecoWS",
+                        default="cvws",
                         help="AzureML workspace name")
     # AzureML clustername
     parser.add_argument("--clustername",
@@ -308,11 +308,9 @@ def create_arg_parser():
                         action="store",
                         default="123456",
                         help="Azure Subscription ID")
-    # ./reco.yaml is created in the azure devops pipeline.
-    # Not recommended to change this.
     parser.add_argument("--condafile",
                         action="store",
-                        default="./reco.yaml",
+                        default="environment.yml",
                         help="file with environment variables")
     # AzureML experiment name
     parser.add_argument("--expname",
