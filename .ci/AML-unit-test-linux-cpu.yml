@@ -26,7 +26,7 @@ variables:
 - name  : 'expname'
   value : 'unit-test-linux-cpu'
 - name  : 'condafile'
-  value : 'classification/environment.yml'
+  value : 'environment.yml'
 - name  : 'rg'
   value : 'cvbp_project_resources'
 - name  : 'wsname'
