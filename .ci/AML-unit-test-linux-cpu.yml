@@ -1,0 +1,74 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+#
+variables:
+- group: AzureMLConfig
+- name  : 'test'
+  value : '.ci/run_pytest.py'
+- name  : 'testfolder'
+  value : 'tests/unit'
+- name  : 'testmarkers'
+  value : '"not notebooks and not spark and not gpu"'
+- name  : 'junitxml'
+  value : 'reports/test-unit.xml'
+- name  : 'maxnodes'
+  value : 4
+- name  : 'reponame'
+  value : 'computervision'
+- name  : 'branch'
+  value : 'TestJob'
+- name  : 'clustername'
+  value : 'cv-cpu'
+- name  : 'vmsize'
+  value : 'STANDARD_D3_V2'
+- name  : 'dockerproc'
+  value : 'cpu'
+- name  : 'expname'
+  value : 'unit-test-linux-cpu'
+- name  : 'condafile'
+  value : 'environment.yml'
+- name  : 'rg'
+  value : 'cvbp_project_resources'
+- name  : 'wsname'
+  value : 'cvws'
+trigger: none
+
+pr:
+- staging 
+- master
+  
+pool:
+ vmImage: 'ubuntu-16.04'
+
+steps:
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.6'
+    architecture: 'x64'
+    addToPath: true
+  displayName: 'Use Python 3.6'
+
+- script: | 
+    az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
+  displayName: 'Login to Azure'
+
+- script:
+    ls;
+    ls -al; 
+    pip install paramiko==2.4.2;
+    pip install azureml-sdk;
+    pip install azure-cli;
+    az --version;
+    az ml -h;
+    pytest --version;
+    
+    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)  --rg $(rg) --wsname $(wsname)
+  displayName: 'submit_azureml_pytest'
+
+- task: PublishTestResults@2
+  displayName: 'Publish Test Results **/test-*.xml'
+  inputs:
+    testResultsFiles: '**/test-*.xml'
+    failTaskOnFailedTests: true
+  condition: succeededOrFailed()
