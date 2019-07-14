@@ -28,7 +28,7 @@ steps:
 #   displayName: 'Use Python 3.6'
 
 - bash: |
-      echo "##vso[task.prependpath]/usr/share/miniconda/bin"
+    echo "##vso[task.prependpath]/usr/share/miniconda/bin"
   displayName: Add Conda to PATH
 
 - bash: |
