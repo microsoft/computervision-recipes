@@ -237,19 +237,3 @@ def workspace_name(request):
 @pytest.fixture
 def workspace_region(request):
     return request.config.getoption("--workspace_region")
-
-@pytest.fixture
-def image_name(request):
-    return request.config.getoption("--image_name")
-
-# def pytest_generate_tests(metafunc):
-#     if "--subscription_id" in metafunc.fixturenames:
-#         metafunc.parametrize("subscription_id", metafunc.config.getoption("subscription_id"))
-#     if "--resource_group" in metafunc.fixturenames:
-#         metafunc.parametrize("resource_group", metafunc.config.getoption("resource_group"))
-#     if "--workspace_name" in metafunc.fixturenames:
-#         metafunc.parametrize("workspace_name", metafunc.config.getoption("workspace_name"))
-#     if "--workspace_region" in metafunc.fixturenames:
-#         metafunc.parametrize("workspace_region", metafunc.config.getoption("workspace_region"))
-#     if "--image_name" in metafunc.fixturenames:
-#         metafunc.parametrize("image_name", metafunc.config.getoption("image_name"))
