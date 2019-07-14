@@ -20,12 +20,12 @@ pool:
 
 steps:
 
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.6'
-    architecture: 'x64'
-    addToPath: true
-  displayName: 'Use Python 3.6'
+# - task: UsePythonVersion@0
+#   inputs:
+#     versionSpec: '3.6'
+#     architecture: 'x64'
+#     addToPath: true
+#   displayName: 'Use Python 3.6'
 
 - bash: |
       echo "##vso[task.prependpath]/usr/share/miniconda/bin"
