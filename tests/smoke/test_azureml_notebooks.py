@@ -16,35 +16,6 @@ import shutil
 KERNEL_NAME = "cv"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
-import argparse
-
-parser = argparse.ArgumentParser()
-
-"""
-subscription_id = "2ad17db4-e26d-4c9e-999e-adae9182530c"#"YOUR_SUBSCRIPTION_ID"
-resource_group = "rijaidelnewrg1"#"YOUR_RESOURCE_GROUP_NAME"  
-workspace_name = "rijaidelnewrg1ws6"#"YOUR_WORKSPACE_NAME"  
-workspace_region = "eastus2" #"YOUR_WORKSPACE_REGION" #Possible values eastus, eastus2 and so on.
-image_name = "rijaiamlimage3" #"YOUR_IMAGE_NAME" # without the underscores.
-
-"""
-
-# def create_arg_parser():
-#     parser = argparse.ArgumentParser(description='Process inputs')
-#     parser.add_argument("--subscription_id",
-#                         help="Azure Subscription Id to create resources in")
-#     parser.add_argument("--resource_group",
-#                         help="Name of the resource group")
-#     parser.add_argument("--workspace_name",
-#                         help="Name of Azure ML Workspace")
-#     parser.add_argument("--workspace_region",
-#                         help="Azure region to create the workspace in")
-#     parser.add_argument("--image_name",
-#                         help="Name of docker image in Azure ML Workspace")
-#     args = parser.parse_args()
-#     return args
-
-
 @pytest.mark.amlnotebooks
 def test_20_notebook_run(
     classification_notebooks,
