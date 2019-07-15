@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 #
 variables:
-- group: AzureMLConfig
+- group : NewKV-AKS
 - name  : 'resource_group'
   value : 'smoketest'
 - name  : 'workspace_name'
