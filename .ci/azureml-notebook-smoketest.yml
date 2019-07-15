@@ -2,11 +2,11 @@
 # Licensed under the MIT License.
 #
 variables:
-- group : NewKV-AKS
+- group: NewKV-AKS
 - name  : 'resource_group'
-  value : 'smoketest'
+  value : 'smoketest1'
 - name  : 'workspace_name'
-  value : 'smoketestws'
+  value : 'smoketestws1'
 - name  : 'workspace_region'
   value : 'eastus2'
 trigger: none
