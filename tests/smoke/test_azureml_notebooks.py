@@ -22,9 +22,8 @@ def test_20_notebook_run(
     subscription_id,
     resource_group,
     workspace_name,
-    workspace_region,
-    image_name,
-):
+    workspace_region
+    ):
     notebook_path = classification_notebooks["20_azure_workspace_setup"]
     pm.execute_notebook(
         notebook_path,
@@ -34,8 +33,7 @@ def test_20_notebook_run(
             subscription_id=subscription_id,
             resource_group=resource_group,
             workspace_name=workspace_name,
-            workspace_region=workspace_region,
-            image_name=image_name,
+            workspace_region=workspace_region
         ),
         kernel_name=KERNEL_NAME,
     )
