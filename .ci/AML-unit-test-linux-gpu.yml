@@ -58,7 +58,7 @@ steps:
     az --version;
     az ml -h;
     pytest --version;
-    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(Build.Repository.Name) --branch $(Build.SourceBranchName)  --pr $(System.PullRequest.PullRequestId) $(--rg $(rg) --wsname $(wsname)
+    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(Build.Repository.Name) --branch $(Build.SourceBranchName)  --pr $(System.PullRequest.PullRequestId) --rg $(rg) --wsname $(wsname)
   displayName: 'submit_azureml_pytest'
 
 - task: PublishTestResults@2
