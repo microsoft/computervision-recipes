@@ -40,6 +40,7 @@ steps:
   displayName: 'Create and activate conda environment'
 
 - bash: |
+    source activate cv
     python -m ipykernel install --user --name cv --display-name "cv"
     pytest -q --subscription_id=$(subscriptionid) --resource_group=$(resource_group) --workspace_name=$(workspace_name) --workspace_region=$(workspace_region) tests/smoke/test_azureml_notebooks.py
   displayName: 'Install azureml sdk and run azure ml smoke tests'
