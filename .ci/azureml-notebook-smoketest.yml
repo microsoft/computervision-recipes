@@ -37,6 +37,9 @@ steps:
     pip install azureml-sdk
     source activate cv
     conda env list
+    echo Login Azure Account
+    az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
+    az account set --subscription $(subscriptionid)
   displayName: 'Create and activate conda environment'
 
 - bash: |
