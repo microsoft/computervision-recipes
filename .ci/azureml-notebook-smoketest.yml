@@ -38,7 +38,9 @@ steps:
     source activate cv
     conda env list
     echo Login Azure Account
-    az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
+    # az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
+    # Trying a new KV library to rule out SP access issues.
+    az login -t $(sptenent) --service-principal -u $(spidentity) --password $(spsecret)
     az account set --subscription $(subscriptionid)
   displayName: 'Create and activate conda environment'
 
