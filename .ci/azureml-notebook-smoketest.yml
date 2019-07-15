@@ -33,19 +33,13 @@ steps:
 
 - bash: |
     conda env create -f environment.yml
+    pip install paramiko==2.4.2
+    pip install azureml-sdk
     source activate cv
     conda env list
   displayName: 'Create and activate conda environment'
 
 - bash: |
-    ls -al
-    source activate cv
-    pip install paramiko==2.4.2
-    pip install azureml-sdk
-    pip install azure-cli
-    az --version
-    az ml -h
-    pytest --version
     python -m ipykernel install --user --name cv --display-name "cv"
     pytest -q --subscription_id=$(subscriptionid) --resource_group=$(resource_group) --workspace_name=$(workspace_name) --workspace_region=$(workspace_region) tests/smoke/test_azureml_notebooks.py
   displayName: 'Install azureml sdk and run azure ml smoke tests'
