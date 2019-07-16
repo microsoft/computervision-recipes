@@ -2,11 +2,11 @@
 # Licensed under the MIT License.
 #
 variables:
-- group: NewKV-AKS
+- group: AzureMLConfig
 - name  : 'resource_group'
-  value : 'smoketest1'
+  value : 'smoketest'
 - name  : 'workspace_name'
-  value : 'smoketestws1'
+  value : 'smoketestws'
 - name  : 'workspace_region'
   value : 'eastus2'
 trigger: none
@@ -58,19 +58,19 @@ steps:
 #   displayName: 'Cleanup Task'
 #   condition: always()
 
-- bash: |
-      source /usr/share/miniconda/etc/profile.d/conda.sh
-      echo Execute Resource Group Delete
-      existResponse=$(az group exists -n $(resource_group))
-      if [ "$existResponse" == "true" ]; then
-        echo Deleting project resource group
-        az group delete --name $(resource_group) --yes
-      else
-        echo Project resource group did not exist
-      fi
-      echo Done Cleanup
-  displayName: 'Resource Group Cleanup'
-  condition: or(canceled(),failed())
+# - bash: |
+#       source /usr/share/miniconda/etc/profile.d/conda.sh
+#       echo Execute Resource Group Delete
+#       existResponse=$(az group exists -n $(resource_group))
+#       if [ "$existResponse" == "true" ]; then
+#         echo Deleting project resource group
+#         az group delete --name $(resource_group) --yes
+#       else
+#         echo Project resource group did not exist
+#       fi
+#       echo Done Cleanup
+#   displayName: 'Resource Group Cleanup'
+#   condition: or(canceled(),failed())
 
 
 - task: PublishTestResults@2
