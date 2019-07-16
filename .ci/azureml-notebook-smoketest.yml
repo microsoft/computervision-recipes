@@ -4,9 +4,9 @@
 variables:
 - group: AzureMLConfig
 - name  : 'resource_group'
-  value : 'smoketest'
+  value : 'smoketestnew'
 - name  : 'workspace_name'
-  value : 'smoketestws'
+  value : 'smoketestwsnew'
 - name  : 'workspace_region'
   value : 'eastus2'
 trigger: none
