@@ -4,9 +4,9 @@
 variables:
 - group: AzureMLConfig
 - name  : 'resource_group'
-  value : 'smoketestnew'
+  value : 'smoketest'
 - name  : 'workspace_name'
-  value : 'smoketestwsnew'
+  value : 'smoketestws'
 - name  : 'workspace_region'
   value : 'eastus2'
 trigger: none
@@ -19,13 +19,6 @@ pool:
  vmImage: 'ubuntu-16.04'
 
 steps:
-
-# - task: UsePythonVersion@0
-#   inputs:
-#     versionSpec: '3.6'
-#     architecture: 'x64'
-#     addToPath: true
-#   displayName: 'Use Python 3.6'
 
 - bash: |
     echo "##vso[task.prependpath]/usr/share/miniconda/bin"
@@ -48,27 +41,20 @@ steps:
     pytest -q --subscription_id=$(subscriptionid) --resource_group=$(resource_group) --workspace_name=$(workspace_name) --workspace_region=$(workspace_region) tests/smoke/test_azureml_notebooks.py
   displayName: 'Install azureml sdk and run azure ml smoke tests'
 
-# - bash: |
-#       echo Remove Conda Environment
-#       conda remove -n cv --all -q --force -y
-#       conda env list
-#       echo Done Cleanup
-#   displayName: 'Cleanup Task'
-#   condition: always()
 
-# - bash: |
-#       source /usr/share/miniconda/etc/profile.d/conda.sh
-#       echo Execute Resource Group Delete
-#       existResponse=$(az group exists -n $(resource_group))
-#       if [ "$existResponse" == "true" ]; then
-#         echo Deleting project resource group
-#         az group delete --name $(resource_group) --yes
-#       else
-#         echo Project resource group did not exist
-#       fi
-#       echo Done Cleanup
-#   displayName: 'Resource Group Cleanup'
-#   condition: or(canceled(),failed())
+- bash: |
+      source /usr/share/miniconda/etc/profile.d/conda.sh
+      echo Execute Resource Group Delete
+      existResponse=$(az group exists -n $(resource_group))
+      if [ "$existResponse" == "true" ]; then
+        echo Deleting project resource group
+        az group delete --name $(resource_group) --yes
+      else
+        echo Project resource group did not exist
+      fi
+      echo Done Cleanup
+  displayName: 'Resource Group Cleanup'
+  condition: or(canceled(),failed())
 
 
 - task: PublishTestResults@2
