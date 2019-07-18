@@ -83,7 +83,7 @@ def setup_workspace(
             name=workspace_name,
             subscription_id=subscription_id,
             resource_group=resource_group,
-            auth=cli_auth
+            auth=cli_auth,
         )
     except WorkspaceException:
         # this call might take a minute or two.
@@ -94,7 +94,7 @@ def setup_workspace(
             resource_group=resource_group,
             # create_resource_group=True,
             location=location,
-            auth=cli_auth
+            auth=cli_auth,
         )
     return ws
 
@@ -212,11 +212,11 @@ def submit_experiment_to_azureml(
         test_folder  (str) - folder where tests to run are stored,
                              like ./tests/unit
         test_markers (str) - test markers used by pytest
-                             'not notebooks and not spark and not gpu'
+                             "not notebooks and not spark and not gpu"
         junitxml     (str) - file of output summary of tests run
-                             note '--junitxml' is required as part
+                             note "--junitxml" is required as part
                              of the string
-                             Example: '--junitxml reports/test-unit.xml'
+                             Example: "--junitxml reports/test-unit.xml"
         run_config - environment configuration
         experiment - instance of an Experiment, a collection of
                      trials where each trial is a run.
@@ -265,90 +265,90 @@ def create_arg_parser():
         "--test",
         action="store",
         default=".ci/run_pytest.py",
-        help="location of script to run pytest"
+        help="location of script to run pytest",
     )
     # test folder
     parser.add_argument(
         "--testfolder",
         action="store",
         default="./tests/unit",
-        help="folder where tests are stored"
+        help="folder where tests are stored",
     )
     # pytest test markers
     parser.add_argument(
         "--testmarkers",
         action="store",
         default="not notebooks and not spark and not gpu",
-        help="pytest markers indicate tests to run"
+        help="pytest markers indicate tests to run",
     )
     # test summary file
     parser.add_argument(
         "--junitxml",
         action="store",
         default="reports/test-unit.xml",
-        help="file for returned test results"
+        help="file for returned test results",
     )
     # max num nodes in Azure cluster
     parser.add_argument(
         "--maxnodes",
         action="store",
         default=4,
-        help="specify the maximum number of nodes for the run"
+        help="specify the maximum number of nodes for the run",
     )
     # Azure resource group
     parser.add_argument(
         "--rg",
         action="store",
         default="cvpb_project_resources",
-        help="Azure Resource Group"
+        help="Azure Resource Group",
     )
     # AzureML workspace Name
     parser.add_argument(
         "--wsname",
         action="store",
         default="cvws",
-        help="AzureML workspace name"
+        help="AzureML workspace name",
     )
     # AzureML clustername
     parser.add_argument(
         "--clustername",
         action="store",
         default="amlcompute",
-        help="Set name of Azure cluster"
+        help="Set name of Azure cluster",
     )
     # Azure VM size
     parser.add_argument(
         "--vmsize",
         action="store",
         default="STANDARD_D3_V2",
-        help="Set the size of the VM either STANDARD_D3_V2"
+        help="Set the size of the VM either STANDARD_D3_V2",
     )
     # cpu or gpu
     parser.add_argument(
         "--dockerproc",
         action="store",
         default="cpu",
-        help="Base image used in docker container"
+        help="Base image used in docker container",
     )
     # Azure subscription id, when used in a pipeline, it is stored in keyvault
     parser.add_argument(
         "--subid",
         action="store",
         default="123456",
-        help="Azure Subscription ID"
+        help="Azure Subscription ID",
     )
     parser.add_argument(
         "--condafile",
         action="store",
         default="environment.yml",
-        help="file with environment variables"
+        help="file with environment variables",
     )
     # AzureML experiment name
     parser.add_argument(
         "--expname",
         action="store",
         default="defaultExpName",
-        help="experiment name on Azure"
+        help="experiment name on Azure",
     )
     # Azure datacenter location
     parser.add_argument("--location", default="EastUS", help="Azure location")
@@ -357,21 +357,21 @@ def create_arg_parser():
         "--reponame",
         action="store",
         default="computervision",
-        help="GitHub repo being tested"
+        help="GitHub repo being tested",
     )
     # github branch, stored in AzureML experiment for info purposes
     parser.add_argument(
         "--branch",
         action="store",
         default="--branch MyGithubBranch",
-        help=" Identify the branch test test is run on"
+        help=" Identify the branch test test is run on",
     )
     # github pull request, stored in AzureML experiment for info purposes
     parser.add_argument(
         "--pr",
         action="store",
         default="--pr PRTestRun",
-        help="If a pr triggered the test, list it here"
+        help="If a pr triggered the test, list it here",
     )
 
     args = parser.parse_args()
@@ -381,7 +381,7 @@ def create_arg_parser():
 
 if __name__ == "__main__":
     logger = logging.getLogger("submit_azureml_pytest.py")
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     # logging.basicConfig(level=logging.DEBUG)
     args = create_arg_parser()
 
@@ -401,20 +401,20 @@ if __name__ == "__main__":
         subscription_id=args.subid,
         resource_group=args.rg,
         cli_auth=cli_auth,
-        location=args.location
+        location=args.location,
     )
 
     cpu_cluster = setup_persistent_compute_target(
         workspace=workspace,
         cluster_name=args.clustername,
         vm_size=args.vmsize,
-        max_nodes=args.maxnodes
+        max_nodes=args.maxnodes,
     )
 
     run_config = create_run_config(
         cpu_cluster=cpu_cluster,
         docker_proc_type=docker_proc_type,
-        conda_env_file=args.condafile
+        conda_env_file=args.condafile,
     )
 
     logger.info(
@@ -429,7 +429,7 @@ if __name__ == "__main__":
         test_markers=args.testmarkers,
         junitxml=args.junitxml,
         run_config=run_config,
-        experiment=experiment
+        experiment=experiment,
     )
 
     # add helpful information to experiment on Azure
