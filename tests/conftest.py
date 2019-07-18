@@ -266,6 +266,7 @@ def workspace_name(request):
 @pytest.fixture
 def workspace_region(request):
     return request.config.getoption("--workspace_region")
+
 def model_pred_scores(tiny_ic_databunch):
     """Return a simple learner and prediction scores on tiny ic data"""
     model = models.resnet18

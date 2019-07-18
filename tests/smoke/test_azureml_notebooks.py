@@ -16,7 +16,7 @@ import shutil
 KERNEL_NAME = "cv"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
-@pytest.mark.amlnotebooks
+@pytest.mark.azureml_notebook_test
 def test_20_notebook_run(
     classification_notebooks,
     subscription_id,
@@ -39,7 +39,7 @@ def test_20_notebook_run(
     )
 
 
-@pytest.mark.azureml_test
+@pytest.mark.azureml_notebook_test
 def test_21_notebook_run(
     classification_notebooks,
     subscription_id,
@@ -59,6 +59,7 @@ def test_21_notebook_run(
         kernel_name=KERNEL_NAME,
     )
 
+@pytest.mark.azureml_notebook_test
 def test_22_notebook_run(
     classification_notebooks,
     subscription_id,
@@ -78,6 +79,7 @@ def test_22_notebook_run(
         kernel_name=KERNEL_NAME,
     )
 
+@pytest.mark.azureml_notebook_test
 def test_23_notebook_run(
     classification_notebooks,
     subscription_id,
