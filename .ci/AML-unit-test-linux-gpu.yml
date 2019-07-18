@@ -63,4 +63,4 @@ steps:
   inputs:
     testResultsFiles: '**/test-*.xml'
     failTaskOnFailedTests: true
-  testRunTitle: 'Test results for CV AzureML PyTest'
+    testRunTitle: 'Test results for CV AzureML PyTest'
