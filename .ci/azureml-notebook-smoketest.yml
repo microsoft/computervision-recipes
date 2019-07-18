@@ -43,19 +43,17 @@ steps:
 
 
 - bash: |
-      source /usr/share/miniconda/etc/profile.d/conda.sh
-      echo Execute Resource Group Delete
-      existResponse=$(az group exists -n $(resource_group))
+      echo Ensure Resource Group Deletion
+      existResponse=$(az group exists -n $(azureresourcegroup))
       if [ "$existResponse" == "true" ]; then
         echo Deleting project resource group
-        az group delete --name $(resource_group) --yes
+        az group delete --name $(azureresourcegroup) --yes
       else
         echo Project resource group did not exist
       fi
       echo Done Cleanup
-  displayName: 'Resource Group Cleanup'
-  condition: or(canceled(),failed())
-
+  displayName: 'Cleanup Task'
+  condition: always()
 
 - task: PublishTestResults@2
   displayName: 'Publish Test Results **/test-*.xml'
