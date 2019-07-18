@@ -13,10 +13,6 @@ variables:
   value : 'reports/test-unit.xml'
 - name  : 'maxnodes'
   value : 4
-- name  : 'reponame'
-  value : 'computervision'
-- name  : 'branch'
-  value : 'TestJob'
 - name  : 'clustername'
   value : 'cv-cpu'
 - name  : 'vmsize'
@@ -54,21 +50,17 @@ steps:
   displayName: 'Login to Azure'
 
 - script:
-    ls;
-    ls -al; 
+    # bug fix for azureml sdk 7/18/2019
     pip install paramiko==2.4.2;
     pip install azureml-sdk;
     pip install azure-cli;
-    az --version;
-    az ml -h;
-    pytest --version;
-    
-    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)  --rg $(rg) --wsname $(wsname)
+    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(Build.Repository.Name) --branch $(Build.SourceBranchName)  --rg $(rg) --wsname $(wsname)
   displayName: 'submit_azureml_pytest'
 
 - task: PublishTestResults@2
   displayName: 'Publish Test Results **/test-*.xml'
+  condition: always()
   inputs:
     testResultsFiles: '**/test-*.xml'
     failTaskOnFailedTests: true
-  condition: succeededOrFailed()
+    testRunTitle: 'Test results for CV AzureML PyTest'
