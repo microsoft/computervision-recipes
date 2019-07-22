@@ -32,7 +32,7 @@ jobs:
 - job: Smoke
   displayName : 'Smoke: no CV tests yet'
 
-variables:
+  variables:
   - name  : 'testfolder'
     value : 'tests/integration'
   - name  : 'junitxml'
