@@ -42,11 +42,11 @@ steps:
 
 
 - bash: |
-      echo Ensure Resource Group Deletion
-      existResponse=$(az group exists -n $(azureresourcegroup))
+      echo Ensure Resource Group Deletion $(resource_group)
+      existResponse=$(az group exists -n $(resource_group))
       if [ "$existResponse" == "true" ]; then
         echo Deleting project resource group
-        az group delete --name $(azureresourcegroup) --yes
+        az group delete --name $(resource_group) --yes
       else
         echo Project resource group did not exist
       fi

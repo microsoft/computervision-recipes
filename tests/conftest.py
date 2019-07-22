@@ -85,6 +85,9 @@ def classification_notebooks():
         ),
         "23_aci_aks_web_service_testing": os.path.join(
             folder_notebooks, "23_aci_aks_web_service_testing.ipynb"
+        ),
+        "24_exploring_hyperparameters_on_azureml": os.path.join(
+            folder_notebooks, "24_exploring_hyperparameters_on_azureml.ipynb"
         )
     }
     return paths
@@ -249,6 +252,10 @@ def pytest_addoption(parser):
                         help="Azure region to create the workspace in")
     parser.addoption("--image_name",
                         help="Name of docker image in Azure ML Workspace")
+    parser.addoption("--epochs",
+                        help="Number of epochs")
+    parser.addoption("--max_total_runs",
+                        help="Max number of runs for hyperparameter tuning")
 
 
 @pytest.fixture
@@ -266,6 +273,14 @@ def workspace_name(request):
 @pytest.fixture
 def workspace_region(request):
     return request.config.getoption("--workspace_region")
+
+@pytest.fixture
+def epochs(request):
+    return request.config.getoption("--epochs")
+
+@pytest.fixture
+def max_total_runs(request):
+    return request.config.getoption("--max_total_runs")
 
 def model_pred_scores(tiny_ic_databunch):
     """Return a simple learner and prediction scores on tiny ic data"""
