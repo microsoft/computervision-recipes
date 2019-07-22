@@ -113,9 +113,7 @@ def test_24_notebook_run(
     subscription_id,
     resource_group,
     workspace_name,
-    workspace_region,
-    epochs,
-    max_total_runs
+    workspace_region
 ):
     notebook_path = classification_notebooks["24_exploring_hyperparameters_on_azureml"]
     pm.execute_notebook(
