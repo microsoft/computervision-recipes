@@ -25,12 +25,13 @@ pr: none
 #- staging 
 #- master
   
-pool:
- vmImage: 'ubuntu-16.04'
+
 
 jobs:
 - job: Smoke
   displayName : 'Smoke: no CV tests yet'
+  pool:
+    vmImage: 'ubuntu-16.04'
 
   variables:
   - name  : 'testfolder'
@@ -51,8 +52,17 @@ steps:
     addToPath: true
   displayName: 'Use Python 3.6'
 
+- task: PublishTestResults@2
+  displayName: 'Publish Test Results **/test-*.xml'
+  inputs:
+    testResultsFiles: '**/test-*.xml'
+    failTaskOnFailedTests: true
+  condition: succeededOrFailed()
+  
 - job : Integration
   displayName : 'Integration'
+  pool:
+    vmImage: 'ubuntu-16.04'
 
   variables:
   - name  : 'testfolder'
