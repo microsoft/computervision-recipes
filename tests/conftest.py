@@ -252,11 +252,7 @@ def pytest_addoption(parser):
                         help="Azure region to create the workspace in")
     parser.addoption("--image_name",
                         help="Name of docker image in Azure ML Workspace")
-    parser.addoption("--epochs",
-                        help="Number of epochs")
-    parser.addoption("--max_total_runs",
-                        help="Max number of runs for hyperparameter tuning")
-
+                        
 
 @pytest.fixture
 def subscription_id(request):
@@ -273,14 +269,6 @@ def workspace_name(request):
 @pytest.fixture
 def workspace_region(request):
     return request.config.getoption("--workspace_region")
-
-@pytest.fixture
-def epochs(request):
-    return request.config.getoption("--epochs")
-
-@pytest.fixture
-def max_total_runs(request):
-    return request.config.getoption("--max_total_runs")
 
 def model_pred_scores(tiny_ic_databunch):
     """Return a simple learner and prediction scores on tiny ic data"""

@@ -127,8 +127,8 @@ def test_24_notebook_run(
             resource_group=resource_group,
             workspace_name=workspace_name,
             workspace_region=workspace_region,
-            epochs=epochs,
-            max_total_runs=max_total_runs
+            epochs=1,
+            max_total_runs=1
         ),
         kernel_name=KERNEL_NAME,
     )
