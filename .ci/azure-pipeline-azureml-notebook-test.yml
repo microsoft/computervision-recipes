@@ -40,7 +40,7 @@ jobs:
       python -m ipykernel install --user --name cv --display-name "cv"
       pytest -q --subscription_id=$(subscriptionid) --resource_group=$(resource_group) --workspace_name=$(workspace_name) --workspace_region=$(workspace_region) -m azuremlnotebooks
     displayName: 'Run AzureML notebook tests'
-
+  
   - bash: |
         echo Ensure Resource Group Deletion $(resource_group)
         existResponse=$(az group exists -n $(resource_group))
