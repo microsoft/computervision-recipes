@@ -105,3 +105,30 @@ def test_23_notebook_run(
         ),
         kernel_name=KERNEL_NAME,
     )
+
+
+@pytest.mark.azuremlnotebooks
+def test_24_notebook_run(
+    classification_notebooks,
+    subscription_id,
+    resource_group,
+    workspace_name,
+    workspace_region,
+    epochs,
+    max_total_runs
+):
+    notebook_path = classification_notebooks["24_exploring_hyperparameters_on_azureml"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            subscription_id=subscription_id,
+            resource_group=resource_group,
+            workspace_name=workspace_name,
+            workspace_region=workspace_region,
+            epochs=epochs,
+            max_total_runs=max_total_runs
+        ),
+        kernel_name=KERNEL_NAME,
+    )
