@@ -2,15 +2,14 @@
 
 Contribution are welcome! Here's a few things to know:
 
-- [Contribution Guidelines](#contribution-guidelines)
-  - [Microsoft Contributor License Agreement](#microsoft-contributor-license-agreement)
-  - [Steps to Contributing](#steps-to-contributing)
-  - [Working with Notebooks](#working-with-notebooks)
-  - [Coding Guidelines](#coding-guidelines)
-  - [Code of Conduct](#code-of-conduct)
-      - [Do not point fingers](#do-not-point-fingers)
-      - [Provide code feedback based on evidence](#provide-code-feedback-based-on-evidence)
-      - [Ask questions do not give answers](#ask-questions-do-not-give-answers)
+- [Microsoft Contributor License Agreement](#microsoft-contributor-license-agreement)
+- [Steps to Contributing](#steps-to-contributing)
+- [Working with Notebooks](#working-with-notebooks)
+- [Coding Guidelines](#coding-guidelines)
+- [Code of Conduct](#code-of-conduct)
+    - [Do not point fingers](#do-not-point-fingers)
+    - [Provide code feedback based on evidence](#provide-code-feedback-based-on-evidence)
+    - [Ask questions do not give answers](#ask-questions-do-not-give-answers)
 
 ## Microsoft Contributor License Agreement
 
@@ -28,17 +27,17 @@ Here are the basic steps to get started with your first contribution. Please rea
 1. Make code changes.
 1. Ensure unit tests pass and code style / formatting is consistent (see [wiki](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines#python-and-docstrings-style) for more details).
 1. We use [pre-commit](https://pre-commit.com/) package to run our pre-commit hooks. We use black formatter and flake8 linting on each commit. In order to set up pre-commit on your machine, follow the steps here, please note that you only need to run these steps the first time you use pre-commit for this project.
-   
+
    * Update your conda environment, pre-commit is part of the yaml file or just do    
    ```
     $ pip install pre-commit
    ```    
-   * Set up pre-commit by running following command, this will put pre-commit under your .git/hooks directory. 
+   * Set up pre-commit by running following command, this will put pre-commit under your .git/hooks directory.
    ```
    $ pre-commit install
    ```
    ```
-   $ git commit -m "message" 
+   $ git commit -m "message"
    ```
    * Each time you commit, git will run the pre-commit hooks (black and flake8 for now) on any python files that are getting committed and are part of the git index.  If black modifies/formats the file, or if flake8 finds any linting errors, the commit will not succeed. You will need to stage the file again if black changed the file, or fix the issues identified by flake8 and and stage it again.
 
@@ -48,7 +47,7 @@ Here are the basic steps to get started with your first contribution. Please rea
    ```
 1. Create a pull request against <b>staging</b> branch.
 
-Note: We use the staging branch to land all new features, so please remember to create the Pull Request against staging. 
+Note: We use the staging branch to land all new features, so please remember to create the Pull Request against staging.
 
 Once the features included in a milestone are complete we will merge staging into master and make a release. See the wiki for more detail about our [merge strategy](https://github.com/Microsoft/Recommenders/wiki/Strategy-to-merge-the-code-to-master-branch).
 
@@ -57,7 +56,7 @@ Once the features included in a milestone are complete we will merge staging int
 It's challenging to do code review for notebooks in GitHub. [reviewnb](https://www.reviewnb.com/) makes it easy to review notebooks in GitHub but only works with public repository. Since we are still in private mode, [jupytext](https://github.com/mwouts/jupytext) is another option that provides conversion of ipython notebooks to multiple formats and also work with pre-commit. However, it falls short of adding the converted files automatically as part of the git commit. An [issue](https://github.com/mwouts/jupytext/issues/200) has been opened with jupytext for this. In the interim, a more reliable way is to manually convert the notebooks to python script using [nbconvert](https://github.com/jupyter/nbconvert) and manually add and commit them to your branch along with the notebook. nbconvert comes pre-installed as part of jupyter installation, run the following command to convert a notebook to python script and save it in python folder under image_classification folder.
 ```
 $ jupyter nbconvert --output-dir=./image_classification/python --to python ./image_classification/notebooks/mnist.ipynb
-``` 
+```
 As you check these converted files in, we don't want to enforce black formatting and flake8 linting on them since they also contain markdown and metadata that does not play well with these tools and after all that's not the main goal for converting these notebooks to python script, main goal is to make diffing easier. You can commit the python script generated from nbconvert by using following option with *git commit* command
 ```
 SKIP=black,flake8 git commit -m "commit message"
@@ -65,7 +64,7 @@ SKIP=black,flake8 git commit -m "commit message"
 **Note:** We only want to skip black and flake8 hooks for the nbconvert py files, for everything else these hooks should not be skipped.
 
 When you pull updates from remote there might be merge conflicts at times, use [nbdime](https://nbdime.readthedocs.io/en/latest/) to fix them.
-* To install nbdime 
+* To install nbdime
 ```
 pip install ndime
 ```
@@ -107,35 +106,11 @@ For more information see the [Code of Conduct FAQ](https://opensource.microsoft.
 Apart from the official Code of Conduct developed by Microsoft, in the Recommenders team we adopt the following behaviors, to ensure a great working environment:
 
 #### Do not point fingers
-Let’s be constructive.
+Let’s be constructive. For example: "This method is missing docstrings" instead of "YOU forgot to put docstrings".
 
-<details>
-<summary><em>Click here to see some examples</em></summary>
+#### Provide code feedback based on evidence
 
-"This method is missing docstrings" instead of "YOU forgot to put docstrings".
-
-</details>
-
-#### Provide code feedback based on evidence 
-
-When making code reviews, try to support your ideas based on evidence (papers, library documentation, stackoverflow, etc) rather than your personal preferences. 
-
-<details>
-<summary><em>Click here to see some examples</em></summary>
-
-"When reviewing this code, I saw that the Python implementation the metrics are based on classes, however, [scikit-learn](https://scikit-learn.org/stable/modules/classes.html#sklearn-metrics-metrics) and [tensorflow](https://www.tensorflow.org/api_docs/python/tf/metrics) use functions. We should follow the standard in the industry."
-
-</details>
-
+When making code reviews, try to support your ideas based on evidence (papers, library documentation, stackoverflow, etc) rather than your personal preferences. For example: "When reviewing this code, I saw that the Python implementation the metrics are based on classes, however, [scikit-learn](https://scikit-learn.org/stable/modules/classes.html#sklearn-metrics-metrics) and [tensorflow](https://www.tensorflow.org/api_docs/python/tf/metrics) use functions. We should follow the standard in the industry."
 
 #### Ask questions do not give answers
-Try to be empathic. 
-
-<details>
-<summary><em>Click here to see some examples</em></summary>
-
-* Would it make more sense if ...?
-* Have you considered this ... ?
-
-</details>
-
+Try to be empathic. For example: "Would it make more sense if ...?" or "Have you considered this ... ?"
