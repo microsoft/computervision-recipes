@@ -51,9 +51,7 @@ def classification_notebooks():
 
     # Path for the notebooks
     paths = {
-        "00_webcam": os.path.join(
-            folder_notebooks, "00_webcam.ipynb"
-        ),
+        "00_webcam": os.path.join(folder_notebooks, "00_webcam.ipynb"),
         "01_training_introduction": os.path.join(
             folder_notebooks, "01_training_introduction.ipynb"
         ),
@@ -73,8 +71,7 @@ def classification_notebooks():
             folder_notebooks, "12_hard_negative_sampling.ipynb"
         ),
         "20_azure_workspace_setup": os.path.join(
-            folder_notebooks,
-            "20_azure_workspace_setup.ipynb",
+            folder_notebooks, "20_azure_workspace_setup.ipynb"
         ),
         "21_deployment_on_azure_container_instances": os.path.join(
             folder_notebooks,
@@ -202,6 +199,18 @@ def multilabel_result():
 
 
 @pytest.fixture(scope="session")
+def model_pred_scores(tiny_ic_databunch):
+    """Return a simple learner and prediction scores on tiny ic data"""
+    model = models.resnet18
+    lr = 1e-4
+    epochs = 1
+
+    learn = cnn_learner(tiny_ic_databunch, model)
+    learn.fit(epochs, lr)
+    return learn, learn.get_preds()[0].tolist()
+
+
+@pytest.fixture(scope="session")
 def testing_im_list(tmp_session):
     """ Set of 5 images from the can/ folder of the Fridge Objects dataset
      used to test positive example rank calculations"""
@@ -241,6 +250,7 @@ def testing_databunch(tmp_session):
 
     return validation_bunch
 
+
 def pytest_addoption(parser):
     parser.addoption("--subscription_id",
                         help="Azure Subscription Id to create resources in")
@@ -250,35 +260,25 @@ def pytest_addoption(parser):
                         help="Name of Azure ML Workspace")
     parser.addoption("--workspace_region",
                         help="Azure region to create the workspace in")
-    parser.addoption("--image_name",
-                        help="Name of docker image in Azure ML Workspace")
-                        
 
 @pytest.fixture
 def subscription_id(request):
     return request.config.getoption("--subscription_id")
 
+
 @pytest.fixture
 def resource_group(request):
     return request.config.getoption("--resource_group")
+
 
 @pytest.fixture
 def workspace_name(request):
     return request.config.getoption("--workspace_name")
 
+
 @pytest.fixture
 def workspace_region(request):
     return request.config.getoption("--workspace_region")
-
-def model_pred_scores(tiny_ic_databunch):
-    """Return a simple learner and prediction scores on tiny ic data"""
-    model = models.resnet18
-    lr = 1e-4
-    epochs = 1
-
-    learn = cnn_learner(tiny_ic_databunch, model)
-    learn.fit(epochs, lr)
-    return learn, learn.get_preds()[0].tolist()
 
 
 # @pytest.fixture(scope="session")
