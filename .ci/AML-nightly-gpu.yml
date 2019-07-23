@@ -19,6 +19,7 @@ variables:
   value : 'cvbp_project_resources'
 - name  : 'wsname'
   value : 'cvws'
+
 trigger: none
 
 pr: none
@@ -70,7 +71,7 @@ jobs:
   - name  : 'junitxml'
     value : 'reports/test-int.xml'
   - name  : 'testmarkers'
-    value : '"not notebooks and not spark and not gpu"'
+    value : '"notebooks and not spark and not gpu"'
   - name  : 'expname'
     value : 'nightly-int-test-linux-gpu'
 
