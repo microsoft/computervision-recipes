@@ -75,7 +75,7 @@ jobs:
     value : 'nightly-int-test-linux-gpu'
 
   steps:
-  
+
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.6'
@@ -101,4 +101,4 @@ jobs:
     inputs:
       testResultsFiles: '**/test-*.xml'
       failTaskOnFailedTests: true
-      testRunTitle: 'Test results for CV AzureML PyTest'
+      testRunTitle: 'Test results for CV AzureML PyTest'
