@@ -9,7 +9,7 @@ from torch.cuda import is_available
 from utils_cv.common.gpu import linux_with_gpu
 
 # Parameters
-KERNEL_NAME = "python3
+KERNEL_NAME = "python3"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
 
