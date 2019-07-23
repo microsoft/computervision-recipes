@@ -9,7 +9,7 @@ variables:
   value : 'tests/unit'
 - name  : 'testmarkers'
   # not gpu is to match how the existing tests run
-  value : '"notebooks and not spark and not gpu"'
+  value : '"notebooks and not spark and not gpu and not azuremlnotebooks"'
 - name  : 'junitxml'
   value : 'reports/test-unit.xml'
 - name  : 'maxnodes'
