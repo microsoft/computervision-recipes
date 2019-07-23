@@ -35,7 +35,6 @@ pr:
 - staging 
 - master
 
-
 jobs:
 - job: Smoke
   displayName : 'Smoke: no CV tests yet'
