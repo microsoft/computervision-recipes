@@ -83,6 +83,9 @@ def classification_notebooks():
         "23_aci_aks_web_service_testing": os.path.join(
             folder_notebooks, "23_aci_aks_web_service_testing.ipynb"
         ),
+        "24_exploring_hyperparameters_on_azureml": os.path.join(
+            folder_notebooks, "24_exploring_hyperparameters_on_azureml.ipynb"
+        )
     }
     return paths
 
@@ -249,19 +252,14 @@ def testing_databunch(tmp_session):
 
 
 def pytest_addoption(parser):
-    parser.addoption(
-        "--subscription_id",
-        help="Azure Subscription Id to create resources in",
-    )
-    parser.addoption("--resource_group", help="Name of the resource group")
-    parser.addoption("--workspace_name", help="Name of Azure ML Workspace")
-    parser.addoption(
-        "--workspace_region", help="Azure region to create the workspace in"
-    )
-    parser.addoption(
-        "--image_name", help="Name of docker image in Azure ML Workspace"
-    )
-
+    parser.addoption("--subscription_id",
+                        help="Azure Subscription Id to create resources in")
+    parser.addoption("--resource_group",
+                        help="Name of the resource group")
+    parser.addoption("--workspace_name",
+                        help="Name of Azure ML Workspace")
+    parser.addoption("--workspace_region",
+                        help="Azure region to create the workspace in")
 
 @pytest.fixture
 def subscription_id(request):
