@@ -20,12 +20,20 @@ variables:
 - name  : 'wsname'
   value : 'cvws'
 
+schedules:
+- cron: "56 22 * * *"
+  displayName: Daily run
+  branches:
+    include:
+    - master
+    - staging
+  always: true
+
 trigger: none
 
-pr: none
-#- staging 
-#- master
-  
+pr:
+- staging 
+- master
 
 
 jobs:
@@ -52,13 +60,8 @@ jobs:
       architecture: 'x64'
       addToPath: true
     displayName: 'Use Python 3.6'
-  
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **/test-*.xml'
-    inputs:
-      testResultsFiles: '**/test-*.xml'
-      failTaskOnFailedTests: true
-    condition: succeededOrFailed()
+
+  # no smoke tests to run
     
 - job : Integration
   displayName : 'Integration'
