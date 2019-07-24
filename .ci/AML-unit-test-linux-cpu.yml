@@ -33,7 +33,7 @@ variables:
   value : 'cvws'
 - name  : 'prtag'
   value : 'UnitTestRun'
-  
+
 trigger: none
 
 pr:
@@ -57,16 +57,10 @@ steps:
   displayName: 'Login to Azure'
 
 - script:
-    ls;
-    ls -al; 
     pip install paramiko==2.4.2;
     pip install azureml-sdk;
     pip install azure-cli;
-    az --version;
-    az ml -h;
-    pytest --version;
-    
-    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch)  --rg $(rg) --wsname $(wsname)
+    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(reponame) --branch $(branch) --pr $(prtag) --rg $(rg) --wsname $(wsname)
   displayName: 'submit_azureml_pytest'
 
 - task: PublishTestResults@2

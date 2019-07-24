@@ -30,6 +30,7 @@ variables:
   value : 'cvws'
 - name  : 'prtag'
   value : 'NBTestRun'
+
 trigger: none
 
 pr:
