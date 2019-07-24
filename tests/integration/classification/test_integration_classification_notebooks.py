@@ -11,7 +11,7 @@ import shutil
 from utils_cv.common.gpu import linux_with_gpu
 
 # Parameters
-KERNEL_NAME = "cv"
+KERNEL_NAME = "python3"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
 
@@ -35,7 +35,9 @@ def test_01_notebook_run(classification_notebooks):
 @pytest.mark.notebooks
 def test_02_notebook_run(classification_notebooks):
     if linux_with_gpu():
-        notebook_path = classification_notebooks["02_multilabel_classification"]
+        notebook_path = classification_notebooks[
+            "02_multilabel_classification"
+        ]
         pm.execute_notebook(
             notebook_path,
             OUTPUT_NOTEBOOK,
@@ -53,7 +55,9 @@ def test_02_notebook_run(classification_notebooks):
 @pytest.mark.notebooks
 def test_03_notebook_run(classification_notebooks):
     if linux_with_gpu():
-        notebook_path = classification_notebooks["03_training_accuracy_vs_speed"]
+        notebook_path = classification_notebooks[
+            "03_training_accuracy_vs_speed"
+        ]
         pm.execute_notebook(
             notebook_path,
             OUTPUT_NOTEBOOK,
@@ -70,17 +74,18 @@ def test_03_notebook_run(classification_notebooks):
 @pytest.mark.notebooks
 def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
     if linux_with_gpu():
-        notebook_path = classification_notebooks["11_exploring_hyperparameters"]
+        notebook_path = classification_notebooks[
+            "11_exploring_hyperparameters"
+        ]
         pm.execute_notebook(
             notebook_path,
             OUTPUT_NOTEBOOK,
             parameters=dict(
                 PM_VERSION=pm.__version__,
-
                 # Speed up testing since otherwise would take ~12 minutes on V100
                 DATA=[tiny_ic_data_path],
                 REPS=1,
-                IM_SIZES=[60,100],
+                IM_SIZES=[60, 100],
             ),
             kernel_name=KERNEL_NAME,
         )
@@ -88,7 +93,10 @@ def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
         assert nb_output.scraps["nr_elements"].data == 6
         assert nb_output.scraps["max_accuray"].data > 0.5
-        assert nb_output.scraps["max_duration"].data > 1.2 * nb_output.scraps["min_duration"].data
+        assert (
+            nb_output.scraps["max_duration"].data
+            > 1.2 * nb_output.scraps["min_duration"].data
+        )
 
 
 @pytest.mark.notebooks
