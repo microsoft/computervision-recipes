@@ -9,6 +9,8 @@ variables:
   value : 'amlnotebookws'
 - name  : 'workspace_region'
   value : 'eastus2'
+- name  : 'junitxml'
+  value : 'reports/test-unit.xml'
 trigger: none
 
 pr:
@@ -38,7 +40,7 @@ jobs:
   - bash: |
       source activate cv
       python -m ipykernel install --user --name cv --display-name "cv"
-      pytest -q --subscription_id=$(subscriptionid) --resource_group=$(resource_group) --workspace_name=$(workspace_name) --workspace_region=$(workspace_region) -m azuremlnotebooks
+      pytest -q --subscription_id=$(subscriptionid) --resource_group=$(resource_group) --workspace_name=$(workspace_name) --workspace_region=$(workspace_region) --junitxml $(junitxml) -m azuremlnotebooks
     displayName: 'Run AzureML notebook tests'
   
   - bash: |
