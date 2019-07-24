@@ -8,7 +8,7 @@ The goal of this repository is to accelerate the development of computer vision 
 
 The current main priority is to support image classification. Additionally, we also provide a basic (but often sufficiently accurate) example for image similarity. See the [projects](https://github.com/Microsoft/ComputerVision/projects) and [milestones](https://github.com/Microsoft/ComputerVision/milestones) pages in this repository for more details.
 
-## Getting started
+## Getting Started
 
 To get started on your local machine:
 
