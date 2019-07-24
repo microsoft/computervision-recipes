@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import os
 import numpy as np
 from utils_cv.classification.widget import AnnotationWidget, ResultsWidget

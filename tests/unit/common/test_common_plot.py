@@ -17,6 +17,15 @@ def test_line_graph():
     )
     plt.close()
 
+    line_graph(
+        values=[1, 2, 3],
+        labels="Train",
+        x_guides=[0, 1],
+        x_name="Epoch",
+        y_name="Accuracy",
+    )
+    plt.close()
+
 
 def test_show_ims(tiny_ic_data_path):
     # Naive test to run the function without errors

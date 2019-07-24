@@ -1,4 +1,4 @@
-# Unit Test steps
+# Unit and integration test steps
 steps:
 
 - bash: |
@@ -6,16 +6,16 @@ steps:
   displayName: Add Conda to PATH
 
 - bash: |
-    conda env create -f classification/environment.yml
+    conda env create -f environment.yml
     source activate cv
     conda env list
   displayName: 'Create and activate conda environment'
 
 - bash: |
     source activate cv
-    python -m ipykernel install --user --name cv --display-name "cv"
-    pytest --durations 100 tests/unit --junitxml=junit/test-unitttest.xml
-  displayName: 'Run Unit tests'
+    # python -m ipykernel install --user --name cv --display-name "cv"
+    pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks"
+  displayName: 'Run unit and (only on Linux GPU) integration tests'
 
 - bash: |
       echo Remove Conda Environment
@@ -29,3 +29,10 @@ steps:
   inputs:
     testResultsFiles: '**/test-unitttest.xml'
     testRunTitle: 'Test results for PyTest'
+
+- task: ComponentGovernanceComponentDetection@0
+  inputs:
+    scanType: 'Register'
+    verbosity: 'Verbose'
+    alertWarningLevel: 'High'
+

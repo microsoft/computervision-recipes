@@ -39,8 +39,6 @@ def plot_distances(
         image, distance = distances[index]
 
         plt.subplot(num_rows, num_cols, num + 1)
-        # plt.rcParams["figure.dpi"] = 100 #higher dpi so that text is clearer
-        # plt.rcParams["axes.titlepad"] = 1
         plt.subplots_adjust(hspace=0.2)
         plt.axis("off")
 
@@ -132,7 +130,9 @@ def plot_recalls(ranks: List[int], figsize: Tuple[int, int] = None):
 
 
 def plot_ranks_distribution(
-    ranks: List[int], x_axis_max: int = None, figsize: Tuple[int, int] = None
+    ranks: List[int],
+    x_axis_max: int = None,
+    figsize: Tuple[int, int] = (15, 6),
 ):
     """Displays the distribution of rank of the positive image
     across comparative sets.

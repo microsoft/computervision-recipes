@@ -70,6 +70,9 @@ def classification_notebooks():
         "12_hard_negative_sampling": os.path.join(
             folder_notebooks, "12_hard_negative_sampling.ipynb"
         ),
+        "20_azure_workspace_setup": os.path.join(
+            folder_notebooks, "20_azure_workspace_setup.ipynb"
+        ),
         "21_deployment_on_azure_container_instances": os.path.join(
             folder_notebooks,
             "21_deployment_on_azure_container_instances.ipynb",
@@ -77,6 +80,12 @@ def classification_notebooks():
         "22_deployment_on_azure_kubernetes_service": os.path.join(
             folder_notebooks, "22_deployment_on_azure_kubernetes_service.ipynb"
         ),
+        "23_aci_aks_web_service_testing": os.path.join(
+            folder_notebooks, "23_aci_aks_web_service_testing.ipynb"
+        ),
+        "24_exploring_hyperparameters_on_azureml": os.path.join(
+            folder_notebooks, "24_exploring_hyperparameters_on_azureml.ipynb"
+        )
     }
     return paths
 
@@ -199,6 +208,77 @@ def model_pred_scores(tiny_ic_databunch):
     learn = cnn_learner(tiny_ic_databunch, model)
     learn.fit(epochs, lr)
     return learn, learn.get_preds()[0].tolist()
+
+
+@pytest.fixture(scope="session")
+def testing_im_list(tmp_session):
+    """ Set of 5 images from the can/ folder of the Fridge Objects dataset
+     used to test positive example rank calculations"""
+    im_paths = unzip_url(
+        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+    )
+    can_im_paths = os.listdir(os.path.join(im_paths, "can"))
+    can_im_paths = [
+        os.path.join(im_paths, "can", im_name) for im_name in can_im_paths
+    ][0:5]
+    return can_im_paths
+
+
+@pytest.fixture(scope="session")
+def testing_databunch(tmp_session):
+    """ Builds a databunch from the Fridge Objects
+    and returns its validation component that is used
+    to test comparative_set_builder"""
+    im_paths = unzip_url(
+        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+    )
+    can_im_paths = os.listdir(os.path.join(im_paths, "can"))
+    can_im_paths = [
+        os.path.join(im_paths, "can", im_name) for im_name in can_im_paths
+    ][0:5]
+    random.seed(642)
+    data = (
+        ImageList.from_folder(im_paths)
+        .split_by_rand_pct(valid_pct=0.2, seed=20)
+        .label_from_folder()
+        .transform(size=300)
+        .databunch(bs=16)
+        .normalize(imagenet_stats)
+    )
+
+    validation_bunch = data.valid_ds
+
+    return validation_bunch
+
+
+def pytest_addoption(parser):
+    parser.addoption("--subscription_id",
+                        help="Azure Subscription Id to create resources in")
+    parser.addoption("--resource_group",
+                        help="Name of the resource group")
+    parser.addoption("--workspace_name",
+                        help="Name of Azure ML Workspace")
+    parser.addoption("--workspace_region",
+                        help="Azure region to create the workspace in")
+
+@pytest.fixture
+def subscription_id(request):
+    return request.config.getoption("--subscription_id")
+
+
+@pytest.fixture
+def resource_group(request):
+    return request.config.getoption("--resource_group")
+
+
+@pytest.fixture
+def workspace_name(request):
+    return request.config.getoption("--workspace_name")
+
+
+@pytest.fixture
+def workspace_region(request):
+    return request.config.getoption("--workspace_region")
 
 
 # @pytest.fixture(scope="session")

@@ -12,7 +12,7 @@ import scrapbook as sb
 # Unless manually modified, python3 should be
 # the name of the current jupyter kernel
 # that runs on the activated conda environment
-KERNEL_NAME = "cv"
+KERNEL_NAME = "python3"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
 
@@ -20,9 +20,15 @@ OUTPUT_NOTEBOOK = "output.ipynb"
 def test_00_notebook_run(similarity_notebooks):
     notebook_path = similarity_notebooks["00"]
     pm.execute_notebook(
-        notebook_path,
-        OUTPUT_NOTEBOOK,
-        kernel_name=KERNEL_NAME,
+        notebook_path, OUTPUT_NOTEBOOK, kernel_name=KERNEL_NAME
+    )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert len(nb_output.scraps["query_feature"].data) == 512
+    assert min(nb_output.scraps["query_feature"].data) >= 0
+    assert (
+        min([dist for (path, dist) in nb_output.scraps["distances"].data])
+        < 1e-3
     )
 
 
@@ -42,7 +48,3 @@ def test_01_notebook_run(similarity_notebooks, tiny_ic_data_path):
         kernel_name=KERNEL_NAME,
     )
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-
-    # Conservative assert: check if rank is smaller than or equal 5
-    # (Typically mediam_rank should be 1, and random rank is 50)
-    #assert nb_output.scraps['median_rank'].data <= 5
