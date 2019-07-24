@@ -30,7 +30,7 @@ def line_graph(
         legend_loc: legend location
     """
     if isinstance(labels, str):
-        plt.plot(range(values), values, label=labels, lw=1)
+        plt.plot(range(len(values)), values, label=labels, lw=1)
     else:
         assert len(values) == len(labels)
         for i, v in enumerate(values):

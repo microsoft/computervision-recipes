@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import List
+from typing import List, Dict
 
 import numpy as np
 
@@ -10,6 +10,7 @@ from fastai.vision import DatasetType, open_image
 from fastai.vision.data import ImageDataBunch
 from fastai.vision.image import Image
 from torch.nn import Module
+from torch import Tensor
 
 
 class SaveFeatures:
@@ -24,11 +25,11 @@ class SaveFeatures:
 
     features = None
 
-    def __init__(self, model_layer):
+    def __init__(self, model_layer: Module):
         self.hook = model_layer.register_forward_hook(self.hook_fn)
         self.features = None
 
-    def hook_fn(self, module, input, output):
+    def hook_fn(self, module: Module, input: Tensor, output: Tensor):
         out = output.detach().cpu().numpy()
         if isinstance(self.features, type(None)):
             self.features = out
@@ -40,9 +41,7 @@ class SaveFeatures:
 
 
 def compute_feature(
-    im_or_path: Image,
-    learn: Learner,
-    embedding_layer: Module,
+    im_or_path: Image, learn: Learner, embedding_layer: Module
 ) -> List[float]:
     """Compute features for a single image
 
@@ -55,22 +54,20 @@ def compute_feature(
 
     """
     if isinstance(im_or_path, str):
-        im = open_image(im_or_path, convert_mode='RGB')
+        im = open_image(im_or_path, convert_mode="RGB")
     else:
         im = im_or_path
     featurizer = SaveFeatures(embedding_layer)
     featurizer.features = None
     _ = learn.predict(im)
     feats = featurizer.features[0][:]
-    assert(len(feats) > 1)
+    assert len(feats) > 1
     featurizer.features = None
     return feats
 
 
 def compute_features(
-    data: ImageDataBunch,
-    learn: Learner,
-    embedding_layer: Module,
+    data: ImageDataBunch, learn: Learner, embedding_layer: Module
 ) -> List[dict]:
     """Compute features for multiple image NOT using mini-batching.
 
@@ -92,13 +89,12 @@ def compute_features(
     return feat_dict
 
 
-# Use this function to featurize the training or test set of a learner
-def compute_features_learner(data,
-    dataset_type: DatasetType,
-    learn: Learner,
-    embedding_layer: Module,
-) -> List[dict]:
+def compute_features_learner(
+    data, dataset_type: DatasetType, learn: Learner, embedding_layer: Module
+) -> List[Dict[str, np.array]]:
     """Compute features for multiple image using mini-batching.
+
+    Use this function to featurize the training or test set of a learner
 
     Args:
         dataset_type: Specify train, valid or test set.
@@ -111,14 +107,16 @@ def compute_features_learner(data,
     Returns: DNN feature of the provided image.
 
     """
-    if dataset_type==DatasetType.Train:
+    if dataset_type == DatasetType.Train:
         label_list = list(data.train_ds.items)
-    elif dataset_type==DatasetType.Valid:
+    elif dataset_type == DatasetType.Valid:
         label_list = list(data.valid_ds.items)
-    elif dataset_type==DatasetType.Test:
+    elif dataset_type == DatasetType.Test:
         label_list = list(data.test_ds.items)
     else:
-        raise Exception("Dataset_type needs to be of type DatasetType.Train, DatasetType.Valid or DatasetType.Test.")
+        raise Exception(
+            "Dataset_type needs to be of type DatasetType.Train, DatasetType.Valid or DatasetType.Test."
+        )
 
     featurizer = SaveFeatures(embedding_layer)
     _ = learn.get_preds(dataset_type)
@@ -126,8 +124,9 @@ def compute_features_learner(data,
 
     # Get corresponding image paths
     im_paths = [str(x) for x in label_list]
-    assert(len(feats) == len(im_paths))
+    assert len(feats) == len(im_paths)
     return dict(zip(im_paths, feats))
+
 
 # Use this function to featurize a provided dataset
 # def compute_features_dl(data, device_data_loader, learn, embedding_layer):

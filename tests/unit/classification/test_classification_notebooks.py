@@ -8,12 +8,13 @@ import os
 import glob
 import papermill as pm
 import pytest
+import scrapbook as sb
 import shutil
 
 # Unless manually modified, python3 should be
 # the name of the current jupyter kernel
 # that runs on the activated conda environment
-KERNEL_NAME = "cv"
+KERNEL_NAME = "python3"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
 
@@ -26,6 +27,10 @@ def test_00_notebook_run(classification_notebooks):
         parameters=dict(PM_VERSION=pm.__version__),
         kernel_name=KERNEL_NAME,
     )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert nb_output.scraps["predicted_label"].data == "coffee_mug"
+    assert nb_output.scraps["predicted_confidence"].data > 0.5
 
 
 @pytest.mark.notebooks
@@ -43,6 +48,9 @@ def test_01_notebook_run(classification_notebooks, tiny_ic_data_path):
         kernel_name=KERNEL_NAME,
     )
 
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert len(nb_output.scraps["training_accuracies"].data) == 1
+
 
 @pytest.mark.notebooks
 def test_02_notebook_run(classification_notebooks, multilabel_ic_data_path):
@@ -59,6 +67,9 @@ def test_02_notebook_run(classification_notebooks, multilabel_ic_data_path):
         kernel_name=KERNEL_NAME,
     )
 
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert len(nb_output.scraps["training_accuracies"].data) == 1
+
 
 @pytest.mark.notebooks
 def test_03_notebook_run(classification_notebooks, tiny_ic_data_path):
@@ -70,13 +81,16 @@ def test_03_notebook_run(classification_notebooks, tiny_ic_data_path):
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_ic_data_path,
             MULTILABEL=False,
-            MODEL_TYPE="fast_inference",  # options: ['fast_inference', 'high_performance', 'small_size']
+            MODEL_TYPE="fast_inference",
             EPOCHS_HEAD=1,
             EPOCHS_BODY=1,
             IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
     )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert len(nb_output.scraps["training_accuracies"].data) == 1
 
 
 @pytest.mark.notebooks
@@ -91,6 +105,9 @@ def test_10_notebook_run(classification_notebooks, tiny_ic_data_path):
         ),
         kernel_name=KERNEL_NAME,
     )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert nb_output.scraps["num_images"].data == 6
 
 
 @pytest.mark.notebooks
@@ -110,6 +127,9 @@ def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
         kernel_name=KERNEL_NAME,
     )
 
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert nb_output.scraps["nr_elements"].data == 1
+
 
 @pytest.mark.notebooks
 def test_12_notebook_run(classification_notebooks, tiny_ic_data_path):
@@ -126,6 +146,9 @@ def test_12_notebook_run(classification_notebooks, tiny_ic_data_path):
         ),
         kernel_name=KERNEL_NAME,
     )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert len(nb_output.scraps["train_acc"].data) == 1
 
 
 @pytest.mark.notebooks
