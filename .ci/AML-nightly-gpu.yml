@@ -22,7 +22,7 @@ variables:
 
 
 schedules:
-- cron: "56 22 * * *"
+- cron: "30 22 * * *"
   displayName: Daily run
   branches:
     include:
@@ -48,7 +48,7 @@ jobs:
   - name  : 'junitxml'
     value : 'reports/test-smoke.xml'
   - name  : 'testmarkers'
-    value : '"not notebooks and not spark and not gpu and not azuremlnotebooks"'
+    value : '"not notebooks and not spark and linuxgpu and not azuremlnotebooks"'
   - name  : 'expname'
     value : 'nightly-smoke-test-linux-gpu'
 
