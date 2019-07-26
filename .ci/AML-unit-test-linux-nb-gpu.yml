@@ -9,7 +9,7 @@ variables:
   value : 'tests/unit'
 - name  : 'testmarkers'
   # not gpu is to match how the existing tests run
-  value : '"notebooks and not spark and not gpu and not azuremlnotebooks"'
+  value : '"notebooks and not spark and linuxgpu and not azuremlnotebooks"'
 - name  : 'junitxml'
   value : 'reports/test-unit.xml'
 - name  : 'maxnodes'
@@ -30,6 +30,15 @@ variables:
   value : 'cvws'
 - name  : 'prtag'
   value : 'NBTestRun'
+
+schedules:
+- cron: "30 22 * * *"
+  displayName: Daily run
+  branches:
+    include:
+    - master
+    - staging
+  always: true
 
 trigger: none
 

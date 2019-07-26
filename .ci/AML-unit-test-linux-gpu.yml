@@ -8,7 +8,7 @@ variables:
 - name  : 'testfolder'
   value : 'tests/unit'
 - name  : 'testmarkers'
-  value : '"not notebooks and not spark and not gpu"'
+  value : '"not notebooks and not spark and linuxgpu"'
 - name  : 'junitxml'
   value : 'reports/test-unit.xml'
 - name  : 'maxnodes'
@@ -27,6 +27,16 @@ variables:
   value : 'cvbp_project_resources'
 - name  : 'wsname'
   value : 'cvws'
+
+schedules:
+- cron: "30 22 * * *"
+  displayName: Daily run
+  branches:
+    include:
+    - master
+    - staging
+  always: true
+
 trigger: none
 
 pr:
