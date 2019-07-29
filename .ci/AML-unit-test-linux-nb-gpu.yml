@@ -1,35 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 #
-variables:
-- group: AzureMLConfig
-- name  : 'test'
-  value : '.ci/run_pytest.py'
-- name  : 'testfolder'
-  value : 'tests/unit'
-- name  : 'testmarkers'
-  # not gpu is to match how the existing tests run
-  value : '"notebooks and not spark and linuxgpu and not azuremlnotebooks"'
-- name  : 'junitxml'
-  value : 'reports/test-unit.xml'
-- name  : 'maxnodes'
-  value : 4
-- name  : 'clustername'
-  value : 'cv-gpu'
-- name  : 'vmsize'
-  value : 'STANDARD_NC6'
-- name  : 'dockerproc'
-  value : 'gpu'
-- name  : 'expname'
-  value : 'unit-test-linux-gpu-nb'
-- name  : 'condafile'
-  value : 'environment.yml'
-- name  : 'rg'
-  value : 'cvbp_project_resources'
-- name  : 'wsname'
-  value : 'cvws'
-- name  : 'prtag'
-  value : 'NBTestRun'
 
 schedules:
 - cron: "30 22 * * *"
@@ -112,7 +83,6 @@ jobs:
 
   pool:
    vmImage: 'ubuntu-16.04'
-  
 
   variables:
   - group: AzureMLConfig
@@ -121,10 +91,9 @@ jobs:
   - name  : 'testfolder'
     value : 'tests/unit'
   - name  : 'testmarkers'
-    # not gpu is to match how the existing tests run
     value : '"notebooks and not spark and not linuxgpu and not azuremlnotebooks"'
   - name  : 'junitxml'
-    value : 'reports/test-unit.xml'
+    value : 'reports/test-nbgpu.xml'
   - name  : 'maxnodes'
     value : 4
   - name  : 'clustername'
