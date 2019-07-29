@@ -50,8 +50,9 @@ jobs:
     value : 'cvws'
   - name  : 'prtag'
     value : 'NBcpuTestRun'
+
   steps:
-  steps:
+
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.6'
@@ -112,7 +113,9 @@ jobs:
     value : 'cvws'
   - name  : 'prtag'
     value : 'NBgpuTestRun'
+
   steps:
+  
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.6'
