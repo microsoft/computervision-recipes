@@ -45,35 +45,128 @@ trigger: none
 pr:
 - staging 
 - master
+
+jobs:
+- job: NBcpu
+  pool: 
+   vmImage: 'ubuntu-16.04'
+  variables:
+  - group: AzureMLConfig
+  - name  : 'test'
+    value : '.ci/run_pytest.py'
+  - name  : 'testfolder'
+    value : 'tests/unit'
+  - name  : 'testmarkers'
+    # not gpu is to match how the existing tests run
+    value : '"notebooks and not spark and not linuxgpu and not azuremlnotebooks"'
+  - name  : 'junitxml'
+    value : 'reports/test-unit.xml'
+  - name  : 'maxnodes'
+    value : 4
+  - name  : 'clustername'
+    value : 'cv-gpu'
+  - name  : 'vmsize'
+    value : 'STANDARD_D3_V2'
+  - name  : 'dockerproc'
+    value : 'cpu'
+  - name  : 'expname'
+    value : 'unit-test-linux-cpu-nb'
+  - name  : 'condafile'
+    value : 'environment.yml'
+  - name  : 'rg'
+    value : 'cvbp_project_resources'
+  - name  : 'wsname'
+    value : 'cvws'
+  - name  : 'prtag'
+    value : 'NBcpuTestRun'
+  steps:
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6'
+      architecture: 'x64'
+      addToPath: true
+    displayName: 'Use Python 3.6'
   
-pool:
- vmImage: 'ubuntu-16.04'
+  - script: | 
+      az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
+    displayName: 'Login to Azure'
+  
+  - script:
+      # bug fix for azureml sdk 7/18/2019
+      pip install paramiko==2.4.2;
+      pip install azureml-sdk;
+      pip install azure-cli;
+      python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(Build.Repository.Name) --branch $(Build.SourceBranchName)  --pr $(prtag) --rg $(rg) --wsname $(wsname)
+    displayName: 'submit_azureml_pytest'
+  
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results **/test-*.xml'
+    condition: always()
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      failTaskOnFailedTests: true
+      testRunTitle: 'Test results for CV NB cpu AzureML PyTest'
+    
+- job: NBgpu
 
-steps:
+  pool:
+   vmImage: 'ubuntu-16.04'
+  
 
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.6'
-    architecture: 'x64'
-    addToPath: true
-  displayName: 'Use Python 3.6'
-
-- script: | 
-    az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
-  displayName: 'Login to Azure'
-
-- script:
-    # bug fix for azureml sdk 7/18/2019
-    pip install paramiko==2.4.2;
-    pip install azureml-sdk;
-    pip install azure-cli;
-    python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(Build.Repository.Name) --branch $(Build.SourceBranchName)  --pr $(prtag) --rg $(rg) --wsname $(wsname)
-  displayName: 'submit_azureml_pytest'
-
-- task: PublishTestResults@2
-  displayName: 'Publish Test Results **/test-*.xml'
-  condition: always()
-  inputs:
-    testResultsFiles: '**/test-*.xml'
-    failTaskOnFailedTests: true
-    testRunTitle: 'Test results for CV AzureML PyTest'
+  variables:
+  - group: AzureMLConfig
+  - name  : 'test'
+    value : '.ci/run_pytest.py'
+  - name  : 'testfolder'
+    value : 'tests/unit'
+  - name  : 'testmarkers'
+    # not gpu is to match how the existing tests run
+    value : '"notebooks and not spark and not linuxgpu and not azuremlnotebooks"'
+  - name  : 'junitxml'
+    value : 'reports/test-unit.xml'
+  - name  : 'maxnodes'
+    value : 4
+  - name  : 'clustername'
+    value : 'cv-gpu'
+  - name  : 'vmsize'
+    value : 'STANDARD_NC6'
+  - name  : 'dockerproc'
+    value : 'gpu'
+  - name  : 'expname'
+    value : 'unit-test-linux-gpu-nb'
+  - name  : 'condafile'
+    value : 'environment.yml'
+  - name  : 'rg'
+    value : 'cvbp_project_resources'
+  - name  : 'wsname'
+    value : 'cvws'
+  - name  : 'prtag'
+    value : 'NBgpuTestRun'
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6'
+      architecture: 'x64'
+      addToPath: true
+    displayName: 'Use Python 3.6'
+  
+  - script: | 
+      az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
+    displayName: 'Login to Azure'
+  
+  - script:
+      # bug fix for azureml sdk 7/18/2019
+      pip install paramiko==2.4.2;
+      pip install azureml-sdk;
+      pip install azure-cli;
+      python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(Build.Repository.Name) --branch $(Build.SourceBranchName)  --pr $(prtag) --rg $(rg) --wsname $(wsname)
+    displayName: 'submit_azureml_pytest'
+  
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results **/test-*.xml'
+    condition: always()
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      failTaskOnFailedTests: true
+      testRunTitle: 'Test results for CV NB gpu AzureML PyTest'

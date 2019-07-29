@@ -34,6 +34,15 @@ variables:
 - name  : 'prtag'
   value : 'UnitTestRun'
 
+schedules:
+- cron: "30 22 * * *"
+  displayName: Daily run
+  branches:
+    include:
+    - master
+    - staging
+  always: true
+
 trigger: none
 
 pr:
