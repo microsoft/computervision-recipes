@@ -1,25 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 #
-variables:
-- group: AzureMLConfig
-- name  : 'test'
-  value : '.ci/run_pytest.py'
-- name  : 'maxnodes'
-  value : 4
-- name  : 'clustername'
-  value : 'cv-nightly-gpu'
-- name  : 'vmsize'
-  value : 'STANDARD_NC6'
-- name  : 'dockerproc'
-  value : 'gpu'
-- name  : 'condafile'
-  value : 'environment.yml'
-- name  : 'rg'
-  value : 'cvbp_project_resources'
-- name  : 'wsname'
-  value : 'cvws'
-
 
 schedules:
 - cron: "30 22 * * *"
@@ -37,20 +18,39 @@ pr:
 - master
 
 jobs:
-- job: Smoke
-  displayName : 'Smoke: no CV tests yet'
+- job: SmokeCPU
+  displayName : 'SmokeCPU'
   pool:
     vmImage: 'ubuntu-16.04'
 
   variables:
+  - group: AzureMLConfig
   - name  : 'testfolder'
-    value : 'tests/integration'
+    value : 'tests/smoke'
   - name  : 'junitxml'
-    value : 'reports/test-smoke.xml'
+    value : 'reports/test-smokecpu.xml'
   - name  : 'testmarkers'
-    value : '"not notebooks and not spark and linuxgpu and not azuremlnotebooks"'
+    value : '"not notebooks and not spark and not linuxgpu and not azuremlnotebooks"'
   - name  : 'expname'
-    value : 'nightly-smoke-test-linux-gpu'
+    value : 'nightly-smoke-test-linux-cpu'
+  - name  : 'test'
+    value : '.ci/run_pytest.py'
+  - name  : 'maxnodes'
+    value : 4
+  - name  : 'clustername'
+    value : 'cv-nightly-cpu'
+  - name  : 'vmsize'
+    value : 'STANDARD_D3_V2'
+  - name  : 'dockerproc'
+    value : 'cpu'
+  - name  : 'condafile'
+    value : 'environment.yml'
+  - name  : 'rg'
+    value : 'cvbp_project_resources'
+  - name  : 'wsname'
+    value : 'cvws'
+  - name  : 'prtag'
+    value : 'Nightlysmokecpu'
 
   steps:
   
@@ -63,20 +63,145 @@ jobs:
 
   # no smoke tests to run
     
-- job : Integration
-  displayName : 'Integration'
+- job : IntegrationCPU
+  displayName : 'IntegrationCPU'
   pool:
     vmImage: 'ubuntu-16.04'
 
   variables:
+  - group: AzureMLConfig
   - name  : 'testfolder'
     value : 'tests/integration'
   - name  : 'junitxml'
-    value : 'reports/test-int.xml'
+    value : 'reports/test-intcpu.xml'
   - name  : 'testmarkers'
-    value : '"notebooks and not spark and not gpu and not azuremlnotebooks"'
+    value : '"not notebooks and not spark and not linuxgpu and not azuremlnotebooks"'
+  - name  : 'expname'
+    value : 'nightly-int-test-linux-cpu'
+  - name  : 'test'
+    value : '.ci/run_pytest.py'
+  - name  : 'maxnodes'
+    value : 4
+  - name  : 'clustername'
+    value : 'cv-nightly-cpu'
+  - name  : 'vmsize'
+    value : 'STANDARD_D3_V2'
+  - name  : 'dockerproc'
+    value : 'cpu'
+  - name  : 'condafile'
+    value : 'environment.yml'
+  - name  : 'rg'
+    value : 'cvbp_project_resources'
+  - name  : 'wsname'
+    value : 'cvws'
+  - name  : 'prtag'
+    value : 'NightlyIntcpu'
+
+  steps:
+
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6'
+      architecture: 'x64'
+      addToPath: true
+    displayName: 'Use Python 3.6'
+
+  - script:
+      az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
+    displayName: 'Login to Azure'
+  
+  - script:
+      # bug fix for azureml sdk 7/18/2019
+      pip install paramiko==2.4.2;
+      pip install --upgrade azureml-sdk;
+      pip install azure-cli;
+      python .ci/submit_azureml_pytest.py --subid $(subscriptionid) --test $(test) --testfolder $(testfolder) --condafile $(condafile) --testmarkers $(testmarkers) --clustername $(clustername) --expname $(expname) --dockerproc $(dockerproc) --junitxml $(junitxml) --reponame $(Build.Repository.Name) --branch $(Build.SourceBranchName) --pr $(prtag) --rg $(rg) --wsname $(wsname)
+    displayName: 'submit_azureml_pytest'
+  
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results **/test-*.xml'
+    condition: always()
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      failTaskOnFailedTests: true
+      testRunTitle: 'Test results for CV CPU Int AzureML PyTest'
+
+- job: SmokeGPU
+  displayName : 'SmokeGPU'
+  pool:
+    vmImage: 'ubuntu-16.04'
+
+  variables:
+  - group: AzureMLConfig
+  - name  : 'testfolder'
+    value : 'tests/smoke'
+  - name  : 'junitxml'
+    value : 'reports/test-smokegpu.xml'
+  - name  : 'testmarkers'
+    value : '"not notebooks and not spark and linuxgpu and not azuremlnotebooks"'
+  - name  : 'expname'
+    value : 'nightly-smoke-test-linux-gpu'
+  - name  : 'test'
+    value : '.ci/run_pytest.py'
+  - name  : 'maxnodes'
+    value : 4
+  - name  : 'clustername'
+    value : 'cv-nightly-gpu'
+  - name  : 'vmsize'
+    value : 'STANDARD_NC6'
+  - name  : 'dockerproc'
+    value : 'gpu'
+  - name  : 'condafile'
+    value : 'environment.yml'
+  - name  : 'rg'
+    value : 'cvbp_project_resources'
+  - name  : 'wsname'
+    value : 'cvws'
+  - name  : 'prtag'
+    value : 'Nightlysmokegpu'
+
+  steps:
+  
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6'
+      architecture: 'x64'
+      addToPath: true
+    displayName: 'Use Python 3.6'
+
+  # no smoke tests to run
+    
+- job : IntegrationGPU
+  displayName : 'IntegrationGPU'
+  pool:
+    vmImage: 'ubuntu-16.04'
+
+  variables:
+  - group: AzureMLConfig
+  - name  : 'testfolder'
+    value : 'tests/integration'
+  - name  : 'junitxml'
+    value : 'reports/test-intgpu.xml'
+  - name  : 'testmarkers'
+    value : '"not notebooks and not spark and linuxgpu and not azuremlnotebooks"'
   - name  : 'expname'
     value : 'nightly-int-test-linux-gpu'
+  - name  : 'test'
+    value : '.ci/run_pytest.py'
+  - name  : 'maxnodes'
+    value : 4
+  - name  : 'clustername'
+    value : 'cv-nightly-gpu'
+  - name  : 'vmsize'
+    value : 'STANDARD_NC6'
+  - name  : 'dockerproc'
+    value : 'gpu'
+  - name  : 'condafile'
+    value : 'environment.yml'
+  - name  : 'rg'
+    value : 'cvbp_project_resources'
+  - name  : 'wsname'
+    value : 'cvws'
   - name  : 'prtag'
     value : 'NightlyIntgpu'
 
@@ -107,4 +232,4 @@ jobs:
     inputs:
       testResultsFiles: '**/test-*.xml'
       failTaskOnFailedTests: true
-      testRunTitle: 'Test results for CV AzureML PyTest'
+      testRunTitle: 'Test results for CV GPU Int AzureML PyTest'
