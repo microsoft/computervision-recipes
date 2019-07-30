@@ -97,6 +97,28 @@ We follow the Google docstring guidlines outlined on this [styleguide](https://g
       """
 ```
 
+Since we take a strong dependency on fast.ai, variable naming should follow the standards of fast.ai which are described in this [abbreviation guide](https://docs.fast.ai/dev/abbr.html). For example, in computer vision cases, an image should always be abbreviated with `im` and not `i`, `img`, `imag`, `image`, etc. The one exception to this guide is that variable names should be as self-explanatory as possible. For example, the meaning of the variable `batch_size` is clearer than `bs` to refer to batch size.
+
+The main variables and abbreviations are given in the table below:
+
+| Abbreviation | Description |
+| ------------ | ----------- |
+| `im `                    | Image
+| `fig`                    | Figure
+| `pt`                     | 2D point (column,row)
+| `rect`                   | Rectangle (order: left, top, right, bottom)
+| `width`, `height`, `w`, `h`  | Image dimensions
+| `scale`                  | Image up/down scaling factor
+| `angle`                  | Rotation angle in degree
+| `table`                  | 2D row/column matrix implemented using a list of lists
+| `row`, `list1D`             | Single row in a table, i.e. single 1D-list
+| `rowItem`                | Single item in a row
+| `line`, `string`            | Single string
+| `lines`, `strings`          | List of strings
+| `list1D`                 | List of items, not necessarily strings
+| -`s`    | Multiple of something (plural) should be indicated by appending an `s` to an abbreviation.
+
+
 ## Code of Conduct
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
