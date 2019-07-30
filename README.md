@@ -10,9 +10,10 @@ The current main priority is to support image classification. Additionally, we a
 
 ## Getting Started
 
-To get started on your local machine:
+To get started:
 
-1. Install Anaconda with Python >= 3.6. [Miniconda](https://conda.io/miniconda.html) is a quick way to get started.
+1. (Optional) Create an Azure Data Science Virtual Machine with e.g. a V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm), [price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). 
+1. Install Anaconda with Python >= 3.6. [Miniconda](https://conda.io/miniconda.html). This step can be skipped if working on a Data Science Virtual Machine.
 1. Clone the repository
     ```
     git clone https://github.com/Microsoft/ComputerVision
