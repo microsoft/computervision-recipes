@@ -15,6 +15,8 @@ jobs:
       cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
       sed -i ''s/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/$(github_token)/g'' tools/repo_metrics/config.py
       sed -i ''s/XXXXXXXXXXXXXXXXXXXXXXXXX/$(cosmosdb_connectionstring)/g'' tools/repo_metrics/config.py
+      echo $(github_token)
+      echo $(cosmosdb_connectionstring)
     displayName: Configure CosmosDB Connection
 
   - script: | 
