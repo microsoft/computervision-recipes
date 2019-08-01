@@ -13,10 +13,6 @@ variables:
   value : 'reports/test-unit.xml'
 trigger: none
 
-pr:
-- staging 
-- master
-
 jobs:
 - job: AzureMLNotebookTest
   timeoutInMinutes: 300
