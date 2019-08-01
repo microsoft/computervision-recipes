@@ -9,7 +9,8 @@ This document tries to answer frequent questions around object detection. For ge
   * [Which problems can be solved using object detection?](#which-problems-can-be-solved-using-object-detection)
 
 * Technology
-  * Fast R-CNN
+  * [R-CNN object detection approaches](#r-cnn-object-detection-approaches)
+  * [Intersection-over-Union overlap metric](intersection-over-union-overlap-metric)
   * [Non-maxima suppression](#non-maxima-suppression)
   * [Mean Average Precision](#mean-average-precision)
 
@@ -30,26 +31,39 @@ Image classification can be used if the object-of-interest is relatively large i
 
 ## Technology
 
-### Fast R-CNN
-R-CNNs for Object Detection were first presented in 2014 by [Ross Girshick et al.](http://arxiv.org/abs/1311.2524), and shown to outperform previous state-of-the-art approaches on one of the major object recognition challenges in the field: [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/). Since then, two follow-up papers were published which contain significant speed improvements: [Fast R-CNN](https://arxiv.org/pdf/1504.08083v2.pdf) and [Faster R-CNN](https://arxiv.org/abs/1506.01497).
 
-The basic idea of R-CNN is to take a deep Neural Network which was originally trained for image classification using millions of annotated images and modify it for the purpose of object detection. The basic idea from the first R-CNN paper is illustrated in the Figure below (taken from the paper): (1) Given an input image, (2) in a first step, a large number region proposals are generated. (3) These region proposals, or Regions-of-Interests (ROIs), are then each independently sent through the network which outputs a vector of e.g. 4096 floating point values for each ROI. Finally, (4) a classifier is learned which takes the 4096 float ROI representation as input and outputs a label and confidence to each ROI.  
+### R-CNN Object Detection Approaches
+R-CNNs for Object Detection were first presented in 2014 by [Ross Girshick et al.](http://arxiv.org/abs/1311.2524), and shown to outperform previous state-of-the-art approaches on one of the major object recognition challenges in the field: [Pascal VOC](http://host.robots.ox.ac.uk/pascal/VOC/). The main drawback of the approach was its slow inference speed. Since then, two follow-up papers were published which introduced significant speed improvements: [Fast R-CNN](https://arxiv.org/pdf/1504.08083v2.pdf) and [Faster R-CNN](https://arxiv.org/abs/1506.01497).
+
+As most object detection methods, R-CNN approaches use a deep Neural Network which was trained for image classification using millions of annotated images and modify it for the purpose of object detection. The basic idea from the first R-CNN paper is illustrated in the Figure below (taken from the paper): (1) Given an input image, (2) in a first step, a large number region proposals are generated. (3) These region proposals, or Regions-of-Interests (ROIs), are then each independently sent through the network which outputs a vector of e.g. 4096 floating point values for each ROI. Finally, (4) a classifier is learned which takes the 4096 float ROI representation as input and outputs a label and confidence to each ROI.  
 <p align="center">
-<img src="doc/rcnnPipeline.JPG" alt="alt text" width="600" align="center"/>
+<img src="media/rcnn_pipeline.jpg" width="600" align="center"/>
 </p>
 
-While this approach works well in terms of accuracy, it is very costly to compute since the Neural Network has to be evaluated for each ROI. Fast R-CNN addresses this drawback by only evaluating most of the network (to be specific: the convolution layers) a single time per image. According to the authors, this leads to a 213 times speed-up during testing and a 9x speed-up during training without loss of accuracy.
+While this approach works well in terms of accuracy, it is very costly to compute since the Neural Network has to be evaluated for each ROI. Fast R-CNN addresses this drawback by only evaluating most of the network (to be specific: the convolution layers) a single time per image. According to the authors, this leads to a 213 times speed-up during testing and a 9x speed-up during training without loss of accuracy. Faster R-CNN then shows how ROIs can be computed as part of the network, essentially combining all steps in the figure above into a single DNN.
 
-The original Caffe implementation used in the R-CNN papers can be found at github:
-[RCNN](https://github.com/rbgirshick/rcnn), [Fast R-CNN](https://github.com/rbgirshick/fast-rcnn), and [Faster R-CNN](https://github.com/rbgirshick/py-faster-rcnn). This tutorial uses some of the code from these repositories, notably (but not exclusively) for svm training and model evaluation.
+
+### Intersection-over-Union overlap metric
+
+Often we want to measure by how much two given rectangles overlap. For example, one rectangle might correspond to the ground-truth location of an object, while the second rectangle is detected location, and the goal is to measure how precise (if at all) the object was detected.
+
+For this, a metric called Intersection-over-Union (IoU) is typically used. In the example below, the IoU is given by dividing the yellow area by the yellow and blue area. See also this [page](https://www.pyimagesearch.com/2016/11/07/intersection-over-union-iou-for-object-detection/) for a more in-depth discussion.     
+<p align="center">
+<img src="media/iou_example.jpg" width="400" align="center"/>
+</p>
+
+
+
+
+
+
 
 ### Non-maxima suppression
-Object detection methods often output multiple detections which fully or partly cover the same object in an image. These ROIs need to be merged to be able to count objects and obtain their exact locations in the image. This is traditionally done using a technique called Non-Maxima Suppression (NMS). The version of NMS we use (and which was also used in the R-CNN publications) does not merge ROIs but instead tries to identify which ROIs best cover the real locations of an object and discards all other ROIs. This is implemented by iteratively selecting the ROI with highest confidence and removing all other ROIs which significantly overlap this ROI and are classified to be of the same class.
+Object detection methods often output multiple detections which fully or partly cover the same object in an image. These detections need to be pruned to be able to count objects and obtain their exact locations in the image. This is traditionally done using a technique called Non-Maxima Suppression (NMS), and is implemented by iteratively selecting the detection with highest confidence and removing all other detections which (i) are classified to be of the same class; and (ii) significantly overlap measured using the Intersection-over-Union (IOU) metric.
 
-Detection results before (left) and after (right) Non-maxima Suppression:
+Detection results with confidence scores before (left) and after non-maxima Suppression with (middle) conservative IOU threshold and (right) aggressive IOU threshold:
 <p align="center">
-<img src="doc/nn_00.jpg" alt="alt text" height="300"/>
-<img src="doc/nn_00_no_nms.jpg" alt="alt text" height="300"/>
+<img src="media/nms_example.jpg" width="600" align="center"/>
 </p>
 
 ### Mean Average Precision
