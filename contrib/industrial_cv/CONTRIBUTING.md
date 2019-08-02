@@ -9,18 +9,18 @@ Contributions are welcomed! Here's a few things to know:
 
 ## Steps to Contributing
 
-**TL;DR for contributing: We use the staging branch to land all new features and fixes. To make a contribution, please create a branch from staging, make a modification in the code and create a PR to staging.** 
+**TL;DR for contributing: We use the contrib branch to land all new features and fixes. To make a contribution, please create a branch from contrib, make a modification in the code and create a PR to contrib.** 
 
 Here are the basic steps to get started with your first contribution. Please reach out with any questions.
-1. Use [open issues](https://github.com/Microsoft/Industrial_CV/issues) to discuss the proposed changes. Create an issue describing changes if necessary to collect feedback. Also, please use provided labels to tag issues so everyone can easily sort issues of interest.
+1. Use [open issues](https://github.com/Microsoft/ComputerVision/issues) to discuss the proposed changes. Create an issue describing changes if necessary to collect feedback. Also, please use provided labels to tag issues so everyone can easily sort issues of interest.
 2. [Fork the repo](https://help.github.com/articles/fork-a-repo/) so you can make and test local changes.
-3. Create a new branch **from staging branch** for the issue (please do not create a branch from master). We suggest prefixing the branch with your username and then a descriptive title: (e.g. gramhagen/update_contributing_docs)
+3. Create a new branch **from contrib branch** for the issue (please do not create a branch from master or staging). We suggest prefixing the branch with your username and then a descriptive title: (e.g. gramhagen/update_contributing_docs)
 4. Create a test that replicates the issue.
 5. Make code changes.
 6. Ensure unit tests pass and code style / formatting is consistent TODO: add docstring links.
-7. Create a pull request against **staging** branch.
+7. Create a pull request against **contrib** branch.
 
-Once the features included in a [milestone](https://github.com/Microsoft/Industrial_CV/milestones) are completed, we will merge staging into master. TODO: make a wiki with coding guidelines.
+Once the features included in a [milestone](https://github.com/Microsoft/ComputerVision/milestones) are completed, we will merge contrib into staging. TODO: make a wiki with coding guidelines.
 
 ## Coding Guidelines
 
@@ -38,7 +38,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-Apart from the official Code of Conduct developed by Microsoft, in the Industrial CV team we adopt the following behaviors, to ensure a great working environment:
+Apart from the official Code of Conduct developed by Microsoft, in the Computer Vision team we adopt the following behaviors, to ensure a great working environment:
 
 #### Do not point fingers
 Let’s be constructive.
