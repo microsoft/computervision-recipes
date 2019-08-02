@@ -6,6 +6,9 @@ This document tries to answer frequent questions related to object detection. Fo
 
 * General
 
+* Data
+  * [How to annotate images?](#how-to-annotate-images)
+
 * Technology
   * [How does the technology work?](#how-does-the-technology-work)
   * [R-CNN object detection approaches](#r-cnn-object-detection-approaches)
@@ -14,6 +17,22 @@ This document tries to answer frequent questions related to object detection. Fo
   * [Mean Average Precision](#mean-average-precision)
 
 ## General
+
+## Data
+
+### How to annotate images?
+
+Annotated object locations are required to train and evaluate an object detector. Open source UIs such as [LabelImg](https://tzutalin.github.io/labelImg) can be used to manually draw rectangles around one or more objects in an image. LabelImg writes all annotations to a single xml-file per image (in Pascal-VOC format) which can be read using the provided code. Here is a screenshot of the LabelImg UI:
+<p align="center">
+<img src="media/labelimg_ui.jpg" width="600" align="center"/>
+</p>
+
+Annotating images is complex and consistency is key. For example:
+* Occluded objects should either be always annotated, or never.
+* Ambiguous images should be removed, for example if it is unclear to a human if an object is lemon or a tennis ball.
+* Ensuring consistency is difficult especially if multiple people are involved. Hence our recommendation is, if possible, that the person who trains the model annotates all images. This also helps in gaining a better understanding of the problem domain.
+
+Especially the test set used for evaluation should be of high annotation quality so that accuracy measures reflect the true performance of the model. The training set can, but ideally shouldn't be, noisy.
 
 
 ## Technology
