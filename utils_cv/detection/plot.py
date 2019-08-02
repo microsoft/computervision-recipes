@@ -16,9 +16,10 @@ def display_bounding_boxes(
     labels: List[int],
     categories: List[str],
     rect_th: int = 2,
-    text_size: float = 0.8,
+    text_size: float = 1,
     text_th: int = 2,
     color: Tuple[int, int, int] = (255, 0, 0),
+    figsize: Tuple[int, int] = (12, 12),
 ) -> None:
     """ Draw image with bounding boxes.
 
@@ -58,7 +59,7 @@ def display_bounding_boxes(
             )
 
     # display the output image
-    plt.figure(figsize=(8, 12))
+    plt.figure(figsize=figsize)
     plt.imshow(im)
     plt.xticks([])
     plt.yticks([])

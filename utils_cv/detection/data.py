@@ -15,7 +15,7 @@ class Urls:
     fridge_objects_path = urljoin(base, "odFridgeObjects.zip")
 
 
-def coco_labels() -> List[str]:
+def get_coco_labels() -> List[str]:
     """ List of Coco labels with the original idexing.
 
     Reference: https://github.com/pytorch/vision/blob/master/docs/source/models.rst
