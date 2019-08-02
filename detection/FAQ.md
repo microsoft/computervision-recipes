@@ -9,7 +9,7 @@ This document tries to answer frequent questions related to object detection. Fo
 * Technology
   * [How does the technology work?](#how-does-the-technology-work)
   * [R-CNN object detection approaches](#r-cnn-object-detection-approaches)
-  * [Intersection-over-Union overlap metric](intersection-over-union-overlap-metric)
+  * [Intersection-over-Union overlap metric](#intersection-over-union-overlap-metric)
   * [Non-maxima suppression](#non-maxima-suppression)
   * [Mean Average Precision](#mean-average-precision)
 
