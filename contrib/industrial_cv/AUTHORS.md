@@ -1,5 +1,5 @@
-Contributors to Industrial CV
-=============================
+Contributors to CVBP
+====================
 
 TODO: add why we're working on Industrial CV applications
 
