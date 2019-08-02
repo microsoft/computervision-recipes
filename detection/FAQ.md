@@ -27,12 +27,14 @@ Annotated object locations are required to train and evaluate an object detector
 <img src="media/labelimg_ui.jpg" width="600" align="center"/>
 </p>
 
-Annotating images is complex and consistency is key. For example:
+Selection and annotating images is complex and consistency is key. For example:
+* All objects in an image need to be annotated, even if the image contains many of them. Consider removing the image if this would take too much time.
+* Ambiguous images should be removed, for example if it is unclear to a human if an object is lemon or a tennis ball, or if the image is blurry, etc.
 * Occluded objects should either be always annotated, or never.
-* Ambiguous images should be removed, for example if it is unclear to a human if an object is lemon or a tennis ball.
 * Ensuring consistency is difficult especially if multiple people are involved. Hence our recommendation is, if possible, that the person who trains the model annotates all images. This also helps in gaining a better understanding of the problem domain.
 
 Especially the test set used for evaluation should be of high annotation quality so that accuracy measures reflect the true performance of the model. The training set can, but ideally shouldn't be, noisy.
+
 
 
 ## Technology
