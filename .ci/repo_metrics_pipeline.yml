@@ -30,10 +30,13 @@ jobs:
       versionSpec: '3.6'
       architecture: 'x64'
 
+  - bash: |
+      export escaped_cosmosdb_connectionstring=$(echo "${cosmosdb_connectionstring}" | sed "s@&@\\\\&@g")
+
   - script: |
       cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
       sed -i 's#<GITHUB_TOKEN>#$(github_token)#' tools/repo_metrics/config.py
-      sed -i 's#<CONNECTION_STRING>#`echo "$(cosmosdb_connectionstring)" | sed "s@&@\\\\&@g"`#' tools/repo_metrics/config.py
+      sed -i 's#<CONNECTION_STRING>#$(escaped_cosmosdb_connectionstring)#' tools/repo_metrics/config.py
       cat tools/repo_metrics/config.py
     displayName: Configure CosmosDB Connection
 
