@@ -31,15 +31,13 @@ jobs:
       architecture: 'x64'
 
   - bash: |
-      echo $COSMOSDB_CONNECTIONSTRING
       export ESCAPED_COSMOSDB_CONNECTIONSTRING=$(echo "$COSMOSDB_CONNECTIONSTRING" | sed "s@&@\\\\&@g")
-      echo $ESCAPED_COSMOSDB_CONNECTIONSTRING
-    displayName: Escape meta character in variables
+    displayName: Escape meta characters in variables
 
   - script: |
       cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
       sed -i 's#<GITHUB_TOKEN>#$(github_token)#' tools/repo_metrics/config.py
-      sed -i 's#<CONNECTION_STRING>#$(ESCAPED_COSMOSDB_CONNECTIONSTRING)#' tools/repo_metrics/config.py
+      sed -i 's#<CONNECTION_STRING>#$ESCAPED_COSMOSDB_CONNECTIONSTRING#' tools/repo_metrics/config.py
       cat tools/repo_metrics/config.py
     displayName: Configure CosmosDB Connection
 
