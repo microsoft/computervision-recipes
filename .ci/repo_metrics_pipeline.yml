@@ -34,11 +34,12 @@ jobs:
       cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
       sed -i 's#<GITHUB_TOKEN>#$(github_token)#' tools/repo_metrics/config.py
       sed -i 's#<CONNECTION_STRING>#$(cosmosdb_connectionstring)#' tools/repo_metrics/config.py
+      cat tools/repo_metrics/config.py
     displayName: Configure CosmosDB Connection
 
   - script: | 
-      python -m pip install "python-dateutil>=2.8.0" "pymongo>=3.8.0" "gitpython>2.1.11" "requests>=2.21.0"
-      python tools/repo_metrics/track_metrics.py --github_repo "https://github.com/microsoft/ComputerVision" --save_to_database
+      python -m pip install 'python-dateutil>=2.8.0' 'pymongo>=3.8.0' 'gitpython>2.1.11' 'requests>=2.21.0'
+      python tools/repo_metrics/track_metrics.py --github_repo 'https://github.com/microsoft/ComputerVision' --save_to_database
     displayName: Python script to record stats
 
 
