@@ -35,6 +35,10 @@ jobs:
     displayName: Escape meta characters in variables
 
   - script: |
+      echo $escaped_cosmosdb_connectionstring
+      echo $(escaped_cosmosdb_connectionstring)
+      echo $ESCAPED_COSMOSDB_CONNECTIONSTRING
+      echo $(ESCAPED_COSMOSDB_CONNECTIONSTRING)
       cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
       sed -i 's#<GITHUB_TOKEN>#$(github_token)#' tools/repo_metrics/config.py
       sed -i 's#<CONNECTION_STRING>#$ESCAPED_COSMOSDB_CONNECTIONSTRING#' tools/repo_metrics/config.py
