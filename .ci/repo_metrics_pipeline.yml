@@ -31,7 +31,10 @@ jobs:
       architecture: 'x64'
 
   - bash: |
+      echo ${cosmosdb_connectionstring}
       export escaped_cosmosdb_connectionstring=$(echo "${cosmosdb_connectionstring}" | sed "s@&@\\\\&@g")
+      echo ${escaped_cosmosdb_connectionstring}
+    displayName: Escape meta character in variables
 
   - script: |
       cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
