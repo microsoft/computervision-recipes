@@ -31,11 +31,9 @@ jobs:
       architecture: 'x64'
 
   - script: |
-      echo $(ESCAPED_COSMOSDB_CONNECTIONSTRING)
       cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
       sed -i 's#<GITHUB_TOKEN>#$(github_token)#' tools/repo_metrics/config.py
       sed -i "s#<CONNECTION_STRING>#`echo '$(cosmosdb_connectionstring)' | sed 's@&@\\\\&@g'`#" tools/repo_metrics/config.py
-      cat tools/repo_metrics/config.py
     displayName: Configure CosmosDB Connection
 
   - script: | 
