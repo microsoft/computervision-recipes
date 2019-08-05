@@ -18,7 +18,7 @@ Answers to frequently asked questions such as "How does the technology work?" ca
 
 ## Getting Started
 
-To get started, simply follow the repository-wide installation instructions in this [readme](../README.md/#getting-started) to create a conda environment called _cv_. Not other steps are required. To activate the _cv_ environment run:
+To get started, simply follow the repository-wide installation instructions in this [readme](../README.md/#getting-started) to create a conda environment called _cv_. No other steps are required. To activate the _cv_ environment run:
   ```
   conda activate cv
   ```
