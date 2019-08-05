@@ -18,10 +18,9 @@ Answers to frequently asked questions such as "How does the technology work?" ca
 
 ## Getting Started
 
-To get started, follow the repository-wide installation instructions in this [readme](../README.md/#getting-started) to create a conda environment called _cv_. In addition, install the torchvision library by executing:
+To get started, simply follow the repository-wide installation instructions in this [readme](../README.md/#getting-started) to create a conda environment called _cv_. Not other steps are required. To activate the _cv_ environment run:
   ```
   conda activate cv
-  pip install torchvision
   ```
 
 We recommend running these samples on a machine with GPU, on either Windows or Linux. While a GPU is technically not required, training gets prohibitively slow even when using only a few dozens of images.
