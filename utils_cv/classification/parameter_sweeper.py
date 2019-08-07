@@ -193,6 +193,7 @@ class ParameterSweeper:
         training_schedule=TrainingSchedule.head_first_then_body,
         discriminative_lr=False,
         one_cycle_policy=True,
+        metric_name="accuracy",
     )
 
     def __init__(self, **kwargs) -> None:
@@ -212,6 +213,7 @@ class ParameterSweeper:
             training_schedule=[self.default_params.get("training_schedule")],
             discriminative_lr=[self.default_params.get("discriminative_lr")],
             one_cycle_policy=[self.default_params.get("one_cycle_policy")],
+            metric_name=[self.default_params.get("metric_name")],
         )
 
         self.param_order = tuple(self.params.keys())
@@ -478,7 +480,7 @@ class ParameterSweeper:
                         "duration"
                     ] = duration
                     res[rep][stringified_permutation][data_name][
-                        "accuracy"
+                        self.params["metric_name"]  # accuracy"
                     ] = float(metric)
 
                     learn.destroy()
