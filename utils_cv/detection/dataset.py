@@ -58,8 +58,15 @@ class DetectionDataset(object):
                 categories.append(category.text)
         return list(set(categories))
 
-    def get_random_image(self):
-        """ Choose and get image from dataset. """
+    def get_random_image(self) -> Tuple[List[List[int]], List[str], str]:
+        """ Choose and get image from dataset.
+
+        This function returns all the data that is needed to effectively
+        visualize an image from the dataset.
+
+        Returns:
+            A tuple of boxes, categories, image path
+        """
         rand_idx = randrange(len(self.ims))
         boxes, labels, im_path = self._get_im_data(rand_idx)
         return (boxes, [self.categories[label] for label in labels], im_path)
@@ -67,7 +74,13 @@ class DetectionDataset(object):
     def split_train_test(
         self, train_ratio: float = 0.8
     ) -> Tuple[Dataset, Dataset]:
-        """ TODO
+        """ Split theis dataset into a training and testing set
+
+        Args:
+            train_ratio: the amount of images to use for training (the rest
+            will be used for testing.
+        Return
+            A training and testing dataset in that order
         """
         indices = torch.randperm(len(self)).tolist()
         self.set_transform(get_transform(train=True))
@@ -77,21 +90,37 @@ class DetectionDataset(object):
         return train, test
 
     def set_transform(self, transforms: List[object]) -> None:
-        """ TODO
-        """
+        """ Apply transformations. """
         self.transforms = transforms
 
-    def show_batch(self):
-        """ show batch of images.
-        TODO - add args
-        """
-        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(16, 16))
-        display_bounding_boxes(*self.get_random_image(), ax1)
-        display_bounding_boxes(*self.get_random_image(), ax2)
-        display_bounding_boxes(*self.get_random_image(), ax3)
+    def show_batch(
+        self, rows: int = 1, figsize: Tuple[int, int] = (16, 16),
+    ) -> None:
+        """ Show batch of images.
 
-    def _get_annotations(self, annotation_path: str):
-        """ Extract the annotations and image path from labelling in Pascal VOC format. """
+        Args:
+            rows: the number of rows images to display
+            figize: the figure size to use
+
+        Returns None but displays a grid of annotated images.
+        """
+        fig, axes = plt.subplots(rows, 3, figsize=figsize)
+        for row in axes:
+            for ax in row:
+                display_bounding_boxes(*self.get_random_image(), ax)
+        plt.subplots_adjust(top=0.8, bottom=0.2, hspace=0.1, wspace=0.2)
+
+    def _get_annotations(
+            self, annotation_path: str
+    ) -> Tuple[List[List[str]], List[int], str]:
+        """ Extract the annotations and image path from labelling in Pascal VOC format. 
+
+        Args:
+            annotation_path: the path to the annotation xml file
+
+        Return
+            A tuple of boxes, labels, and the image path
+        """
         boxes = []
         labels = []
         tree = ET.parse(annotation_path)
