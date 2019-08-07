@@ -426,7 +426,7 @@ class ParameterSweeper:
         datasets: List[Path],
         reps: int = 3,
         early_stopping: bool = False,
-        accuracy_hook=None,
+        metric_fct=None,
     ) -> pd.DataFrame:
         """ Performs the experiment.
         Iterates through the number of specified <reps>, the list permutations
@@ -446,6 +446,7 @@ class ParameterSweeper:
 
         res = dict()
         for rep in range(reps):
+            print
 
             res[rep] = dict()
             for i, permutation in enumerate(self.permutations):
@@ -468,19 +469,19 @@ class ParameterSweeper:
                         dataset, permutation, early_stopping
                     )
 
-                    if accuracy_hook is None:
+                    if metric_fct is None:
                         _, metric = learn.validate(
                             learn.data.valid_dl, metrics=[accuracy]
                         )
 
                     else:
-                        metric = accuracy_hook(learn)
+                        metric = metric_fct(learn)
 
                     res[rep][stringified_permutation][data_name][
                         "duration"
                     ] = duration
                     res[rep][stringified_permutation][data_name][
-                        self.params["metric_name"]  # accuracy"
+                        self.params["metric_name"]
                     ] = float(metric)
 
                     learn.destroy()
