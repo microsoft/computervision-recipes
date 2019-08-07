@@ -420,7 +420,11 @@ class ParameterSweeper:
         return self
 
     def run(
-        self, datasets: List[Path], reps: int = 3, early_stopping: bool = False
+        self,
+        datasets: List[Path],
+        reps: int = 3,
+        early_stopping: bool = False,
+        accuracy_hook=None,
     ) -> pd.DataFrame:
         """ Performs the experiment.
         Iterates through the number of specified <reps>, the list permutations
@@ -462,9 +466,13 @@ class ParameterSweeper:
                         dataset, permutation, early_stopping
                     )
 
-                    _, metric = learn.validate(
-                        learn.data.valid_dl, metrics=[accuracy]
-                    )
+                    if accuracy_hook is None:
+                        _, metric = learn.validate(
+                            learn.data.valid_dl, metrics=[accuracy]
+                        )
+
+                    else:
+                        metric = accuracy_hook(learn)
 
                     res[rep][stringified_permutation][data_name][
                         "duration"
