@@ -27,16 +27,13 @@ from utils_cv.common.data import unzip_url
 
 # from utils_cv.common.gpu import which_processor
 from utils_cv.similarity.data import comparative_set_builder
+from utils_cv.similarity.metrics import (
+    positive_image_ranks,
+)  # compute_distances, recall_at_k
+from utils_cv.similarity.model import (
+    compute_features_learner,
+)  # compute_features,
 
-# from utils_cv.similarity.metrics import (
-#     compute_distances,
-#     positive_image_ranks,
-#     recall_at_k,
-# )
-# from utils_cv.similarity.model import (
-#     compute_features,
-#     compute_features_learner,
-# )
 # from utils_cv.similarity.plot import (
 #     plot_comparative_set,
 #     plot_distances,
