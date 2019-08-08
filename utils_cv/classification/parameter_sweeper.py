@@ -213,9 +213,9 @@ class ParameterSweeper:
             training_schedule=[self.default_params.get("training_schedule")],
             discriminative_lr=[self.default_params.get("discriminative_lr")],
             one_cycle_policy=[self.default_params.get("one_cycle_policy")],
-            metric_name=[self.default_params.get("metric_name")],
         )
 
+        self.metric_name = self.default_params.get("metric_name")
         self.param_order = tuple(self.params.keys())
         self.update_parameters(**kwargs)
 
@@ -480,8 +480,9 @@ class ParameterSweeper:
                     res[rep][stringified_permutation][data_name][
                         "duration"
                     ] = duration
+
                     res[rep][stringified_permutation][data_name][
-                        self.params["metric_name"]
+                        self.metric_name
                     ] = float(metric)
 
                     learn.destroy()
