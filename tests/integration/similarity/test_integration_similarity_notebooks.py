@@ -28,7 +28,7 @@ def test_01_notebook_run(similarity_notebooks):
 
 
 @pytest.mark.notebooks
-def test_11_notebook_run(similarity_notebooks, tiny_ic_data_path):
+def test_11_notebook_run(similarity_notebooks):
     if linux_with_gpu():
         notebook_path = similarity_notebooks["11"]
         pm.execute_notebook(
@@ -37,5 +37,5 @@ def test_11_notebook_run(similarity_notebooks, tiny_ic_data_path):
             parameters=dict(PM_VERSION=pm.__version__),
             kernel_name=KERNEL_NAME,
         )
-        # nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-        # assert nb_output.scraps["median_rank"].data <= 10
+        nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+        assert min(nb_output.scraps["ranks"].data) <= 10
