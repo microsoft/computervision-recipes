@@ -449,8 +449,6 @@ class ParameterSweeper:
 
         res = dict()
         for rep in range(reps):
-            print
-
             res[rep] = dict()
             for i, permutation in enumerate(self.permutations):
                 print(
