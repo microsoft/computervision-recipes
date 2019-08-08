@@ -412,9 +412,12 @@ class ParameterSweeper:
         If the kwarg value is None, pass.
         Otherwise overwrite the corresponding self.params key.
         """
+        allowed_keys = set(self.params.keys())
+        allowed_keys.add("metric_name")
+
         for k, v in kwargs.items():
-            if k not in self.params.keys():
-                raise Exception("Parameter {k} is invalid.")
+            if k not in allowed_keys:
+                raise Exception(f"Parameter {k} is invalid.")
             if v is None:
                 continue
             self.params[k] = v
