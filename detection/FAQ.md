@@ -22,10 +22,12 @@ This document tries to answer frequent questions related to object detection. Fo
 
 ### How to annotate images?
 
-Annotated object locations are required to train and evaluate an object detector. Open source UIs such as [LabelImg](https://tzutalin.github.io/labelImg) can be used to manually draw rectangles around one or more objects in an image. LabelImg writes all annotations to a single xml-file per image (in Pascal-VOC format) which can be read using the provided code. Here is a screenshot of the LabelImg UI:
+Annotated object locations are required to train and evaluate an object detector. One of the best open source UIs which runs on Windows and Linux is [VOTT](https://github.com/Microsoft/VoTT/releases). VOTT can be used to manually draw rectangles around one or more objects in an image. These annotations can then be exported in Pascal-VOC format (single xml-file per image) which the provided notebooks know how to read.
 <p align="center">
-<img src="media/labelimg_ui.jpg" width="600" align="center"/>
+<img src="media/vott_ui.jpg" width="600" align="center"/>
 </p>
+
+When creating a new project in VOTT, note that the "source connection" can simply point to a local folder which contains the images to be annotated, and respectively the "target connection" to a folder where to write the output. Pascal VOC style annotations can be exported by selecting "Pascal VOC" in the "Export Settings" tab and then using the "Export Project" button in the "Tags Editor" tab.
 
 Selection and annotating images is complex and consistency is key. For example:
 * All objects in an image need to be annotated, even if the image contains many of them. Consider removing the image if this would take too much time.
