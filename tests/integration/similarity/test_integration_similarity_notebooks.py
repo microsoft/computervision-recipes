@@ -4,7 +4,6 @@
 import papermill as pm
 import pytest
 import scrapbook as sb
-from torch.cuda import is_available
 
 from utils_cv.common.gpu import linux_with_gpu
 
@@ -26,3 +25,17 @@ def test_01_notebook_run(similarity_notebooks):
 
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
         assert nb_output.scraps["median_rank"].data <= 10
+
+
+@pytest.mark.notebooks
+def test_11_notebook_run(similarity_notebooks, tiny_ic_data_path):
+    if linux_with_gpu():
+        notebook_path = similarity_notebooks["11"]
+        pm.execute_notebook(
+            notebook_path,
+            OUTPUT_NOTEBOOK,
+            parameters=dict(PM_VERSION=pm.__version__),
+            kernel_name=KERNEL_NAME,
+        )
+        # nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+        # assert nb_output.scraps["median_rank"].data <= 10
