@@ -7,7 +7,7 @@ steps:
 
 - bash: |
     rm -rf /data/anaconda/envs/cv
-  displayName: 'Remove conda env in case it wasn't created correctly'
+  displayName: 'Remove conda env in case it was not created correctly'
 
 - bash: |
     conda env create -f environment.yml
