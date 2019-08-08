@@ -6,7 +6,7 @@ steps:
   displayName: Add Conda to PATH
 
 - bash: |
-    if [ -d "/data/anaconda/envs/cv" ]; then rm -Rf /data/anaconda/envs/cv; fi
+    rm -rf /data/anaconda/envs/cv
   displayName: 'Remove conda env in case it wasn't created correctly'
 
 - bash: |
