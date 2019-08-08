@@ -116,3 +116,22 @@ To opt out of tracking, please go to the raw `.ipynb` files and remove the follo
     "![Impressions](https://PixelServer20190423114238.azurewebsites.net/api/impressions/ComputerVision/classification/notebooks/21_deployment_on_azure_container_instances.png)"
 ```
 
+
+## Install this repository via PIP
+A [setup.py](setup.py) file is provided in order to simplify the
+installation of this utilities in this repo from the main directory.
+
+```
+pip install -e .
+```
+
+It is also possible to install directly from GitHub.
+
+```
+pip install git+https://github.com/microsoft/ComputerVision#egg=utils_cv
+```
+
+**NOTE** - The pip installation installs necessary package
+dependencies to make it a self-contained utility.  However, it is
+expected that the conda will be used as shown above to setup the
+environment for the notebooks being used without any issues.
