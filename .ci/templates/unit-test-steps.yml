@@ -6,6 +6,10 @@ steps:
   displayName: Add Conda to PATH
 
 - bash: |
+    if [ -d "/data/anaconda/envs/cv" ]; then rm -Rf /data/anaconda/envs/cv; fi
+  displayName: 'Remove conda env in case it wasn't created correctly'
+
+- bash: |
     conda env create -f environment.yml
     source activate cv
     conda env list
