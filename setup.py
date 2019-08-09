@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from os import path
 
 
@@ -45,16 +45,18 @@ setup(
         "fastai==1.0.48",  # requires pytorch, torchvision, nvidia-ml-py3
         "scikit-learn>=0.19.1",
     ],
-    keywords=", ".join([
-        "computer vision",
-        "deep learning",
-        "convolutional neural network",
-        "image classification",
-        "image similarity",
-        "data science",
-        "artificial intelligence",
-        "machine learning",
-        "gpu",
-    ]),
-    packages=[UTILS_CV, ],
+    keywords=", ".join(
+        [
+            "computer vision",
+            "deep learning",
+            "convolutional neural network",
+            "image classification",
+            "image similarity",
+            "data science",
+            "artificial intelligence",
+            "machine learning",
+            "gpu",
+        ]
+    ),
+    packages=[UTILS_CV],
 )
