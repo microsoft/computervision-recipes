@@ -11,6 +11,11 @@ variables:
   value : 'eastus2'
 - name  : 'junitxml'
   value : 'reports/test-unit.xml'
+  
+# no PR builds
+pr: none
+
+# no CI trigger
 trigger: none
 
 jobs:
