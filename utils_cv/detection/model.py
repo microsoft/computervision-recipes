@@ -55,7 +55,7 @@ def get_transform(train: bool) -> List[object]:
     return Compose(transforms)
 
 
-def get_pretrained_model(num_classes: int) -> nn.Module:
+def get_pretrained_fasterrcnn(num_classes: int) -> nn.Module:
     """ Gets a pretrained FasterRCNN model
 
     Args:
