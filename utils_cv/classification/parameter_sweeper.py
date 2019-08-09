@@ -193,10 +193,9 @@ class ParameterSweeper:
         training_schedule=TrainingSchedule.head_first_then_body,
         discriminative_lr=False,
         one_cycle_policy=True,
-        metric_name="accuracy",
     )
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, metric_name="accuracy", **kwargs) -> None:
         """
         Initialize class with default params if kwargs is empty.
         Otherwise, initialize params with kwargs.
@@ -215,7 +214,8 @@ class ParameterSweeper:
             one_cycle_policy=[self.default_params.get("one_cycle_policy")],
         )
 
-        self.metric_name = self.default_params.get("metric_name")
+        self.metric_name = metric_name
+
         self.param_order = tuple(self.params.keys())
         self.update_parameters(**kwargs)
 
@@ -412,11 +412,8 @@ class ParameterSweeper:
         If the kwarg value is None, pass.
         Otherwise overwrite the corresponding self.params key.
         """
-        allowed_keys = set(self.params.keys())
-        allowed_keys.add("metric_name")
-
         for k, v in kwargs.items():
-            if k not in allowed_keys:
+            if k not in set(self.params.keys()):
                 raise Exception(f"Parameter {k} is invalid.")
             if v is None:
                 continue
@@ -450,6 +447,7 @@ class ParameterSweeper:
         res = dict()
         for rep in range(reps):
             res[rep] = dict()
+
             for i, permutation in enumerate(self.permutations):
                 print(
                     f"Running {i+1} of {len(self.permutations)} permutations. "
