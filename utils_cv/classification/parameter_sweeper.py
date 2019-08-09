@@ -195,7 +195,7 @@ class ParameterSweeper:
         one_cycle_policy=True,
     )
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, metric_name="accuracy", **kwargs) -> None:
         """
         Initialize class with default params if kwargs is empty.
         Otherwise, initialize params with kwargs.
@@ -213,6 +213,8 @@ class ParameterSweeper:
             discriminative_lr=[self.default_params.get("discriminative_lr")],
             one_cycle_policy=[self.default_params.get("one_cycle_policy")],
         )
+
+        self.metric_name = metric_name
 
         self.param_order = tuple(self.params.keys())
         self.update_parameters(**kwargs)
@@ -411,8 +413,8 @@ class ParameterSweeper:
         Otherwise overwrite the corresponding self.params key.
         """
         for k, v in kwargs.items():
-            if k not in self.params.keys():
-                raise Exception("Parameter {k} is invalid.")
+            if k not in set(self.params.keys()):
+                raise Exception(f"Parameter {k} is invalid.")
             if v is None:
                 continue
             self.params[k] = v
@@ -420,7 +422,11 @@ class ParameterSweeper:
         return self
 
     def run(
-        self, datasets: List[Path], reps: int = 3, early_stopping: bool = False
+        self,
+        datasets: List[Path],
+        reps: int = 3,
+        early_stopping: bool = False,
+        metric_fct=None,
     ) -> pd.DataFrame:
         """ Performs the experiment.
         Iterates through the number of specified <reps>, the list permutations
@@ -440,8 +446,8 @@ class ParameterSweeper:
 
         res = dict()
         for rep in range(reps):
-
             res[rep] = dict()
+
             for i, permutation in enumerate(self.permutations):
                 print(
                     f"Running {i+1} of {len(self.permutations)} permutations. "
@@ -462,15 +468,20 @@ class ParameterSweeper:
                         dataset, permutation, early_stopping
                     )
 
-                    _, metric = learn.validate(
-                        learn.data.valid_dl, metrics=[accuracy]
-                    )
+                    if metric_fct is None:
+                        _, metric = learn.validate(
+                            learn.data.valid_dl, metrics=[accuracy]
+                        )
+
+                    else:
+                        metric = metric_fct(learn)
 
                     res[rep][stringified_permutation][data_name][
                         "duration"
                     ] = duration
+
                     res[rep][stringified_permutation][data_name][
-                        "accuracy"
+                        self.metric_name
                     ] = float(metric)
 
                     learn.destroy()
