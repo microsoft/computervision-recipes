@@ -1,4 +1,4 @@
-# Recommender Utilities # 
+# Computer Vision Utilities # 
 
 This package (`cv_utils`) contains functions to simplify common tasks
 used when developing and evaluating computer vision systems.  A short
