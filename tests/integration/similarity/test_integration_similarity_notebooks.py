@@ -28,14 +28,20 @@ def test_01_notebook_run(similarity_notebooks):
 
 
 @pytest.mark.notebooks
-def test_11_notebook_run(similarity_notebooks):
+def test_11_notebook_run(similarity_notebooks, tiny_ic_data_path):
     if linux_with_gpu():
         notebook_path = similarity_notebooks["11"]
         pm.execute_notebook(
             notebook_path,
             OUTPUT_NOTEBOOK,
-            parameters=dict(PM_VERSION=pm.__version__),
+            parameters=dict(
+                PM_VERSION=pm.__version__,
+                # Speed up testing since otherwise would take ~12 minutes on V100
+                DATA_PATHS=[tiny_ic_data_path],
+                REPS=1,
+                IM_SIZES=[60, 100],
+            ),
             kernel_name=KERNEL_NAME,
         )
         nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-        assert min(nb_output.scraps["ranks"].data) <= 10
+        assert min(nb_output.scraps["ranks"].data) <= 30
