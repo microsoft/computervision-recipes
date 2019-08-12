@@ -20,12 +20,12 @@ When you submit a pull request, a CLA-bot will automatically determine whether y
 ## Steps to Contributing
 
 Here are the basic steps to get started with your first contribution. Please reach out with any questions.
-1. Use [open issues](https://github.com/Microsoft/Recommenders/issues) to discuss the proposed changes. Create an issue describing changes if necessary to collect feedback. Also, please use provided labels to tag issues so everyone can easily sort issues of interest.
+1. Use [open issues](https://github.com/Microsoft/ComputerVision/issues) to discuss the proposed changes. Create an issue describing changes if necessary to collect feedback. Also, please use provided labels to tag issues so everyone can easily sort issues of interest.
 1. [Fork the repo](https://help.github.com/articles/fork-a-repo/) so you can make and test local changes.
 1. Create a new branch for the issue. We suggest prefixing the branch with your username and then a descriptive title: (e.g. gramhagen/update_contributing_docs)
 1. Create a test that replicates the issue.
 1. Make code changes.
-1. Ensure unit tests pass and code style / formatting is consistent (see [wiki](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines#python-and-docstrings-style) for more details).
+1. Ensure unit tests pass and code style / formatting is consistent, and follows the [Zen of Python](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines#the-zen-of-python).
 1. We use [pre-commit](https://pre-commit.com/) package to run our pre-commit hooks. We use black formatter and flake8 linting on each commit. In order to set up pre-commit on your machine, follow the steps here, please note that you only need to run these steps the first time you use pre-commit for this project.
 
    * Update your conda environment, pre-commit is part of the yaml file or just do    
@@ -49,7 +49,6 @@ Here are the basic steps to get started with your first contribution. Please rea
 
 Note: We use the staging branch to land all new features, so please remember to create the Pull Request against staging.
 
-Once the features included in a milestone are complete we will merge staging into master and make a release. See the wiki for more detail about our [merge strategy](https://github.com/Microsoft/Recommenders/wiki/Strategy-to-merge-the-code-to-master-branch).
 
 ## Working with Notebooks
 
@@ -77,8 +76,6 @@ nbdiff notebook_1.ipynb notebook_2.ipynb
 
 We strive to maintain high quality code to make the utilities in the repository easy to understand, use, and extend. We also work hard to maintain a friendly and constructive environment. We've found that having clear expectations on the development process and consistent style helps to ensure everyone can contribute and collaborate effectively.
 
-Please review the [coding guidelines](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines) wiki page to see more details about the expectations for development approach and style.
-
 We follow the Google docstring guidlines outlined on this [styleguide](https://github.com/google/styleguide/blob/gh-pages/pyguide.md#38-comments-and-docstrings) page. For example:
 ```python
   def bite(n:int, animal:animal_object) -> bool:
@@ -103,7 +100,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-Apart from the official Code of Conduct developed by Microsoft, in the Recommenders team we adopt the following behaviors, to ensure a great working environment:
+Apart from the official Code of Conduct developed by Microsoft, we adopt the following behaviors, to ensure a great working environment:
 
 #### Do not point fingers
 Let’s be constructive. For example: "This method is missing docstrings" instead of "YOU forgot to put docstrings".
