@@ -38,7 +38,17 @@ To get started:
 1. At this point, you should be able to run the notebooks in this repo. Explore our notebooks on the following computer vision domains. Make sure to change the kernel to "Python (cv)".
     - [/classification](classification#notebooks)
     - [/similarity](similarity#notebooks)
-    
+
+
+The utilities in [`utils_cv`](utils_cv) is `pip`-installable from the
+main directory by `pip install .` or directly from the master branch
+on GitHub (**NOTE** To build the wheel, `g++` is required):
+
+```bash
+pip install git+https://github.com/microsoft/ComputerVision.git@master#egg=utils_cv
+```
+
+
 ## Introduction
 
 Note that for certain computer vision problems, you may not need to build your own models. Instead, pre-built or easily customizable solutions exist which do not require any custom coding or machine learning expertise. We strongly recommend evaluating if these can sufficiently solve your problem. If these solutions are not applicable, or the accuracy of these solutions is not sufficient, then resorting to more complex and time-consuming custom approaches may be necessary.
@@ -115,23 +125,3 @@ To opt out of tracking, please go to the raw `.ipynb` files and remove the follo
 ```sh
     "![Impressions](https://PixelServer20190423114238.azurewebsites.net/api/impressions/ComputerVision/classification/notebooks/21_deployment_on_azure_container_instances.png)"
 ```
-
-
-## Install this repository via PIP
-A [setup.py](setup.py) file is provided in order to simplify the
-installation of this utilities in this repo from the main directory.
-
-```
-pip install -e .
-```
-
-It is also possible to install directly from GitHub.
-
-```
-pip install git+https://github.com/microsoft/ComputerVision#egg=utils_cv
-```
-
-**NOTE** - The pip installation installs necessary package
-dependencies to make it a self-contained utility.  However, it is
-expected that the conda will be used as shown above to setup the
-environment for the notebooks being used without any issues.
