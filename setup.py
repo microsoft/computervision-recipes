@@ -59,4 +59,5 @@ setup(
         ]
     ),
     packages=[UTILS_CV],
+    python_requires="==3.6.8",
 )
