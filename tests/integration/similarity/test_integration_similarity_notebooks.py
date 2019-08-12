@@ -5,43 +5,41 @@ import papermill as pm
 import pytest
 import scrapbook as sb
 
-from utils_cv.common.gpu import linux_with_gpu
-
 # Parameters
 KERNEL_NAME = "python3"
 OUTPUT_NOTEBOOK = "output.ipynb"
 
 
 @pytest.mark.notebooks
+@pytest.mark.linuxgpu
 def test_01_notebook_run(similarity_notebooks):
-    if linux_with_gpu():
-        notebook_path = similarity_notebooks["01"]
-        pm.execute_notebook(
-            notebook_path,
-            OUTPUT_NOTEBOOK,
-            parameters=dict(PM_VERSION=pm.__version__),
-            kernel_name=KERNEL_NAME,
-        )
+    notebook_path = similarity_notebooks["01"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(PM_VERSION=pm.__version__),
+        kernel_name=KERNEL_NAME,
+    )
 
-        nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-        assert nb_output.scraps["median_rank"].data <= 10
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert nb_output.scraps["median_rank"].data <= 10
 
 
 @pytest.mark.notebooks
+@pytest.mark.linuxgpu
 def test_11_notebook_run(similarity_notebooks, tiny_ic_data_path):
-    if linux_with_gpu():
-        notebook_path = similarity_notebooks["11"]
-        pm.execute_notebook(
-            notebook_path,
-            OUTPUT_NOTEBOOK,
-            parameters=dict(
-                PM_VERSION=pm.__version__,
-                # Speed up testing since otherwise would take ~12 minutes on V100
-                DATA_PATHS=[tiny_ic_data_path],
-                REPS=1,
-                IM_SIZES=[60, 100],
-            ),
-            kernel_name=KERNEL_NAME,
-        )
-        nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-        assert min(nb_output.scraps["ranks"].data) <= 30
+    notebook_path = similarity_notebooks["11"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            # Speed up testing since otherwise would take ~12 minutes on V100
+            DATA_PATHS=[tiny_ic_data_path],
+            REPS=1,
+            IM_SIZES=[60, 100],
+        ),
+        kernel_name=KERNEL_NAME,
+    )
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert min(nb_output.scraps["ranks"].data) <= 30
