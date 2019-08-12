@@ -102,5 +102,5 @@ def test_12_notebook_run(classification_notebooks):
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     assert len(nb_output.scraps["train_acc"].data) == 12
     assert nb_output.scraps["train_acc"].data[-1] > 0.70
-    assert nb_output.scraps["valid_acc"].data[-1] > 0.70
+    assert nb_output.scraps["valid_acc"].data[-1] > 0.60
     assert len(nb_output.scraps["negative_sample_ids"].data) > 0
