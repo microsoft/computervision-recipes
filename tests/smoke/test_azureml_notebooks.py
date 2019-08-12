@@ -113,9 +113,11 @@ def test_24_notebook_run(
     subscription_id,
     resource_group,
     workspace_name,
-    workspace_region
+    workspace_region,
 ):
-    notebook_path = classification_notebooks["24_exploring_hyperparameters_on_azureml"]
+    notebook_path = classification_notebooks[
+        "24_exploring_hyperparameters_on_azureml"
+    ]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -125,8 +127,9 @@ def test_24_notebook_run(
             resource_group=resource_group,
             workspace_name=workspace_name,
             workspace_region=workspace_region,
-            epochs=1,
-            max_total_runs=1
+            MAX_NODES=2,
+            MAX_TOTAL_RUNS=1,
+            IM_SIZES=[30, 40],
         ),
         kernel_name=KERNEL_NAME,
     )
