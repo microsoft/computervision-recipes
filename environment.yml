@@ -13,25 +13,16 @@ name: cv
 channels:
 - defaults
 - conda-forge
-- pytorch
-- fastai
 dependencies:
 - python==3.6.8
-- pytorch==1.0.0
-- torchvision  
-- fastai==1.0.48
-- ipykernel>=4.6.1
 - jupyter>=1.0.0
 - pytest>=3.6.4
-- bqplot
-- scikit-learn>=0.19.1
 - pip>=19.0.3
 - pip:
-  - azureml-sdk[notebooks,contrib]>=1.0.30
+  # NOTE: Make sure of syncing dependencies in `setup.py`
+  - .
   - black>=18.6b4
-  - papermill>=0.15.0
   - ipywebrtc
-  - nvidia-ml-py3
   - pre-commit>=1.14.4
   - lxml>=4.3.2
   - nteract-scrapbook
