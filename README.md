@@ -40,13 +40,16 @@ To get started:
     - [/similarity](similarity#notebooks)
 
 
-The utilities in [`utils_cv`](utils_cv) is `pip`-installable from the
-main directory by `pip install .` or directly from the master branch
-on GitHub (**NOTE** To build the wheel, `g++` is required):
+As an alternative to the steps above, and if one wants to install only
+the 'utils_cv' library (without creating a new conda environment),
+this can be done by running
 
 ```bash
 pip install git+https://github.com/microsoft/ComputerVision.git@master#egg=utils_cv
 ```
+
+or by downloading the repo and then running `pip install .` in the
+root directory.
 
 
 ## Introduction
