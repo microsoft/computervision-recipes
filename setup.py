@@ -6,8 +6,6 @@ from os import path
 
 
 UTILS_CV = "utils_cv"  # Utility folder name
-# UTILS_CV_PATH = path.join(path.abspath(path.dirname(__file__)), UTILS_CV)
-# README = path.join(UTILS_CV_PATH, "README.md")
 README = path.join(UTILS_CV, "README.md")
 exec(open(path.join(UTILS_CV, "__init__.py")).read())
 
@@ -37,8 +35,11 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     include_package_data=True,
-    # Not fully test the dependency coverage, please make sure to sync
-    # with environment.yml
+    # Make utils_cv pip-installable without environment.yml.
+    # * But keep environment.yml unchanged util final decision to
+    #   incorporate utils_cv into environment.yml.
+    # * Make sure to sync with environment.yml if any dependencies or
+    #   versions changed.
     install_requires=[
         "azureml-sdk[notebooks,contrib]>=1.0.30",  # requires ipykernel, papermill, jupyter-core, jupyter-client
         "bqplot",
@@ -59,5 +60,5 @@ setup(
         ]
     ),
     packages=[UTILS_CV],
-    python_requires="==3.6.8",
+    python_requires=">=3.6",
 )
