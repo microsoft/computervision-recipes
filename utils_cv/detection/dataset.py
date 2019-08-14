@@ -2,26 +2,30 @@
 # Licensed under the MIT License.
 
 import os
-import torch
-from torch.utils.data import Dataset, Subset
-from typing import List, Tuple, Union
+import math
 from pathlib import Path
 from random import randrange
+from typing import List, Tuple, Union
+
+import torch
+from torch.utils.data import Dataset, Subset
 import xml.etree.ElementTree as ET
-from matplotlib import pyplot as plt
 from PIL import Image
-from .plot import display_bounding_boxes
+
+from .plot import display_bounding_boxes, plot_grid
 from .model import get_transform
 
 
 class DetectionDataset(object):
     """ An object detection dataset.
     """
+
     def __init__(
         self,
         root: Union[str, Path],
-        # categories: List[str],
         transforms: object = None,
+        image_folder: str = "images",
+        annotation_folder: str = "annotations",
     ):
         """ initialize dataset
 
@@ -34,13 +38,19 @@ class DetectionDataset(object):
             root: the root path of the dataset containing the image and
             annotation folders
             transforms: the transformations to apply
+            image_folder: the name of the image folder
+            annotation_folder: the name of the annotation folder
         """
 
         self.root = Path(root)
         self.transforms = transforms
+        self.image_folder = image_folder
+        self.annotation_folder = annotation_folder
 
-        self.ims = list(sorted(os.listdir(self.root / "images")))
-        self.annotations = list(sorted(os.listdir(self.root / "annotations")))
+        self.ims = list(sorted(os.listdir(self.root / self.image_folder)))
+        self.annotations = list(
+            sorted(os.listdir(self.root / self.annotation_folder))
+        )
         self.categories = self._get_categories()
 
     def _get_categories(self) -> List[str]:
@@ -58,17 +68,31 @@ class DetectionDataset(object):
                 categories.append(category.text)
         return list(set(categories))
 
-    def get_random_image(self) -> Tuple[List[List[int]], List[str], str]:
+    def get_image_features(
+        self, idx: int = None, rand: bool = False
+    ) -> Tuple[List[List[int]], List[str], str]:
         """ Choose and get image from dataset.
 
         This function returns all the data that is needed to effectively
         visualize an image from the dataset.
 
+        Args:
+            idx: The image index to get the features of
+            rand: randomly select image
+
+        Raises:
+            Exception is idx is not None and rand is set to True
+
         Returns:
             A tuple of boxes, categories, image path
         """
-        rand_idx = randrange(len(self.ims))
-        boxes, labels, im_path = self._get_im_data(rand_idx)
+        if (idx is not None) and (rand is True):
+            raise Exception("idx cannot be set if rand is set to True.")
+        if idx is None and rand is False:
+            rand = True
+        if rand:
+            idx = randrange(len(self.ims))
+        boxes, labels, im_path = self._get_im_data(idx)
         return (boxes, [self.categories[label] for label in labels], im_path)
 
     def split_train_test(
@@ -79,41 +103,36 @@ class DetectionDataset(object):
         Args:
             train_ratio: the amount of images to use for training (the rest
             will be used for testing.
+
         Return
             A training and testing dataset in that order
         """
+        test_num = math.floor(len(self) * (1 - train_ratio))
         indices = torch.randperm(len(self)).tolist()
         self.set_transform(get_transform(train=True))
-        train = Subset(self, indices[:-50])
+        train = Subset(self, indices[:-test_num])
         self.set_transform(get_transform(train=False))
-        test = Subset(self, indices[-50:])
+        test = Subset(self, indices[-test_num:])
         return train, test
 
     def set_transform(self, transforms: List[object]) -> None:
         """ Apply transformations. """
         self.transforms = transforms
 
-    def show_batch(
-        self, rows: int = 1, figsize: Tuple[int, int] = (16, 16),
-    ) -> None:
+    def show_batch(self, rows: int = 1) -> None:
         """ Show batch of images.
 
         Args:
             rows: the number of rows images to display
-            figize: the figure size to use
 
         Returns None but displays a grid of annotated images.
         """
-        fig, axes = plt.subplots(rows, 3, figsize=figsize)
-        for row in axes:
-            for ax in row:
-                display_bounding_boxes(*self.get_random_image(), ax)
-        plt.subplots_adjust(top=0.8, bottom=0.2, hspace=0.1, wspace=0.2)
+        plot_grid(display_bounding_boxes, self.get_image_features, rows=rows)
 
     def _get_annotations(
-            self, annotation_path: str
+        self, annotation_path: str
     ) -> Tuple[List[List[str]], List[int], str]:
-        """ Extract the annotations and image path from labelling in Pascal VOC format. 
+        """ Extract the annotations and image path from labelling in Pascal VOC format.
 
         Args:
             annotation_path: the path to the annotation xml file
@@ -156,7 +175,7 @@ class DetectionDataset(object):
             (boxes, labels, im_path)
         """
         annotation_path = (
-            self.root / "annotations" / str(self.annotations[idx])
+            self.root / self.annotation_folder / str(self.annotations[idx])
         )
         return self._get_annotations(annotation_path)
 
