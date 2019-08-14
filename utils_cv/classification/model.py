@@ -8,7 +8,7 @@ import fastai.basic_train
 from fastai.basic_train import _loss_func2activ, LearnerCallback
 from fastai.torch_core import TensorOrNumList
 from fastai.vision import (
-    CallbackHandler, DataLoader, Learner, nn,
+    CallbackHandler, DataLoader, DatasetType, Learner, nn,
     ImageDataBunch, imagenet_stats, PBar,
 )
 from fastprogress.fastprogress import format_time
@@ -158,6 +158,14 @@ def get_preds(
             where n = sample size // BATCH_SIZE
         pbar: ProgressBar object
     """
+
+    # Note: In Fastai, for DatasetType.Train, only the output of complete minibatches is computed. Ie if one has 101 images, 
+    # and uses a minibatch size of 10, then len(feats) is 96 and not 101. For DatasetType.Valid this is not the case,
+    # and len(feats) is as expected 101. A way around this is to use DatasetType.Fix instead when referring to the training set.
+    # See e.g. issue: https://forums.fast.ai/t/get-preds-returning-less-results-than-length-of-original-dataset/34148
+    if dl == DatasetType.Train:
+        dl = DatasetType.Fix
+
     lf = learn.loss_func if with_loss else None
     return fastai.basic_train.get_preds(
         learn.model, dl, cb_handler=CallbackHandler(learn.callbacks),

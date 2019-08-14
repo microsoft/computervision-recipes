@@ -12,6 +12,7 @@ from fastai.vision.image import Image
 from torch.nn import Module
 from torch import Tensor
 
+import utils_cv
 
 class SaveFeatures:
     """Hook to save the features in the intermediate layers
@@ -107,7 +108,13 @@ def compute_features_learner(
     Returns: DNN feature of the provided image.
 
     """
-    if dataset_type == DatasetType.Train:
+    # Note: In Fastai, for DatasetType.Train, only the output of complete minibatches is computed. Ie if one has 101 images, 
+    # and uses a minibatch size of 10, then len(feats) is 96 and not 101. For DatasetType.Valid this is not the case,
+    # and len(feats) is as expected 101. A way around this is to use DatasetType.Fix instead when referring to the training set.
+    # See e.g. issue: https://forums.fast.ai/t/get-preds-returning-less-results-than-length-of-original-dataset/34148
+
+    if dataset_type == DatasetType.Train or dataset_type == DatasetType.Fix:
+        dataset_type = DatasetType.Fix # Training set without shuffeling and no dropping of last batch. See note above.
         label_list = list(data.train_ds.items)
     elif dataset_type == DatasetType.Valid:
         label_list = list(data.valid_ds.items)
@@ -115,26 +122,26 @@ def compute_features_learner(
         label_list = list(data.test_ds.items)
     else:
         raise Exception(
-            "Dataset_type needs to be of type DatasetType.Train, DatasetType.Valid or DatasetType.Test."
+            "Dataset_type needs to be of type DatasetType.Train, DatasetType.Valid, DatasetType.Test or DatasetType.Fix."
         )
 
+    # Compute features
     featurizer = SaveFeatures(embedding_layer)
     _ = learn.get_preds(dataset_type)
     feats = featurizer.features[:]
 
     # Get corresponding image paths
+    assert len(feats) == len(label_list)
     im_paths = [str(x) for x in label_list]
-    assert len(feats) == len(im_paths)
     return dict(zip(im_paths, feats))
 
 
 # Use this function to featurize a provided dataset
 # def compute_features_dl(data, device_data_loader, learn, embedding_layer):
 #     featurizer = SaveFeatures(embedding_layer)
-#     BUG: get_preds does not return features for all images, maybe only for full mini batches
+#     BUG: get_preds does not return features for all images, but only for complete mini batches
 #     utils_cv.classification.model.get_preds(learn, device_data_loader)
 #     feats = featurizer.features[:]
-#
 #     # Get corresponding image paths
 #     im_paths = [str(x) for x in list(data.items)]
 #     assert(len(feats) == len(im_paths))
