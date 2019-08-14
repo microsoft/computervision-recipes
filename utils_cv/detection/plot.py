@@ -174,7 +174,8 @@ def _get_precision_recall_settings(
 
 
 def _plot_pr_curve_iou_range(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
-    """ Plots the PR curve over varying iou thresholds. """
+    """ Plots the PR curve over varying iou thresholds averaging over [K]
+    categoyies. """
     x = np.arange(0.0, 1.01, 0.01)
     iou_thrs_idx = range(0, 10)
     iou_thrs = np.linspace(
@@ -194,16 +195,19 @@ def _plot_pr_curve_iou_range(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
 
 
 def _plot_pr_curve_iou_mean(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
-    """ Plots the PR curve, averaging the iou thresholds. """
+    """ Plots the PR curve, averaging over iou thresholds and [K] categories. """
     x = np.arange(0.0, 1.01, 0.01)
     ax = _setup_pr_axes(
         ax, "Precision-Recall Curve - Mean over IoU Thresholds"
     )
-    avg_arr = np.mean(
-        coco_eval.eval["precision"][
-            _get_precision_recall_settings(slice(0, None))
-        ],
-        axis=0,
+    avg_arr = np.mean(  # mean over K categories
+        np.mean(  # mean over iou thresholds
+            coco_eval.eval["precision"][
+                _get_precision_recall_settings(slice(0, None))
+            ],
+            axis=0,
+        ),
+        axis=1,
     )
 
     ax.plot(x, avg_arr, c="black", label=f"IOU=mean")
