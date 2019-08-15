@@ -31,6 +31,7 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 | [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Deploys a trained model exposed on a REST API using Azure Container Instances (ACI). |
 | [22_deployment_on_azure_kubernetes_service.ipynb](notebooks/22_deployment_on_azure_kubernetes_service.ipynb)| Deploys a trained model exposed on a REST API using the Azure Kubernetes Service (AKS). |
 | [23_aci_aks_web_service_testing.ipynb](notebooks/23_aci_aks_web_service_testing.ipynb)| Tests the deployed models on either ACI or AKS. |
+| [24_exploring_hyperparameters_on_azureml.ipynb](notebooks/24_exploring_hyperparameters_on_azureml.ipynb)| Performs highly parallel parameter sweeping using AzureML's HyperDrive. |
 
 ## Azure-enhanced notebooks
 
