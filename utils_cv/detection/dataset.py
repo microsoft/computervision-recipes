@@ -18,6 +18,9 @@ from .model import get_transform
 
 class DetectionDataset(object):
     """ An object detection dataset.
+
+    The dunder methods __init__, __getitem__, and __len__ were inspired from code found here:
+    https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html#writing-a-custom-dataset-for-pennfudan
     """
 
     def __init__(
@@ -54,7 +57,7 @@ class DetectionDataset(object):
         self.categories = self._get_categories()
 
     def _get_categories(self) -> List[str]:
-        """ Parses all Pascal VOC formatted annoatation files to extract all
+        """ Parses all Pascal VOC formatted annotation files to extract all
         possible categories. """
         categories = ["__background__"]
         for annotation_path in self.annotations:
@@ -69,7 +72,7 @@ class DetectionDataset(object):
         return list(set(categories))
 
     def get_image_features(
-        self, idx: int = None, rand: bool = False
+        self, idx: int = None, rand: bool = True
     ) -> Tuple[List[List[int]], List[str], str]:
         """ Choose and get image from dataset.
 
@@ -78,30 +81,36 @@ class DetectionDataset(object):
 
         Args:
             idx: The image index to get the features of
-            rand: randomly select image
+            rand: randomly select image (default is true)
 
         Raises:
-            Exception is idx is not None and rand is set to True
+            Exception if idx is not None and rand is set to True
+            Exception if rand and idx is set to False and None respectively
 
         Returns:
             A tuple of boxes, categories, image path
         """
+
         if (idx is not None) and (rand is True):
             raise Exception("idx cannot be set if rand is set to True.")
         if idx is None and rand is False:
-            rand = True
+            raise Exception(
+                "specify idx if rand is True (which is the default setting)."
+            )
+
         if rand:
             idx = randrange(len(self.ims))
+
         boxes, labels, im_path = self._get_im_data(idx)
         return (boxes, [self.categories[label] for label in labels], im_path)
 
     def split_train_test(
         self, train_ratio: float = 0.8
     ) -> Tuple[Dataset, Dataset]:
-        """ Split theis dataset into a training and testing set
+        """ Split this dataset into a training and testing set
 
         Args:
-            train_ratio: the amount of images to use for training (the rest
+            train_ratio: the ratio of images to use for training (the rest
             will be used for testing.
 
         Return
@@ -109,15 +118,11 @@ class DetectionDataset(object):
         """
         test_num = math.floor(len(self) * (1 - train_ratio))
         indices = torch.randperm(len(self)).tolist()
-        self.set_transform(get_transform(train=True))
+        self.transforms = get_transform(train=True)
         train = Subset(self, indices[:-test_num])
-        self.set_transform(get_transform(train=False))
+        self.transforms = get_transform(train=False)
         test = Subset(self, indices[-test_num:])
         return train, test
-
-    def set_transform(self, transforms: List[object]) -> None:
-        """ Apply transformations. """
-        self.transforms = transforms
 
     def show_batch(self, rows: int = 1) -> None:
         """ Show batch of images.

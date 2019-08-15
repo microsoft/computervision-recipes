@@ -36,3 +36,4 @@ dependencies:
   - pre-commit>=1.14.4
   - lxml>=4.3.2
   - nteract-scrapbook
+  - git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI
