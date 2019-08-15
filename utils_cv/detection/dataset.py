@@ -8,12 +8,13 @@ from random import randrange
 from typing import List, Tuple, Union
 
 import torch
-from torch.utils.data import Dataset, Subset
+from torch.utils.data import Dataset, Subset, DataLoader
 import xml.etree.ElementTree as ET
 from PIL import Image
 
 from .plot import display_bounding_boxes, plot_grid
 from .model import get_transform
+from .references.utils import collate_fn
 
 
 class DetectionDataset(object):
@@ -26,7 +27,9 @@ class DetectionDataset(object):
     def __init__(
         self,
         root: Union[str, Path],
+        batch_size: int = 2,
         transforms: object = None,
+        train_test_ratio: float = 0.8,
         image_folder: str = "images",
         annotation_folder: str = "annotations",
     ):
@@ -40,7 +43,9 @@ class DetectionDataset(object):
         Args:
             root: the root path of the dataset containing the image and
             annotation folders
+            batch_size: batch size for dataloaders
             transforms: the transformations to apply
+            train_test_ratio: the ratio of training to testing data
             image_folder: the name of the image folder
             annotation_folder: the name of the annotation folder
         """
@@ -49,12 +54,18 @@ class DetectionDataset(object):
         self.transforms = transforms
         self.image_folder = image_folder
         self.annotation_folder = annotation_folder
+        self.batch_size = batch_size
+        self.train_test_ratio = train_test_ratio
 
+        # get images and annotations
         self.ims = list(sorted(os.listdir(self.root / self.image_folder)))
         self.annotations = list(
             sorted(os.listdir(self.root / self.annotation_folder))
         )
         self.categories = self._get_categories()
+
+        # setup datasets (train_ds, test_ds, train_dl, test_dl)
+        self._setup_data(train_test_ratio=train_test_ratio)
 
     def _get_categories(self) -> List[str]:
         """ Parses all Pascal VOC formatted annotation files to extract all
@@ -105,24 +116,47 @@ class DetectionDataset(object):
         return (boxes, [self.categories[label] for label in labels], im_path)
 
     def split_train_test(
-        self, train_ratio: float = 0.8
+        self, train_test_ratio: float = 0.8
     ) -> Tuple[Dataset, Dataset]:
         """ Split this dataset into a training and testing set
 
         Args:
-            train_ratio: the ratio of images to use for training (the rest
-            will be used for testing.
+            train_test_ratio: the ratio of images to use for training vs
+            testing
 
         Return
             A training and testing dataset in that order
         """
-        test_num = math.floor(len(self) * (1 - train_ratio))
+        test_num = math.floor(len(self) * (1 - train_test_ratio))
         indices = torch.randperm(len(self)).tolist()
         self.transforms = get_transform(train=True)
         train = Subset(self, indices[:-test_num])
         self.transforms = get_transform(train=False)
         test = Subset(self, indices[-test_num:])
         return train, test
+
+    def _setup_data(self, train_test_ratio: float = 0.8):
+        """ create training and validation data loaders
+        """
+        self.train_ds, self.test_ds = self.split_train_test(
+            train_test_ratio=train_test_ratio
+        )
+
+        self.train_dl = DataLoader(
+            self.train_ds,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=4,
+            collate_fn=collate_fn,
+        )
+
+        self.test_dl = DataLoader(
+            self.test_ds,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=4,
+            collate_fn=collate_fn,
+        )
 
     def show_batch(self, rows: int = 1) -> None:
         """ Show batch of images.

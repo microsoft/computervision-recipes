@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 
 from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 from .references.engine import train_one_epoch, evaluate
-from .references.utils import collate_fn
 from .references.coco_eval import CocoEvaluator
 from .plot import BoundingBoxParams, plot_boxes, plot_grid
 
@@ -94,8 +93,6 @@ class DetectionLearner:
         self,
         dataset: Dataset,
         lr: float,
-        train_ratio: float = 0.8,
-        batch_size: int = 2,
         model: nn.Module = None,
         momentum: float = 0.9,
         weight_decay: float = 0.0005,
@@ -109,12 +106,14 @@ class DetectionLearner:
         self.model = model
         self.dataset = dataset
         self.lr = lr
-        self.batch_size = batch_size
         self.momentum = momentum
         self.weight_decay = weight_decay
 
-        # setup datasets (train_ds, test_ds, train_dl, test_dl)
-        self._setup_data(dataset, train_ratio=train_ratio)
+        # get training dataloaders and datasets
+        self.train_ds = dataset.train_ds
+        self.test_ds = dataset.test_ds
+        self.train_dl = dataset.train_dl
+        self.test_dl = dataset.test_dl
 
         # setup model, default to fasterrcnn
         if self.model is None:
@@ -145,34 +144,12 @@ class DetectionLearner:
             )
         )
 
-    def _setup_data(self, dataset: Dataset, train_ratio: float = 0.8):
-        """ create training and validation data loaders
-        """
-        self.train_ds, self.test_ds = dataset.split_train_test(
-            train_ratio=train_ratio
-        )
-
-        self.train_dl = DataLoader(
-            self.train_ds,
-            batch_size=self.batch_size,
-            shuffle=True,
-            num_workers=4,
-            collate_fn=collate_fn,
-        )
-
-        self.test_dl = DataLoader(
-            self.test_ds,
-            batch_size=self.batch_size,
-            shuffle=False,
-            num_workers=4,
-            collate_fn=collate_fn,
-        )
-
     def fit(self, epochs: int, print_freq: int = 10) -> None:
         """ The main training loop. """
         self.losses = []
         self.epochs = epochs
         for epoch in range(self.epochs):
+
             # train for one epoch, printing every 10 iterations
             logger = train_one_epoch(
                 self.model,
