@@ -37,6 +37,7 @@ To get started on your local machine:
 1. At this point, you should be able to run the notebooks in this repo. Explore our notebooks on the following computer vision domains. Make sure to change the kernel to "Python (cv)".
     - [/classification](classification#notebooks)
     - [/similarity](similarity#notebooks)
+    - [/detection](detection#notebooks)
     
 ## Introduction
 
