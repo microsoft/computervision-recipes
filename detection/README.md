@@ -34,6 +34,8 @@ We provide several notebooks to show how object detection algorithms can be desi
 | --- | --- |
 | [00_webcam.ipynb](./notebooks/00_webcam.ipynb)| Quick-start notebook which demonstrates how to build an object detection system using a single image or webcam as input.
 | [01_training_and_evaluation_introduction.ipynb](./notebooks/01_training_and_evaluation_introduction.ipynb)| Notebook which explains the basic concepts around model training and evaluation.|
+| [24_exploring_hyperparameters_on_azureml.ipynb](./notebooks/24_exploring_hyperparameters_on_azureml.ipynb)| Performs highly parallel parameter sweeping using AzureML's HyperDrive. |
+
 
 ## Contribution guidelines
 
