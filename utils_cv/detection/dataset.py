@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from functools import partial
 import math
 from pathlib import Path
 from random import randrange
@@ -83,7 +84,7 @@ class DetectionDataset(object):
         return list(set(categories))
 
     def get_image_features(
-        self, idx: int = None, rand: bool = True
+        self, idx: int = None, rand: bool = False
     ) -> Tuple[List[List[int]], List[str], str]:
         """ Choose and get image from dataset.
 
@@ -92,7 +93,7 @@ class DetectionDataset(object):
 
         Args:
             idx: The image index to get the features of
-            rand: randomly select image (default is true)
+            rand: randomly select image
 
         Raises:
             Exception if idx is not None and rand is set to True
@@ -105,9 +106,7 @@ class DetectionDataset(object):
         if (idx is not None) and (rand is True):
             raise Exception("idx cannot be set if rand is set to True.")
         if idx is None and rand is False:
-            raise Exception(
-                "specify idx if rand is True (which is the default setting)."
-            )
+            raise Exception("specify idx if rand is True.")
 
         if rand:
             idx = randrange(len(self.ims))
@@ -166,7 +165,8 @@ class DetectionDataset(object):
 
         Returns None but displays a grid of annotated images.
         """
-        plot_grid(display_bounding_boxes, self.get_image_features, rows=rows)
+        get_image_features = partial(self.get_image_features, rand=True)
+        plot_grid(display_bounding_boxes, get_image_features, rows=rows)
 
     def _get_annotations(
         self, annotation_path: str

@@ -2,12 +2,11 @@
 # Licensed under the MIT License.
 
 import numpy as np
-from typing import List, Tuple, Union
+from typing import List, Tuple, Dict, Any
 from pathlib import Path
 from functools import partial
 
 from PIL import Image
-import cv2
 import torch
 import torch.nn as nn
 from torchvision import transforms
@@ -19,7 +18,7 @@ import matplotlib.pyplot as plt
 from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 from .references.engine import train_one_epoch, evaluate
 from .references.coco_eval import CocoEvaluator
-from .plot import BoundingBoxParams, plot_boxes, plot_grid
+from .plot import PlotSettings, plot_boxes, plot_grid
 
 
 def get_bounding_boxes(
@@ -50,6 +49,9 @@ def get_bounding_boxes(
 
 def get_transform(train: bool) -> List[object]:
     """ Gets basic the transformations to apply to images.
+
+    Source:
+    https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html#writing-a-custom-dataset-for-pennfudan
 
     Args:
         train: whether or not we are getting transformations for the training
@@ -179,18 +181,31 @@ class DetectionLearner:
         ax.plot(self.losses)
 
     def evaluate(self, dl: DataLoader = None) -> CocoEvaluator:
-        """ eval code on validation/test set. """
+        """ eval code on validation/test set and saves the evaluation results in self.results. """
         if dl is None:
             dl = self.test_dl
-        return evaluate(self.model, dl, device=self.device)
+        self.results = evaluate(self.model, dl, device=self.device)
+        return self.results
 
     def get_model(self) -> nn.Module:
         """ returns the model object. """
         return self.model
 
-    def inference(self, im_path: Union[str, Path]):
-        """ Performs inferencing on an image path. """
-        im = Image.open(im_path)
+    def inference(self, im: np.ndarray) -> Dict[Any, Any]:
+        """ Performs inferencing on an image path.
+
+        Args:
+            im: the image array which you can get from `Image.open(path)`
+
+        Raises:
+            TypeError is the im object is a path or str to the image instead of
+            an nd.array
+
+        Return the prediction dictionary object
+        """
+        if isinstance(im, (str, Path)):
+            raise TypeError("Pass in a np.ndarray, not image path.")
+
         transform = transforms.Compose([transforms.ToTensor()])
         im = transform(im).cuda()
         model = self.get_model().eval()  # eval mode
@@ -212,25 +227,25 @@ class DetectionLearner:
             / self.dataset.image_folder
             / self.dataset.ims[idx]
         )
-        im = cv2.imread(str(im_path))
+        im = Image.open(str(im_path))
 
         # plot prediction boxes
-        pred = self.inference(im_path)
+        pred = self.inference(im)
         pred_labels, pred_boxes = get_bounding_boxes(pred)
-        pred_params = BoundingBoxParams(rect_color=(255, 0, 0), text_size=0)
+        pred_params = PlotSettings(rect_color=(255, 0, 0), text_size=0)
         im = plot_boxes(
             im,
             pred_boxes,
             [self.dataset.categories[l] for l in pred_labels],
-            bbox_params=pred_params,
+            plot_settings=pred_params,
         )
 
         # plot ground truth boxes
-        ground_truth_params = BoundingBoxParams(
-            rect_color=(0, 255, 0), text_size=0
-        )
+        ground_truth_params = PlotSettings(rect_color=(0, 255, 0), text_size=0)
         boxes, categories, im_path = self.dataset.get_image_features(idx)
-        im = plot_boxes(im, boxes, categories, bbox_params=ground_truth_params)
+        im = plot_boxes(
+            im, boxes, categories, plot_settings=ground_truth_params
+        )
 
         # show image
         ax.set_xticks([])

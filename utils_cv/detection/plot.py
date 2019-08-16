@@ -7,7 +7,8 @@ Helper module for visualizations
 from typing import List, Union, Tuple, Callable, Any
 from pathlib import Path
 
-import cv2
+from PIL import Image, ImageDraw, ImageFont
+
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL.JpegImagePlugin import JpegImageFile
@@ -15,22 +16,22 @@ from PIL.JpegImagePlugin import JpegImageFile
 from .references.coco_eval import CocoEvaluator
 
 
-class BoundingBoxParams:
+class PlotSettings:
     """ Simple class to contain bounding box params. """
 
     def __init__(
         self,
-        rect_th: int = 2,
+        rect_th: int = 4,
         rect_color: Tuple[int, int, int] = (255, 0, 0),
-        text_size: float = 1,
-        text_th: int = 2,
+        text_size: int = 25,
+        text_font: str = "DejaVuSerifCondensed.ttf",
         text_color: Tuple[int, int, int] = (255, 255, 255),
     ):
-        self.rect_th, self.rect_color, self.text_size, self.text_th, self.text_color = (
+        self.rect_th, self.rect_color, self.text_size, self.text_font, self.text_color = (
             rect_th,
             rect_color,
             text_size,
-            text_th,
+            text_font,
             text_color,
         )
 
@@ -39,7 +40,7 @@ def plot_boxes(
     im: JpegImageFile,
     boxes: List[List[int]],
     categories: List[str],
-    bbox_params: BoundingBoxParams = BoundingBoxParams(),
+    plot_settings: PlotSettings = PlotSettings(),
 ) -> JpegImageFile:
     """ Plot boxes on Image and return the Image
 
@@ -47,37 +48,32 @@ def plot_boxes(
         im: The image to plot boxes on
         boxes: the boxes to plot - a list of [xmin, ymin, xmax, ymax] boxes
         categories: list of catogires to label the boxes with
-        bbox_params: the parameter of the bounding boxes
+        plot_settings: the parameter of the bounding boxes
 
     Returns:
         The same image with boxes and labels plotted on it
     """
-    # Convert to RGB
-    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
     if len(boxes) > 0:
         for box, category in zip(boxes, categories):
 
-            # reformat boxes to be consumable by cv2
+            # reformat boxes to be consumable
             box = [(box[0], box[1]), (box[2], box[3])]
 
-            # Draw Rectangle with the coordinates
-            cv2.rectangle(
-                im,
-                box[0],
-                box[1],
-                color=bbox_params.rect_color,
-                thickness=bbox_params.rect_th,
+            # draw rect
+            draw = ImageDraw.Draw(im)
+            draw.rectangle(
+                box,
+                outline=plot_settings.rect_color,
+                width=plot_settings.rect_th,
             )
 
-            # Write the prediction class
-            cv2.putText(
-                im,
-                category,
-                (box[0][0], box[0][1] + 15),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                bbox_params.text_size,
-                color=bbox_params.text_color,
-                thickness=bbox_params.text_th,
+            font = ImageFont.truetype(
+                plot_settings.text_font, plot_settings.text_size
+            )
+
+            # write prediction class
+            draw.text(
+                box[0], category, font=font, fill=plot_settings.text_color
             )
 
     return im
@@ -88,7 +84,7 @@ def display_bounding_boxes(
     categories: List[str],
     im_path: Union[Path, str],
     ax: Union[None, plt.axes] = None,
-    bbox_params: BoundingBoxParams = BoundingBoxParams(),
+    plot_settings: PlotSettings = PlotSettings(),
     figsize: Tuple[int, int] = (12, 12),
 ) -> None:
     """ Draw image with bounding boxes.
@@ -101,11 +97,11 @@ def display_bounding_boxes(
 
     Returns nothing, but plots the image with bounding boxes and categories.
     """
-    # Read image with cv2
-    im = cv2.imread(str(im_path))
+    # Read image
+    im = Image.open(str(im_path))
 
     # plot boxes on im
-    im = plot_boxes(im, boxes, categories, bbox_params=bbox_params)
+    im = plot_boxes(im, boxes, categories, plot_settings=plot_settings)
 
     # display the output image
     if ax is not None:
