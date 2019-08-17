@@ -34,9 +34,9 @@ def get_bounding_boxes(
     Return:
         a list of labels and bounding boxes that pass the minimum threshold.
     """
-    pred_labels = list(pred[0]["labels"].cpu().numpy())
+    pred_labels = list(pred[0]["labels"].detach().cpu().numpy())
     pred_boxes = list(pred[0]["boxes"].detach().cpu().numpy().astype(np.int32))
-    pred_scores = list(pred[0]["scores"].cpu().numpy())
+    pred_scores = list(pred[0]["scores"].detach().cpu().numpy())
 
     qualified_labels = []
     qualified_boxes = []
