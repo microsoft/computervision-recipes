@@ -25,5 +25,5 @@ We provide several notebooks to show how image similarity algorithms can be desi
 
 ## Coding guidelines
 
-See the [coding guidelines](../classification/#coding-guidelines) in the image classification folder.
+See the [coding guidelines](../CONTRIBUTING.md#coding-guidelines) in the root folder.
 
