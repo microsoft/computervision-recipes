@@ -14,8 +14,128 @@ import xml.etree.ElementTree as ET
 from PIL import Image
 
 from .plot import display_bounding_boxes, plot_grid
-from .model import get_transform
 from .references.utils import collate_fn
+from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
+
+
+def get_transform(train: bool) -> List[object]:
+    """ Gets basic the transformations to apply to images.
+
+    Source:
+    https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html#writing-a-custom-dataset-for-pennfudan
+
+    Args:
+        train: whether or not we are getting transformations for the training
+        set.
+
+    Returns:
+        A list of transforms to apply.
+    """
+    transforms = []
+    transforms.append(ToTensor())
+    if train:
+        transforms.append(RandomHorizontalFlip(0.5))
+    return Compose(transforms)
+
+
+class Bbox:
+    """ Util to represent bounding boxes
+
+    Source:
+    https://github.com/Azure/ObjectDetectionUsingCntk/blob/master/helpers.py
+    """
+
+    MAX_VALID_DIM = 100000
+    left = top = right = bottom = None
+
+    def __init__(self, left: int, top: int, right: int, bottom: int):
+        self.left = int(round(float(left)))
+        self.top = int(round(float(top)))
+        self.right = int(round(float(right)))
+        self.bottom = int(round(float(bottom)))
+        self.standardize()
+
+    def __str__(self):
+        return "Bbox object: left = {0}, top = {1}, right = {2}, bottom = {3}".format(
+            self.left, self.top, self.right, self.bottom
+        )
+
+    def __repr__(self):
+        return str(self)
+
+    def rect(self) -> List[int]:
+        return [self.left, self.top, self.right, self.bottom]
+
+    def max(self) -> int:
+        return max([self.left, self.top, self.right, self.bottom])
+
+    def min(self) -> int:
+        return min([self.left, self.top, self.right, self.bottom])
+
+    def width(self) -> int:
+        width = self.right - self.left + 1
+        assert width >= 0
+        return width
+
+    def height(self) -> int:
+        height = self.bottom - self.top + 1
+        assert height >= 0
+        return height
+
+    def surface_area(self) -> float:
+        return self.width() * self.height()
+
+    def get_overlap_bbox(self, bbox: "Bbox") -> Union[None, "Bbox"]:
+        left1, top1, right1, bottom1 = self.rect()
+        left2, top2, right2, bottom2 = bbox.rect()
+        overlap_left = max(left1, left2)
+        overlap_top = max(top1, top2)
+        overlap_right = min(right1, right2)
+        overlap_bottom = min(bottom1, bottom2)
+        if (overlap_left > overlap_right) or (overlap_top > overlap_bottom):
+            return None
+        else:
+            return Bbox(
+                overlap_left, overlap_top, overlap_right, overlap_bottom
+            )
+
+    def standardize(
+        self
+    ) -> None:  # NOTE: every setter method should call standardize
+        left_new = min(self.left, self.right)
+        top_new = min(self.top, self.bottom)
+        right_new = max(self.left, self.right)
+        bottom_new = max(self.top, self.bottom)
+        self.left = left_new
+        self.top = top_new
+        self.right = right_new
+        self.bottom = bottom_new
+
+    def crop(self, max_width: int, max_height: int) -> "Bbox":
+        left_new = min(max(self.left, 0), maxWidth)
+        top_new = min(max(self.top, 0), maxHeight)
+        right_new = min(max(self.right, 0), maxWidth)
+        bottom_new = min(max(self.bottom, 0), maxHeight)
+        return Bbox(left_new, top_new, right_new, bottom_new)
+
+    def is_valid(self) -> bool:
+        if self.left >= self.right or self.top >= self.bottom:
+            return False
+        if (
+            min(self.rect()) < -self.MAX_VALID_DIM
+            or max(self.rect()) > self.MAX_VALID_DIM
+        ):
+            return False
+        return True
+
+
+class Annotation:
+    """ Contains a Bbox. """
+
+    def __init__(self, bbox: Bbox, category_name: str, category_idx: int):
+        self.bbox = bbox
+        self.category_name = category_name
+        self.category_idx = category_idx
 
 
 class DetectionDataset(object):
@@ -54,14 +174,14 @@ class DetectionDataset(object):
         self.root = Path(root)
         self.transforms = transforms
         self.image_folder = image_folder
-        self.annotation_folder = annotation_folder
+        self.anno_folder = annotation_folder
         self.batch_size = batch_size
         self.train_test_ratio = train_test_ratio
 
         # get images and annotations
-        self.ims = list(sorted(os.listdir(self.root / self.image_folder)))
-        self.annotations = list(
-            sorted(os.listdir(self.root / self.annotation_folder))
+        self.im_paths = list(sorted(os.listdir(self.root / self.image_folder)))
+        self.anno_paths = list(
+            sorted(os.listdir(self.root / self.anno_folder))
         )
         self.categories = self._get_categories()
 
@@ -72,9 +192,9 @@ class DetectionDataset(object):
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible categories. """
         categories = ["__background__"]
-        for annotation_path in self.annotations:
-            annotation_path = self.root / "annotations" / str(annotation_path)
-            tree = ET.parse(annotation_path)
+        for anno_path in self.anno_paths:
+            anno_path = self.root / "annotations" / str(anno_path)
+            tree = ET.parse(anno_path)
             root = tree.getroot()
             objs = root.findall("object")
             for obj in objs:
@@ -109,9 +229,9 @@ class DetectionDataset(object):
             raise Exception("specify idx if rand is True.")
 
         if rand:
-            idx = randrange(len(self.ims))
+            idx = randrange(len(self.im_paths))
 
-        boxes, labels, im_path = self._get_im_data(idx)
+        boxes, labels, im_path = self._read_anno_idx(idx)
         return (boxes, [self.categories[label] for label in labels], im_path)
 
     def split_train_test(
@@ -157,8 +277,8 @@ class DetectionDataset(object):
             collate_fn=collate_fn,
         )
 
-    def show_batch(self, rows: int = 1) -> None:
-        """ Show batch of images.
+    def show_ims(self, rows: int = 1) -> None:
+        """ Show a set of images.
 
         Args:
             rows: the number of rows images to display
@@ -168,20 +288,21 @@ class DetectionDataset(object):
         get_image_features = partial(self.get_image_features, rand=True)
         plot_grid(display_bounding_boxes, get_image_features, rows=rows)
 
-    def _get_annotations(
-        self, annotation_path: str
+    def _read_anno_path(
+        self, anno_path: str
     ) -> Tuple[List[List[str]], List[int], str]:
         """ Extract the annotations and image path from labelling in Pascal VOC format.
 
         Args:
-            annotation_path: the path to the annotation xml file
+            anno_path: the path to the annotation xml file
 
         Return
             A tuple of boxes, labels, and the image path
         """
         boxes = []
         labels = []
-        tree = ET.parse(annotation_path)
+        # annos = []
+        tree = ET.parse(anno_path)
         root = tree.getroot()
 
         # extract bounding boxes and classification
@@ -198,30 +319,40 @@ class DetectionDataset(object):
             xmax = int(bnd_box[2].text)
             ymax = int(bnd_box[3].text)
 
+            # bbox = Bbox(xmin, ymin, xmax, ymax)
+            # assert bbox.is_valid()
+
+            # anno = Annotation(
+            #     bbox=bbox,
+            #     category_name=category.text,
+            #     category_idx=self.categories.index(category.text)
+            # )
+            # annos.append(anno)
+
             boxes.append([xmin, ymin, xmax, ymax])
             labels.append(self.categories.index(category.text))
 
         # get image path from annotation
-        annotation_dir = os.path.dirname(annotation_path)
-        im_path = root.find("path").text
-        im_path = os.path.realpath(os.path.join(annotation_dir, im_path))
+        anno_dir = os.path.dirname(anno_path)
+        im_path = os.path.realpath(
+            os.path.join(anno_dir, root.find("path").text)
+        )
 
+        # return annos, im_path
         return (boxes, labels, im_path)
 
-    def _get_im_data(self, idx) -> Tuple[List[List[int]], List[int], str]:
+    def _read_anno_idx(self, idx) -> Tuple[List[List[int]], List[int], str]:
         """
         Returns
             (boxes, labels, im_path)
         """
-        annotation_path = (
-            self.root / self.annotation_folder / str(self.annotations[idx])
-        )
-        return self._get_annotations(annotation_path)
+        anno_path = self.root / self.anno_folder / str(self.anno_paths[idx])
+        return self._read_anno_path(anno_path)
 
     def __getitem__(self, idx):
         """ Make iterable. """
         # get box/labels from annotations
-        boxes, labels, im_path = self._get_im_data(idx)
+        boxes, labels, im_path = self._read_anno_idx(idx)
 
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
@@ -256,4 +387,4 @@ class DetectionDataset(object):
         return (im, target)
 
     def __len__(self):
-        return len(self.ims)
+        return len(self.im_paths)

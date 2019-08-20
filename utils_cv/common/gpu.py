@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import platform
 
+import torch
 from torch.cuda import current_device, get_device_name, is_available
 
 
@@ -19,3 +21,12 @@ def linux_with_gpu():
     is_linux = platform.system().lower() == "linux"
     has_gpu = is_available()
     return is_linux and has_gpu
+
+
+def torch_device():
+    """ Gets the torch device. Try gpu first, otherwise gpu. """
+    return (
+        torch.device("cuda")
+        if torch.cuda.is_available()
+        else torch.device("cpu")
+    )

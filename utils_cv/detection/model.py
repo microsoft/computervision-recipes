@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import numpy as np
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Union
 from pathlib import Path
 from functools import partial
 
@@ -15,10 +15,10 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 
-from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 from .references.engine import train_one_epoch, evaluate
 from .references.coco_eval import CocoEvaluator
 from .plot import PlotSettings, plot_boxes, plot_grid
+from ..common.gpu import torch_device
 
 
 def get_bounding_boxes(
@@ -45,26 +45,6 @@ def get_bounding_boxes(
             qualified_labels.append(label)
             qualified_boxes.append(box)
     return qualified_labels, qualified_boxes
-
-
-def get_transform(train: bool) -> List[object]:
-    """ Gets basic the transformations to apply to images.
-
-    Source:
-    https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html#writing-a-custom-dataset-for-pennfudan
-
-    Args:
-        train: whether or not we are getting transformations for the training
-        set.
-
-    Returns:
-        A list of transforms to apply.
-    """
-    transforms = []
-    transforms.append(ToTensor())
-    if train:
-        transforms.append(RandomHorizontalFlip(0.5))
-    return Compose(transforms)
 
 
 def get_pretrained_fasterrcnn(num_classes: int) -> nn.Module:
@@ -100,11 +80,7 @@ class DetectionLearner:
         weight_decay: float = 0.0005,
     ):
         """ Initialize leaner object. """
-        self.device = (
-            torch.device("cuda")
-            if torch.cuda.is_available()
-            else torch.device("cpu")
-        )
+        self.device = torch_device()
         self.model = model
         self.dataset = dataset
         self.lr = lr
@@ -187,15 +163,14 @@ class DetectionLearner:
         self.results = evaluate(self.model, dl, device=self.device)
         return self.results
 
-    def get_model(self) -> nn.Module:
-        """ returns the model object. """
-        return self.model
-
-    def inference(self, im: np.ndarray) -> Dict[Any, Any]:
-        """ Performs inferencing on an image path.
+    def predict(
+        self, im_or_path: Union[np.ndarray, Union[str, Path]]
+    ) -> Dict[Any, Any]:
+        """ Performs inferencing on an image path or image.
 
         Args:
-            im: the image array which you can get from `Image.open(path)`
+            im_or_path: the image array which you can get from `Image.open(path)` OR a
+            image path
 
         Raises:
             TypeError is the im object is a path or str to the image instead of
@@ -204,11 +179,11 @@ class DetectionLearner:
         Return the prediction dictionary object
         """
         if isinstance(im, (str, Path)):
-            raise TypeError("Pass in a np.ndarray, not image path.")
+            im = Image.open(im)
 
         transform = transforms.Compose([transforms.ToTensor()])
         im = transform(im).cuda()
-        model = self.get_model().eval()  # eval mode
+        model = self.model.eval()  # eval mode
         with torch.no_grad():
             pred = model([im])
         return pred
