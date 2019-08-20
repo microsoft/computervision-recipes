@@ -12,7 +12,6 @@ from fastai.vision.image import Image
 from torch.nn import Module
 from torch import Tensor
 
-import utils_cv
 
 class SaveFeatures:
     """Hook to save the features in the intermediate layers
@@ -108,13 +107,15 @@ def compute_features_learner(
     Returns: DNN feature of the provided image.
 
     """
-    # Note: In Fastai, for DatasetType.Train, only the output of complete minibatches is computed. Ie if one has 101 images, 
-    # and uses a minibatch size of 10, then len(feats) is 96 and not 101. For DatasetType.Valid this is not the case,
+    # Note: In Fastai, for DatasetType.Train, only the output of complete minibatches is computed. Ie if one has 101 images,
+    # and uses a minibatch size of 16, then len(feats) is 96 and not 101. For DatasetType.Valid this is not the case,
     # and len(feats) is as expected 101. A way around this is to use DatasetType.Fix instead when referring to the training set.
     # See e.g. issue: https://forums.fast.ai/t/get-preds-returning-less-results-than-length-of-original-dataset/34148
 
     if dataset_type == DatasetType.Train or dataset_type == DatasetType.Fix:
-        dataset_type = DatasetType.Fix # Training set without shuffeling and no dropping of last batch. See note above.
+        dataset_type = (
+            DatasetType.Fix
+        )  # Training set without shuffeling and no dropping of last batch. See note above.
         label_list = list(data.train_ds.items)
     elif dataset_type == DatasetType.Valid:
         label_list = list(data.valid_ds.items)
