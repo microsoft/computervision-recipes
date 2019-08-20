@@ -30,7 +30,7 @@ def linux_with_gpu():
     return is_linux() and has_gpu
 
 
-def db_num_workers(non_windows_num_workers=16):
+def db_num_workers(non_windows_num_workers: int = 16):
     """Returns how many workers to use when loading images in a databunch. On windows machines using >0 works significantly slows down model
     training and evaluation. Setting num_workers to zero on Windows machines will speed up training/inference significantly, but will still be
     2-3 times slower.
