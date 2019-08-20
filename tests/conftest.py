@@ -103,6 +103,7 @@ def similarity_notebooks():
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
+        "12": os.path.join(folder_notebooks, "12_fast_retrieval.ipynb"),
     }
     return paths
 
