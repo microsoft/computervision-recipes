@@ -1,12 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import numpy as np
-from typing import List, Tuple, Dict, Any, Union
+from typing import List, Tuple, Union, Generator
 from pathlib import Path
-from functools import partial
 
 from PIL import Image
+import numpy as np
 import torch
 import torch.nn as nn
 from torchvision import transforms
@@ -17,18 +16,19 @@ import matplotlib.pyplot as plt
 
 from .references.engine import train_one_epoch, evaluate
 from .references.coco_eval import CocoEvaluator
-from .plot import PlotSettings, plot_boxes, plot_grid
+from .helper import Annotation, Bbox
 from ..common.gpu import torch_device
 
 
 def get_bounding_boxes(
-    pred: List[dict], threshold: int = 0.6
+    pred: List[dict], categories: List[str] = None, threshold: int = 0.6
 ) -> Tuple[List[int], List[List[int]]]:
     """ Gets the bounding boxes and labels from a prediction given a threshold.
 
     Args:
         pred: the output of passing in an image to torchvision's FasterRCNN
         model
+        categories: list of categories
         threshold: the minimum threshold to accept.
 
     Return:
@@ -36,15 +36,21 @@ def get_bounding_boxes(
     """
     pred_labels = list(pred[0]["labels"].cpu().numpy())
     pred_boxes = list(pred[0]["boxes"].detach().cpu().numpy().astype(np.int32))
-    pred_scores = list(pred[0]["scores"].cpu().numpy())
+    pred_scores = list(pred[0]["scores"].detach().cpu().numpy())
 
-    qualified_labels = []
-    qualified_boxes = []
+    annos = []
     for label, box, score in zip(pred_labels, pred_boxes, pred_scores):
         if score > threshold:
-            qualified_labels.append(label)
-            qualified_boxes.append(box)
-    return qualified_labels, qualified_boxes
+            bbox = Bbox.from_array(box)
+            category_name = (
+                categories[label] if categories is not None else None
+            )
+            anno = Annotation(
+                bbox, category_name=category_name, category_idx=label
+            )
+            annos.append(anno)
+
+    return annos
 
 
 def get_pretrained_fasterrcnn(num_classes: int) -> nn.Module:
@@ -88,6 +94,7 @@ class DetectionLearner:
         self.weight_decay = weight_decay
 
         # get training dataloaders and datasets
+        self.dataset = dataset
         self.train_ds = dataset.train_ds
         self.test_ds = dataset.test_ds
         self.train_dl = dataset.train_dl
@@ -164,13 +171,17 @@ class DetectionLearner:
         return self.results
 
     def predict(
-        self, im_or_path: Union[np.ndarray, Union[str, Path]]
-    ) -> Dict[Any, Any]:
+        self,
+        im_or_path: Union[np.ndarray, Union[str, Path]],
+        threshold: int = 0.6,
+    ) -> List[Annotation]:
         """ Performs inferencing on an image path or image.
 
         Args:
             im_or_path: the image array which you can get from `Image.open(path)` OR a
             image path
+            threshold: the threshold to use to calculate whether the object was
+            detected
 
         Raises:
             TypeError is the im object is a path or str to the image instead of
@@ -178,73 +189,50 @@ class DetectionLearner:
 
         Return the prediction dictionary object
         """
-        if isinstance(im, (str, Path)):
-            im = Image.open(im)
+        im = (
+            Image.open(im_or_path)
+            if isinstance(im_or_path, (str, Path))
+            else im_or_path
+        )
 
         transform = transforms.Compose([transforms.ToTensor()])
         im = transform(im).cuda()
         model = self.model.eval()  # eval mode
         with torch.no_grad():
             pred = model([im])
-        return pred
+        categories = self.train_ds.dataset.categories
+        return get_bounding_boxes(
+            pred, categories=categories, threshold=threshold
+        )
 
-    def show_detection_vs_ground_truth(self, idx: int, ax: plt.axes) -> None:
-        """ Plots the bounding box predictions and ground truth
+    def pred_batch(
+        self, dl: DataLoader, threshold: int = 0.6
+    ) -> Generator[List[Annotation], None, None]:
+        """ Batch predict
 
-        Args:
-            idx: the index of the dataset to visualize
-            ax: axes to draw on
+        Args
+            dataset_iterator: takes in a dataloader iterator, and predicts on the batch_size
+            specified by it. This can be created by `iter(dataloader)`
+            threshold: iou threshold for a positive detection
 
-        Returns nothing but plots graph.
+        Returns an iterator that yields a list of annotations for each image that is scored
         """
-        im_path = (
-            self.dataset.root
-            / self.dataset.image_folder
-            / self.dataset.ims[idx]
-        )
-        im = Image.open(str(im_path))
 
-        # plot prediction boxes
-        pred = self.inference(im)
-        pred_labels, pred_boxes = get_bounding_boxes(pred)
-        pred_params = PlotSettings(rect_color=(255, 0, 0), text_size=0)
-        im = plot_boxes(
-            im,
-            pred_boxes,
-            [self.dataset.categories[l] for l in pred_labels],
-            plot_settings=pred_params,
-        )
+        categories = self.dataset.categories
+        model = self.model.eval()
 
-        # plot ground truth boxes
-        ground_truth_params = PlotSettings(rect_color=(0, 255, 0), text_size=0)
-        boxes, categories, im_path = self.dataset.get_image_features(idx)
-        im = plot_boxes(
-            im, boxes, categories, plot_settings=ground_truth_params
-        )
+        for i, batch in enumerate(dl):
+            ims, infos = batch
+            ims = [im.cuda() for im in ims]
+            with torch.no_grad():
+                preds = model(list(ims))
 
-        # show image
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.imshow(im)
-
-    def show_preds(self, ds: Dataset = None, rows: int = 1) -> None:
-        """ Show batch of predictions against ground truth.
-
-        Args:
-            ds: the datset to use, by default, use test_ds
-            rows: rows to predict
-
-        Returns nothing
-        """
-        if ds is None:
-            ds = self.test_ds
-
-        # setup iterator if not yet setup
-        if not hasattr(self, "ds_iterator"):
-            self.ds_iterator = iter(ds.indices)
-
-        plot_grid(
-            self.show_detection_vs_ground_truth,
-            partial(next, self.ds_iterator),
-            rows=rows,
-        )
+            anno_batch = []
+            for pred, info in zip(preds, infos):
+                anno = get_bounding_boxes(
+                    [pred], categories=categories, threshold=threshold
+                )
+                anno_batch.append(
+                    {"idx": int(info["image_id"].numpy()), "anno": anno}
+                )
+            yield anno_batch

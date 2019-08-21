@@ -4,6 +4,7 @@
 """
 Helper module for visualizations
 """
+import os
 from typing import List, Union, Tuple, Callable, Any
 from pathlib import Path
 
@@ -14,6 +15,7 @@ import matplotlib.pyplot as plt
 from PIL.JpegImagePlugin import JpegImageFile
 
 from .references.coco_eval import CocoEvaluator
+from .helper import Annotation
 
 
 class PlotSettings:
@@ -38,29 +40,29 @@ class PlotSettings:
 
 def plot_boxes(
     im: JpegImageFile,
-    boxes: List[List[int]],
-    categories: List[str],
+    annos: List[Annotation],
+    im_title: str = None,
     plot_settings: PlotSettings = PlotSettings(),
 ) -> JpegImageFile:
     """ Plot boxes on Image and return the Image
 
     Args:
         im: The image to plot boxes on
-        boxes: the boxes to plot - a list of [xmin, ymin, xmax, ymax] boxes
-        categories: list of catogires to label the boxes with
+        annos: a list of annotations
+        im_title: optional title str to pass in to draw on the top of the image
         plot_settings: the parameter of the bounding boxes
 
     Returns:
         The same image with boxes and labels plotted on it
     """
-    if len(boxes) > 0:
-        for box, category in zip(boxes, categories):
+    if len(annos) > 0:
+        draw = ImageDraw.Draw(im)
+        for anno in annos:
 
-            # reformat boxes to be consumable
-            box = [(box[0], box[1]), (box[2], box[3])]
+            bbox = anno.bbox
+            box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
 
             # draw rect
-            draw = ImageDraw.Draw(im)
             draw.rectangle(
                 box,
                 outline=plot_settings.rect_color,
@@ -73,15 +75,22 @@ def plot_boxes(
 
             # write prediction class
             draw.text(
-                box[0], category, font=font, fill=plot_settings.text_color
+                (bbox.left, bbox.top),
+                anno.category_name,
+                font=font,
+                fill=plot_settings.text_color,
+            )
+
+        if im_title is not None:
+            draw.text(
+                (0, 0), im_title, font=font, fill=plot_settings.text_color
             )
 
     return im
 
 
 def display_bounding_boxes(
-    boxes: List[List[int]],
-    categories: List[str],
+    annos: List[Annotation],
     im_path: Union[Path, str],
     ax: Union[None, plt.axes] = None,
     plot_settings: PlotSettings = PlotSettings(),
@@ -90,8 +99,7 @@ def display_bounding_boxes(
     """ Draw image with bounding boxes.
 
     Args:
-        boxes: A list of [xmin, ymin, xmax, ymax] bounding boxes to draw
-        categories: A list of detected categories
+        annos: A list of Annotations
         im_path: the location of image path to draw
         ax: an optional ax to specify where you wish the figure to be drawn on
 
@@ -100,8 +108,11 @@ def display_bounding_boxes(
     # Read image
     im = Image.open(str(im_path))
 
+    # set an image title
+    im_title = os.path.basename(im_path)
+
     # plot boxes on im
-    im = plot_boxes(im, boxes, categories, plot_settings=plot_settings)
+    im = plot_boxes(im, annos, im_title=im_title, plot_settings=plot_settings)
 
     # display the output image
     if ax is not None:
@@ -114,6 +125,82 @@ def display_bounding_boxes(
         plt.xticks([])
         plt.yticks([])
         plt.show()
+
+
+def plot_grid(
+    plot_func: Callable[..., None],
+    args: Any,
+    rows: int = 1,
+    figsize: Tuple[int, int] = (16, 16),
+) -> None:
+    """ Helper function to plot image grids.
+
+    Args:
+        plot_func: callback to call on each subplot. It should take an 'ax' as
+        the last param.
+        rows: rows to plot
+        figsize: figure size (will be dynamically modified in the code
+    """
+    fig_height = rows * 8
+    figsize = (16, fig_height)
+
+    fig, axes = plt.subplots(rows, 3, figsize=figsize)
+
+    if rows == 1:
+        axes = [axes]
+
+    for row in axes:
+        for ax in row:
+            # dynamic injection of params into callable
+            arguments = args() if isinstance(args, Callable) else args
+            try:
+                plot_func(arguments, ax)
+            except Exception:
+                plot_func(*arguments, ax)
+
+    plt.subplots_adjust(top=0.8, bottom=0.2, hspace=0.1, wspace=0.2)
+
+
+def plot_detection_vs_ground_truth(
+    im_path: str,
+    detection_annos: List[Annotation],
+    ground_truth_annos: List[Annotation],
+    ax: plt.axes,
+) -> None:
+    """ Plots bounding boxes of ground_truths and detections.
+
+    Args:
+        im_path: the image to plot
+        detection_annos: a list of detected annotations
+        ground_truth_annos: a list of ground_truth detections
+        ax: the axis to plot on
+
+    Returns nothing, but displays a graph
+    """
+    im = Image.open(im_path).convert("RGB")
+
+    # plot detections
+    pred_params = PlotSettings(rect_color=(255, 0, 0), text_size=1)
+    im = plot_boxes(
+        im,
+        detection_annos,
+        im_title=os.path.basename(im_path),
+        plot_settings=pred_params,
+    )
+
+    # plot ground truth boxes
+    ground_truth_params = PlotSettings(rect_color=(0, 255, 0), text_size=1)
+    im = plot_boxes(
+        im,
+        ground_truth_annos,
+        im_title=os.path.basename(im_path),
+        plot_settings=ground_truth_params,
+    )
+
+    # show image
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.imshow(im)
 
 
 # ===== Precision - Recall curve =====
@@ -233,46 +320,12 @@ def plot_pr_curves(
 
     Returns nothing, but plots PR graphs.
     """
-    for _, coco_eval in evaluator.coco_eval.items():
-        if not coco_eval.eval:
-            raise Exception(
-                "`accumulate()` has not been called on the passed in coco_eval object."
-            )
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
-        _plot_pr_curve_iou_range(ax1, coco_eval)
-        _plot_pr_curve_iou_mean(ax2, coco_eval)
-        plt.show()
-
-
-def plot_grid(
-    plot_func: Callable[..., None],
-    args: Any,
-    rows: int = 1,
-    figsize: Tuple[int, int] = (16, 16),
-) -> None:
-    """ Helper function to plot image grids.
-
-    Args:
-        plot_func: callback to call on each subplot. It should take an 'ax' as
-        the last param.
-        rows: rows to plot
-        figsize: figure size (will be dynamically modified in the code
-    """
-    fig_height = rows * 8
-    figsize = (16, fig_height)
-
-    fig, axes = plt.subplots(rows, 3, figsize=figsize)
-
-    if rows == 1:
-        axes = [axes]
-
-    for row in axes:
-        for ax in row:
-            # dynamic injection of params into callable
-            arguments = args() if isinstance(args, Callable) else args
-            try:
-                plot_func(arguments, ax)
-            except Exception:
-                plot_func(*arguments, ax)
-
-    plt.subplots_adjust(top=0.8, bottom=0.2, hspace=0.1, wspace=0.2)
+    coco_eval = evaluator.coco_eval["bbox"]
+    if not coco_eval.eval:
+        raise Exception(
+            "`accumulate()` has not been called on the passed in coco_eval object."
+        )
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
+    _plot_pr_curve_iou_range(ax1, coco_eval)
+    _plot_pr_curve_iou_mean(ax2, coco_eval)
+    plt.show()
