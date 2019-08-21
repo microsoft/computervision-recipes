@@ -17,8 +17,9 @@ channels:
 - fastai
 dependencies:
 - python==3.6.8
-- pytorch==1.0.0
-- torchvision  
+- pytorch>=1.0.0
+- torchvision>=0.3.0
+- pycocotools>=2.0
 - fastai==1.0.48
 - ipykernel>=4.6.1
 - jupyter>=1.0.0
@@ -35,3 +36,4 @@ dependencies:
   - pre-commit>=1.14.4
   - lxml>=4.3.2
   - nteract-scrapbook
+  - git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI
