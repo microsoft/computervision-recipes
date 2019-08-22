@@ -11,11 +11,12 @@ variables:
   value : 'eastus2'
 - name  : 'junitxml'
   value : 'reports/test-unit.xml'
-trigger: none
+  
+# no PR builds
+pr: none
 
-pr:
-- staging 
-- master
+# no CI trigger
+trigger: none
 
 jobs:
 - job: AzureMLNotebookTest
