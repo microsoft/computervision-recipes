@@ -124,14 +124,11 @@ class AnnotationBbox(Bbox):
         cls, arr: List[int], label_idx: int, label_name: str = None
     ) -> "AnnotationBbox":
         """ Create a Bbox object from an array [left, top, right, bottom] """
-        return AnnotationBbox(
-            arr[0],
-            arr[1],
-            arr[2],
-            arr[3],
-            label_idx=label_idx,
-            label_name=label_name,
-        )
+        bbox = super().from_array(arr)
+        bbox.__class__ = AnnotationBbox
+        bbox.label_idx = label_idx
+        bbox.label_name = label_name
+        return bbox
 
     def __repr__(self):
         name = (

@@ -71,6 +71,19 @@ def get_pretrained_fasterrcnn(num_classes: int) -> nn.Module:
     return model
 
 
+def calculate_ap(e: CocoEvaluator) -> float:
+    """ Calculate the Average Precision (AP) by averaging all iou
+    thresholds across all labels.
+
+    see `utils.detection.plot:_get_precision_recall_settings` to
+    get information on the precision_setting variable below and what the
+    indicies mean.
+    """
+    precision_settings = (slice(0, None), slice(0, None), slice(0, None), 0, 2)
+    coco_eval = e.coco_eval["bbox"].eval["precision"]
+    return np.mean(np.mean(coco_eval[precision_settings]))
+
+
 class DetectionLearner:
     """ Detection Learner for Object Detection"""
 
@@ -122,6 +135,7 @@ class DetectionLearner:
     def fit(self, epochs: int, print_freq: int = 10) -> None:
         """ The main training loop. """
         self.losses = []
+        self.ap = []
         self.epochs = epochs
         for epoch in range(self.epochs):
 
@@ -140,18 +154,27 @@ class DetectionLearner:
             self.lr_scheduler.step()
 
             # evaluate
-            self.evaluate(dl=self.dataset.train_dl)
+            e = self.evaluate(dl=self.dataset.train_dl)
+            self.ap.append(calculate_ap(e))
 
-    def plot_losses(self, figsize: Tuple[int, int] = (10, 5)) -> None:
-        """ Plot training loss from fitting. """
+    def plot_precision_and_loss(
+        self, figsize: Tuple[int, int] = (10, 5)
+    ) -> None:
+        """ Plot training loss from calling `fit` and average precision on the
+        test set. """
         fig = plt.figure(figsize=figsize)
-        ax = fig.add_subplot(111)
-        ax.set_xlim([0, self.epochs - 1])
-        ax.set_xticks(range(0, self.epochs))
-        ax.set_title("Loss over epochs")
-        ax.set_xlabel("epochs")
-        ax.set_ylabel("loss")
-        ax.plot(self.losses)
+        ax1 = fig.add_subplot(111)
+
+        ax1.set_xlim([0, self.epochs - 1])
+        ax1.set_xticks(range(0, self.epochs))
+        ax1.set_title("Loss and Average Precision over epochs")
+        ax1.set_xlabel("epochs")
+        ax1.set_ylabel("loss", color="g")
+        ax1.plot(self.losses, "g-")
+
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("average precision", color="b")
+        ax2.plot(self.ap, "b-")
 
     def evaluate(self, dl: DataLoader = None) -> CocoEvaluator:
         """ eval code on validation/test set and saves the evaluation results in self.results. """
@@ -199,8 +222,7 @@ class DetectionLearner:
         """ Batch predict
 
         Args
-            dataset_iterator: takes in a dataloader iterator, and predicts on the batch_size
-            specified by it. This can be created by `iter(dataloader)`
+            dl: A DataLoader to load batches of images from
             threshold: iou threshold for a positive detection
 
         Returns an iterator that yields a list of annotations for each image that is scored
