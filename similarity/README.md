@@ -21,6 +21,7 @@ We provide several notebooks to show how image similarity algorithms can be desi
 | [00_webcam.ipynb](./notebooks/00_webcam.ipynb)| Quick start notebook which demonstrates how to build an image retrieval system using a single image or webcam as input.
 | [01_training_and_evaluation_introduction.ipynb](./notebooks/01_training_and_evaluation_introduction.ipynb)| Notebook which explains the basic concepts around model training and evaluation, based on using DNNs trained for image classification.|
 | [11_exploring_hyperparameters.ipynb](notebooks/11_exploring_hyperparameters.ipynb)| Finds optimal model parameters using grid search. |
+| [12_fast_retrieval.ipynb](notebooks/12_fast_retrieval.ipynb)| Fast image retrieval using nearest neighbor search. |
 
 
 ## Coding guidelines
