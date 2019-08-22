@@ -46,12 +46,6 @@ bottom={self.bottom}]\
     def rect(self) -> List[int]:
         return [self.left, self.top, self.right, self.bottom]
 
-    def max(self) -> int:
-        return max([self.left, self.top, self.right, self.bottom])
-
-    def min(self) -> int:
-        return min([self.left, self.top, self.right, self.bottom])
-
     def width(self) -> int:
         width = self.right - self.left + 1
         assert width >= 0
@@ -109,20 +103,40 @@ bottom={self.bottom}]\
         return True
 
 
-class Annotation:
-    """ Contains a Bbox. """
+class AnnotationBbox(Bbox):
+    """ Inherits from Bbox """
 
     def __init__(
-        self, bbox: Bbox, category_idx: int, category_name: str = None
+        self,
+        left: int,
+        top: int,
+        right: int,
+        bottom: int,
+        label_idx: int,
+        label_name: str = None,
     ):
-        self.bbox = bbox
-        self.category_idx = category_idx
-        self.category_name = category_name or str(category_idx)
+        super().__init__(left, top, right, bottom)
+        self.label_idx = label_idx
+        self.label_name = label_name or str(label_idx)
+
+    @classmethod
+    def from_array(
+        cls, arr: List[int], label_idx: int, label_name: str = None
+    ) -> "AnnotationBbox":
+        """ Create a Bbox object from an array [left, top, right, bottom] """
+        return AnnotationBbox(
+            arr[0],
+            arr[1],
+            arr[2],
+            arr[3],
+            label_idx=label_idx,
+            label_name=label_name,
+        )
 
     def __repr__(self):
         name = (
             "None"
-            if self.category_name == str(self.category_idx)
-            else self.category_name
+            if self.label_name == str(self.label_idx)
+            else self.label_name
         )
-        return f"{{{self.bbox} | <{name}> | label:{self.category_idx}}}"
+        return f"{{{str(self)} | <{name}> | label:{self.label_idx}}}"

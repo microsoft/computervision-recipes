@@ -14,7 +14,7 @@ import xml.etree.ElementTree as ET
 from PIL import Image
 
 from .plot import display_bounding_boxes, plot_grid
-from .helper import Bbox, Annotation
+from .bbox import AnnotationBbox
 from .references.utils import collate_fn
 from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 
@@ -52,8 +52,8 @@ class DetectionDataset:
         batch_size: int = 2,
         transforms: object = None,
         train_test_ratio: float = 0.8,
-        im_folder: str = "images",
-        annotation_folder: str = "annotations",
+        im_dir: str = "images",
+        annotation_dir: str = "annotations",
     ):
         """ initialize dataset
 
@@ -68,41 +68,39 @@ class DetectionDataset:
             batch_size: batch size for dataloaders
             transforms: the transformations to apply
             train_test_ratio: the ratio of training to testing data
-            im_folder: the name of the image folder
-            annotation_folder: the name of the annotation folder
+            im_dir: the name of the image folder
+            annotation_dir: the name of the annotation folder
         """
 
         self.root = Path(root)
         self.transforms = transforms
-        self.im_folder = im_folder
-        self.anno_folder = annotation_folder
+        self.im_dir = im_dir
+        self.anno_dir = annotation_dir
         self.batch_size = batch_size
         self.train_test_ratio = train_test_ratio
 
         # get images and annotations
-        self.im_paths = list(sorted(os.listdir(self.root / self.im_folder)))
-        self.anno_paths = list(
-            sorted(os.listdir(self.root / self.anno_folder))
-        )
-        self.categories = self._get_categories()
+        self.im_paths = list(sorted(os.listdir(self.root / self.im_dir)))
+        self.anno_paths = list(sorted(os.listdir(self.root / self.anno_dir)))
+        self.labels = self._get_labels()
 
         # setup datasets (train_ds, test_ds, train_dl, test_dl)
         self._setup_data(train_test_ratio=train_test_ratio)
 
-    def _get_categories(self) -> List[str]:
+    def _get_labels(self) -> List[str]:
         """ Parses all Pascal VOC formatted annotation files to extract all
-        possible categories. """
-        categories = ["__background__"]
+        possible labels. """
+        labels = ["__background__"]
         for anno_path in self.anno_paths:
             anno_path = self.root / "annotations" / str(anno_path)
             tree = ET.parse(anno_path)
             root = tree.getroot()
             objs = root.findall("object")
             for obj in objs:
-                category = obj[0]
-                assert category.tag == "name"
-                categories.append(category.text)
-        return list(set(categories))
+                label = obj[0]
+                assert label.tag == "name"
+                labels.append(label.text)
+        return list(set(labels))
 
     def split_train_test(
         self, train_test_ratio: float = 0.8
@@ -161,7 +159,7 @@ class DetectionDataset:
 
     def _read_anno_path(
         self, anno_path: str
-    ) -> Tuple[List[Annotation], Union[str, Path]]:
+    ) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
         """ Extract the annotations and image path from labelling in Pascal VOC format.
 
         Args:
@@ -170,15 +168,15 @@ class DetectionDataset:
         Return
             A tuple of annotations and the image path
         """
-        annos = []
+        anno_bboxes = []
         tree = ET.parse(anno_path)
         root = tree.getroot()
 
         # extract bounding boxes and classification
         objs = root.findall("object")
         for obj in objs:
-            category = obj[0]
-            assert category.tag == "name"
+            label = obj[0]
+            assert label.tag == "name"
 
             bnd_box = obj[4]
             assert bnd_box.tag == "bndbox"
@@ -188,15 +186,14 @@ class DetectionDataset:
             right = int(bnd_box[2].text)
             bottom = int(bnd_box[3].text)
 
-            bbox = Bbox(left, top, right, bottom)
-            assert bbox.is_valid()
-
-            anno = Annotation(
-                bbox=bbox,
-                category_name=category.text,
-                category_idx=self.categories.index(category.text),
+            anno_bbox = AnnotationBbox.from_array(
+                [left, top, right, bottom],
+                label_name=label.text,
+                label_idx=self.labels.index(label.text),
             )
-            annos.append(anno)
+            assert anno_bbox.is_valid()
+
+            anno_bboxes.append(anno_bbox)
 
         # get image path from annotation
         anno_dir = os.path.dirname(anno_path)
@@ -204,11 +201,11 @@ class DetectionDataset:
             os.path.join(anno_dir, root.find("path").text)
         )
 
-        return (annos, im_path)
+        return (anno_bboxes, im_path)
 
     def _read_anno_idx(
         self, idx: int, rand: bool = False
-    ) -> Tuple[List[Annotation], Union[str, Path]]:
+    ) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
         """ Get annotation by index
 
         Args:
@@ -230,19 +227,19 @@ class DetectionDataset:
         if rand:
             idx = randrange(len(self.im_paths))
 
-        anno_path = self.root / self.anno_folder / str(self.anno_paths[idx])
+        anno_path = self.root / self.anno_dir / str(self.anno_paths[idx])
         return self._read_anno_path(anno_path)
 
     def __getitem__(self, idx):
         """ Make iterable. """
         # get box/labels from annotations
-        annos, im_path = self._read_anno_idx(idx)
+        anno_bboxes, im_path = self._read_anno_idx(idx)
 
         boxes = [
-            [anno.bbox.left, anno.bbox.top, anno.bbox.right, anno.bbox.bottom]
-            for anno in annos
+            [anno_bbox.left, anno_bbox.top, anno_bbox.right, anno_bbox.bottom]
+            for anno_bbox in anno_bboxes
         ]
-        labels = [anno.category_idx for anno in annos]
+        labels = [anno_bbox.label_idx for anno_bbox in anno_bboxes]
 
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)

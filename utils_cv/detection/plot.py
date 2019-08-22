@@ -5,7 +5,7 @@
 Helper module for visualizations
 """
 import os
-from typing import List, Union, Tuple, Callable, Any
+from typing import List, Union, Tuple, Callable, Any, Iterator
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from PIL.JpegImagePlugin import JpegImageFile
 
 from .references.coco_eval import CocoEvaluator
-from .helper import Annotation
+from .bbox import AnnotationBbox
 
 
 class PlotSettings:
@@ -40,7 +40,7 @@ class PlotSettings:
 
 def plot_boxes(
     im: JpegImageFile,
-    annos: List[Annotation],
+    anno_bboxes: List[AnnotationBbox],
     im_title: str = None,
     plot_settings: PlotSettings = PlotSettings(),
 ) -> JpegImageFile:
@@ -48,19 +48,21 @@ def plot_boxes(
 
     Args:
         im: The image to plot boxes on
-        annos: a list of annotations
+        anno_bboxes: a list of annotations bboxes
         im_title: optional title str to pass in to draw on the top of the image
         plot_settings: the parameter of the bounding boxes
 
     Returns:
         The same image with boxes and labels plotted on it
     """
-    if len(annos) > 0:
+    if len(anno_bboxes) > 0:
         draw = ImageDraw.Draw(im)
-        for anno in annos:
+        for anno_bbox in anno_bboxes:
 
-            bbox = anno.bbox
-            box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
+            box = [
+                (anno_bbox.left, anno_bbox.top),
+                (anno_bbox.right, anno_bbox.bottom),
+            ]
 
             # draw rect
             draw.rectangle(
@@ -75,8 +77,8 @@ def plot_boxes(
 
             # write prediction class
             draw.text(
-                (bbox.left, bbox.top),
-                anno.category_name,
+                (anno_bbox.left, anno_bbox.top),
+                anno_bbox.label_name,
                 font=font,
                 fill=plot_settings.text_color,
             )
@@ -90,7 +92,7 @@ def plot_boxes(
 
 
 def display_bounding_boxes(
-    annos: List[Annotation],
+    anno_bboxes: List[AnnotationBbox],
     im_path: Union[Path, str],
     ax: Union[None, plt.axes] = None,
     plot_settings: PlotSettings = PlotSettings(),
@@ -99,11 +101,11 @@ def display_bounding_boxes(
     """ Draw image with bounding boxes.
 
     Args:
-        annos: A list of Annotations
+        anno_bboxes: A list of AnnotationsBboxes
         im_path: the location of image path to draw
         ax: an optional ax to specify where you wish the figure to be drawn on
 
-    Returns nothing, but plots the image with bounding boxes and categories.
+    Returns nothing, but plots the image with bounding boxes and labels.
     """
     # Read image
     im = Image.open(str(im_path))
@@ -112,7 +114,9 @@ def display_bounding_boxes(
     im_title = os.path.basename(im_path)
 
     # plot boxes on im
-    im = plot_boxes(im, annos, im_title=im_title, plot_settings=plot_settings)
+    im = plot_boxes(
+        im, anno_bboxes, im_title=im_title, plot_settings=plot_settings
+    )
 
     # display the output image
     if ax is not None:
@@ -129,7 +133,7 @@ def display_bounding_boxes(
 
 def plot_grid(
     plot_func: Callable[..., None],
-    args: Any,
+    args: Union[Callable, Iterator, Any],
     rows: int = 1,
     figsize: Tuple[int, int] = (16, 16),
 ) -> None:
@@ -138,8 +142,14 @@ def plot_grid(
     Args:
         plot_func: callback to call on each subplot. It should take an 'ax' as
         the last param.
+        args: args can be passed in in many forms. It can be an iterator, a
+        callable, or simply some static parameters. If it is an iterator, this
+        function will call `next` on it each time. If it is a callable, this
+        function will call the function and use the returned values each time.
         rows: rows to plot
         figsize: figure size (will be dynamically modified in the code
+
+    Returns nothing but plots graph
     """
     fig_height = rows * 8
     figsize = (16, fig_height)
@@ -152,7 +162,11 @@ def plot_grid(
     for row in axes:
         for ax in row:
             # dynamic injection of params into callable
-            arguments = args() if isinstance(args, Callable) else args
+            arguments = (
+                args()
+                if isinstance(args, Callable)
+                else (next(args) if hasattr(args, "__iter__") else args)
+            )
             try:
                 plot_func(arguments, ax)
             except Exception:
@@ -163,8 +177,8 @@ def plot_grid(
 
 def plot_detection_vs_ground_truth(
     im_path: str,
-    detection_annos: List[Annotation],
-    ground_truth_annos: List[Annotation],
+    detection_annos: List[AnnotationBbox],
+    ground_truth_annos: List[AnnotationBbox],
     ax: plt.axes,
 ) -> None:
     """ Plots bounding boxes of ground_truths and detections.
@@ -237,8 +251,8 @@ def _get_precision_recall_settings(
     represents the following:
     1. [T] 10 evenly distributed thresholds for IoU, from 0.5 to 0.95.
     2. [R] 101 recall thresholds, from 0 to 101
-    3. [K] category, set to 0 if you want to display the results of the first
-    category TODO - actually lets use the mean over all categories
+    3. [K] label, set to 0 if you want to display the results of the first
+    label TODO - actually lets use the mean over all labels
     4. [A] area size range of the target (all-0, small-1, medium-2, large-3)
     5. [M] The maximum number of detection frames in a single image where index
     0 represents max_det=1, 1 represents max_det=10, 2 represents max_det=100
@@ -249,7 +263,7 @@ def _get_precision_recall_settings(
     Args:
         iou_thrs: the IoU thresholds to return
         rec_thrs: the recall thrsholds to return
-        cat_ids: category ids to use for evaluation
+        cat_ids: label ids to use for evaluation
         area_rng: object area ranges for evaluation
         max_dets: thresholds on max detections per image
 
@@ -281,12 +295,12 @@ def _plot_pr_curve_iou_range(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
 
 
 def _plot_pr_curve_iou_mean(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
-    """ Plots the PR curve, averaging over iou thresholds and [K] categories. """
+    """ Plots the PR curve, averaging over iou thresholds and [K] labels. """
     x = np.arange(0.0, 1.01, 0.01)
     ax = _setup_pr_axes(
         ax, "Precision-Recall Curve - Mean over IoU Thresholds"
     )
-    avg_arr = np.mean(  # mean over K categories
+    avg_arr = np.mean(  # mean over K labels
         np.mean(  # mean over iou thresholds
             coco_eval.eval["precision"][
                 _get_precision_recall_settings(slice(0, None))

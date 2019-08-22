@@ -16,19 +16,19 @@ import matplotlib.pyplot as plt
 
 from .references.engine import train_one_epoch, evaluate
 from .references.coco_eval import CocoEvaluator
-from .helper import Annotation, Bbox
+from .bbox import AnnotationBbox
 from ..common.gpu import torch_device
 
 
 def get_bounding_boxes(
-    pred: List[dict], categories: List[str] = None, threshold: int = 0.6
+    pred: List[dict], labels: List[str] = None, threshold: int = 0.6
 ) -> Tuple[List[int], List[List[int]]]:
     """ Gets the bounding boxes and labels from a prediction given a threshold.
 
     Args:
         pred: the output of passing in an image to torchvision's FasterRCNN
         model
-        categories: list of categories
+        labels: list of labels
         threshold: the minimum threshold to accept.
 
     Return:
@@ -38,19 +38,16 @@ def get_bounding_boxes(
     pred_boxes = list(pred[0]["boxes"].detach().cpu().numpy().astype(np.int32))
     pred_scores = list(pred[0]["scores"].detach().cpu().numpy())
 
-    annos = []
+    anno_bboxes = []
     for label, box, score in zip(pred_labels, pred_boxes, pred_scores):
         if score > threshold:
-            bbox = Bbox.from_array(box)
-            category_name = (
-                categories[label] if categories is not None else None
+            label_name = labels[label] if labels is not None else None
+            anno_bbox = AnnotationBbox.from_array(
+                box, label_idx=label, label_name=label_name
             )
-            anno = Annotation(
-                bbox, category_name=category_name, category_idx=label
-            )
-            annos.append(anno)
+            anno_bboxes.append(anno_bbox)
 
-    return annos
+    return anno_bboxes
 
 
 def get_pretrained_fasterrcnn(num_classes: int) -> nn.Module:
@@ -93,16 +90,9 @@ class DetectionLearner:
         self.momentum = momentum
         self.weight_decay = weight_decay
 
-        # get training dataloaders and datasets
-        self.dataset = dataset
-        self.train_ds = dataset.train_ds
-        self.test_ds = dataset.test_ds
-        self.train_dl = dataset.train_dl
-        self.test_dl = dataset.test_dl
-
         # setup model, default to fasterrcnn
         if self.model is None:
-            self.model = get_pretrained_fasterrcnn(len(dataset.categories)).to(
+            self.model = get_pretrained_fasterrcnn(len(dataset.labels)).to(
                 self.device
             )
 
@@ -139,7 +129,7 @@ class DetectionLearner:
             logger = train_one_epoch(
                 self.model,
                 self.optimizer,
-                self.train_dl,
+                self.dataset.train_dl,
                 self.device,
                 epoch,
                 print_freq=print_freq,
@@ -150,7 +140,7 @@ class DetectionLearner:
             self.lr_scheduler.step()
 
             # evaluate
-            self.evaluate(dl=self.train_dl)
+            self.evaluate(dl=self.dataset.train_dl)
 
     def plot_losses(self, figsize: Tuple[int, int] = (10, 5)) -> None:
         """ Plot training loss from fitting. """
@@ -166,7 +156,7 @@ class DetectionLearner:
     def evaluate(self, dl: DataLoader = None) -> CocoEvaluator:
         """ eval code on validation/test set and saves the evaluation results in self.results. """
         if dl is None:
-            dl = self.test_dl
+            dl = self.dataset.test_dl
         self.results = evaluate(self.model, dl, device=self.device)
         return self.results
 
@@ -174,7 +164,7 @@ class DetectionLearner:
         self,
         im_or_path: Union[np.ndarray, Union[str, Path]],
         threshold: int = 0.6,
-    ) -> List[Annotation]:
+    ) -> List[AnnotationBbox]:
         """ Performs inferencing on an image path or image.
 
         Args:
@@ -187,7 +177,7 @@ class DetectionLearner:
             TypeError is the im object is a path or str to the image instead of
             an nd.array
 
-        Return the prediction dictionary object
+        Return a list of AnnotationBbox
         """
         im = (
             Image.open(im_or_path)
@@ -200,14 +190,12 @@ class DetectionLearner:
         model = self.model.eval()  # eval mode
         with torch.no_grad():
             pred = model([im])
-        categories = self.train_ds.dataset.categories
-        return get_bounding_boxes(
-            pred, categories=categories, threshold=threshold
-        )
+        labels = self.dataset.labels
+        return get_bounding_boxes(pred, labels=labels, threshold=threshold)
 
     def pred_batch(
         self, dl: DataLoader, threshold: int = 0.6
-    ) -> Generator[List[Annotation], None, None]:
+    ) -> Generator[List[AnnotationBbox], None, None]:
         """ Batch predict
 
         Args
@@ -218,7 +206,7 @@ class DetectionLearner:
         Returns an iterator that yields a list of annotations for each image that is scored
         """
 
-        categories = self.dataset.categories
+        labels = self.dataset.labels
         model = self.model.eval()
 
         for i, batch in enumerate(dl):
@@ -227,12 +215,15 @@ class DetectionLearner:
             with torch.no_grad():
                 preds = model(list(ims))
 
-            anno_batch = []
+            bbox_batch = []
             for pred, info in zip(preds, infos):
-                anno = get_bounding_boxes(
-                    [pred], categories=categories, threshold=threshold
+                anno_bboxes = get_bounding_boxes(
+                    [pred], labels=labels, threshold=threshold
                 )
-                anno_batch.append(
-                    {"idx": int(info["image_id"].numpy()), "anno": anno}
+                bbox_batch.append(
+                    {
+                        "idx": int(info["image_id"].numpy()),
+                        "anno_bboxes": anno_bboxes,
+                    }
                 )
-            yield anno_batch
+            yield bbox_batch
