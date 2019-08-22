@@ -47,4 +47,36 @@ def test_01_notebook_run(similarity_notebooks, tiny_ic_data_path):
         ),
         kernel_name=KERNEL_NAME,
     )
-    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+
+
+@pytest.mark.notebooks
+def test_11_notebook_run(similarity_notebooks, tiny_ic_data_path):
+    notebook_path = similarity_notebooks["11"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            DATA_PATHS=[tiny_ic_data_path],
+            REPS=1,
+            LEARNING_RATES=[1e-4],
+            IM_SIZES=[30],
+            EPOCHS=[1],
+        ),
+        kernel_name=KERNEL_NAME,
+    )
+
+@pytest.mark.notebooks
+def test_12_notebook_run(similarity_notebooks, tiny_ic_data_path):
+    notebook_path = similarity_notebooks["12"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            DATA_PATH=tiny_ic_data_path,
+            IM_SIZE=30,
+            NUM_RANK_ITER=5
+        ),
+        kernel_name=KERNEL_NAME,
+    )

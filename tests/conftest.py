@@ -85,7 +85,7 @@ def classification_notebooks():
         ),
         "24_exploring_hyperparameters_on_azureml": os.path.join(
             folder_notebooks, "24_exploring_hyperparameters_on_azureml.ipynb"
-        )
+        ),
     }
     return paths
 
@@ -100,6 +100,10 @@ def similarity_notebooks():
         "01": os.path.join(
             folder_notebooks, "01_training_and_evaluation_introduction.ipynb"
         ),
+        "11": os.path.join(
+            folder_notebooks, "11_exploring_hyperparameters.ipynb"
+        ),
+        "12": os.path.join(folder_notebooks, "12_fast_retrieval.ipynb"),
     }
     return paths
 
@@ -252,14 +256,16 @@ def testing_databunch(tmp_session):
 
 
 def pytest_addoption(parser):
-    parser.addoption("--subscription_id",
-                        help="Azure Subscription Id to create resources in")
-    parser.addoption("--resource_group",
-                        help="Name of the resource group")
-    parser.addoption("--workspace_name",
-                        help="Name of Azure ML Workspace")
-    parser.addoption("--workspace_region",
-                        help="Azure region to create the workspace in")
+    parser.addoption(
+        "--subscription_id",
+        help="Azure Subscription Id to create resources in",
+    )
+    parser.addoption("--resource_group", help="Name of the resource group")
+    parser.addoption("--workspace_name", help="Name of Azure ML Workspace")
+    parser.addoption(
+        "--workspace_region", help="Azure region to create the workspace in"
+    )
+
 
 @pytest.fixture
 def subscription_id(request):

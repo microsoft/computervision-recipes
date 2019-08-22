@@ -14,7 +14,6 @@ import logging
 from datetime import datetime
 from dateutil.parser import isoparse
 from pymongo import MongoClient
-from datetime import datetime
 from tools.repo_metrics.git_stats import Github
 from tools.repo_metrics.config import (
     GITHUB_TOKEN,
@@ -32,6 +31,7 @@ log = logging.getLogger()
 
 def parse_args():
     """Argument parser.
+
     Returns:
         obj: Parser.
     """
@@ -61,12 +61,14 @@ def parse_args():
 
 def connect(uri="mongodb://localhost"):
     """Mongo connector.
+
     Args:
         uri (str): Connection string.
+
     Returns:
         obj: Mongo client.
     """
-    client = MongoClient(uri, serverSelectionTimeoutMS=1000)
+    client = MongoClient(uri, serverSelectionTimeoutMS=5000)
 
     # Send a query to the server to see if the connection is working.
     try:
@@ -78,9 +80,11 @@ def connect(uri="mongodb://localhost"):
 
 def event_as_dict(event, date):
     """Encodes an string event input as a dictionary with the date.
+
     Args:
         event (str): Details of a event.
         date (datetime): Date of the event.
+
     Returns:
         dict: Dictionary with the event and the date.
     """
@@ -89,8 +93,10 @@ def event_as_dict(event, date):
 
 def github_stats_as_dict(github):
     """Encodes Github statistics as a dictionary with the date.
+
     Args:
         obj: Github object.
+
     Returns:
         dict: Dictionary with Github details and the date.
     """
@@ -125,6 +131,7 @@ def github_stats_as_dict(github):
 
 def tracker(args):
     """Main function to track metrics.
+
     Args:
         args (obj): Parsed arguments.
     """
