@@ -254,8 +254,8 @@ def _get_precision_recall_settings(
     represents the following:
     1. [T] 10 evenly distributed thresholds for IoU, from 0.5 to 0.95.
     2. [R] 101 recall thresholds, from 0 to 101
-    3. [K] label, set to 0 if you want to display the results of the first
-    label TODO - actually lets use the mean over all labels
+    3. [K] label, set to slice(0, None) to get precision over all the labels in
+    the dataset. Then take the mean over all labels.
     4. [A] area size range of the target (all-0, small-1, medium-2, large-3)
     5. [M] The maximum number of detection frames in a single image where index
     0 represents max_det=1, 1 represents max_det=10, 2 represents max_det=100
