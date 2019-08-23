@@ -135,6 +135,7 @@ def plot_grid(
     plot_func: Callable[..., None],
     args: Union[Callable, Iterator, Any],
     rows: int = 1,
+    cols: int = 3,
     figsize: Tuple[int, int] = (16, 16),
 ) -> None:
     """ Helper function to plot image grids.
@@ -147,6 +148,8 @@ def plot_grid(
         function will call `next` on it each time. If it is a callable, this
         function will call the function and use the returned values each time.
         rows: rows to plot
+        cols: cols to plot, default is 3. NOTE: use cols=3 for best looking
+        grid
         figsize: figure size (will be dynamically modified in the code
 
     Returns nothing but plots graph
@@ -154,7 +157,7 @@ def plot_grid(
     fig_height = rows * 8
     figsize = (16, fig_height)
 
-    fig, axes = plt.subplots(rows, 3, figsize=figsize)
+    fig, axes = plt.subplots(rows, cols, figsize=figsize)
 
     if rows == 1:
         axes = [axes]

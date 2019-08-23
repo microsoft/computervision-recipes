@@ -51,7 +51,7 @@ class DetectionDataset:
         root: Union[str, Path],
         batch_size: int = 2,
         transforms: object = None,
-        train_test_ratio: float = 0.8,
+        train_pct: float = 0.8,
         im_dir: str = "images",
         annotation_dir: str = "annotations",
     ):
@@ -67,7 +67,7 @@ class DetectionDataset:
             annotation folders
             batch_size: batch size for dataloaders
             transforms: the transformations to apply
-            train_test_ratio: the ratio of training to testing data
+            train_pct: the ratio of training to testing data
             im_dir: the name of the image folder
             annotation_dir: the name of the annotation folder
         """
@@ -77,7 +77,7 @@ class DetectionDataset:
         self.im_dir = im_dir
         self.anno_dir = annotation_dir
         self.batch_size = batch_size
-        self.train_test_ratio = train_test_ratio
+        self.train_pct = train_pct
 
         # get images and annotations
         self.im_paths = list(sorted(os.listdir(self.root / self.im_dir)))
@@ -85,7 +85,7 @@ class DetectionDataset:
         self.labels = self._get_labels()
 
         # setup datasets (train_ds, test_ds, train_dl, test_dl)
-        self._setup_data(train_test_ratio=train_test_ratio)
+        self._setup_data(train_pct=train_pct)
 
     def _get_labels(self) -> List[str]:
         """ Parses all Pascal VOC formatted annotation files to extract all
@@ -103,18 +103,18 @@ class DetectionDataset:
         return list(set(labels))
 
     def split_train_test(
-        self, train_test_ratio: float = 0.8
+        self, train_pct: float = 0.8
     ) -> Tuple[Dataset, Dataset]:
         """ Split this dataset into a training and testing set
 
         Args:
-            train_test_ratio: the ratio of images to use for training vs
+            train_pct: the ratio of images to use for training vs
             testing
 
         Return
             A training and testing dataset in that order
         """
-        test_num = math.floor(len(self) * (1 - train_test_ratio))
+        test_num = math.floor(len(self) * (1 - train_pct))
         indices = torch.randperm(len(self)).tolist()
         self.transforms = get_transform(train=True)
         train = Subset(self, indices[:-test_num])
@@ -122,11 +122,11 @@ class DetectionDataset:
         test = Subset(self, indices[-test_num:])
         return train, test
 
-    def _setup_data(self, train_test_ratio: float = 0.8):
+    def _setup_data(self, train_pct: float = 0.8):
         """ create training and validation data loaders
         """
         self.train_ds, self.test_ds = self.split_train_test(
-            train_test_ratio=train_test_ratio
+            train_pct=train_pct
         )
 
         self.train_dl = DataLoader(
@@ -145,17 +145,20 @@ class DetectionDataset:
             collate_fn=collate_fn,
         )
 
-    def show_ims(self, rows: int = 1, rand: bool = False) -> None:
+    def show_ims(
+        self, rows: int = 1, cols: int = 3, rand: bool = False
+    ) -> None:
         """ Show a set of images.
 
         Args:
             rows: the number of rows images to display
+            cols: cols to display, NOTE: use 3 for best looking grid
             rand: randomize images
 
         Returns None but displays a grid of annotated images.
         """
         im_features = partial(self._read_anno_idx, None, True)
-        plot_grid(display_bounding_boxes, im_features, rows=rows)
+        plot_grid(display_bounding_boxes, im_features, rows=rows, cols=cols)
 
     def _read_anno_path(
         self, anno_path: str
@@ -171,6 +174,12 @@ class DetectionDataset:
         anno_bboxes = []
         tree = ET.parse(anno_path)
         root = tree.getroot()
+
+        # get image path from annotation
+        anno_dir = os.path.dirname(anno_path)
+        im_path = os.path.realpath(
+            os.path.join(anno_dir, root.find("path").text)
+        )
 
         # extract bounding boxes and classification
         objs = root.findall("object")
@@ -190,16 +199,11 @@ class DetectionDataset:
                 [left, top, right, bottom],
                 label_name=label.text,
                 label_idx=self.labels.index(label.text),
+                im_path=im_path,
             )
             assert anno_bbox.is_valid()
 
             anno_bboxes.append(anno_bbox)
-
-        # get image path from annotation
-        anno_dir = os.path.dirname(anno_path)
-        im_path = os.path.realpath(
-            os.path.join(anno_dir, root.find("path").text)
-        )
 
         return (anno_bboxes, im_path)
 
@@ -227,8 +231,12 @@ class DetectionDataset:
         if rand:
             idx = randrange(len(self.im_paths))
 
-        anno_path = self.root / self.anno_dir / str(self.anno_paths[idx])
+        anno_path = self.get_path_from_idx(idx)
         return self._read_anno_path(anno_path)
+
+    def get_path_from_idx(self, idx: int) -> str:
+        """ Gets an im_path from idx. """
+        return self.root / self.anno_dir / str(self.anno_paths[idx])
 
     def __getitem__(self, idx):
         """ Make iterable. """

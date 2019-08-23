@@ -21,18 +21,22 @@ from ..common.gpu import torch_device
 
 
 def get_bounding_boxes(
-    pred: List[dict], labels: List[str] = None, threshold: int = 0.6
-) -> Tuple[List[int], List[List[int]]]:
+    pred: List[dict],
+    labels: List[str] = None,
+    im_path: str = None,
+    threshold: int = 0.6,
+) -> List[AnnotationBbox]:
     """ Gets the bounding boxes and labels from a prediction given a threshold.
 
     Args:
         pred: the output of passing in an image to torchvision's FasterRCNN
         model
         labels: list of labels
+        im_path: the image path of the preds
         threshold: the minimum threshold to accept.
 
     Return:
-        a list of labels and bounding boxes that pass the minimum threshold.
+        a list of AnnotationBboxesthat pass the minimum threshold.
     """
     pred_labels = list(pred[0]["labels"].cpu().numpy())
     pred_boxes = list(pred[0]["boxes"].detach().cpu().numpy().astype(np.int32))
@@ -43,7 +47,7 @@ def get_bounding_boxes(
         if score > threshold:
             label_name = labels[label] if labels is not None else None
             anno_bbox = AnnotationBbox.from_array(
-                box, label_idx=label, label_name=label_name
+                box, label_idx=label, label_name=label_name, im_path=im_path
             )
             anno_bboxes.append(anno_bbox)
 
@@ -90,7 +94,7 @@ class DetectionLearner:
     def __init__(
         self,
         dataset: Dataset,
-        lr: float,
+        lr: float = 0.005,
         model: nn.Module = None,
         momentum: float = 0.9,
         weight_decay: float = 0.0005,
@@ -109,6 +113,23 @@ class DetectionLearner:
                 self.device
             )
 
+        # setup optimizer and lr scheduler
+        self._setup_optimizer(self.lr, self.momentum, self.weight_decay)
+
+    def __getattr__(self, attr):
+        if attr in self.__dict__:
+            return self.__dict__[attr]
+        raise AttributeError(
+            "'{}' object has no attribute '{}'".format(
+                type(self).__name__, attr
+            )
+        )
+
+    def _setup_optimizer(
+        self, lr: float, momentum: float, weight_decay: float
+    ) -> None:
+        """ setup the lr scheduler and the optimizer which are used in the main
+        training loop. """
         # construct our optimizer
         params = [p for p in self.model.parameters() if p.requires_grad]
         self.optimizer = torch.optim.SGD(
@@ -123,19 +144,29 @@ class DetectionLearner:
             self.optimizer, step_size=3, gamma=0.1
         )
 
-    def __getattr__(self, attr):
-        if attr in self.__dict__:
-            return self.__dict__[attr]
-        raise AttributeError(
-            "'{}' object has no attribute '{}'".format(
-                type(self).__name__, attr
-            )
-        )
-
-    def fit(self, epochs: int, print_freq: int = 10) -> None:
+    def fit(
+        self,
+        epochs: int,
+        lr: float = None,
+        momentum: float = None,
+        weight_decay: float = None,
+        print_freq: int = 10,
+    ) -> None:
         """ The main training loop. """
+
+        # override lr, momentum, or weight_decay if it is set
+        if None in (lr, momentum, weight_decay):
+            self._setup_optimizer(
+                lr or self.lr,
+                momentum or self.momentum,
+                weight_decay or self.weight_decay,
+            )
+
+        # store data in these arrays to plot later
         self.losses = []
         self.ap = []
+
+        # main training loop
         self.epochs = epochs
         for epoch in range(self.epochs):
 
@@ -157,7 +188,7 @@ class DetectionLearner:
             e = self.evaluate(dl=self.dataset.train_dl)
             self.ap.append(calculate_ap(e))
 
-    def plot_precision_and_loss(
+    def plot_precision_loss_curves(
         self, figsize: Tuple[int, int] = (10, 5)
     ) -> None:
         """ Plot training loss from calling `fit` and average precision on the
@@ -216,7 +247,22 @@ class DetectionLearner:
         labels = self.dataset.labels
         return get_bounding_boxes(pred, labels=labels, threshold=threshold)
 
-    def pred_batch(
+    def predict_dl(
+        self, dl: DataLoader, threshold: int = 0.6
+    ) -> List[AnnotationBbox]:
+        """ Predict all images in a dataloader object.
+
+        Args:
+            dl: the dataloader to predict on
+            threshold: iou threshold for a positive detection
+
+        Returns a list of AnnotationBboxes
+        """
+        pred_generator = self.predict_batch(dl, threshold=threshold)
+        detections = [pred for preds in pred_generator for pred in preds]
+        return detections
+
+    def predict_batch(
         self, dl: DataLoader, threshold: int = 0.6
     ) -> Generator[List[AnnotationBbox], None, None]:
         """ Batch predict
@@ -239,13 +285,12 @@ class DetectionLearner:
 
             bbox_batch = []
             for pred, info in zip(preds, infos):
+
+                im_idx = int(info["image_id"].numpy())
+                im_path = dl.dataset.dataset.get_path_from_idx(im_idx)
+
                 anno_bboxes = get_bounding_boxes(
-                    [pred], labels=labels, threshold=threshold
+                    [pred], labels=labels, im_path=im_path, threshold=threshold
                 )
-                bbox_batch.append(
-                    {
-                        "idx": int(info["image_id"].numpy()),
-                        "anno_bboxes": anno_bboxes,
-                    }
-                )
+                bbox_batch.append({"idx": im_idx, "anno_bboxes": anno_bboxes})
             yield bbox_batch

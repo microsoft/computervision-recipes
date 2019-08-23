@@ -113,21 +113,24 @@ class AnnotationBbox(Bbox):
         right: int,
         bottom: int,
         label_idx: int,
+        im_path: str = None,
         label_name: str = None,
     ):
+        """ Initialize AnnotationBbox """
         super().__init__(left, top, right, bottom)
+        self.set_meta(label_idx, im_path, label_name)
+
+    def set_meta(self, label_idx: int, im_path: str, label_name):
         self.label_idx = label_idx
-        self.label_name = label_name or str(label_idx)
+        self.im_path = im_path
+        self.label_name = label_name
 
     @classmethod
-    def from_array(
-        cls, arr: List[int], label_idx: int, label_name: str = None
-    ) -> "AnnotationBbox":
+    def from_array(cls, arr: List[int], **kwargs) -> "AnnotationBbox":
         """ Create a Bbox object from an array [left, top, right, bottom] """
         bbox = super().from_array(arr)
         bbox.__class__ = AnnotationBbox
-        bbox.label_idx = label_idx
-        bbox.label_name = label_name
+        bbox.set_meta(**kwargs)
         return bbox
 
     def __repr__(self):
@@ -136,4 +139,4 @@ class AnnotationBbox(Bbox):
             if self.label_name == str(self.label_idx)
             else self.label_name
         )
-        return f"{{{str(self)} | <{name}> | label:{self.label_idx}}}"
+        return f"{{{str(self)} | <{name}> | label:{self.label_idx} | path:{self.im_path}}} "
