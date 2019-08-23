@@ -8,11 +8,11 @@ import os
 from typing import List, Union, Tuple, Callable, Any, Iterator
 from pathlib import Path
 
+import PIL
 from PIL import Image, ImageDraw, ImageFont
 
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL.JpegImagePlugin import JpegImageFile
 
 from .references.coco_eval import CocoEvaluator
 from .bbox import AnnotationBbox
@@ -39,11 +39,11 @@ class PlotSettings:
 
 
 def plot_boxes(
-    im: JpegImageFile,
+    im: PIL.Image.Image,
     anno_bboxes: List[AnnotationBbox],
     im_title: str = None,
     plot_settings: PlotSettings = PlotSettings(),
-) -> JpegImageFile:
+) -> PIL.Image.Image:
     """ Plot boxes on Image and return the Image
 
     Args:
