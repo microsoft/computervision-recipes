@@ -139,4 +139,46 @@ class AnnotationBbox(Bbox):
             if self.label_name == str(self.label_idx)
             else self.label_name
         )
-        return f"{{{str(self)} | <{name}> | label:{self.label_idx} | path:{self.im_path}}} "
+        return f"{{{str(self)} | <{name}> | label:{self.label_idx} | path:{self.im_path}}}"
+
+
+class DetectionBbox(AnnotationBbox):
+    """ Inherits from AnnotationBbox """
+
+    def __init__(
+        self,
+        left: int,
+        top: int,
+        right: int,
+        bottom: int,
+        label_idx: int,
+        score: float,
+        im_path: str = None,
+        label_name: str = None,
+    ):
+        """ Initialize DetectionBbox """
+        super().__init__(
+            left,
+            top,
+            right,
+            bottom,
+            label_idx,
+            im_path=im_path,
+            label_name=label_name,
+        )
+        self.score = score
+
+    @classmethod
+    def from_array(
+        cls, arr: List[int], score: float, **kwargs
+    ) -> "DetectionBbox":
+        """ Create a Bbox object from an array [left, top, right, bottom]
+        This funciton must take in a score.
+        """
+        bbox = super().from_array(arr, **kwargs)
+        bbox.__class__ = DetectionBbox
+        bbox.score = score
+        return bbox
+
+    def __repr__(self):
+        return f"{super().__repr__()} | score: {self.score}"
