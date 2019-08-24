@@ -4,8 +4,11 @@
 from typing import List, Union
 
 
-class Bbox:
+class _Bbox:
     """ Util to represent bounding boxes
+
+    Generally speaking, you should use either the AnnotationBbox or the
+    DetectionBbox that inherit from this class.
 
     Source:
     https://github.com/Azure/ObjectDetectionUsingCntk/blob/master/helpers.py
@@ -69,6 +72,7 @@ bottom={self.bottom}]\
         if (overlap_left > overlap_right) or (overlap_top > overlap_bottom):
             return None
         else:
+            # TODO think about whether this actually works for classes that inherit _Bbox
             return Bbox(
                 overlap_left, overlap_top, overlap_right, overlap_bottom
             )
@@ -86,11 +90,12 @@ bottom={self.bottom}]\
         self.bottom = bottom_new
 
     def crop(self, max_width: int, max_height: int) -> "Bbox":
-        left_new = min(max(self.left, 0), maxWidth)
-        top_new = min(max(self.top, 0), maxHeight)
-        right_new = min(max(self.right, 0), maxWidth)
-        bottom_new = min(max(self.bottom, 0), maxHeight)
-        return Bbox(left_new, top_new, right_new, bottom_new)
+        self.left = min(max(self.left, 0), max_width)
+        self.top = min(max(self.top, 0), max_height)
+        self.right = min(max(self.right, 0), max_width)
+        self.bottom = min(max(self.bottom, 0), max_height)
+        self.standardize()
+        return self
 
     def is_valid(self) -> bool:
         if self.left >= self.right or self.top >= self.bottom:
