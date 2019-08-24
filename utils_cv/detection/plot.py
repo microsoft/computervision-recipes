@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from .references.coco_eval import CocoEvaluator
-from .bbox import AnnotationBbox
+from .bbox import _Bbox, AnnotationBbox, DetectionBbox
 
 
 class PlotSettings:
@@ -40,29 +40,26 @@ class PlotSettings:
 
 def plot_boxes(
     im: PIL.Image.Image,
-    anno_bboxes: List[AnnotationBbox],
-    im_title: str = None,
+    bboxes: List[_Bbox],
+    title: str = None,
     plot_settings: PlotSettings = PlotSettings(),
 ) -> PIL.Image.Image:
     """ Plot boxes on Image and return the Image
 
     Args:
         im: The image to plot boxes on
-        anno_bboxes: a list of annotations bboxes
-        im_title: optional title str to pass in to draw on the top of the image
+        bboxes: a list of bboxes (either DetectionBbox or AnnotationBbox)
+        title: optional title str to pass in to draw on the top of the image
         plot_settings: the parameter of the bounding boxes
 
     Returns:
         The same image with boxes and labels plotted on it
     """
-    if len(anno_bboxes) > 0:
+    if len(bboxes) > 0:
         draw = ImageDraw.Draw(im)
-        for anno_bbox in anno_bboxes:
+        for bbox in bboxes:
 
-            box = [
-                (anno_bbox.left, anno_bbox.top),
-                (anno_bbox.right, anno_bbox.bottom),
-            ]
+            box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
 
             # draw rect
             draw.rectangle(
@@ -77,22 +74,20 @@ def plot_boxes(
 
             # write prediction class
             draw.text(
-                (anno_bbox.left, anno_bbox.top),
-                anno_bbox.label_name,
+                (bbox.left, bbox.top),
+                bbox.label_name,
                 font=font,
                 fill=plot_settings.text_color,
             )
 
         if im_title is not None:
-            draw.text(
-                (0, 0), im_title, font=font, fill=plot_settings.text_color
-            )
+            draw.text((0, 0), title, font=font, fill=plot_settings.text_color)
 
     return im
 
 
-def display_bounding_boxes(
-    anno_bboxes: List[AnnotationBbox],
+def display_bboxes(
+    bboxes: List[_Bbox],
     im_path: Union[Path, str],
     ax: Union[None, plt.axes] = None,
     plot_settings: PlotSettings = PlotSettings(),
@@ -101,7 +96,7 @@ def display_bounding_boxes(
     """ Draw image with bounding boxes.
 
     Args:
-        anno_bboxes: A list of AnnotationsBboxes
+        bboxes: A list of _Bbox, could be DetectionBbox or AnnotationBbox
         im_path: the location of image path to draw
         ax: an optional ax to specify where you wish the figure to be drawn on
 
@@ -111,12 +106,10 @@ def display_bounding_boxes(
     im = Image.open(str(im_path))
 
     # set an image title
-    im_title = os.path.basename(im_path)
+    title = os.path.basename(im_path)
 
     # plot boxes on im
-    im = plot_boxes(
-        im, anno_bboxes, im_title=im_title, plot_settings=plot_settings
-    )
+    im = plot_boxes(im, bboxes, title=title, plot_settings=plot_settings)
 
     # display the output image
     if ax is not None:
@@ -180,16 +173,16 @@ def plot_grid(
 
 def plot_detection_vs_ground_truth(
     im_path: str,
-    detection_annos: List[AnnotationBbox],
-    ground_truth_annos: List[AnnotationBbox],
+    det_bboxes: List[DetectionBbox],
+    anno_bboxes: List[AnnotationBbox],
     ax: plt.axes,
 ) -> None:
     """ Plots bounding boxes of ground_truths and detections.
 
     Args:
         im_path: the image to plot
-        detection_annos: a list of detected annotations
-        ground_truth_annos: a list of ground_truth detections
+        det_bboxes: a list of detected annotations
+        anno_bboxes: a list of ground_truth detections
         ax: the axis to plot on
 
     Returns nothing, but displays a graph
@@ -197,21 +190,21 @@ def plot_detection_vs_ground_truth(
     im = Image.open(im_path).convert("RGB")
 
     # plot detections
-    pred_params = PlotSettings(rect_color=(255, 0, 0), text_size=1)
+    det_params = PlotSettings(rect_color=(255, 0, 0), text_size=1)
     im = plot_boxes(
         im,
-        detection_annos,
+        det_bboxes,
         im_title=os.path.basename(im_path),
-        plot_settings=pred_params,
+        plot_settings=det_params,
     )
 
     # plot ground truth boxes
-    ground_truth_params = PlotSettings(rect_color=(0, 255, 0), text_size=1)
+    anno_params = PlotSettings(rect_color=(0, 255, 0), text_size=1)
     im = plot_boxes(
         im,
-        ground_truth_annos,
+        anno_bboxes,
         im_title=os.path.basename(im_path),
-        plot_settings=ground_truth_params,
+        plot_settings=anno_params,
     )
 
     # show image
