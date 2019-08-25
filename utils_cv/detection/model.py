@@ -85,7 +85,7 @@ def get_pretrained_fasterrcnn(num_classes: int) -> nn.Module:
     return model
 
 
-def calculate_ap(e: CocoEvaluator) -> float:
+def _calculate_ap(e: CocoEvaluator) -> float:
     """ Calculate the Average Precision (AP) by averaging all iou
     thresholds across all labels.
 
@@ -167,7 +167,7 @@ class DetectionLearner:
 
             # evaluate
             e = self.evaluate(dl=self.dataset.train_dl)
-            self.ap.append(calculate_ap(e))
+            self.ap.append(_calculate_ap(e))
 
     def plot_precision_loss_curves(
         self, figsize: Tuple[int, int] = (10, 5)
@@ -245,8 +245,8 @@ class DetectionLearner:
         Returns a list of DetectionBbox
         """
         pred_generator = self.predict_batch(dl, threshold=threshold)
-        detections = [pred for preds in pred_generator for pred in preds]
-        return detections
+        det_bboxes = [pred for preds in pred_generator for pred in preds]
+        return det_bboxes
 
     def predict_batch(
         self, dl: DataLoader, threshold: Optional[float] = 0.5
@@ -258,7 +258,8 @@ class DetectionLearner:
             threshold: iou threshold for a positive detection. Note: set
             threshold to None to omit a threshold
 
-        Returns an iterator that yields a list of detection bboxes for each image that is scored
+        Returns an iterator that yields a batch of detection bboxes for each
+        image that is scored.
         """
 
         labels = self.dataset.labels
@@ -268,16 +269,16 @@ class DetectionLearner:
             ims, infos = batch
             ims = [im.cuda() for im in ims]
             with torch.no_grad():
-                preds = model(list(ims))
+                raw_dets = model(list(ims))
 
             det_bbox_batch = []
-            for pred, info in zip(preds, infos):
+            for raw_det, info in zip(raw_dets, infos):
 
                 im_idx = int(info["image_id"].numpy())
                 im_path = dl.dataset.dataset.get_path_from_idx(im_idx)
 
                 det_bboxes = _get_det_bboxes(
-                    [pred], labels=labels, im_path=im_path
+                    [raw_det], labels=labels, im_path=im_path
                 )
 
                 det_bboxes = _apply_threshold(det_bboxes, threshold)

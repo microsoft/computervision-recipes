@@ -80,7 +80,7 @@ def plot_boxes(
                 fill=plot_settings.text_color,
             )
 
-        if im_title is not None:
+        if title is not None:
             draw.text((0, 0), title, font=font, fill=plot_settings.text_color)
 
     return im
@@ -194,7 +194,7 @@ def plot_detection_vs_ground_truth(
     im = plot_boxes(
         im,
         det_bboxes,
-        im_title=os.path.basename(im_path),
+        title=os.path.basename(im_path),
         plot_settings=det_params,
     )
 
@@ -203,7 +203,7 @@ def plot_detection_vs_ground_truth(
     im = plot_boxes(
         im,
         anno_bboxes,
-        im_title=os.path.basename(im_path),
+        title=os.path.basename(im_path),
         plot_settings=anno_params,
     )
 
@@ -214,12 +214,6 @@ def plot_detection_vs_ground_truth(
 
 
 # ===== Precision - Recall curve =====
-
-
-def _get_cmap(n, name="hsv"):
-    """Returns a function that maps each index in 0, 1, ..., n-1 to a distinct
-    RGB color; the keyword argument name must be a standard mpl colormap name."""
-    return plt.cm.get_cmap(name, n)
 
 
 def _setup_pr_axes(ax: plt.axes, title: str) -> plt.axes:
@@ -277,7 +271,10 @@ def _plot_pr_curve_iou_range(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
     iou_thrs = np.linspace(
         0.5, 0.95, np.round((0.95 - 0.5) / 0.05) + 1, endpoint=True
     )
-    cmap = _get_cmap(len(iou_thrs))
+
+    # get_cmap() - a function that maps each index in 0, 1, ..., n-1 to a distinct
+    # RGB color; the keyword argument name must be a standard mpl colormap name.
+    cmap = plt.cm.get_cmap("hsv", len(iou_thrs))
 
     ax = _setup_pr_axes(
         ax, "Precision-Recall Curve @ different IoU Thresholds"

@@ -13,7 +13,7 @@ from torch.utils.data import Dataset, Subset, DataLoader
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import display_bounding_boxes, plot_grid
+from .plot import display_bboxes, plot_grid
 from .bbox import AnnotationBbox
 from .references.utils import collate_fn
 from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
@@ -51,7 +51,7 @@ class DetectionDataset:
         root: Union[str, Path],
         batch_size: int = 2,
         transforms: object = None,
-        train_pct: float = 0.8,
+        train_pct: float = 0.5,
         im_dir: str = "images",
         annotation_dir: str = "annotations",
     ):
@@ -73,6 +73,7 @@ class DetectionDataset:
         """
 
         self.root = Path(root)
+        # TODO think about how transforms are working...
         self.transforms = transforms
         self.im_dir = im_dir
         self.anno_dir = annotation_dir
@@ -84,12 +85,39 @@ class DetectionDataset:
         self.anno_paths = list(sorted(os.listdir(self.root / self.anno_dir)))
         self.labels = self._get_labels()
 
-        # setup datasets (train_ds, test_ds, train_dl, test_dl)
-        self._setup_data(train_pct=train_pct)
+        # create training and validation datasets
+        self.train_ds, self.test_ds = self.split_train_test(
+            train_pct=train_pct
+        )
+
+        # create training and validation data loaders
+        self.train_dl = DataLoader(
+            self.train_ds,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=4,
+            collate_fn=collate_fn,
+        )
+
+        self.test_dl = DataLoader(
+            self.test_ds,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=4,
+            collate_fn=collate_fn,
+        )
 
     def _get_labels(self) -> List[str]:
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible labels. """
+        # TODO: Since we are looping over all annotation text files here anyway
+        # and parse them using ET.parse() how about we also store all the
+        # bounding box annotations here already? Shouldn't slow us down by
+        # much, and that way we don't need to pay the cost again (via lazy
+        # reading) in the get_item()_ function. Plus it makes the code easier
+        # to understand. This will also help for other functions I have in
+        # mind, where I want to compute what the average/min/max box
+        # width/height is, etc.
         labels = ["__background__"]
         for anno_path in self.anno_paths:
             anno_path = self.root / "annotations" / str(anno_path)
@@ -114,36 +142,19 @@ class DetectionDataset:
         Return
             A training and testing dataset in that order
         """
+        # TODO Is it possible to make these lines in split_train_test() a bit
+        # more intuitive.
+
         test_num = math.floor(len(self) * (1 - train_pct))
         indices = torch.randperm(len(self)).tolist()
+
         self.transforms = get_transform(train=True)
-        train = Subset(self, indices[:-test_num])
+        train = Subset(self, indices[test_num:])
+
         self.transforms = get_transform(train=False)
-        test = Subset(self, indices[-test_num:])
+        test = Subset(self, indices[: test_num + 1])
+
         return train, test
-
-    def _setup_data(self, train_pct: float = 0.8):
-        """ create training and validation data loaders
-        """
-        self.train_ds, self.test_ds = self.split_train_test(
-            train_pct=train_pct
-        )
-
-        self.train_dl = DataLoader(
-            self.train_ds,
-            batch_size=self.batch_size,
-            shuffle=True,
-            num_workers=4,
-            collate_fn=collate_fn,
-        )
-
-        self.test_dl = DataLoader(
-            self.test_ds,
-            batch_size=self.batch_size,
-            shuffle=False,
-            num_workers=4,
-            collate_fn=collate_fn,
-        )
 
     def show_ims(
         self, rows: int = 1, cols: int = 3, rand: bool = False
@@ -157,8 +168,8 @@ class DetectionDataset:
 
         Returns None but displays a grid of annotated images.
         """
-        im_features = partial(self._read_anno_idx, None, True)
-        plot_grid(display_bounding_boxes, im_features, rows=rows, cols=cols)
+        im_annos = partial(self._read_anno_idx, None, True)
+        plot_grid(display_bboxes, im_annos, rows=rows, cols=cols)
 
     def _read_anno_path(
         self, anno_path: str

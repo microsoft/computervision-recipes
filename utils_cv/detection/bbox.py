@@ -27,12 +27,12 @@ class _Bbox:
     @classmethod
     def from_array(cls, arr: List[int]) -> "Bbox":
         """ Create a Bbox object from an array [left, top, right, bottom] """
-        return Bbox(arr[0], arr[1], arr[2], arr[3])
+        return _Bbox(arr[0], arr[1], arr[2], arr[3])
 
     @classmethod
     def from_array_xywh(cls, arr: List[int]) -> "Bbox":
         """ create a Bbox object from an array [left, top, width, height] """
-        return Bbox(arr[0], arr[1], arr[0] + arr[2], arr[1] + arr[3])
+        return _Bbox(arr[0], arr[1], arr[0] + arr[2], arr[1] + arr[3])
 
     def __str__(self):
         return f"""\
@@ -73,7 +73,7 @@ bottom={self.bottom}]\
             return None
         else:
             # TODO think about whether this actually works for classes that inherit _Bbox
-            return Bbox(
+            return _Bbox(
                 overlap_left, overlap_top, overlap_right, overlap_bottom
             )
 
@@ -108,7 +108,7 @@ bottom={self.bottom}]\
         return True
 
 
-class AnnotationBbox(Bbox):
+class AnnotationBbox(_Bbox):
     """ Inherits from Bbox """
 
     def __init__(
