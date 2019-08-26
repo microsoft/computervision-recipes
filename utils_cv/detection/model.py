@@ -198,7 +198,7 @@ class DetectionLearner:
     def predict(
         self,
         im_or_path: Union[np.ndarray, Union[str, Path]],
-        threshold: Optional[int] = 0.6,
+        threshold: Optional[int] = 0.5,
     ) -> List[DetectionBbox]:
         """ Performs inferencing on an image path or image.
 

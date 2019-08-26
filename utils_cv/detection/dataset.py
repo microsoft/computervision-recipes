@@ -36,6 +36,7 @@ def get_transform(train: bool) -> List[object]:
     transforms.append(ToTensor())
     if train:
         transforms.append(RandomHorizontalFlip(0.5))
+        # TODO we can add more 'default' transformations here
     return Compose(transforms)
 
 
@@ -50,7 +51,7 @@ class DetectionDataset:
         self,
         root: Union[str, Path],
         batch_size: int = 2,
-        transforms: object = None,
+        transforms: object = get_transform(train=True),
         train_pct: float = 0.5,
         im_dir: str = "images",
         annotation_dir: str = "annotations",
@@ -110,14 +111,12 @@ class DetectionDataset:
     def _get_labels(self) -> List[str]:
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible labels. """
-        # TODO: Since we are looping over all annotation text files here anyway
-        # and parse them using ET.parse() how about we also store all the
-        # bounding box annotations here already? Shouldn't slow us down by
-        # much, and that way we don't need to pay the cost again (via lazy
-        # reading) in the get_item()_ function. Plus it makes the code easier
-        # to understand. This will also help for other functions I have in
-        # mind, where I want to compute what the average/min/max box
-        # width/height is, etc.
+        # TODO implement:
+        # - option to bypass this setup set if users already know label names
+        # - option to do 'active' loading so that we preload all annotations
+        # during setup time (instead of lazy loading) - this will let us
+        # do things like get average box size of all the data, etc..
+
         labels = ["__background__"]
         for anno_path in self.anno_paths:
             anno_path = self.root / "annotations" / str(anno_path)
@@ -143,7 +142,7 @@ class DetectionDataset:
             A training and testing dataset in that order
         """
         # TODO Is it possible to make these lines in split_train_test() a bit
-        # more intuitive.
+        # more intuitive?
 
         test_num = math.floor(len(self) * (1 - train_pct))
         indices = torch.randperm(len(self)).tolist()
