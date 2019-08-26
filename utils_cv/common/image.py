@@ -3,7 +3,7 @@
 
 from base64 import b64encode
 from pathlib import Path
-from typing import List, Tuple, Union 
+from typing import List, Tuple, Union
 
 import numpy as np
 from PIL import Image
@@ -28,7 +28,7 @@ def im2base64(im_path: Union[Path, str]) -> bytes:
     return im_bytes
 
 
-def ims2strlist(im_path_list: list) -> list:
+def ims2strlist(im_path_list: List[str]) -> List[str]:
     """Get byte-str list of the images in the given path.
 
     Args:
