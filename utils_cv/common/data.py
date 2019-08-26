@@ -114,7 +114,7 @@ def unzip_urls(
     # download all data urls
     paths = list()
     for url in urls:
-        paths.append(unzip_url(url, dest, exist_ok=True))
+        paths.append(unzip_url(url, fpath=dest, dest=dest, exist_ok=True))
 
     return paths
 
