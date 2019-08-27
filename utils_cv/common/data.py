@@ -80,7 +80,7 @@ def unzip_url(
     fname = _get_file_name(url)
     fname_without_extension = fname.split(".")[0]
     zip_file = Path(os.path.join(fpath, fname))
-    unzipped_dir = Path(os.path.join(fpath, fname_without_extension))
+    unzipped_dir = Path(os.path.join(dest, fname_without_extension))
 
     # download zipfile if zipfile not exists
     if zip_file.is_file():
@@ -99,7 +99,7 @@ def unzip_url(
         z.extractall(fpath)
         z.close()
 
-    return os.path.realpath(os.path.join(fpath, fname_without_extension))
+    return os.path.realpath(unzipped_dir)
 
 
 def unzip_urls(
@@ -114,7 +114,7 @@ def unzip_urls(
     # download all data urls
     paths = list()
     for url in urls:
-        paths.append(unzip_url(url, dest, exist_ok=True))
+        paths.append(unzip_url(url, fpath=dest, dest=dest, exist_ok=True))
 
     return paths
 

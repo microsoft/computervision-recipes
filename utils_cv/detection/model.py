@@ -1,12 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import numpy as np
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Union, Generator, Optional
 from pathlib import Path
-from functools import partial
 
 from PIL import Image
+import numpy as np
 import torch
 import torch.nn as nn
 from torchvision import transforms
@@ -15,56 +14,54 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 
-from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 from .references.engine import train_one_epoch, evaluate
 from .references.coco_eval import CocoEvaluator
-from .plot import PlotSettings, plot_boxes, plot_grid
+from .bbox import DetectionBbox
+from ..common.gpu import torch_device
 
 
-def get_bounding_boxes(
-    pred: List[dict], threshold: int = 0.6
-) -> Tuple[List[int], List[List[int]]]:
-    """ Gets the bounding boxes and labels from a prediction given a threshold.
+def _get_det_bboxes(
+    pred: List[dict], labels: List[str], im_path: str = None
+) -> List[DetectionBbox]:
+    """ Gets the bounding boxes and labels from the prediction object
 
     Args:
         pred: the output of passing in an image to torchvision's FasterRCNN
         model
-        threshold: the minimum threshold to accept.
+        labels: list of labels
+        im_path: the image path of the preds
 
     Return:
-        a list of labels and bounding boxes that pass the minimum threshold.
+        a list of DetectionBboxes
     """
     pred_labels = pred[0]["labels"].detach().cpu().numpy().tolist()
     pred_boxes = pred[0]["boxes"].detach().cpu().numpy().astype(np.int32).tolist()
     pred_scores = pred[0]["scores"].detach().cpu().numpy().tolist()
 
-    qualified_labels = []
-    qualified_boxes = []
+    det_bboxes = []
     for label, box, score in zip(pred_labels, pred_boxes, pred_scores):
-        if score > threshold:
-            qualified_labels.append(label)
-            qualified_boxes.append(box)
-    return qualified_labels, qualified_boxes
+        label_name = labels[label]
+        det_bbox = DetectionBbox.from_array(
+            box,
+            score=score,
+            label_idx=label,
+            label_name=label_name,
+            im_path=im_path,
+        )
+        det_bboxes.append(det_bbox)
+
+    return det_bboxes
 
 
-def get_transform(train: bool) -> List[object]:
-    """ Gets basic the transformations to apply to images.
-
-    Source:
-    https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html#writing-a-custom-dataset-for-pennfudan
-
-    Args:
-        train: whether or not we are getting transformations for the training
-        set.
-
-    Returns:
-        A list of transforms to apply.
-    """
-    transforms = []
-    transforms.append(ToTensor())
-    if train:
-        transforms.append(RandomHorizontalFlip(0.5))
-    return Compose(transforms)
+def _apply_threshold(
+    det_bboxes: List[DetectionBbox], threshold: Optional[float] = 0.5
+) -> List[DetectionBbox]:
+    """ Filters the list of DetectionBboxes by score threshold. """
+    return (
+        [det_bbox for det_bbox in det_bboxes if det_bbox.score > threshold]
+        if threshold is not None
+        else det_bboxes
+    )
 
 
 def get_pretrained_fasterrcnn(num_classes: int) -> nn.Module:
@@ -88,54 +85,33 @@ def get_pretrained_fasterrcnn(num_classes: int) -> nn.Module:
     return model
 
 
+def _calculate_ap(e: CocoEvaluator) -> float:
+    """ Calculate the Average Precision (AP) by averaging all iou
+    thresholds across all labels.
+
+    see `utils.detection.plot:_get_precision_recall_settings` to
+    get information on the precision_setting variable below and what the
+    indicies mean.
+    """
+    precision_settings = (slice(0, None), slice(0, None), slice(0, None), 0, 2)
+    coco_eval = e.coco_eval["bbox"].eval["precision"]
+    return np.mean(np.mean(coco_eval[precision_settings]))
+
+
 class DetectionLearner:
     """ Detection Learner for Object Detection"""
 
-    def __init__(
-        self,
-        dataset: Dataset,
-        lr: float,
-        model: nn.Module = None,
-        momentum: float = 0.9,
-        weight_decay: float = 0.0005,
-    ):
+    def __init__(self, dataset: Dataset, model: nn.Module = None):
         """ Initialize leaner object. """
-        self.device = (
-            torch.device("cuda")
-            if torch.cuda.is_available()
-            else torch.device("cpu")
-        )
+        self.device = torch_device()
         self.model = model
         self.dataset = dataset
-        self.lr = lr
-        self.momentum = momentum
-        self.weight_decay = weight_decay
-
-        # get training dataloaders and datasets
-        self.train_ds = dataset.train_ds
-        self.test_ds = dataset.test_ds
-        self.train_dl = dataset.train_dl
-        self.test_dl = dataset.test_dl
 
         # setup model, default to fasterrcnn
         if self.model is None:
-            self.model = get_pretrained_fasterrcnn(len(dataset.categories)).to(
+            self.model = get_pretrained_fasterrcnn(len(dataset.labels)).to(
                 self.device
             )
-
-        # construct our optimizer
-        params = [p for p in self.model.parameters() if p.requires_grad]
-        self.optimizer = torch.optim.SGD(
-            params,
-            lr=self.lr,
-            momentum=self.momentum,
-            weight_decay=self.weight_decay,
-        )
-
-        # and a learning rate scheduler
-        self.lr_scheduler = torch.optim.lr_scheduler.StepLR(
-            self.optimizer, step_size=3, gamma=0.1
-        )
 
     def __getattr__(self, attr):
         if attr in self.__dict__:
@@ -146,9 +122,32 @@ class DetectionLearner:
             )
         )
 
-    def fit(self, epochs: int, print_freq: int = 10) -> None:
+    def fit(
+        self,
+        epochs: int,
+        lr: float = 0.005,
+        momentum: float = 0.9,
+        weight_decay: float = 0.0005,
+        print_freq: int = 10,
+    ) -> None:
         """ The main training loop. """
+
+        # construct our optimizer
+        params = [p for p in self.model.parameters() if p.requires_grad]
+        self.optimizer = torch.optim.SGD(
+            params, lr=lr, momentum=momentum, weight_decay=weight_decay
+        )
+
+        # and a learning rate scheduler
+        self.lr_scheduler = torch.optim.lr_scheduler.StepLR(
+            self.optimizer, step_size=3, gamma=0.1
+        )
+
+        # store data in these arrays to plot later
         self.losses = []
+        self.ap = []
+
+        # main training loop
         self.epochs = epochs
         for epoch in range(self.epochs):
 
@@ -156,7 +155,7 @@ class DetectionLearner:
             logger = train_one_epoch(
                 self.model,
                 self.optimizer,
-                self.train_dl,
+                self.dataset.train_dl,
                 self.device,
                 epoch,
                 print_freq=print_freq,
@@ -167,109 +166,123 @@ class DetectionLearner:
             self.lr_scheduler.step()
 
             # evaluate
-            self.evaluate(dl=self.train_dl)
+            e = self.evaluate(dl=self.dataset.train_dl)
+            self.ap.append(_calculate_ap(e))
 
-    def plot_losses(self, figsize: Tuple[int, int] = (10, 5)) -> None:
-        """ Plot training loss from fitting. """
+    def plot_precision_loss_curves(
+        self, figsize: Tuple[int, int] = (10, 5)
+    ) -> None:
+        """ Plot training loss from calling `fit` and average precision on the
+        test set. """
         fig = plt.figure(figsize=figsize)
-        ax = fig.add_subplot(111)
-        ax.set_xlim([0, self.epochs - 1])
-        ax.set_xticks(range(0, self.epochs))
-        ax.set_title("Loss over epochs")
-        ax.set_xlabel("epochs")
-        ax.set_ylabel("loss")
-        ax.plot(self.losses)
+        ax1 = fig.add_subplot(111)
+
+        ax1.set_xlim([0, self.epochs - 1])
+        ax1.set_xticks(range(0, self.epochs))
+        ax1.set_title("Loss and Average Precision over epochs")
+        ax1.set_xlabel("epochs")
+        ax1.set_ylabel("loss", color="g")
+        ax1.plot(self.losses, "g-")
+
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("average precision", color="b")
+        ax2.plot(self.ap, "b-")
 
     def evaluate(self, dl: DataLoader = None) -> CocoEvaluator:
         """ eval code on validation/test set and saves the evaluation results in self.results. """
         if dl is None:
-            dl = self.test_dl
+            dl = self.dataset.test_dl
         self.results = evaluate(self.model, dl, device=self.device)
         return self.results
 
-    def get_model(self) -> nn.Module:
-        """ returns the model object. """
-        return self.model
-
-    def inference(self, im: np.ndarray) -> Dict[Any, Any]:
-        """ Performs inferencing on an image path.
+    def predict(
+        self,
+        im_or_path: Union[np.ndarray, Union[str, Path]],
+        threshold: Optional[int] = 0.5,
+    ) -> List[DetectionBbox]:
+        """ Performs inferencing on an image path or image.
 
         Args:
-            im: the image array which you can get from `Image.open(path)`
+            im_or_path: the image array which you can get from `Image.open(path)` OR a
+            image path
+            threshold: the threshold to use to calculate whether the object was
+            detected. Note: can be set to None to return all detection bounding
+            boxes.
 
         Raises:
             TypeError is the im object is a path or str to the image instead of
             an nd.array
 
-        Return the prediction dictionary object
+        Return a list of DetectionBbox
         """
-        if isinstance(im, (str, Path)):
-            raise TypeError("Pass in a np.ndarray, not image path.")
+        im = (
+            Image.open(im_or_path)
+            if isinstance(im_or_path, (str, Path))
+            else im_or_path
+        )
 
         transform = transforms.Compose([transforms.ToTensor()])
         im = transform(im).cuda()
-        model = self.get_model().eval()  # eval mode
+        model = self.model.eval()  # eval mode
         with torch.no_grad():
             pred = model([im])
-        return pred
+        labels = self.dataset.labels
+        det_bboxes = _get_det_bboxes(pred, labels=labels)
 
-    def show_detection_vs_ground_truth(self, idx: int, ax: plt.axes) -> None:
-        """ Plots the bounding box predictions and ground truth
+        # limit to threshold if threshold is set
+        return _apply_threshold(det_bboxes, threshold)
 
-        Args:
-            idx: the index of the dataset to visualize
-            ax: axes to draw on
-
-        Returns nothing but plots graph.
-        """
-        im_path = (
-            self.dataset.root
-            / self.dataset.image_folder
-            / self.dataset.ims[idx]
-        )
-        im = Image.open(str(im_path))
-
-        # plot prediction boxes
-        pred = self.inference(im)
-        pred_labels, pred_boxes = get_bounding_boxes(pred)
-        pred_params = PlotSettings(rect_color=(255, 0, 0), text_size=0)
-        im = plot_boxes(
-            im,
-            pred_boxes,
-            [self.dataset.categories[l] for l in pred_labels],
-            plot_settings=pred_params,
-        )
-
-        # plot ground truth boxes
-        ground_truth_params = PlotSettings(rect_color=(0, 255, 0), text_size=0)
-        boxes, categories, im_path = self.dataset.get_image_features(idx)
-        im = plot_boxes(
-            im, boxes, categories, plot_settings=ground_truth_params
-        )
-
-        # show image
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.imshow(im)
-
-    def show_preds(self, ds: Dataset = None, rows: int = 1) -> None:
-        """ Show batch of predictions against ground truth.
+    def predict_dl(
+        self, dl: DataLoader, threshold: Optional[float] = 0.5
+    ) -> List[DetectionBbox]:
+        """ Predict all images in a dataloader object.
 
         Args:
-            ds: the datset to use, by default, use test_ds
-            rows: rows to predict
+            dl: the dataloader to predict on
+            threshold: iou threshold for a positive detection. Note: set
+            threshold to None to omit a threshold
 
-        Returns nothing
+        Returns a list of DetectionBbox
         """
-        if ds is None:
-            ds = self.test_ds
+        pred_generator = self.predict_batch(dl, threshold=threshold)
+        det_bboxes = [pred for preds in pred_generator for pred in preds]
+        return det_bboxes
 
-        # setup iterator if not yet setup
-        if not hasattr(self, "ds_iterator"):
-            self.ds_iterator = iter(ds.indices)
+    def predict_batch(
+        self, dl: DataLoader, threshold: Optional[float] = 0.5
+    ) -> Generator[List[DetectionBbox], None, None]:
+        """ Batch predict
 
-        plot_grid(
-            self.show_detection_vs_ground_truth,
-            partial(next, self.ds_iterator),
-            rows=rows,
-        )
+        Args
+            dl: A DataLoader to load batches of images from
+            threshold: iou threshold for a positive detection. Note: set
+            threshold to None to omit a threshold
+
+        Returns an iterator that yields a batch of detection bboxes for each
+        image that is scored.
+        """
+
+        labels = self.dataset.labels
+        model = self.model.eval()
+
+        for i, batch in enumerate(dl):
+            ims, infos = batch
+            ims = [im.cuda() for im in ims]
+            with torch.no_grad():
+                raw_dets = model(list(ims))
+
+            det_bbox_batch = []
+            for raw_det, info in zip(raw_dets, infos):
+
+                im_idx = int(info["image_id"].numpy())
+                im_path = dl.dataset.dataset.get_path_from_idx(im_idx)
+
+                det_bboxes = _get_det_bboxes(
+                    [raw_det], labels=labels, im_path=im_path
+                )
+
+                det_bboxes = _apply_threshold(det_bboxes, threshold)
+                det_bbox_batch.append(
+                    {"idx": im_idx, "det_bboxes": det_bboxes}
+                )
+            yield det_bbox_batch
