@@ -6,6 +6,12 @@ The majority of state-of-the-art systems for image similarity use DNNs to comput
 
 A major difference between modern image similarity approaches is how the DNN is trained. A simple but quite powerful approach is to use a standard image classification loss - this is the approach taken in this repository, and explained in the [classification](../classification/README.md) folder. More accurate similarity measures are based on DNNs which are trained explicitly for image similarity, such as the [FaceNet](https://arxiv.org/pdf/1503.03832.pdf) work which uses a Siamese network architecture. FaceNet-like approaches will be added to this repository at a later point.
 
+
+## Frequently asked questions
+
+Answers to Frequently Asked Questions such as "How many images do I need to train a model?" or "How to annotate images?" can be found in the [FAQ.md](FAQ.md) file. For image classification specified questions, see the [FAQ.md](../classification/FAQ.md) in the classification folder.
+
+
 ## Notebooks
 
 We provide several notebooks to show how image similarity algorithms can be designed and evaluated.
@@ -14,11 +20,11 @@ We provide several notebooks to show how image similarity algorithms can be desi
 | --- | --- |
 | [00_webcam.ipynb](./notebooks/00_webcam.ipynb)| Quick start notebook which demonstrates how to build an image retrieval system using a single image or webcam as input.
 | [01_training_and_evaluation_introduction.ipynb](./notebooks/01_training_and_evaluation_introduction.ipynb)| Notebook which explains the basic concepts around model training and evaluation, based on using DNNs trained for image classification.|
+| [11_exploring_hyperparameters.ipynb](notebooks/11_exploring_hyperparameters.ipynb)| Finds optimal model parameters using grid search. |
+| [12_fast_retrieval.ipynb](notebooks/12_fast_retrieval.ipynb)| Fast image retrieval using nearest neighbor search. |
+
 
 ## Coding guidelines
 
-See the [coding guidelines](../classification/#coding-guidelines) in the image classification folder.
+See the [coding guidelines](../CONTRIBUTING.md#coding-guidelines) in the root folder.
 
-## Frequently asked questions
-
-Answers to Frequently Asked Questions such as "How many images do I need to train a model?" or "How to annotate images?" can be found in the [FAQ.md](FAQ.md) file. For image classification specified questions, see the [FAQ.md](../classification/FAQ.md) in the classification folder.

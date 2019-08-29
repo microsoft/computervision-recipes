@@ -16,11 +16,20 @@ def which_processor():
         print("Cuda is not available. Torch is using CPU")
 
 
+def is_linux():
+    """Returns if machine is running an Linux OS"""
+    return platform.system().lower() == "linux"
+
+
+def is_windows():
+    """Returns if machine is running an Windows OS"""
+    return platform.system().lower() == "windows"
+
+
 def linux_with_gpu():
     """Returns if machine is running an Linux OS and has a GPU"""
-    is_linux = platform.system().lower() == "linux"
     has_gpu = is_available()
-    return is_linux and has_gpu
+    return is_linux() and has_gpu
 
 
 def torch_device():
@@ -30,3 +39,16 @@ def torch_device():
         if torch.cuda.is_available()
         else torch.device("cpu")
     )
+
+
+def db_num_workers(non_windows_num_workers: int = 16):
+    """Returns how many workers to use when loading images in a databunch. On windows machines using >0 works significantly slows down model
+    training and evaluation. Setting num_workers to zero on Windows machines will speed up training/inference significantly, but will still be
+    2-3 times slower.
+
+    For a description of the slow windows speed see: https://github.com/pytorch/pytorch/issues/12831
+    """
+    if is_windows():
+        return 0
+    else:
+        return non_windows_num_workers
