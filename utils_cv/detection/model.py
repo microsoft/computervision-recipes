@@ -34,9 +34,9 @@ def _get_det_bboxes(
     Return:
         a list of DetectionBboxes
     """
-    pred_labels = list(pred[0]["labels"].cpu().numpy())
-    pred_boxes = list(pred[0]["boxes"].detach().cpu().numpy().astype(np.int32))
-    pred_scores = list(pred[0]["scores"].detach().cpu().numpy())
+    pred_labels = pred[0]["labels"].detach().cpu().numpy().tolist()
+    pred_boxes = pred[0]["boxes"].detach().cpu().numpy().astype(np.int32).tolist()
+    pred_scores = pred[0]["scores"].detach().cpu().numpy().tolist()
 
     det_bboxes = []
     for label, box, score in zip(pred_labels, pred_boxes, pred_scores):
