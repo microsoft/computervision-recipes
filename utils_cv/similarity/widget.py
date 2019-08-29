@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import copy
 from fastai.data_block import LabelList
 from ipywidgets import widgets, Layout, IntSlider
@@ -26,9 +27,10 @@ class DistanceWidget(object):
         """Helper class to draw and update Image classification results widgets.
 
         Args:
-            dataset (LabelList): Data used for prediction, containing ImageList x and CategoryList y.
-            distances (np.ndarray): distance for each image to the query.
-            sort (boolean): set to true to sort images by their smallest distance.
+            dataset: Data used for prediction, containing ImageList x and CategoryList y.
+            distances: Distance for each image to the query.
+            query_im_path: Path to query image.
+            sort: set to true to sort images by their smallest distance.
         """
         assert len(dataset) == len(distances)
 

@@ -24,6 +24,7 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+pip-wheel-metadata/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -129,6 +130,7 @@ data
 *.pkl
 
 # aml notebooks outputs
+*/notebooks/.azureml/
 */notebooks/aml_config*
 */notebooks/azureml-models
 */notebooks/myenv.yml

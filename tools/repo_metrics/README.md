@@ -1,8 +1,8 @@
 # Repository Metrics
 
-[![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/repo-metrics?branchName=rijai_repometrics)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=27&branchName=rijai_repometrics)
+[![Build Status](https://dev.azure.com/best-practices/computervision/_apis/build/status/repo-metrics?branchName=staging)](https://dev.azure.com/best-practices/computervision/_build/latest?definitionId=27&branchName=staging)
 
-We developed a script that allows us to track the metrics of the ComputerVisionBestPractices repo. Some of the metrics we can track are listed here:
+We developed a script that allows us to track the repo metrics. Some of the metrics we can track are listed here:
 
 * Number of stars
 * Number of forks
@@ -10,17 +10,27 @@ We developed a script that allows us to track the metrics of the ComputerVisionB
 * Number of views
 * Number of lines of code
 
-To see the full list of metrics, see [git_stats.py](scripts/repo_metrics/git_stats.py)
+To see the full list of metrics, see [git_stats.py](git_stats.py)
 
 The first step is to set up the credentials, copy the configuration file and fill up the credentials of GitHub and CosmosDB:
 
-    cp scripts/repo_metrics/config_template.py scripts/repo_metrics/config.py
+    cp tools/repo_metrics/config_template.py tools/repo_metrics/config.py
 
 To track the current state of the repository and save it to CosmosDB:
 
-    python scripts/repo_metrics/track_metrics.py --github_repo "https://github.com/Microsoft/ComputerVision" --save_to_database
+    python tools/repo_metrics/track_metrics.py --github_repo "https://github.com/Microsoft/ComputerVision" --save_to_database
 
 To track an event related to this repository and save it to CosmosDB:
 
-    python scripts/repo_metrics/track_metrics.py --event "Today we did our first blog of the project" --event_date 2018-12-01 --save_to_database
+    python tools/repo_metrics/track_metrics.py --event "Today we did our first blog of the project" --event_date 2018-12-01 --save_to_database
+
+
+### Setting up Azure CosmosDB
+
+The API that we is used to track the GitHub metrics is the [Mongo API](https://docs.microsoft.com/en-us/azure/cosmos-db/mongodb-introduction).
+
+The database name and collections name are defined in the [config file](config_template.py). There are two main collections, defined as `COLLECTION_GITHUB_STATS` and `COLLECTION_EVENTS` to store the information defined on the previous section. 
+
+**IMPORTANT NOTE**: If the database and the collections are created directly through the portal, a common partition key should be defined. We recommend to use `date` as partition key.
+
 

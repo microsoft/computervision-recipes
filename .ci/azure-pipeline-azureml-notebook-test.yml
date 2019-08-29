@@ -1,0 +1,65 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+#
+variables:
+- group: AzureMLConfig
+- name  : 'resource_group'
+  value : 'amlnotebookrg'
+- name  : 'workspace_name'
+  value : 'amlnotebookws'
+- name  : 'workspace_region'
+  value : 'eastus2'
+- name  : 'junitxml'
+  value : 'reports/test-unit.xml'
+  
+# no PR builds
+pr: none
+
+# no CI trigger
+trigger: none
+
+jobs:
+- job: AzureMLNotebookTest
+  timeoutInMinutes: 300
+  pool:
+    vmImage: 'Ubuntu-16.04'
+  steps:
+  - bash: |
+      echo "##vso[task.prependpath]/usr/share/miniconda/bin"
+    displayName: Add Conda to PATH
+
+  - bash: |
+      conda env create -f environment.yml
+      pip install paramiko==2.4.2
+      source activate cv
+      conda env list
+      echo Login Azure Account
+      az login --service-principal -u $(spidentity) -p $(spsecret) --tenant $(sptenant)
+      az account set --subscription $(subscriptionid)
+    displayName: 'Create and activate conda environment'
+
+  - bash: |
+      source activate cv
+      python -m ipykernel install --user --name cv --display-name "cv"
+      pytest -q --subscription_id=$(subscriptionid) --resource_group=$(resource_group) --workspace_name=$(workspace_name) --workspace_region=$(workspace_region) --junitxml $(junitxml) -m azuremlnotebooks
+    displayName: 'Run AzureML notebook tests'
+  
+  - bash: |
+        echo Ensure Resource Group Deletion $(resource_group)
+        existResponse=$(az group exists -n $(resource_group))
+        if [ "$existResponse" == "true" ]; then
+          echo Deleting project resource group
+          az group delete --name $(resource_group) --yes
+        else
+          echo Project resource group did not exist
+        fi
+        echo Done Cleanup
+    displayName: 'Cleanup Task'
+    condition: always()
+
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results **/test-*.xml'
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      failTaskOnFailedTests: true
+    condition: succeededOrFailed()

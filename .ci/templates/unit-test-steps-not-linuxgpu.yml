@@ -1,0 +1,42 @@
+# Unit and integration test steps
+steps:
+
+- bash: |
+    echo "##vso[task.prependpath]/data/anaconda/bin"
+  displayName: Add Conda to PATH
+
+- bash: |
+    rm -rf /data/anaconda/envs/cv
+  displayName: 'Remove conda env in case it was not created correctly'
+
+- bash: |
+    conda env create -f environment.yml
+    source activate cv
+    conda env list
+  displayName: 'Create and activate conda environment'
+
+- bash: |
+    source activate cv
+    # python -m ipykernel install --user --name cv --display-name "cv"
+    pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"
+  displayName: 'Run unit and (only on Linux GPU) integration tests'
+
+- bash: |
+      echo Remove Conda Environment
+      conda remove -n cv --all -q --force -y
+      conda env list
+      echo Done Cleanup
+  displayName: 'Cleanup Task'
+  condition: always()
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFiles: '**/test-unitttest.xml'
+    testRunTitle: 'Test results for PyTest'
+
+- task: ComponentGovernanceComponentDetection@0
+  inputs:
+    scanType: 'Register'
+    verbosity: 'Verbose'
+    alertWarningLevel: 'High'
+

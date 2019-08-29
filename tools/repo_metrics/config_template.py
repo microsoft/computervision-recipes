@@ -3,11 +3,13 @@
 
 # Github token
 # More info: https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
-GITHUB_TOKEN = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+GITHUB_TOKEN = "<GITHUB_TOKEN>"
 
 # CosmosDB Mongo API
-CONNECTION_STRING = "mongodb://XXXXXXXXXXXXXXXXXXXXXXXXX.documents.azure.com:10255/?ssl=true&replicaSet=globaldb"
-DATABASE = "cvbp_stats"
+#   * Azure Portal: Settings -> Connection String -> PRIMARY CONNECTION STRING
+#   * For example, 'mongodb://<USERNAME>:<PRIMARY PASSWORD>@<HOST>:<PORT>/?ssl=true&replicaSet=globaldb'
+CONNECTION_STRING = "<CONNECTION_STRING>"
+DATABASE = "cv_stats"
 COLLECTION_GITHUB_STATS = "github_stats"
 COLLECTION_EVENTS = "events"
 
