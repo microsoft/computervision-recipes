@@ -132,6 +132,25 @@ def validate_vm_name(vm_name) -> bool:
     return True
 
 
+def check_valid_yes_no_response(input: str) -> bool:
+    if input in ("Y", "y", "N", "n"):
+        return True
+    else:
+        print_formatted_text(
+            HTML("<ansired>Enter 'y' or 'n'. Please try again.</ansired>")
+        )
+        return False
+
+
+def yes_no_prompter(msg: str) -> bool:
+    cond = None
+    valid_response = False
+    while not valid_response:
+        cond = prompt(msg)
+        valid_response = check_valid_yes_no_response(cond)
+    return True if cond in ("Y", "y") else False
+
+
 def prompt_subscription_id() -> str:
     """ Prompt for subscription id. """
     subscription_id = None
@@ -247,26 +266,26 @@ def prompt_password() -> str:
 
 def prompt_use_gpu() -> str:
     """ Prompt for GPU or CPU. """
-    use_gpu = None
-    valid_response = False
-    while not valid_response:
-        use_gpu = prompt(
-            (
-                "Do you want to use a GPU-enabled VM (It will incur a "
-                "higher cost) [y/n]: "
-            )
+    return yes_no_prompter(
+        (
+            "Do you want to use a GPU-enabled VM (It will incur a "
+            "higher cost) [y/n]: "
         )
-        if use_gpu in ("Y", "y", "N", "n"):
-            valid_response = True
-        else:
-            print_formatted_text(
-                HTML("<ansired>Enter 'y' or 'n'. Please try again.</ansired>")
-            )
-    return True if use_gpu in ("Y", "y") else False
+    )
 
 
-def check_quota(region: str, vm_family: str) -> int:
-    """ Checks if the subscription has quote in the specified region.
+def prompt_use_cpu_instead() -> str:
+    """ Prompt switch to using CPU. """
+    return yes_no_prompter(
+        (
+            "Do you want to switch to using a CPU instead? (This will "
+            "likely solve your out-of-quota problem) [y/n]: "
+        )
+    )
+
+
+def get_available_quota(region: str, vm_family: str) -> int:
+    """ Get available quota of the subscription in the specified region.
 
     Args:
         region: the region to check
@@ -281,10 +300,7 @@ def check_quota(region: str, vm_family: str) -> int:
     return int(quota[0]["max"]) - int(quota[0]["current"])
 
 
-def create_dsvm() -> None:
-    """ Interaction session to create a data science vm. """
-
-    # print intro dialogue
+def print_intro_dialogue():
     print_formatted_text(
         HTML(
             textwrap.dedent(
@@ -324,10 +340,8 @@ def create_dsvm() -> None:
         )
     )
 
-    # validate active user
-    prompt("Press enter to continue...\n")
 
-    # check that az cli is installed
+def check_az_cli_installed():
     if not is_installed("az"):
         print(
             textwrap.dedent(
@@ -340,30 +354,18 @@ def create_dsvm() -> None:
         )
         exit(0)
 
-    # check if we are logged in
+
+def check_logged_in() -> bool:
     print("Checking to see if you are logged in...")
     results = subprocess.run(
         account_list_cmd.split(" "),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    logged_in = False if results.stderr else True
+    return False if "az login" in str(results.stderr) else True
 
-    # login to the az cli and suppress output
-    if not logged_in:
-        subprocess.run(silent_login_cmd.split(" "))
-        print("\n")
-    else:
-        print_formatted_text(
-            HTML(
-                (
-                    "<ansigreen>Looks like you're already logged "
-                    "in.</ansigreen>\n"
-                )
-            )
-        )
 
-    # show account sub list
+def show_accounts():
     print("Here is a list of your subscriptions:")
     results = subprocess.run(
         account_list_cmd.split(" "), stdout=subprocess.PIPE
@@ -372,19 +374,9 @@ def create_dsvm() -> None:
         HTML(f"<ansigreen>{results.stdout.decode('utf-8')}</ansigreen>")
     )
 
-    # prompt fields
-    subscription_id = prompt_subscription_id()
-    vm_name = prompt_vm_name()
-    region = prompt_region()
-    use_gpu = prompt_use_gpu()
-    username = prompt_username()
-    password = prompt_password()
 
-    # set GPU
-    vm = vm_options["gpu"] if use_gpu else vm_options["cpu"]
-
-    # check quota
-    if check_quota(region, vm["family"]) < vm["cores"]:
+def check_quota(region: str, vm: dict, subscription_id: str) -> dict:
+    if get_available_quota(region, vm["family"]) < vm["cores"]:
         print_formatted_text(
             HTML(
                 textwrap.dedent(
@@ -397,19 +389,20 @@ def create_dsvm() -> None:
                 https://docs.microsoft.com/en-us/azure/azure-supportability/resource-manager-core-quotas-request
 
                 (If you selected GPU, you may try using CPU instead.)
-
-                Exiting...
                 </ansired>\
                 """
                 )
             )
         )
-        exit()
+        if prompt_use_cpu_instead():
+            vm = vm_options["cpu"]
+        else:
+            print_formatted_text(HTML("Exiting.."))
+            exit()
+    return vm
 
-    # set sub id
-    subprocess.run(set_account_sub_cmd.format(subscription_id).split(" "))
 
-    # provision rg
+def create_rg(vm_name: str, region: str):
     print_formatted_text(
         HTML(("\n<ansiyellow>Creating the resource group.</ansiyellow>"))
     )
@@ -427,7 +420,8 @@ def create_dsvm() -> None:
             )
         )
 
-    # create vm
+
+def create_vm(vm_name: str, vm: dict, username: str, password: str):
     print_formatted_text(
         HTML(
             (
@@ -436,7 +430,7 @@ def create_dsvm() -> None:
             )
         )
     )
-    results = subprocess.run(
+    subprocess.run(
         provision_vm_cmd.format(
             f"{vm_name}-rg",
             vm_name,
@@ -448,21 +442,25 @@ def create_dsvm() -> None:
         stdout=subprocess.PIPE,
     )
 
-    # get vm ip
+
+def get_vm_ip(vm_name: str) -> str:
     results = subprocess.run(
         vm_ip_cmd.format(vm_name, vm_name).split(" "),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
-    if len(results.stderr.decode("utf-8")) > 0:
-        exit()
+
     vm_ip = results.stdout.decode("utf-8").strip().strip('"')
     if len(vm_ip) > 0:
         print_formatted_text(
             HTML("<ansigreen>VM creation succeeded.</ansigreen>\n")
         )
+    return vm_ip
 
-    # exit message
+
+def print_exit_dialogue(
+    vm_name: str, vm_ip: str, region: str, username: str, subscription_id: str
+):
     print_formatted_text(
         HTML(
             textwrap.dedent(
@@ -498,6 +496,86 @@ def create_dsvm() -> None:
             )
         )
     )
+
+
+def create_dsvm() -> None:
+    """ Interaction session to create a data science vm. """
+
+    # print intro dialogue
+    print_intro_dialogue()
+
+    # validate active user
+    prompt("Press enter to continue...\n")
+
+    # check that az cli is installed
+    check_az_cli_installed()
+
+    # check if we are logged in
+    logged_in = check_logged_in()
+
+    # login to the az cli and suppress output
+    if not logged_in:
+        subprocess.run(silent_login_cmd.split(" "))
+        print("\n")
+    else:
+        print_formatted_text(
+            HTML(
+                (
+                    "<ansigreen>Looks like you're already logged "
+                    "in.</ansigreen>\n"
+                )
+            )
+        )
+
+    # show account sub list
+    show_accounts()
+
+    # prompt fields
+    subscription_id = prompt_subscription_id()
+    vm_name = prompt_vm_name()
+    region = prompt_region()
+    use_gpu = prompt_use_gpu()
+    username = prompt_username()
+    password = prompt_password()
+
+    # set GPU
+    vm = vm_options["gpu"] if use_gpu else vm_options["cpu"]
+
+    # check quota
+    vm = check_quota(region, vm, subscription_id)
+
+    # set sub id
+    subprocess.run(set_account_sub_cmd.format(subscription_id).split(" "))
+
+    # provision rg
+    create_rg(vm_name, region)
+
+    # create vm
+    create_vm(vm_name, vm, username, password)
+
+    # get vm ip
+    vm_ip = get_vm_ip(vm_name)
+
+    # # install cvbp on dsvm
+    # HOST = "www.example.org"
+    # # Ports are handled in ~/.ssh/config since we use OpenSSH
+    # COMMAND = "uname -a"
+
+    # ssh = subprocess.Popen(
+    #     ["ssh", f"{username}@{vm_ip}", COMMAND],
+    #     shell=False,
+    #     stdout=subprocess.PIPE,
+    #     stderr=subprocess.PIPE,
+    # )
+    # result = ssh.stdout.readlines()
+    # if result == []:
+    #     error = ssh.stderr.readlines()
+    #     print(error)
+    # else:
+    #     print(result)
+
+    # exit message
+    print_exit_dialogue(vm_name, vm_ip, region, username, subscription_id)
 
 
 if __name__ == "__main__":
