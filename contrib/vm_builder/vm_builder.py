@@ -36,6 +36,27 @@ quota_cmd = (
     "[?contains(localName,'{}')].{{max:limit,current:currentValue}}"
 )
 
+install_repo_cmd = (
+    "az vm run-command invoke -g {}-rg -n {} "
+    "--command-id RunShellScript --scripts"
+)
+
+# install repo invoke script
+install_repo_script = """<<<EOF
+ls
+EOF
+"""
+
+tmp = """<<<EOF
+rm -rf computervision
+conda remove -n cv --all
+git clone https://www.github.com/microsoft/computervision
+cd computervision
+conda env create -f environment.yml
+tmux
+jupyter notebook --port 8888
+EOF"""
+
 
 def is_installed(cli_app: str) -> bool:
     """Check whether `name` is on PATH and marked as executable."""
@@ -322,7 +343,7 @@ def print_intro_dialogue():
                 - cores: 6
 
             The CPU machine specs:
-                - size: Standard_DS3_v2 (Intel Xeon® E5-2673 v3 2.4 GHz (Haswell))
+                - size: Standard_DS3_v2 (Intel XeonÂ® E5-2673 v3 2.4 GHz (Haswell))
                 - family: DSv2
                 - cores: 4
 
@@ -363,6 +384,21 @@ def check_logged_in() -> bool:
         stderr=subprocess.PIPE,
     )
     return False if "az login" in str(results.stderr) else True
+
+
+def log_in(logged_in: bool):
+    if not logged_in:
+        subprocess.run(silent_login_cmd.split(" "))
+        print("\n")
+    else:
+        print_formatted_text(
+            HTML(
+                (
+                    "<ansigreen>Looks like you're already logged "
+                    "in.</ansigreen>\n"
+                )
+            )
+        )
 
 
 def show_accounts():
@@ -458,6 +494,38 @@ def get_vm_ip(vm_name: str) -> str:
     return vm_ip
 
 
+def install_repo(username: str, password: str, vm_ip: str, vm_name: str):
+    print_formatted_text(
+        HTML("<ansiyellow>Setting up your machine...</ansiyellow>")
+    )
+    invoke_cmd = install_repo_cmd.format(vm_name, vm_name)
+    cmds = invoke_cmd.split(" ")
+    cmds.append(
+        f"""<<<EOF
+export PATH=/anaconda/bin:$PATH
+conda remove -n cv --all
+cd /home/{username}
+rm -rf computervision
+git clone https://www.github.com/microsoft/computervision
+chmod 777 computervision
+cd computervision
+conda env create -f environment.yml
+source activate cv
+python -m ipykernel install --user --name cv --display-name "Python (cv)"
+jupyter notebook --port 8899 --allow-root --NotebookApp.token='' --NotebookApp.password='' &
+EOF"""
+    )
+    subprocess.run(cmds, stdout=subprocess.PIPE)
+    print_formatted_text(
+        HTML(
+            (
+                "<ansigreen>Successfully installed the repo "
+                "on the machine.</ansigreen>\n"
+            )
+        )
+    )
+
+
 def print_exit_dialogue(
     vm_name: str, vm_ip: str, region: str, username: str, subscription_id: str
 ):
@@ -483,7 +551,7 @@ def print_exit_dialogue(
             </ansiyellow>
             To connect via ssh and tunnel:
             <ansiyellow>
-                $ssh -L 8000:localhost:8000 {username}@{vm_ip}
+                $ssh -L 8899:localhost:8899 {username}@{vm_ip}
             </ansiyellow>
             To delete the VM (this command is unrecoverable):
             <ansiyellow>
@@ -498,7 +566,7 @@ def print_exit_dialogue(
     )
 
 
-def create_dsvm() -> None:
+def vm_builder() -> None:
     """ Interaction session to create a data science vm. """
 
     # print intro dialogue
@@ -514,18 +582,7 @@ def create_dsvm() -> None:
     logged_in = check_logged_in()
 
     # login to the az cli and suppress output
-    if not logged_in:
-        subprocess.run(silent_login_cmd.split(" "))
-        print("\n")
-    else:
-        print_formatted_text(
-            HTML(
-                (
-                    "<ansigreen>Looks like you're already logged "
-                    "in.</ansigreen>\n"
-                )
-            )
-        )
+    log_in(logged_in)
 
     # show account sub list
     show_accounts()
@@ -556,27 +613,12 @@ def create_dsvm() -> None:
     # get vm ip
     vm_ip = get_vm_ip(vm_name)
 
-    # # install cvbp on dsvm
-    # HOST = "www.example.org"
-    # # Ports are handled in ~/.ssh/config since we use OpenSSH
-    # COMMAND = "uname -a"
-
-    # ssh = subprocess.Popen(
-    #     ["ssh", f"{username}@{vm_ip}", COMMAND],
-    #     shell=False,
-    #     stdout=subprocess.PIPE,
-    #     stderr=subprocess.PIPE,
-    # )
-    # result = ssh.stdout.readlines()
-    # if result == []:
-    #     error = ssh.stderr.readlines()
-    #     print(error)
-    # else:
-    #     print(result)
+    # install cvbp on dsvm
+    install_repo(username, password, vm_ip, vm_name)
 
     # exit message
     print_exit_dialogue(vm_name, vm_ip, region, username, subscription_id)
 
 
 if __name__ == "__main__":
-    create_dsvm()
+    vm_builder()
