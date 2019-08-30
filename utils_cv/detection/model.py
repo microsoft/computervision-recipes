@@ -104,9 +104,16 @@ def get_pretrained_fasterrcnn(
     # load a model pre-trained pre-trained on COCO
     model = fasterrcnn_resnet50_fpn(
         pretrained=True,
+        min_size=min_size,
         max_size=max_size,
+        rpn_pre_nms_top_n_train=rpn_pre_nms_top_n_train,
         rpn_pre_nms_top_n_test=rpn_pre_nms_top_n_test,
+        rpn_post_nms_top_n_train=rpn_post_nms_top_n_train,
         rpn_post_nms_top_n_test=rpn_post_nms_top_n_test,
+        rpn_nms_thresh=rpn_nms_thresh,
+        box_score_thresh=box_score_thresh,
+        box_nms_thresh=box_nms_thresh,
+        box_detections_per_img=box_detections_per_img,
     )
 
     # get number of input features for the classifier
