@@ -64,17 +64,50 @@ def _apply_threshold(
     )
 
 
-def get_pretrained_fasterrcnn(num_classes: int) -> nn.Module:
+def get_pretrained_fasterrcnn(
+    num_classes: int,
+    # transform parameters
+    min_size: int = 800,
+    max_size: int = 1333,
+    # RPN parameters
+    rpn_pre_nms_top_n_train: int = 2000,
+    rpn_pre_nms_top_n_test: int = 1000,
+    rpn_post_nms_top_n_train: int = 2000,
+    rpn_post_nms_top_n_test: int = 1000,
+    rpn_nms_thresh: float = 0.7,
+    # Box parameters
+    box_score_thresh: int = 0.05,
+    box_nms_thresh: float = 0.5,
+    box_detections_per_img: int = 100,
+) -> nn.Module:
     """ Gets a pretrained FasterRCNN model
 
     Args:
-        num_classes: the number of classes to be detected
+        num_classes: number of output classes of the model (including the background).
+        min_size: minimum size of the image to be rescaled before feeding it to the backbone
+        max_size: maximum size of the image to be rescaled before feeding it to the backbone
+        rpn_pre_nms_top_n_train: number of proposals to keep before applying NMS during training
+        rpn_pre_nms_top_n_test: number of proposals to keep before applying NMS during testing
+        rpn_post_nms_top_n_train: number of proposals to keep after applying NMS during training
+        rpn_post_nms_top_n_test: number of proposals to keep after applying NMS during testing
+        rpn_nms_thresh: NMS threshold used for postprocessing the RPN proposals
+        box_score_thresh: during inference, only return proposals with a classification score greater than box_score_thresh
+        box_nms_thresh: NMS threshold for the prediction head. Used during inference
+        box_detections_per_img: maximum number of detections per image, for all classes
 
     Returns
         The model to fine-tine/inference with
+
+    For a list of all parameters see:
+        https://github.com/pytorch/vision/blob/master/torchvision/models/detection/faster_rcnn.py
     """
     # load a model pre-trained pre-trained on COCO
-    model = fasterrcnn_resnet50_fpn(pretrained=True)
+    model = fasterrcnn_resnet50_fpn(
+        pretrained=True,
+        max_size=max_size,
+        rpn_pre_nms_top_n_test=rpn_pre_nms_top_n_test,
+        rpn_post_nms_top_n_test=rpn_post_nms_top_n_test,
+    )
 
     # get number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
@@ -101,7 +134,24 @@ def _calculate_ap(e: CocoEvaluator) -> float:
 class DetectionLearner:
     """ Detection Learner for Object Detection"""
 
-    def __init__(self, dataset: Dataset, model: nn.Module = None):
+    def __init__(
+        self,
+        dataset: Dataset,
+        model: nn.Module = None,
+        # transform parameters
+        min_size: int = 800,
+        max_size: int = 1333,
+        # RPN parameters
+        rpn_pre_nms_top_n_train: int = 2000,
+        rpn_pre_nms_top_n_test: int = 1000,
+        rpn_post_nms_top_n_train: int = 2000,
+        rpn_post_nms_top_n_test: int = 1000,
+        rpn_nms_thresh: float = 0.7,
+        # Box parameters
+        box_score_thresh: int = 0.05,
+        box_nms_thresh: float = 0.5,
+        box_detections_per_img: int = 100,
+    ):
         """ Initialize leaner object. """
         self.device = torch_device()
         self.model = model
@@ -109,9 +159,20 @@ class DetectionLearner:
 
         # setup model, default to fasterrcnn
         if self.model is None:
-            self.model = get_pretrained_fasterrcnn(len(dataset.labels)).to(
-                self.device
+            self.model = get_pretrained_fasterrcnn(
+                num_classes=len(dataset.labels),
+                min_size=min_size,
+                max_size=max_size,
+                rpn_pre_nms_top_n_train=rpn_pre_nms_top_n_train,
+                rpn_pre_nms_top_n_test=rpn_pre_nms_top_n_test,
+                rpn_post_nms_top_n_train=rpn_post_nms_top_n_train,
+                rpn_post_nms_top_n_test=rpn_post_nms_top_n_test,
+                rpn_nms_thresh=rpn_nms_thresh,
+                box_score_thresh=box_score_thresh,
+                box_nms_thresh=box_nms_thresh,
+                box_detections_per_img=box_detections_per_img,
             )
+            self.model.to(self.device)
 
     def __getattr__(self, attr):
         if attr in self.__dict__:
