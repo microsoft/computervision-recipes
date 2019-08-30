@@ -134,24 +134,7 @@ def _calculate_ap(e: CocoEvaluator) -> float:
 class DetectionLearner:
     """ Detection Learner for Object Detection"""
 
-    def __init__(
-        self,
-        dataset: Dataset,
-        model: nn.Module = None,
-        # transform parameters
-        min_size: int = 800,
-        max_size: int = 1333,
-        # RPN parameters
-        rpn_pre_nms_top_n_train: int = 2000,
-        rpn_pre_nms_top_n_test: int = 1000,
-        rpn_post_nms_top_n_train: int = 2000,
-        rpn_post_nms_top_n_test: int = 1000,
-        rpn_nms_thresh: float = 0.7,
-        # Box parameters
-        box_score_thresh: int = 0.05,
-        box_nms_thresh: float = 0.5,
-        box_detections_per_img: int = 100,
-    ):
+    def __init__(self, dataset: Dataset, model: nn.Module = None):
         """ Initialize leaner object. """
         self.device = torch_device()
         self.model = model
@@ -159,20 +142,8 @@ class DetectionLearner:
 
         # setup model, default to fasterrcnn
         if self.model is None:
-            self.model = get_pretrained_fasterrcnn(
-                num_classes=len(dataset.labels),
-                min_size=min_size,
-                max_size=max_size,
-                rpn_pre_nms_top_n_train=rpn_pre_nms_top_n_train,
-                rpn_pre_nms_top_n_test=rpn_pre_nms_top_n_test,
-                rpn_post_nms_top_n_train=rpn_post_nms_top_n_train,
-                rpn_post_nms_top_n_test=rpn_post_nms_top_n_test,
-                rpn_nms_thresh=rpn_nms_thresh,
-                box_score_thresh=box_score_thresh,
-                box_nms_thresh=box_nms_thresh,
-                box_detections_per_img=box_detections_per_img,
-            )
-            self.model.to(self.device)
+            self.model = get_pretrained_fasterrcnn(len(dataset.labels))
+        self.model.to(self.device)
 
     def __getattr__(self, attr):
         if attr in self.__dict__:
