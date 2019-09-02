@@ -17,9 +17,6 @@ find the Computer Vision repo setup and ready to be used.
 ssh -L 8899:localhost:8899 <username>@<ip-address>
 ```
 
-Visit localhost:8899 on your browser to start using the notebooks.>
-```
-
 Visit localhost:8899 on your browser to start using the notebooks.
 
 
