@@ -31,6 +31,7 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 | [21_deployment_on_azure_container_instances.ipynb](notebooks/21_deployment_on_azure_container_instances.ipynb)| Deploys a trained model exposed on a REST API using Azure Container Instances (ACI). |
 | [22_deployment_on_azure_kubernetes_service.ipynb](notebooks/22_deployment_on_azure_kubernetes_service.ipynb)| Deploys a trained model exposed on a REST API using the Azure Kubernetes Service (AKS). |
 | [23_aci_aks_web_service_testing.ipynb](notebooks/23_aci_aks_web_service_testing.ipynb)| Tests the deployed models on either ACI or AKS. |
+| [24_exploring_hyperparameters_on_azureml.ipynb](notebooks/24_exploring_hyperparameters_on_azureml.ipynb)| Performs highly parallel parameter sweeping using AzureML's HyperDrive. |
 
 ## Azure-enhanced notebooks
 
@@ -45,30 +46,5 @@ The Azure products featured in the notebooks include:
 * [Azure Container Instance](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-deploy-and-where#aci) - You can use Azure Machine Learning service to host your classification model in a web service deployment on Azure Container Instance (ACI). ACI is good for low scale, CPU-based workloads. [21_deployment_on_azure_container_instances](notebooks/21_deployment_on_azure_container_instances.ipynb) explains how to deploy a web service to ACI through Azure ML.
 
 * [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-deploy-and-where#aks) - You can use Azure Machine Learning service to host your classification model in a web service deployment on Azure Kubernetes Service (AKS). AKS is good for high-scale production deployments and provides autoscaling, and fast response times. [22_deployment_on_azure_kubernetes_service](notebooks/22_deployment_on_azure_kubernetes_service.ipynb) explains how to deploy a web service to AKS through Azure ML.
-
-## Coding guidelines
-
-Since we take a strong dependency on fast.ai, variable naming should follow the standards of fast.ai which are described in this [abbreviation guide](https://docs.fast.ai/dev/abbr.html). For example, in computer vision cases, an image should always be abbreviated with `im` and not `i`, `img`, `imag`, `image`, etc. The one exception to this guide is that variable names should be as self-explanatory as possible. For example, the meaning of the variable `batch_size` is clearer than `bs` to refer to batch size.
-
-More general [coding guidelines](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines) are available in the [Microsoft/Recommenders](https://github.com/Microsoft/Recommenders) github repo.
-
-The main variables and abbreviations are given in the table below:
-
-| Abbreviation | Description |
-| ------------ | ----------- |
-| `im `                    | Image
-| `fig`                    | Figure
-| `pt`                     | 2D point (column,row)
-| `rect`                   | Rectangle (order: left, top, right, bottom)
-| `width`, `height`, `w`, `h`  | Image dimensions
-| `scale`                  | Image up/down scaling factor
-| `angle`                  | Rotation angle in degree
-| `table`                  | 2D row/column matrix implemented using a list of lists
-| `row`, `list1D`             | Single row in a table, i.e. single 1D-list
-| `rowItem`                | Single item in a row
-| `line`, `string`            | Single string
-| `lines`, `strings`          | List of strings
-| `list1D`                 | List of items, not necessarily strings
-| -`s`    | Multiple of something (plural) should be indicated by appending an `s` to an abbreviation.
 
 

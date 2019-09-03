@@ -40,6 +40,18 @@ To get started:
     - [/similarity](similarity#notebooks)
     - [/detection](detection#notebooks)
     
+
+As an alternative to the steps above, and if one wants to install only
+the 'utils_cv' library (without creating a new conda environment),
+this can be done by running
+
+```bash
+pip install git+https://github.com/microsoft/ComputerVision.git@master#egg=utils_cv
+```
+
+or by downloading the repo and then running `pip install .` in the
+root directory.
+
 ## Introduction
 
 Note that for certain computer vision problems, you may not need to build your own models. Instead, pre-built or easily customizable solutions exist which do not require any custom coding or machine learning expertise. We strongly recommend evaluating if these can sufficiently solve your problem. If these solutions are not applicable, or the accuracy of these solutions is not sufficient, then resorting to more complex and time-consuming custom approaches may be necessary.
@@ -109,11 +121,10 @@ Most applications in computer vision (CV) fall into one of these 4 categories:
 This project welcomes contributions and suggestions. Please see our [contribution guidelines](CONTRIBUTING.md).
 
 ## Data/Telemetry
-The Azure Machine Learning image classification notebooks ([20_azure_workspace_setup](classification/notebooks/20_azure_workspace_setup.ipynb), [21_deployment_on_azure_container_instances](classification/notebooks/21_deployment_on_azure_container_instances.ipynb), [22_deployment_on_azure_kubernetes_service](classification/notebooks/22_deployment_on_azure_kubernetes_service.ipynb), and [23_aci_aks_web_service_testing](classification/notebooks/23_aci_aks_web_service_testing.ipynb)) collect browser usage data and send it to Microsoft to help improve our products and services. Read Microsoft's [privacy statement to learn more](https://privacy.microsoft.com/en-US/privacystatement).
+The Azure Machine Learning image classification notebooks ([20_azure_workspace_setup](classification/notebooks/20_azure_workspace_setup.ipynb), [21_deployment_on_azure_container_instances](classification/notebooks/21_deployment_on_azure_container_instances.ipynb), [22_deployment_on_azure_kubernetes_service](classification/notebooks/22_deployment_on_azure_kubernetes_service.ipynb), [23_aci_aks_web_service_testing](classification/notebooks/23_aci_aks_web_service_testing.ipynb), and [24_exploring_hyperparameters_on_azureml](classification/notebooks/24_exploring_hyperparameters_on_azureml.ipynb)) collect browser usage data and send it to Microsoft to help improve our products and services. Read Microsoft's [privacy statement to learn more](https://privacy.microsoft.com/en-US/privacystatement).
 
 To opt out of tracking, please go to the raw `.ipynb` files and remove the following line of code (the URL will be slightly different depending on the file):
 
 ```sh
     "![Impressions](https://PixelServer20190423114238.azurewebsites.net/api/impressions/ComputerVision/classification/notebooks/21_deployment_on_azure_container_instances.png)"
 ```
-

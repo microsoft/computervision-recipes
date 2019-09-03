@@ -16,4 +16,4 @@ jobs:
     name: cvbpwinagents
 
   steps:
-  - template: templates/unit-test-steps.yml  # Template reference
+  - template: templates/unit-test-steps-not-linuxgpu.yml  # Template reference
