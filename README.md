@@ -15,7 +15,6 @@ The following is a summary of commonly used Computer Vision scenarios that are c
 | [Classification](classification) | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
 | [Similarity](similarity)  | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
 | [Detection](detection) | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
-| Segmentation (_coming soon_) | Image Segmentation is the process of partitioning a digital image into multiple segments. |
 
 ## Getting Started
 
