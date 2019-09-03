@@ -50,8 +50,8 @@ def _get_file_name(url: str) -> str:
 
 def unzip_url(
     url: str,
-    fpath: Union[Path, str] = data_path(),
-    dest: Union[Path, str] = data_path(),
+    fpath: Union[Path, str] = None,
+    dest: Union[Path, str] = None,
     exist_ok: bool = False,
 ) -> str:
     """ Download file from URL to {fpath} and unzip to {dest}.
@@ -73,6 +73,14 @@ def unzip_url(
     def _raise_file_exists_error(path: Union[Path, str]) -> None:
         if not exist_ok:
             raise FileExistsError(path, "Use param {{exist_ok}} to ignore.")
+
+    if fpath is None and dest is None:
+        fpath = data_path()
+        dest = data_path()
+    if fpath is None and dest is not None:
+        fpath = dest
+    if dest is None and fpath is not None:
+        dest = fpath
 
     os.makedirs(dest, exist_ok=True)
     os.makedirs(fpath, exist_ok=True)
