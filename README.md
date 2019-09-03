@@ -6,7 +6,16 @@ This repository provides examples and best practice guidelines for building comp
 
 The goal of this repository is to accelerate the development of computer vision applications. Rather than creating implementions from scratch, the focus is on providing examples and links to existing state-of-the-art libraries. In addition, having worked in this space for many years, we aim to answer common questions, point out frequently observed pitfalls, and show how to use the cloud for training and deployment.
 
-The current main priority is to support image classification. Additionally, we also provide a basic (but often sufficiently accurate) example for image similarity. See the [projects](https://github.com/Microsoft/ComputerVision/projects) and [milestones](https://github.com/Microsoft/ComputerVision/milestones) pages in this repository for more details.
+## Scenarios
+
+The following is a summary of commonly used Computer Vision scenarios that are covered in this repository. For each of these scenarios, we give you the tools to effectively build your own model. This includes tasks such as fine-tuning your own model on your own data, to more complex tasks such as hard-negative mining and even model deployment.
+
+| Scenario | Description |
+| -------- | ----------- |
+| [Classification](classification) | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
+| [Similarity](similarity)  | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
+| [Detection](detection) | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
+| Segmentation (_coming soon_) | Image Segmentation is the process of partitioning a digital image into multiple segments. |
 
 ## Getting Started
 
@@ -35,11 +44,7 @@ To get started:
     ```
     jupyter notebook
     ```
-1. At this point, you should be able to run the notebooks in this repo. Explore our notebooks on the following computer vision domains. Make sure to change the kernel to "Python (cv)".
-    - [/classification](classification#notebooks)
-    - [/similarity](similarity#notebooks)
-    - [/detection](detection#notebooks)
-    
+1. At this point, you should be able to run the [notebooks](#scenarios) in this repo. 
 
 As an alternative to the steps above, and if one wants to install only
 the 'utils_cv' library (without creating a new conda environment),
