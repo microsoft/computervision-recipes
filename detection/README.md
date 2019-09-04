@@ -23,6 +23,13 @@ To get started, simply follow the repository-wide installation instructions in t
   conda activate cv
   ```
 
+AT THIS POINT, INSTALLATION ON WINDOWS MACHINES REQUIRES A FEW EXTRA STEPS. THESE ARE:
+- BEFORE RUNNING *conda env create -f environment.yml*
+   - REMOVE *pycocotools>=2.0* FROM environment.yaml file
+- AFTER RUNNING *conda env create -f environment.yml* AND *conda activate cv* ALSO RUN
+   - pip install Cython
+   - pip install git+https://github.com/philferriere/cocoapi.git#egg=pycocotools^&subdirectory=PythonAPI
+
 We recommend running these samples on a machine with GPU, on either Windows or Linux. While a GPU is technically not required, training gets prohibitively slow even when using only a few dozens of images.
 
 
