@@ -45,13 +45,13 @@ def parse_pascal_voc_anno(
 ) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
     """ Extract the annotations and image path from labelling in Pascal VOC format.
 
-            Args:
-                anno_path: the path to the annotation xml file
-                labels: list of all possible labels, used to compute label index for each label name
+    Args:
+        anno_path: the path to the annotation xml file
+        labels: list of all possible labels, used to compute label index for each label name
 
-            Return
-                A tuple of annotations and the image path
-            """
+    Return
+        A tuple of annotations and the image path
+    """
 
     anno_bboxes = []
     tree = ET.parse(anno_path)
@@ -110,7 +110,7 @@ class DetectionDataset:
         transforms: object = get_transform(train=True),
         train_pct: float = 0.5,
         annotation_dir: str = "annotations",
-        im_dir: str = None,
+        im_dir: str = "images",
     ):
         """ initialize dataset
 
@@ -166,9 +166,11 @@ class DetectionDataset:
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible labels. """
 
-        # If im_dir specified then get image paths and respective annotations
-        # from scanning that directory. Otherwise find all annotation files
-        # and get path to image from annotation.
+        # All annotation files are assumed to be in the anno_dir directory.
+        # If im_dir is provided then find all images in that directory, and
+        # it's assumed that the annotation filenames end with .xml.
+        # If im_dir is not provided, then the image paths are read from inside
+        # the .xml annotations.
         if self.im_dir is None:
             anno_filenames = sorted(os.listdir(self.root / self.anno_dir))
             self.im_paths = []
@@ -186,6 +188,9 @@ class DetectionDataset:
         self.anno_bboxes = []
         for anno_filename in anno_filenames:
             anno_path = self.root / self.anno_dir / str(anno_filename)
+            assert os.path.exists(anno_path), (
+                "Cannot find annotation file: " + anno_path
+            )
             anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
 
             # TODO For now, ignore all images without a single bounding box in it, otherwise throws error during training.
