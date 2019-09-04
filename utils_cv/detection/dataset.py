@@ -57,9 +57,16 @@ def parse_pascal_voc_anno(
     tree = ET.parse(anno_path)
     root = tree.getroot()
 
-    # get image path from annotation
+    # get image path from annotation. Note that the path field might not be set.
     anno_dir = os.path.dirname(anno_path)
-    im_path = os.path.realpath(os.path.join(anno_dir, root.find("path").text))
+    if root.find("path"):
+        im_path = os.path.realpath(
+            os.path.join(anno_dir, root.find("path").text)
+        )
+    else:
+        im_path = os.path.realpath(
+            os.path.join(anno_dir, root.find("filename").text)
+        )
 
     # extract bounding boxes and classification
     objs = root.findall("object")
