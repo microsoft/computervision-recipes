@@ -1,15 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import pdb
-
 from fastai.vision import cnn_learner, DatasetType, models
 
-#from utils_cv.classification.model import IMAGENET_IM_SIZE, model_to_learner
 from utils_cv.similarity.model import (
     compute_feature,
     compute_features,
-    compute_features_learner
+    compute_features_learner,
 )
 
 
@@ -23,9 +20,10 @@ def test_compute_feature(tiny_ic_databunch):
 
 def test_compute_features(tiny_ic_databunch):
     learn = cnn_learner(tiny_ic_databunch, models.resnet18)
-    #learn.fit_one_cycle(0) #, LEARNING_RATE)
     embedding_layer = learn.model[1][6]
-    features = compute_features(tiny_ic_databunch.valid_ds, learn, embedding_layer)
+    features = compute_features(
+        tiny_ic_databunch.valid_ds, learn, embedding_layer
+    )
     im_paths = tiny_ic_databunch.valid_ds.x.items
     assert len(features) == len(im_paths)
     assert len(features[str(im_paths[1])]) == 512
@@ -34,7 +32,9 @@ def test_compute_features(tiny_ic_databunch):
 def test_compute_features_learner(tiny_ic_databunch):
     learn = cnn_learner(tiny_ic_databunch, models.resnet18)
     embedding_layer = learn.model[1][6]
-    features = compute_features_learner(tiny_ic_databunch, DatasetType.Valid, learn, embedding_layer)
+    features = compute_features_learner(
+        tiny_ic_databunch, DatasetType.Valid, learn, embedding_layer
+    )
     im_paths = tiny_ic_databunch.valid_ds.x.items
     assert len(features) == len(im_paths)
     assert len(features[str(im_paths[1])]) == 512

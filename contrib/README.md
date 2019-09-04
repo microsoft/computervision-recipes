@@ -7,4 +7,4 @@ Each project should live in its own subdirectory ```/contrib/<project>``` and co
 
 | Directory | Project description |
 |---|---|
-| | |
+| vm_builder | This script helps users easily create an Ubuntu Data Science Virtual Machine with a GPU with the Computer Vision repo installed and ready to be used. If you find the script to be out-dated or not working, you can create the VM using the Azure portal or the Azure CLI tool with a few more steps. |
