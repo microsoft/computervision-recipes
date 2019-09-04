@@ -59,7 +59,7 @@ def compute_feature(
         im = im_or_path
     featurizer = SaveFeatures(embedding_layer)
     featurizer.features = None
-    _ = learn.predict(im)
+    learn.predict(im)
     feats = featurizer.features[0][:]
     assert len(feats) > 1
     featurizer.features = None
@@ -128,7 +128,7 @@ def compute_features_learner(
 
     # Compute features
     featurizer = SaveFeatures(embedding_layer)
-    _ = learn.get_preds(dataset_type)
+    learn.get_preds(dataset_type)
     feats = featurizer.features[:]
 
     # Get corresponding image paths

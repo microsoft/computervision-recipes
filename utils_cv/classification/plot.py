@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 """
-Helper module for drawing plots
+Helper module for visualizations
 """
 import matplotlib.pyplot as plt
 import pandas as pd
