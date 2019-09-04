@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import os
-from functools import partial
 import math
 from pathlib import Path
 from random import randrange
@@ -17,6 +16,7 @@ from .plot import display_bboxes, plot_grid
 from .bbox import AnnotationBbox
 from .references.utils import collate_fn
 from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
+from utils_cv.common.gpu import db_num_workers
 
 
 def get_transform(train: bool) -> List[object]:
@@ -40,6 +40,62 @@ def get_transform(train: bool) -> List[object]:
     return Compose(transforms)
 
 
+def parse_pascal_voc_anno(
+    anno_path: str, labels: List[str] = None
+) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
+    """ Extract the annotations and image path from labelling in Pascal VOC format.
+
+    Args:
+        anno_path: the path to the annotation xml file
+        labels: list of all possible labels, used to compute label index for each label name
+
+    Return
+        A tuple of annotations and the image path
+    """
+
+    anno_bboxes = []
+    tree = ET.parse(anno_path)
+    root = tree.getroot()
+
+    # get image path from annotation. Note that the path field might not be set.
+    anno_dir = os.path.dirname(anno_path)
+    if root.find("path"):
+        im_path = os.path.realpath(
+            os.path.join(anno_dir, root.find("path").text)
+        )
+    else:
+        im_path = os.path.realpath(
+            os.path.join(anno_dir, root.find("filename").text)
+        )
+
+    # extract bounding boxes and classification
+    objs = root.findall("object")
+    for obj in objs:
+        label = obj.find("name").text
+        bnd_box = obj.find("bndbox")
+        left = int(bnd_box[0].text)
+        top = int(bnd_box[1].text)
+        right = int(bnd_box[2].text)
+        bottom = int(bnd_box[3].text)
+
+        # Set mapping of label name to label index
+        if labels is None:
+            label_idx = None
+        else:
+            label_idx = labels.index(label)
+
+        anno_bbox = AnnotationBbox.from_array(
+            [left, top, right, bottom],
+            label_name=label,
+            label_idx=label_idx,
+            im_path=im_path,
+        )
+        assert anno_bbox.is_valid()
+        anno_bboxes.append(anno_bbox)
+
+    return (anno_bboxes, im_path)
+
+
 class DetectionDataset:
     """ An object detection dataset.
 
@@ -53,8 +109,8 @@ class DetectionDataset:
         batch_size: int = 2,
         transforms: object = get_transform(train=True),
         train_pct: float = 0.5,
-        im_dir: str = "images",
         annotation_dir: str = "annotations",
+        im_dir: str = "images",
     ):
         """ initialize dataset
 
@@ -69,8 +125,8 @@ class DetectionDataset:
             batch_size: batch size for dataloaders
             transforms: the transformations to apply
             train_pct: the ratio of training to testing data
-            im_dir: the name of the image folder
-            annotation_dir: the name of the annotation folder
+            annotation_dir: the name of the annotation subfolder under the root directory
+            im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
         """
 
         self.root = Path(root)
@@ -81,10 +137,8 @@ class DetectionDataset:
         self.batch_size = batch_size
         self.train_pct = train_pct
 
-        # get images and annotations
-        self.im_paths = list(sorted(os.listdir(self.root / self.im_dir)))
-        self.anno_paths = list(sorted(os.listdir(self.root / self.anno_dir)))
-        self.labels = self._get_labels()
+        # read annotations
+        self._read_annos()
 
         # create training and validation datasets
         self.train_ds, self.test_ds = self.split_train_test(
@@ -96,7 +150,7 @@ class DetectionDataset:
             self.train_ds,
             batch_size=self.batch_size,
             shuffle=True,
-            num_workers=4,
+            num_workers=db_num_workers(),
             collate_fn=collate_fn,
         )
 
@@ -104,30 +158,61 @@ class DetectionDataset:
             self.test_ds,
             batch_size=self.batch_size,
             shuffle=False,
-            num_workers=4,
+            num_workers=db_num_workers(),
             collate_fn=collate_fn,
         )
 
-    def _get_labels(self) -> List[str]:
+    def _read_annos(self) -> List[str]:
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible labels. """
-        # TODO implement:
-        # - option to bypass this setup set if users already know label names
-        # - option to do 'active' loading so that we preload all annotations
-        # during setup time (instead of lazy loading) - this will let us
-        # do things like get average box size of all the data, etc..
 
+        # All annotation files are assumed to be in the anno_dir directory.
+        # If im_dir is provided then find all images in that directory, and
+        # it's assumed that the annotation filenames end with .xml.
+        # If im_dir is not provided, then the image paths are read from inside
+        # the .xml annotations.
+        if self.im_dir is None:
+            anno_filenames = sorted(os.listdir(self.root / self.anno_dir))
+            self.im_paths = []
+        else:
+            im_filenames = sorted(os.listdir(self.root / self.im_dir))
+            anno_filenames = [
+                os.path.splitext(s)[0] + ".xml" for s in im_filenames
+            ]
+            self.im_paths = [
+                os.path.join(self.root / self.im_dir, s) for s in im_filenames
+            ]
+
+        # Parse all annotations
+        self.anno_paths = []
+        self.anno_bboxes = []
+        for anno_filename in anno_filenames:
+            anno_path = self.root / self.anno_dir / str(anno_filename)
+            assert os.path.exists(anno_path), (
+                "Cannot find annotation file: " + anno_path
+            )
+            anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
+
+            # TODO For now, ignore all images without a single bounding box in it, otherwise throws error during training.
+            if len(anno_bboxes) == 0:
+                continue
+
+            if self.im_dir is None:
+                self.im_paths.append(im_path)
+            self.anno_paths.append(anno_path)
+            self.anno_bboxes.append(anno_bboxes)
+
+        # Get list of all labels
         labels = ["__background__"]
-        for anno_path in self.anno_paths:
-            anno_path = self.root / "annotations" / str(anno_path)
-            tree = ET.parse(anno_path)
-            root = tree.getroot()
-            objs = root.findall("object")
-            for obj in objs:
-                label = obj[0]
-                assert label.tag == "name"
-                labels.append(label.text)
-        return list(set(labels))
+        for anno_bboxes in self.anno_bboxes:
+            for anno_bbox in anno_bboxes:
+                labels.append(anno_bbox.label_name)
+        self.labels = list(set(labels))
+
+        # Set for each bounding box label name also what its integer representation is
+        for anno_bboxes in self.anno_bboxes:
+            for anno_bbox in anno_bboxes:
+                anno_bbox.label_idx = self.labels.index(anno_bbox.label_name)
 
     def split_train_test(
         self, train_pct: float = 0.8
@@ -155,104 +240,32 @@ class DetectionDataset:
 
         return train, test
 
-    def show_ims(
-        self, rows: int = 1, cols: int = 3, rand: bool = False
-    ) -> None:
+    def show_ims(self, rows: int = 1, cols: int = 3) -> None:
         """ Show a set of images.
 
         Args:
             rows: the number of rows images to display
             cols: cols to display, NOTE: use 3 for best looking grid
-            rand: randomize images
 
         Returns None but displays a grid of annotated images.
         """
-        im_annos = partial(self._read_anno_idx, None, True)
-        plot_grid(display_bboxes, im_annos, rows=rows, cols=cols)
+        plot_grid(display_bboxes, self._get_random_anno, rows=rows, cols=cols)
 
-    def _read_anno_path(
-        self, anno_path: str
+    def _get_random_anno(
+        self
     ) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
-        """ Extract the annotations and image path from labelling in Pascal VOC format.
+        """ Get random annotation and corresponding image
 
-        Args:
-            anno_path: the path to the annotation xml file
-
-        Return
-            A tuple of annotations and the image path
+        Returns a list of annotatoons and the image path
         """
-        anno_bboxes = []
-        tree = ET.parse(anno_path)
-        root = tree.getroot()
-
-        # get image path from annotation
-        anno_dir = os.path.dirname(anno_path)
-        im_path = os.path.realpath(
-            os.path.join(anno_dir, root.find("path").text)
-        )
-
-        # extract bounding boxes and classification
-        objs = root.findall("object")
-        for obj in objs:
-            label = obj[0]
-            assert label.tag == "name"
-
-            bnd_box = obj[4]
-            assert bnd_box.tag == "bndbox"
-
-            left = int(bnd_box[0].text)
-            top = int(bnd_box[1].text)
-            right = int(bnd_box[2].text)
-            bottom = int(bnd_box[3].text)
-
-            anno_bbox = AnnotationBbox.from_array(
-                [left, top, right, bottom],
-                label_name=label.text,
-                label_idx=self.labels.index(label.text),
-                im_path=im_path,
-            )
-            assert anno_bbox.is_valid()
-
-            anno_bboxes.append(anno_bbox)
-
-        return (anno_bboxes, im_path)
-
-    def _read_anno_idx(
-        self, idx: int, rand: bool = False
-    ) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
-        """ Get annotation by index
-
-        Args:
-            idx: the index to read from
-            rand: choose random index
-
-        Raises:
-            Exception if idx is not None and rand is set to True
-            Exception if rand and idx is set to False and None respectively
-
-        Returns a list of annotaitons and the image path
-        """
-
-        if (idx is not None) and (rand is True):
-            raise Exception("idx cannot be set if rand is set to True.")
-        if idx is None and rand is False:
-            raise Exception("specify idx if rand is False.")
-
-        if rand:
-            idx = randrange(len(self.im_paths))
-
-        anno_path = self.get_path_from_idx(idx)
-        return self._read_anno_path(anno_path)
-
-    def get_path_from_idx(self, idx: int) -> str:
-        """ Gets an im_path from idx. """
-        return self.root / self.anno_dir / str(self.anno_paths[idx])
+        idx = randrange(len(self.anno_paths))
+        return self.anno_bboxes[idx], self.im_paths[idx]
 
     def __getitem__(self, idx):
         """ Make iterable. """
         # get box/labels from annotations
-        anno_bboxes, im_path = self._read_anno_idx(idx)
-
+        im_path = self.im_paths[idx]
+        anno_bboxes = self.anno_bboxes[idx]
         boxes = [
             [anno_bbox.left, anno_bbox.top, anno_bbox.right, anno_bbox.bottom]
             for anno_bbox in anno_bboxes
@@ -292,4 +305,4 @@ class DetectionDataset:
         return (im, target)
 
     def __len__(self):
-        return len(self.im_paths)
+        return len(self.anno_paths)

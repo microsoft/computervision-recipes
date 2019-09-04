@@ -35,7 +35,9 @@ def _get_det_bboxes(
         a list of DetectionBboxes
     """
     pred_labels = pred[0]["labels"].detach().cpu().numpy().tolist()
-    pred_boxes = pred[0]["boxes"].detach().cpu().numpy().astype(np.int32).tolist()
+    pred_boxes = (
+        pred[0]["boxes"].detach().cpu().numpy().astype(np.int32).tolist()
+    )
     pred_scores = pred[0]["scores"].detach().cpu().numpy().tolist()
 
     det_bboxes = []
@@ -314,7 +316,7 @@ class DetectionLearner:
             for raw_det, info in zip(raw_dets, infos):
 
                 im_idx = int(info["image_id"].numpy())
-                im_path = dl.dataset.dataset.get_path_from_idx(im_idx)
+                im_path = dl.dataset.dataset.im_paths[im_idx]
 
                 det_bboxes = _get_det_bboxes(
                     [raw_det], labels=labels, im_path=im_path

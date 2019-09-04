@@ -26,7 +26,7 @@ class PlotSettings:
         rect_th: int = 4,
         rect_color: Tuple[int, int, int] = (255, 0, 0),
         text_size: int = 25,
-        text_font: str = "DejaVuSerifCondensed.ttf",
+        text_font: str = "arial.ttf",
         text_color: Tuple[int, int, int] = (255, 255, 255),
     ):
         self.rect_th, self.rect_color, self.text_size, self.text_font, self.text_color = (
