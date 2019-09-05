@@ -5,11 +5,9 @@
 # https://github.com/Microsoft/Recommenders/tree/master/tests
 
 import os
-import glob
 import papermill as pm
 import pytest
 import scrapbook as sb
-import shutil
 
 # Unless manually modified, python3 should be
 # the name of the current jupyter kernel
@@ -149,47 +147,3 @@ def test_12_notebook_run(classification_notebooks, tiny_ic_data_path):
 
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     assert len(nb_output.scraps["train_acc"].data) == 1
-
-
-@pytest.mark.notebooks
-def skip_test_21_notebook_run(classification_notebooks, tiny_ic_data_path):
-    """ NOTE - this function is intentionally prefixed with 'skip' so that
-    pytests bypasses this function
-    """
-    notebook_path = classification_notebooks[
-        "21_deployment_on_azure_container_instances"
-    ]
-    pm.execute_notebook(
-        notebook_path,
-        OUTPUT_NOTEBOOK,
-        parameters=dict(
-            PM_VERSION=pm.__version__, DATA_PATH=tiny_ic_data_path
-        ),
-        kernel_name=KERNEL_NAME,
-    )
-    try:
-        os.remove("myenv.yml")
-    except OSError:
-        pass
-    try:
-        os.remove("score.py")
-    except OSError:
-        pass
-
-    try:
-        os.remove("output.ipynb")
-    except OSError:
-        pass
-
-    # There should be only one file, but the name may be changed
-    file_list = glob.glob("./*.pkl")
-    for filePath in file_list:
-        try:
-            os.remove(filePath)
-        except OSError:
-            pass
-
-    # TODO should use temp folder for safe cleanup. Notebook should accept the folder paths via papermill param.
-    shutil.rmtree(os.path.join(os.getcwd(), "azureml-models"))
-    shutil.rmtree(os.path.join(os.getcwd(), "models"))
-    shutil.rmtree(os.path.join(os.getcwd(), "outputs"))

@@ -141,23 +141,39 @@ def tiny_ic_multidata_path(tmp_session) -> List[str]:
     """ Returns the path to multiple dataset. """
     return [
         unzip_url(
-            Urls.fridge_objects_watermark_tiny_path, tmp_session, exist_ok=True
+            Urls.fridge_objects_watermark_tiny_path,
+            fpath=tmp_session,
+            dest=tmp_session,
+            exist_ok=True,
         ),
-        unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True),
+        unzip_url(
+            Urls.fridge_objects_tiny_path,
+            fpath=tmp_session,
+            dest=tmp_session,
+            exist_ok=True,
+        ),
     ]
 
 
 @pytest.fixture(scope="session")
 def tiny_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
-    return unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True)
+    return unzip_url(
+        Urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
 
 
 @pytest.fixture(scope="session")
 def tiny_multilabel_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
     return unzip_url(
-        Urls.multilabel_fridge_objects_tiny_path, tmp_session, exist_ok=True
+        Urls.multilabel_fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
     )
 
 
@@ -165,7 +181,10 @@ def tiny_multilabel_ic_data_path(tmp_session) -> str:
 def multilabel_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
     return unzip_url(
-        Urls.multilabel_fridge_objects_path, tmp_session, exist_ok=True
+        Urls.multilabel_fridge_objects_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
     )
 
 
@@ -173,7 +192,10 @@ def multilabel_ic_data_path(tmp_session) -> str:
 def tiny_ic_databunch(tmp_session):
     """ Returns a databunch object for the tiny fridge objects dataset. """
     im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+        Urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
     )
     return (
         ImageList.from_folder(im_paths)
@@ -219,7 +241,10 @@ def testing_im_list(tmp_session):
     """ Set of 5 images from the can/ folder of the Fridge Objects dataset
      used to test positive example rank calculations"""
     im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+        Urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
     )
     can_im_paths = os.listdir(os.path.join(im_paths, "can"))
     can_im_paths = [
@@ -234,7 +259,10 @@ def testing_databunch(tmp_session):
     and returns its validation component that is used
     to test comparative_set_builder"""
     im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+        Urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
     )
     can_im_paths = os.listdir(os.path.join(im_paths, "can"))
     can_im_paths = [
