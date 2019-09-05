@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import os
 from pathlib import Path
 import requests
 from typing import List, Union
@@ -11,13 +10,7 @@ from zipfile import ZipFile
 
 def data_path() -> Path:
     """Get the data directory path"""
-    data_dir = Path(
-        os.path.realpath(
-            os.path.join(
-                os.path.dirname(__file__), os.pardir, os.pardir, "data"
-            )
-        )
-    )
+    data_dir = Path(__file__).parent.parent.parent.joinpath("data").expanduser().resolve()
     data_dir.mkdir(exist_ok=True)
     return data_dir
 
@@ -33,10 +26,11 @@ def get_files_in_directory(
     Return:
         List of filenames
     """
-    if not os.path.exists(directory):
+    directory = Path(directory)
+    if not directory.exists():
         raise Exception(f"Directory '{directory}' does not exist.")
-    filenames = [str(p) for p in Path(directory).iterdir() if p.is_file()]
-    if suffixes and suffixes != "":
+    filenames = [str(p) for p in directory.iterdir() if p.is_file()]
+    if suffixes:
         filenames = [
             s for s in filenames if s.lower().endswith(tuple(suffixes))
         ]
@@ -82,13 +76,16 @@ def unzip_url(
     if dest is None and fpath is not None:
         dest = fpath
 
-    os.makedirs(dest, exist_ok=True)
-    os.makedirs(fpath, exist_ok=True)
+    fpath = Path(fpath)
+    dest = Path(dest)
+
+    fpath.mkdir(parents=True, exist_ok=True)
+    dest.mkdir(parents=True, exist_ok=True)
 
     fname = _get_file_name(url)
     fname_without_extension = fname.split(".")[0]
-    zip_file = Path(os.path.join(fpath, fname))
-    unzipped_dir = Path(os.path.join(dest, fname_without_extension))
+    zip_file = fpath / fname
+    unzipped_dir = dest / fname_without_extension
 
     # download zipfile if zipfile not exists
     if zip_file.is_file():
@@ -107,7 +104,7 @@ def unzip_url(
         z.extractall(fpath)
         z.close()
 
-    return os.path.realpath(unzipped_dir)
+    return str(unzipped_dir.expanduser().resolve())
 
 
 def unzip_urls(
@@ -116,8 +113,7 @@ def unzip_urls(
     """ Download and unzip all datasets in Urls to dest """
 
     # make dir if not exist
-    if not Path(dest).is_dir():
-        os.makedirs(dest)
+    Path(dest).mkdir(parents=True, exist_ok=True)
 
     # download all data urls
     paths = list()
@@ -129,8 +125,4 @@ def unzip_urls(
 
 def root_path() -> Path:
     """Get path of root dir."""
-    return Path(
-        os.path.realpath(
-            os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
-        )
-    )
+    return Path(__file__).parent.parent.parent.expanduser().resolve()
