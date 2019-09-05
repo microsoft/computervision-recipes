@@ -10,7 +10,8 @@ from zipfile import ZipFile
 
 def data_path() -> Path:
     """Get the data directory path"""
-    data_dir = Path(__file__).parent.parent.parent.joinpath("data").expanduser().resolve()
+    data_dir = Path(__file__).parent.parent.parent / "data"
+    data_dir = data_dir.expanduser().resolve()
     data_dir.mkdir(exist_ok=True)
     return data_dir
 
