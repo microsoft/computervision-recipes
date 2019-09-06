@@ -1,4 +1,6 @@
-# Computer Vision
+# Computer Vision 
+
+JS's update
 
 This repository provides examples and best practice guidelines for building computer vision systems. All examples are given as Jupyter notebooks, and use PyTorch as the deep learning library.
 
