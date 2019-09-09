@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 
 from .references.coco_eval import CocoEvaluator
 from .bbox import _Bbox, AnnotationBbox, DetectionBbox
+from ..common.gpu import is_linux
 
 
 class PlotSettings:
@@ -26,9 +27,12 @@ class PlotSettings:
         rect_th: int = 4,
         rect_color: Tuple[int, int, int] = (255, 0, 0),
         text_size: int = 25,
-        text_font: str = "arial.ttf",
+        text_font: str = "DejaVuSerifCondensed.ttf",
         text_color: Tuple[int, int, int] = (255, 255, 255),
     ):
+        if is_windows() == True:
+            text_font = "arial.ttf"
+
         self.rect_th, self.rect_color, self.text_size, self.text_font, self.text_color = (
             rect_th,
             rect_color,
