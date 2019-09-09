@@ -38,6 +38,5 @@ dependencies:
   - nteract-scrapbook
   # - git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI
   - pyyaml>=5.1.2
-  - scrapbook>=0.2.0
   - lxml>=4.3.2
   - requests>=2.22.0
