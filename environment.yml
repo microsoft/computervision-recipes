@@ -27,6 +27,7 @@ dependencies:
 - bqplot
 - scikit-learn>=0.19.1
 - pip>=19.0.3
+- cython>=0.29.1
 - pip:
   - azureml-sdk[notebooks,contrib]>=1.0.30
   - black>=18.6b4
