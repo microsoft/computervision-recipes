@@ -2,6 +2,8 @@
 
 This repository provides examples and best practice guidelines for building computer vision systems. All examples are given as Jupyter notebooks, and use PyTorch as the deep learning library.
 
+New changes from Anupam
+
 ## Overview
 
 The goal of this repository is to accelerate the development of computer vision applications. Rather than creating implementions from scratch, the focus is on providing examples and links to existing state-of-the-art libraries. In addition, having worked in this space for many years, we aim to answer common questions, point out frequently observed pitfalls, and show how to use the cloud for training and deployment.
