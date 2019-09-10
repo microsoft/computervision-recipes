@@ -4,7 +4,7 @@ In recent years, we see an extra-ordinary growth in Computer Vision, with applic
 This repository provides examples and best practice guidelines for building computer vision systems. The focus of the repository is on state-of-the-art methods that are popular among researchers and practitioners working on problems involving image recognition, object detection and image similarity.
 
 These examples are provided as Jupyter notebooks and common utility functions. All examples use PyTorch as the deep learning library.
-<TBD - add hyperlink to Jupyter Notebook and utility functions landing page>
+
 
 ## Overview
 
