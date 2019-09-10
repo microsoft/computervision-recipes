@@ -19,7 +19,7 @@ dependencies:
 - python==3.6.8
 - pytorch>=1.2.0
 - torchvision>=0.3.0
-#- pycocotools>=2.0
+- pycocotools>=2.0
 - fastai==1.0.57
 - ipykernel>=4.6.1
 - jupyter>=1.0.0
@@ -36,5 +36,7 @@ dependencies:
   - nvidia-ml-py3
   - pre-commit>=1.14.4
   - nteract-scrapbook
-  - git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI
+  # - git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI
+  - pyyaml>=5.1.2
   - lxml>=4.3.2
+  - requests>=2.22.0
