@@ -1,12 +1,16 @@
 # Computer Vision
+In recent years, we see an extra-ordinary growth in Computer Vision, with applications in face recognition, image understanding, search, drones, mapping, semi-autonomous and autonomous vehicles. Key essence to many of these applications are visual recognition tasks such  as image classification, object detection and image similarity. Researchers have been applying newer deep learning methods to achieve state-of-the-art(SOTA) results on these challenging visual recognition tasks. 
 
-This repository provides examples and best practice guidelines for building computer vision systems. All examples are given as Jupyter notebooks, and use PyTorch as the deep learning library.
+This repository provides examples and best practice guidelines for building computer vision systems. The focus of the repository is on state-of-the-art methods that are popular among researchers and practitioners working on problems involving image recognition, object detection and image similarity.
 
-New changes from Anupam
+These examples are provided as Jupyter notebooks and common utility functions. All examples use PyTorch as the deep learning library.
+<TBD - add hyperlink to Jupyter Notebook and utility functions landing page>
 
 ## Overview
 
 The goal of this repository is to accelerate the development of computer vision applications. Rather than creating implementions from scratch, the focus is on providing examples and links to existing state-of-the-art libraries. In addition, having worked in this space for many years, we aim to answer common questions, point out frequently observed pitfalls, and show how to use the cloud for training and deployment.
+
+We hope that these examples and utilities can significantly reduce the “time to market” by simplifying the experience from defining the business problem to development of solution by orders of magnitude. In addition, the example notebooks would serve as guidelines and showcase best practices and usage of the tools in a wide variety of languages.
 
 ## Scenarios
 
@@ -19,7 +23,6 @@ The following is a summary of commonly used Computer Vision scenarios that are c
 | [Detection](detection) | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
 
 ## Getting Started
-
 To get started:
 
 1. (Optional) Create an Azure Data Science Virtual Machine with e.g. a V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm), [price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). 
