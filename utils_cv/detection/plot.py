@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 from .references.coco_eval import CocoEvaluator
 from .bbox import _Bbox, AnnotationBbox, DetectionBbox
-from ..common.gpu import is_linux
+from ..common.gpu import is_windows
 
 
 class PlotSettings:
