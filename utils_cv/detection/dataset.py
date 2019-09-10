@@ -203,7 +203,7 @@ class DetectionDataset:
             self.anno_bboxes.append(anno_bboxes)
 
         # Get list of all labels
-        labels = ["__background__"]
+        labels = []
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
                 labels.append(anno_bbox.label_name)
@@ -212,7 +212,7 @@ class DetectionDataset:
         # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
-                anno_bbox.label_idx = self.labels.index(anno_bbox.label_name)
+                anno_bbox.label_idx = self.labels.index(anno_bbox.label_name) +1   
 
     def split_train_test(
         self, train_pct: float = 0.8

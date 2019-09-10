@@ -42,7 +42,7 @@ def _get_det_bboxes(
 
     det_bboxes = []
     for label, box, score in zip(pred_labels, pred_boxes, pred_scores):
-        label_name = labels[label]
+        label_name = labels[label-1]
         det_bbox = DetectionBbox.from_array(
             box,
             score=score,
@@ -151,7 +151,7 @@ class DetectionLearner:
 
         # setup model, default to fasterrcnn
         if self.model is None:
-            self.model = get_pretrained_fasterrcnn(len(dataset.labels))
+            self.model = get_pretrained_fasterrcnn(len(dataset.labels)+1)
         self.model.to(self.device)
 
     def __getattr__(self, attr):
