@@ -15,7 +15,8 @@ from fastai.vision.data import ImageList, imagenet_stats
 from typing import List
 from tempfile import TemporaryDirectory
 from utils_cv.common.data import unzip_url
-from utils_cv.classification.data import Urls
+from utils_cv.classification.data import Urls as ic_urls
+from utils_cv.detection.data import Urls as od_urls
 
 
 def path_classification_notebooks():
@@ -40,6 +41,19 @@ def path_similarity_notebooks():
             "notebooks",
         )
     )
+
+
+def path_detection_notebooks():
+    """ Returns the path of the similarity notebooks folder. """
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.path.pardir,
+            "detection",
+            "notebooks",
+        )
+    )
+
 
 
 # ----- Module fixtures ----------------------------------------------------------
@@ -108,6 +122,23 @@ def similarity_notebooks():
     return paths
 
 
+@pytest.fixture(scope="module")
+def detection_notebooks():
+    folder_notebooks = path_detection_notebooks()
+
+    # Path for the notebooks
+    paths = {
+        "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
+        "01": os.path.join(
+            folder_notebooks, "01_training_introduction.ipynb"
+        ),
+        "11": os.path.join(
+            folder_notebooks, "11_exploring_hyperparameters_on_azureml.ipynb"
+        ),
+    }
+    return paths
+
+
 # ----- Function fixtures ----------------------------------------------------------
 
 
@@ -141,13 +172,13 @@ def tiny_ic_multidata_path(tmp_session) -> List[str]:
     """ Returns the path to multiple dataset. """
     return [
         unzip_url(
-            Urls.fridge_objects_watermark_tiny_path,
+            ic_urls.fridge_objects_watermark_tiny_path,
             fpath=tmp_session,
             dest=tmp_session,
             exist_ok=True,
         ),
         unzip_url(
-            Urls.fridge_objects_tiny_path,
+            ic_urls.fridge_objects_tiny_path,
             fpath=tmp_session,
             dest=tmp_session,
             exist_ok=True,
@@ -159,7 +190,7 @@ def tiny_ic_multidata_path(tmp_session) -> List[str]:
 def tiny_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
     return unzip_url(
-        Urls.fridge_objects_tiny_path,
+        ic_urls.fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
@@ -170,7 +201,7 @@ def tiny_ic_data_path(tmp_session) -> str:
 def tiny_multilabel_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
     return unzip_url(
-        Urls.multilabel_fridge_objects_tiny_path,
+        ic_urls.multilabel_fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
@@ -181,7 +212,7 @@ def tiny_multilabel_ic_data_path(tmp_session) -> str:
 def multilabel_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
     return unzip_url(
-        Urls.multilabel_fridge_objects_path,
+        ic_urls.multilabel_fridge_objects_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
@@ -192,7 +223,7 @@ def multilabel_ic_data_path(tmp_session) -> str:
 def tiny_ic_databunch(tmp_session):
     """ Returns a databunch object for the tiny fridge objects dataset. """
     im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path,
+        ic_urls.fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
@@ -241,7 +272,7 @@ def testing_im_list(tmp_session):
     """ Set of 5 images from the can/ folder of the Fridge Objects dataset
      used to test positive example rank calculations"""
     im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path,
+        ic_urls.fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
@@ -259,7 +290,7 @@ def testing_databunch(tmp_session):
     and returns its validation component that is used
     to test comparative_set_builder"""
     im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path,
+        ic_urls.fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
@@ -283,6 +314,21 @@ def testing_databunch(tmp_session):
     return validation_bunch
 
 
+@pytest.fixture(scope="session")
+def od_data_path(tmp_session) -> str:
+    """ Returns the path to the fridge object detection dataset. """
+    return unzip_url(
+        od_urls.fridge_objects_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
+
+
+# ----- AML Settings ----------------------------------------------------------
+
+
+# TODO i can't find where this function is being used
 def pytest_addoption(parser):
     parser.addoption(
         "--subscription_id",
