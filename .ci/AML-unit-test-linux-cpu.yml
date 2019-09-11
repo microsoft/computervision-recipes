@@ -8,7 +8,7 @@ variables:
 - name  : 'testfolder'
   value : 'tests/unit'
 - name  : 'testmarkers'
-  value : '"not notebooks and not spark and not gpu and not azuremlnotebooks"'
+  value : '"not notebooks and not spark and not linuxgpu and not azuremlnotebooks"'
 - name  : 'junitxml'
   value : 'reports/test-unit.xml'
 - name  : 'maxnodes'
@@ -33,6 +33,15 @@ variables:
   value : 'cvws'
 - name  : 'prtag'
   value : 'UnitTestRun'
+
+schedules:
+- cron: "30 22 * * *"
+  displayName: Daily run
+  branches:
+    include:
+    - master
+    - staging
+  always: true
 
 trigger: none
 
