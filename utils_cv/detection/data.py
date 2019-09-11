@@ -13,7 +13,11 @@ class Urls:
 
     # traditional datasets
     fridge_objects_path = urljoin(base, "odFridgeObjects.zip")
-
+    fridge_objects_watermark_path = urljoin(base, "odFridgeObjectsWatermark.zip")
+    fridge_objects_tiny_path = urljoin(base, "odFridgeObjectsTiny.zip")
+    fridge_objects_watermark_tiny_path = urljoin(
+        base, "odFridgeObjectsWatermarkTiny.zip"
+    )
 
 def coco_labels() -> List[str]:
     """ List of Coco labels with the original idexing.

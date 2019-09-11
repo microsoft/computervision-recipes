@@ -167,6 +167,8 @@ def tmp_session(tmp_path_factory):
         yield td
 
 
+# ------|-- Classification/Similarity ---------------------------------------------
+
 @pytest.fixture(scope="session")
 def tiny_ic_multidata_path(tmp_session) -> List[str]:
     """ Returns the path to multiple dataset. """
@@ -314,11 +316,13 @@ def testing_databunch(tmp_session):
     return validation_bunch
 
 
+# ------|-- Detection -------------------------------------------------------------
+
 @pytest.fixture(scope="session")
-def od_data_path(tmp_session) -> str:
+def tiny_od_data_path(tmp_session) -> str:
     """ Returns the path to the fridge object detection dataset. """
     return unzip_url(
-        od_urls.fridge_objects_path,
+        od_urls.fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,

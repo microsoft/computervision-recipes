@@ -31,14 +31,14 @@ def test_00_notebook_run(detection_notebooks):
 
 
 @pytest.mark.notebooks
-def test_01_notebook_run(detection_notebooks, od_data_path):
+def test_01_notebook_run(detection_notebooks, tiny_od_data_path):
     notebook_path = detection_notebooks["01"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
-            DATA_PATH=od_data_path,
+            DATA_PATH=tiny_od_data_path,
             EPOCHS=1,
         ),
         kernel_name=KERNEL_NAME,
