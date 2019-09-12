@@ -47,13 +47,9 @@ def path_detection_notebooks():
     """ Returns the path of the similarity notebooks folder. """
     return os.path.abspath(
         os.path.join(
-            os.path.dirname(__file__),
-            os.path.pardir,
-            "detection",
-            "notebooks",
+            os.path.dirname(__file__), os.path.pardir, "detection", "notebooks"
         )
     )
-
 
 
 # ----- Module fixtures ----------------------------------------------------------
@@ -129,9 +125,7 @@ def detection_notebooks():
     # Path for the notebooks
     paths = {
         "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
-        "01": os.path.join(
-            folder_notebooks, "01_training_introduction.ipynb"
-        ),
+        "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters_on_azureml.ipynb"
         ),
@@ -168,6 +162,7 @@ def tmp_session(tmp_path_factory):
 
 
 # ------|-- Classification/Similarity ---------------------------------------------
+
 
 @pytest.fixture(scope="session")
 def tiny_ic_multidata_path(tmp_session) -> List[str]:
@@ -317,6 +312,7 @@ def testing_databunch(tmp_session):
 
 
 # ------|-- Detection -------------------------------------------------------------
+
 
 @pytest.fixture(scope="session")
 def tiny_od_data_path(tmp_session) -> str:

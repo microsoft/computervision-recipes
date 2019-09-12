@@ -66,6 +66,7 @@ def test_11_notebook_run(similarity_notebooks, tiny_ic_data_path):
         kernel_name=KERNEL_NAME,
     )
 
+
 @pytest.mark.notebooks
 def test_12_notebook_run(similarity_notebooks, tiny_ic_data_path):
     notebook_path = similarity_notebooks["12"]
@@ -76,7 +77,7 @@ def test_12_notebook_run(similarity_notebooks, tiny_ic_data_path):
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_ic_data_path,
             IM_SIZE=30,
-            NUM_RANK_ITER=5
+            NUM_RANK_ITER=5,
         ),
         kernel_name=KERNEL_NAME,
     )
