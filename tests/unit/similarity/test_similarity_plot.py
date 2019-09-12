@@ -6,7 +6,7 @@ import os, pdb
 import numpy as np
 
 from utils_cv.similarity.data import comparative_set_builder
-from utils_cv.similarity.model import compute_features_learner  # , DatasetType
+from utils_cv.similarity.model import compute_features_learner
 from utils_cv.similarity.plot import (
     plot_comparative_set,
     plot_distances,
