@@ -35,6 +35,7 @@ dependencies:
 - pre-commit>=1.14.4
 - pyyaml>=5.1.2
 - requests>=2.22.0
+- cython
 - pip:
   - nteract-scrapbook
   - azureml-sdk[notebooks,contrib]>=1.0.30
