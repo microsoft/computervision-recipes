@@ -31,12 +31,12 @@ dependencies:
 - black>=18.6b4
 - ipywebrtc 
 - lxml>=4.3.2
-- nvidia-ml-py3
 - pre-commit>=1.14.4
 - pyyaml>=5.1.2
 - requests>=2.22.0
 - cython
 - pip:
+  - nvidia-ml-py3
   - nteract-scrapbook
   - azureml-sdk[notebooks,contrib]>=1.0.30
   - git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI
