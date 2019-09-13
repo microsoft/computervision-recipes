@@ -37,3 +37,4 @@ dependencies:
 - requests>=2.22.0
 - pip:
   - nteract-scrapbook
+  - azureml-sdk[notebooks,contrib]>=1.0.30
