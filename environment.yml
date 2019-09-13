@@ -38,3 +38,4 @@ dependencies:
 - pip:
   - nteract-scrapbook
   - azureml-sdk[notebooks,contrib]>=1.0.30
+  - git+https://github.com/philferriere/cocoapi.git#egg=pycocotools^&subdirectory=PythonAPI
