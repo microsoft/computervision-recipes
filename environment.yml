@@ -36,5 +36,4 @@ dependencies:
 - pyyaml>=5.1.2
 - requests>=2.22.0
 - pip:
-#  - azureml-sdk[notebooks,contrib]>=1.0.30
   - nteract-scrapbook
