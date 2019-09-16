@@ -10,6 +10,10 @@
 import os
 import pytest
 import torch
+import urllib.request
+import random
+from pathlib import Path
+from PIL import Image
 from fastai.vision import cnn_learner, models
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List
@@ -149,6 +153,17 @@ def tmp(tmp_path_factory):
     """
     with TemporaryDirectory(dir=tmp_path_factory.getbasetemp()) as td:
         yield td
+
+
+@pytest.fixture(scope="function")
+def func_tiny_od_data_path(tmp_session) -> str:
+    """ Returns the path to the fridge object detection dataset. """
+    return unzip_url(
+        od_urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
 
 
 # ----- Session fixtures ----------------------------------------------------------
@@ -315,6 +330,15 @@ def testing_databunch(tmp_session):
 
 
 @pytest.fixture(scope="session")
+def od_cup_im(tmp_session) -> Image:
+    """ Returns the path to the downloaded cup image. """
+    IM_URL = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup.jpg"
+    im_path = os.path.join(tmp_session, "example.jpg")
+    urllib.request.urlretrieve(IM_URL, im_path)
+    return Image.open(im_path)
+
+
+@pytest.fixture(scope="session")
 def tiny_od_data_path(tmp_session) -> str:
     """ Returns the path to the fridge object detection dataset. """
     return unzip_url(
@@ -323,6 +347,16 @@ def tiny_od_data_path(tmp_session) -> str:
         dest=tmp_session,
         exist_ok=True,
     )
+
+
+@pytest.fixture(scope="session")
+def od_sample_im_anno(tiny_od_data_path) -> str:
+    """ Returns an annotation and image path from the tiny_od_data_path fixture. 
+    Specifically, using the paths for 1.xml and 1.jpg
+    """
+    anno_path = Path(tiny_od_data_path) / 'annotations' / '1.xml'
+    im_path = Path(tiny_od_data_path) / 'images' / '1.jpg'
+    return (anno_path, im_path)
 
 
 # ----- AML Settings ----------------------------------------------------------

@@ -109,7 +109,7 @@ class DetectionDataset:
         batch_size: int = 2,
         transforms: object = get_transform(train=True),
         train_pct: float = 0.5,
-        annotation_dir: str = "annotations",
+        anno_dir: str = "annotations",
         im_dir: str = "images",
     ):
         """ initialize dataset
@@ -133,7 +133,7 @@ class DetectionDataset:
         # TODO think about how transforms are working...
         self.transforms = transforms
         self.im_dir = im_dir
-        self.anno_dir = annotation_dir
+        self.anno_dir = anno_dir
         self.batch_size = batch_size
         self.train_pct = train_pct
 
