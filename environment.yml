@@ -17,21 +17,26 @@ channels:
 - fastai
 dependencies:
 - python==3.6.8
-- pytorch==1.0.0
-- torchvision  
-- fastai==1.0.48
+- pytorch>=1.2.0
+- torchvision>=0.3.0
+- fastai==1.0.57
 - ipykernel>=4.6.1
 - jupyter>=1.0.0
 - pytest>=3.6.4
 - bqplot
 - scikit-learn>=0.19.1
 - pip>=19.0.3
+- cython>=0.29.1
+- papermill>=0.15.0
+- black>=18.6b4
+- ipywebrtc 
+- lxml>=4.3.2
+- pre-commit>=1.14.4
+- pyyaml>=5.1.2
+- requests>=2.22.0
+- cython
 - pip:
-  - azureml-sdk[notebooks,contrib]>=1.0.30
-  - black>=18.6b4
-  - papermill>=0.15.0
-  - ipywebrtc
   - nvidia-ml-py3
-  - pre-commit>=1.14.4
-  - lxml>=4.3.2
   - nteract-scrapbook
+  - azureml-sdk[notebooks,contrib]>=1.0.30
+  - git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI
