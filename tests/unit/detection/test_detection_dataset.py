@@ -75,8 +75,8 @@ def test_parse_pascal_voc(od_sample_im_anno, od_sample_bboxes):
 def validate_detection_dataset(data: DetectionDataset):
     assert len(data) == 39
     assert type(data) == DetectionDataset
-    print(data.labels)
-    assert False
+    for label in data.labels:
+        assert label in ["water_bottle", "milk_bottle", "can", "carton"]
 
 
 def test_detection_dataset_init_basic(tiny_od_data_path):
