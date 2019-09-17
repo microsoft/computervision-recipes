@@ -12,6 +12,7 @@ import pytest
 import torch
 import urllib.request
 import random
+from torch import tensor
 from pathlib import Path
 from PIL import Image
 from fastai.vision import cnn_learner, models
@@ -21,6 +22,7 @@ from tempfile import TemporaryDirectory
 from utils_cv.common.data import unzip_url
 from utils_cv.classification.data import Urls as ic_urls
 from utils_cv.detection.data import Urls as od_urls
+from utils_cv.detection.bbox import DetectionBbox
 
 
 def path_classification_notebooks():
@@ -330,6 +332,15 @@ def testing_databunch(tmp_session):
 
 
 @pytest.fixture(scope="session")
+def od_cup_path(tmp_session) -> str:
+    """ Returns the path to the downloaded cup image. """
+    IM_URL = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup.jpg"
+    im_path = os.path.join(tmp_session, "example.jpg")
+    urllib.request.urlretrieve(IM_URL, im_path)
+    return im_path
+
+
+@pytest.fixture(scope="session")
 def od_cup_im(tmp_session) -> Image:
     """ Returns the path to the downloaded cup image. """
     IM_URL = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup.jpg"
@@ -351,12 +362,75 @@ def tiny_od_data_path(tmp_session) -> str:
 
 @pytest.fixture(scope="session")
 def od_sample_im_anno(tiny_od_data_path) -> str:
-    """ Returns an annotation and image path from the tiny_od_data_path fixture. 
+    """ Returns an annotation and image path from the tiny_od_data_path fixture.
     Specifically, using the paths for 1.xml and 1.jpg
     """
-    anno_path = Path(tiny_od_data_path) / 'annotations' / '1.xml'
-    im_path = Path(tiny_od_data_path) / 'images' / '1.jpg'
+    anno_path = Path(tiny_od_data_path) / "annotations" / "1.xml"
+    im_path = Path(tiny_od_data_path) / "images" / "1.jpg"
     return (anno_path, im_path)
+
+
+@pytest.fixture(scope="session")
+def od_data_path_labels() -> List[str]:
+    return ["water_bottle", "can", "milk_bottle", "carton"]
+
+
+@pytest.fixture(scope="session")
+def od_sample_raw_preds():
+    return [
+        {
+            "boxes": tensor(
+                [
+                    [109.0, 190.0, 205.0, 408.0],
+                    [340.0, 326.0, 465.0, 549.0],
+                    [214.0, 181.0, 315.0, 460.0],
+                    [215.0, 193.0, 316.0, 471.0],
+                    [109.0, 209.0, 209.0, 420.0],
+                ],
+                device="cuda:0",
+            ),
+            "labels": tensor([3, 2, 1, 2, 1], device="cuda:0"),
+            "scores": tensor(
+                [0.9985, 0.9979, 0.9945, 0.1470, 0.0903], device="cuda:0"
+            ),
+        }
+    ]
+
+
+@pytest.fixture(scope="session")
+def od_sample_detection_bboxes():
+    return [
+        DetectionBbox.from_array(
+            [109.0, 190.0, 205.0, 408.0],
+            label_idx=3,
+            label_name="carton",
+            score=0.9985,
+        ),
+        DetectionBbox.from_array(
+            [340.0, 326.0, 465.0, 549.0],
+            label_idx=2,
+            label_name="milk_bottle",
+            score=0.9979,
+        ),
+        DetectionBbox.from_array(
+            [214.0, 181.0, 315.0, 460.0],
+            label_idx=1,
+            label_name="can",
+            score=0.9945,
+        ),
+        DetectionBbox.from_array(
+            [215.0, 193.0, 316.0, 471.0],
+            label_idx=2,
+            label_name="milk_bottle",
+            score=0.1470,
+        ),
+        DetectionBbox.from_array(
+            [109.0, 209.0, 209.0, 420.0],
+            label_idx=1,
+            label_name="can",
+            score=0.0903,
+        ),
+    ]
 
 
 # ----- AML Settings ----------------------------------------------------------

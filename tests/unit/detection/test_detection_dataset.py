@@ -6,10 +6,12 @@ import torch
 from pathlib import Path
 from torch import Tensor
 from PIL.Image import Image
-from typing import Tuple
+from typing import Tuple, List
 
 from utils_cv.detection.dataset import (
-    get_transform, parse_pascal_voc_anno, DetectionDataset
+    get_transform,
+    parse_pascal_voc_anno,
+    DetectionDataset,
 )
 from utils_cv.detection.bbox import AnnotationBbox, _Bbox
 
@@ -27,7 +29,7 @@ def basic_im(od_cup_im) -> Tuple[Image, dict]:
         "labels": labels,
         "image_id": None,
         "area": None,
-        "iscrowd": False
+        "iscrowd": False,
     }
 
     return (im, target)
@@ -72,25 +74,27 @@ def test_parse_pascal_voc(od_sample_im_anno, od_sample_bboxes):
     assert anno_bboxes[0].bottom == od_sample_bboxes[0].bottom
 
 
-def validate_detection_dataset(data: DetectionDataset):
+def validate_detection_dataset(data: DetectionDataset, labels: List[str]):
     assert len(data) == 39
     assert type(data) == DetectionDataset
+    assert len(data.labels) == 4
     for label in data.labels:
-        assert label in ["water_bottle", "milk_bottle", "can", "carton"]
+        assert label in labels
 
 
-def test_detection_dataset_init_basic(tiny_od_data_path):
+def test_detection_dataset_init_basic(tiny_od_data_path, od_data_path_labels):
     """ Tests that initialization of the Detection Dataset works. """
     data = DetectionDataset(tiny_od_data_path)
-    validate_detection_dataset(data)
+    validate_detection_dataset(data, od_data_path_labels)
     assert len(data.test_ds) == 20
     assert len(data.train_ds) == 20
 
 
-def test_detection_dataset_init_train_pct(tiny_od_data_path):
+def test_detection_dataset_init_train_pct(tiny_od_data_path,
+        od_data_path_labels):
     """ Tests that initialization with train_pct."""
     data = DetectionDataset(tiny_od_data_path, train_pct=0.75)
-    validate_detection_dataset(data)
+    validate_detection_dataset(data, od_data_path_labels)
     assert len(data.test_ds) == 10
     assert len(data.train_ds) == 30
 
@@ -100,7 +104,7 @@ def test_detection_dataset_show_ims(basic_detection_dataset):
     basic_detection_dataset.show_ims()
 
 
-def test_detection_dataset_init_anno_im_dirs(func_tiny_od_data_path):
+def test_detection_dataset_init_anno_im_dirs(func_tiny_od_data_path, od_data_path_labels):
     """ Tests that initialization with renamed anno/im dirs.
     NOTE: this test doesn't use the normal tiny_od_data_path fixture since it
     modifies the files in it. instead it uses the function level fixture.
@@ -108,11 +112,11 @@ def test_detection_dataset_init_anno_im_dirs(func_tiny_od_data_path):
     data_path = Path(func_tiny_od_data_path)
     new_anno_dir_name = "bounding_boxes"
     new_im_dir_name = "photos"
-    anno_dir = data_path / 'annotations'
+    anno_dir = data_path / "annotations"
     anno_dir.rename(data_path / new_anno_dir_name)
-    im_dir = data_path / 'images'
+    im_dir = data_path / "images"
     im_dir.rename(data_path / new_im_dir_name)
-    data = DetectionDataset(str(data_path), anno_dir=new_anno_dir_name, im_dir=new_im_dir_name)
-    validate_detection_dataset(data)
-
-
+    data = DetectionDataset(
+        str(data_path), anno_dir=new_anno_dir_name, im_dir=new_im_dir_name
+    )
+    validate_detection_dataset(data, od_data_path_labels)

@@ -189,7 +189,7 @@ class DetectionDataset:
         for anno_filename in anno_filenames:
             anno_path = self.root / self.anno_dir / str(anno_filename)
             assert os.path.exists(anno_path), (
-                "Cannot find annotation file: " + anno_path
+                f"Cannot find annotation file: {anno_path}"
             )
             anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
 
