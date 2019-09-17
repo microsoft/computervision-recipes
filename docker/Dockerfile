@@ -23,7 +23,7 @@ RUN curl ${ANACONDA} -o anaconda.sh && \
     echo "conda activate base" >> ~/.bashrc
 ENV PATH="${HOME}/conda/bin:${PATH}"
 
-# Clone Recommenders repo
+# Clone Computer Vision repo
 ARG BRANCH="master"
 RUN git clone --depth 1 --single-branch -b ${BRANCH} https://github.com/microsoft/computervision
 
@@ -36,36 +36,6 @@ RUN mkdir ${HOME}/.jupyter && \
     echo "c.NotebookApp.open_browser = False" >> ${NOTEBOOK_CONFIG} && \
     echo "c.MultiKernelManager.default_kernel_name = 'python3'" >> ${NOTEBOOK_CONFIG}
 
-
-# CPU Stage
-FROM base AS cpu
-
-# Setup Conda environment
-RUN python recommenders/scripts/generate_conda_file.py --name base
-
-# PySpark Stage
-FROM base AS pyspark
-
-# Install base dependencies
-RUN apt-get update && \
-    apt-get install -y libgomp1 openjdk-8-jre
-
-# Install Spark
-ARG SPARK="http://archive.apache.org/dist/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz"
-RUN mkdir spark && \
-    curl ${SPARK} -o spark.tgz && \
-    tar xzf spark.tgz --strip-components 1 -C spark && \
-    rm spark.tgz
-
-# Setup Conda environment
-RUN python recommenders/scripts/generate_conda_file.py --name base --pyspark
-
-ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64" \
-    PYSPARK_PYTHON="${HOME}/conda/bin/python" \
-    PYSPARK_DRIVER_PYTHON="${HOME}/conda/bin/python" \
-    SPARK_HOME="${HOME}/spark"
-
-
 # GPU Stage
 FROM nvidia/cuda:9.0-base AS gpu
 
@@ -74,39 +44,16 @@ WORKDIR ${HOME}
 
 COPY --from=base ${HOME} .
 
-# Setup Conda environment
-ENV PATH="${HOME}/conda/bin:${PATH}"
-RUN python recommenders/scripts/generate_conda_file.py --name base --gpu
-
-
-# Full Stage
-FROM gpu AS full
-
-ARG HOME
-WORKDIR ${HOME}
-
-COPY --from=pyspark ${HOME}/spark spark
-
-# Setup Conda environment
-RUN python recommenders/scripts/generate_conda_file.py --name base --gpu --pyspark
-
-ENV JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64" \
-    PYSPARK_PYTHON="${HOME}/conda/bin/python" \
-    PYSPARK_DRIVER_PYTHON="${HOME}/conda/bin/python" \
-    SPARK_HOME="${HOME}/spark"
-
-
 # Final Stage
 FROM $ENV AS final
 
 # Install Conda dependencies
-RUN conda env update -f base.yaml && \
+RUN conda env update -f environment.yaml && \
     conda clean -fay && \
-    conda install cmake && \
     python -m ipykernel install --user --name 'python3' --display-name 'python3'
 
 ARG HOME
-WORKDIR ${HOME}/recommenders
+WORKDIR ${HOME}/computervision
 
 EXPOSE 8888
 CMD ["jupyter", "notebook"]
