@@ -170,8 +170,14 @@ class DetectionLearner:
         momentum: float = 0.9,
         weight_decay: float = 0.0005,
         print_freq: int = 10,
+        step_size: int = None,
+        gamma: float = 0.1,
     ) -> None:
         """ The main training loop. """
+
+        # reduce learning rate every step_size epochs by a factor of gamma (by default) 0.1.
+        if step_size is None:
+            step_size = int(np.round(epochs/1.5)) 
 
         # construct our optimizer
         params = [p for p in self.model.parameters() if p.requires_grad]
@@ -181,7 +187,7 @@ class DetectionLearner:
 
         # and a learning rate scheduler
         self.lr_scheduler = torch.optim.lr_scheduler.StepLR(
-            self.optimizer, step_size=3, gamma=0.1
+            self.optimizer, step_size=step_size, gamma=gamma
         )
 
         # store data in these arrays to plot later
@@ -207,7 +213,7 @@ class DetectionLearner:
             self.lr_scheduler.step()
 
             # evaluate
-            e = self.evaluate(dl=self.dataset.train_dl)
+            e = self.evaluate(dl=self.dataset.test_dl)
             self.ap.append(_calculate_ap(e))
 
     def plot_precision_loss_curves(
