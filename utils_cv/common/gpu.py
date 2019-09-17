@@ -5,6 +5,7 @@ import platform
 
 import torch
 from torch.cuda import current_device, get_device_name, is_available
+from pycocotools.coco import COCO
 
 
 def which_processor():
