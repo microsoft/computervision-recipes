@@ -4,7 +4,7 @@
 ARG ENV="cpu"
 ARG HOME="/root"
 
-FROM ubuntu:18.04 AS base
+FROM ubuntu:18.04 AS cpu
 
 ARG HOME
 ENV HOME="${HOME}"
@@ -12,7 +12,7 @@ WORKDIR ${HOME}
 
 # Install base dependencies
 RUN apt-get update && \
-    apt-get install -y curl git build-essentials
+    apt-get install -y curl git build-essential
 
 # Install Anaconda
 ARG ANACONDA="https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh"
@@ -20,7 +20,7 @@ RUN curl ${ANACONDA} -o anaconda.sh && \
     /bin/bash anaconda.sh -b -p conda && \
     rm anaconda.sh && \
     echo ". ${HOME}/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    echo "conda activate base" >> ~/.bashrc
+    echo "conda activate cv" >> ~/.bashrc
 ENV PATH="${HOME}/conda/bin:${PATH}"
 
 # Clone Computer Vision repo
@@ -36,19 +36,30 @@ RUN mkdir ${HOME}/.jupyter && \
     echo "c.NotebookApp.open_browser = False" >> ${NOTEBOOK_CONFIG} && \
     echo "c.MultiKernelManager.default_kernel_name = 'python3'" >> ${NOTEBOOK_CONFIG}
 
+
 # GPU Stage
 FROM nvidia/cuda:9.0-base AS gpu
 
 ARG HOME
 WORKDIR ${HOME}
 
-COPY --from=base ${HOME} .
+COPY --from=cpu ${HOME} .
+
+ENV PATH="${HOME}/conda/bin:${PATH}"
+
 
 # Final Stage
 FROM $ENV AS final
 
+ARG HOME
+WORKDIR ${HOME}
+
+COPY --from=cpu ${HOME} .
+
+ENV PATH="${HOME}/conda/bin:${PATH}"
+
 # Install Conda dependencies
-RUN conda env update -f environment.yaml && \
+RUN conda env update -f computervision/environment.yml && \
     conda clean -fay && \
     python -m ipykernel install --user --name 'python3' --display-name 'python3'
 
