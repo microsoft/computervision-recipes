@@ -173,20 +173,20 @@ class DetectionDataset:
         # the .xml annotations.
         if self.im_dir is None:
             anno_filenames = sorted(os.listdir(self.root / self.anno_dir))
-            self.im_paths = []
         else:
             im_filenames = sorted(os.listdir(self.root / self.im_dir))
+            im_paths = [
+                os.path.join(self.root / self.im_dir, s) for s in im_filenames
+            ]
             anno_filenames = [
                 os.path.splitext(s)[0] + ".xml" for s in im_filenames
             ]
-            self.im_paths = [
-                os.path.join(self.root / self.im_dir, s) for s in im_filenames
-            ]
 
         # Parse all annotations
+        self.im_paths = []
         self.anno_paths = []
         self.anno_bboxes = []
-        for anno_filename in anno_filenames:
+        for anno_idx, anno_filename in enumerate(anno_filenames):
             anno_path = self.root / self.anno_dir / str(anno_filename)
             assert os.path.exists(anno_path), (
                 "Cannot find annotation file: " + anno_path
@@ -199,8 +199,11 @@ class DetectionDataset:
 
             if self.im_dir is None:
                 self.im_paths.append(im_path)
+            else:
+                self.im_paths.append(im_paths[anno_idx])
             self.anno_paths.append(anno_path)
             self.anno_bboxes.append(anno_bboxes)
+        assert(len(self.im_paths) == len(self.anno_paths)) 
 
         # Get list of all labels
         labels = []
