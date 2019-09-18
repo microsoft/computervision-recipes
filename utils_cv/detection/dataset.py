@@ -18,8 +18,6 @@ from .references.utils import collate_fn
 from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 from utils_cv.common.gpu import db_num_workers
 
-import pdb
-
 
 def get_transform(train: bool) -> List[object]:
     """ Gets basic the transformations to apply to images.
