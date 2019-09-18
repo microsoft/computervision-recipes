@@ -18,10 +18,9 @@ RUN apt-get update && \
 ARG ANACONDA="https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh"
 RUN curl ${ANACONDA} -o anaconda.sh && \
     /bin/bash anaconda.sh -b -p conda && \
-    rm anaconda.sh && \
-    echo ". ${HOME}/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    echo "conda activate cv" >> ~/.bashrc
+    rm anaconda.sh 
 ENV PATH="${HOME}/conda/bin:${PATH}"
+ENV PATH="${HOME}/conda/envs/cv/bin:${PATH}"
 
 # Clone Computer Vision repo
 ARG BRANCH="master"
@@ -46,22 +45,16 @@ WORKDIR ${HOME}
 COPY --from=cpu ${HOME} .
 
 ENV PATH="${HOME}/conda/bin:${PATH}"
+ENV PATH="${HOME}/conda/envs/cv/bin:${PATH}"
 
 
 # Final Stage
 FROM $ENV AS final
 
-ARG HOME
-WORKDIR ${HOME}
-
-COPY --from=cpu ${HOME} .
-
-ENV PATH="${HOME}/conda/bin:${PATH}"
-
 # Install Conda dependencies
 RUN conda env update -f computervision/environment.yml && \
     conda clean -fay && \
-    ${HOME}/conda/envs/cv/bin/python -m ipykernel install --user --name 'cv' --display-name 'python3'
+    python -m ipykernel install --user --name 'cv' --display-name 'python3'
 
 ARG HOME
 WORKDIR ${HOME}/computervision
