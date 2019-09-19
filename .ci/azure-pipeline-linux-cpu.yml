@@ -15,7 +15,7 @@ jobs:
 - job: LinuxCPU
   pool:
     # vmImage: 'ubuntu-16.04'
-    name: cvbpagentpool
+    name: cvbplinuxpool
 
   steps:
 
