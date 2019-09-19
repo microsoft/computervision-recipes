@@ -14,7 +14,7 @@ trigger:
 jobs:
 - job: LinuxGPU
   pool:
-    name: cvbpbuildpool
+    name: cvbplinuxpool
 
   steps:
   - template: templates/unit-test-steps.yml  # Template reference
