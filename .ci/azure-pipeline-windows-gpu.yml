@@ -13,7 +13,7 @@ trigger:
 jobs:
 - job: WindowsGPU
   pool:
-    name: cvbpwinagents
+    name: cvbpwinpool
 
   steps:
   - template: templates/unit-test-steps-not-linuxgpu.yml  # Template reference
