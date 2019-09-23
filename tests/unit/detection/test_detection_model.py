@@ -4,8 +4,8 @@
 import pytest
 from torch import tensor
 from torchvision.models.detection.faster_rcnn import FasterRCNN
+from collections.abc import Iterable
 
-from utils_cv.detection.dataset import DetectionDataset
 from utils_cv.detection.bbox import DetectionBbox
 from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
@@ -14,20 +14,6 @@ from utils_cv.detection.model import (
     _apply_threshold,
     _calculate_ap,
 )
-
-
-@pytest.fixture(scope="session")
-def od_detection_dataset(tiny_od_data_path):
-    """ returns a basic detection dataset. """
-    return DetectionDataset(tiny_od_data_path)
-
-
-@pytest.fixture(scope="session")
-def od_detection_learner(od_detection_dataset):
-    """ returns a basic detection dataset. """
-    learner = DetectionLearner(od_detection_dataset)
-    learner.fit(1)
-    return learner
 
 
 def test__get_det_bboxes(od_sample_raw_preds, od_data_path_labels):
@@ -98,7 +84,6 @@ def test_detection_learner_predict_threshold(od_detection_learner, od_cup_path):
     assert len(bboxes) == 0
 
 
-from collections.abc import Iterable
 def test_detection_learner_predict_batch(od_detection_learner, od_detection_dataset):
     """ Simply test that `predict_batch` works. """
     generator = od_detection_learner.predict_batch(od_detection_dataset.test_dl)

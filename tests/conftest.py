@@ -22,7 +22,13 @@ from tempfile import TemporaryDirectory
 from utils_cv.common.data import unzip_url
 from utils_cv.classification.data import Urls as ic_urls
 from utils_cv.detection.data import Urls as od_urls
-from utils_cv.detection.bbox import DetectionBbox
+from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox
+from utils_cv.detection.dataset import DetectionDataset
+from utils_cv.detection.model import (
+    get_pretrained_fasterrcnn,
+    DetectionLearner,
+)
+
 
 
 def path_classification_notebooks():
@@ -162,8 +168,8 @@ def func_tiny_od_data_path(tmp_session) -> str:
     """ Returns the path to the fridge object detection dataset. """
     return unzip_url(
         od_urls.fridge_objects_tiny_path,
-        fpath=tmp_session,
-        dest=tmp_session,
+        fpath=f'{tmp_session}/tmp',
+        dest=f'{tmp_session}/tmp',
         exist_ok=True,
     )
 
@@ -341,12 +347,30 @@ def od_cup_path(tmp_session) -> str:
 
 
 @pytest.fixture(scope="session")
-def od_cup_im(tmp_session) -> Image:
-    """ Returns the path to the downloaded cup image. """
-    IM_URL = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup.jpg"
-    im_path = os.path.join(tmp_session, "example.jpg")
-    urllib.request.urlretrieve(IM_URL, im_path)
-    return Image.open(im_path)
+def od_cup_anno_bboxes(tmp_session, od_cup_path) -> List[AnnotationBbox]:
+    return [AnnotationBbox(
+        left=61,
+        top=59,
+        right=273,
+        bottom=244,
+        label_name="cup",
+        label_idx="0",
+        im_path=od_cup_path,
+    )]
+
+
+@pytest.fixture(scope="session")
+def od_cup_det_bboxes(tmp_session, od_cup_path) -> List[DetectionBbox]:
+    return [DetectionBbox(
+        left=61,
+        top=59,
+        right=273,
+        bottom=244,
+        label_name="cup",
+        label_idx="0",
+        im_path=od_cup_path,
+        score=0.99,
+    )]
 
 
 @pytest.fixture(scope="session")
@@ -431,6 +455,35 @@ def od_sample_detection_bboxes():
             score=0.0903,
         ),
     ]
+
+
+@pytest.fixture(scope="session")
+def od_detection_dataset(tiny_od_data_path):
+    """ returns a basic detection dataset. """
+    return DetectionDataset(tiny_od_data_path)
+
+
+@pytest.fixture(scope="session")
+def od_detection_learner(od_detection_dataset):
+    """ returns a basic detection learner that has been trained for one epoch. """
+    model = get_pretrained_fasterrcnn(
+        num_classes=len(od_detection_dataset.labels) + 1,
+        min_size=100,
+        max_size=200,
+        rpn_pre_nms_top_n_train=500,
+        rpn_pre_nms_top_n_test=250,
+        rpn_post_nms_top_n_train=500,
+        rpn_post_nms_top_n_test=250,
+    )
+    learner = DetectionLearner(od_detection_dataset, model=model)
+    learner.fit(1)
+    return learner
+
+
+@pytest.fixture(scope="session")
+def od_detection_eval(od_detection_learner):
+    """ returns the eval results of a detection learner after one epoch of training. """
+    return od_detection_learner.evaluate()
 
 
 # ----- AML Settings ----------------------------------------------------------

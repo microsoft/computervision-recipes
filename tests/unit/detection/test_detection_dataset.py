@@ -5,7 +5,7 @@ import pytest
 import torch
 from pathlib import Path
 from torch import Tensor
-from PIL.Image import Image
+from PIL import Image
 from typing import Tuple, List
 
 from utils_cv.detection.dataset import (
@@ -17,9 +17,9 @@ from utils_cv.detection.bbox import AnnotationBbox, _Bbox
 
 
 @pytest.fixture(scope="session")
-def basic_im(od_cup_im) -> Tuple[Image, dict]:
+def basic_im(od_cup_path) -> Tuple[Image.Image, dict]:
     """ returns an Image, Target tuple. """
-    im = od_cup_im.convert("RGB")
+    im = Image.open(od_cup_path).convert("RGB")
 
     boxes = torch.as_tensor([[61, 59, 273, 244]], dtype=torch.float32)
     labels = torch.as_tensor([[0]], dtype=torch.int64)
@@ -48,7 +48,7 @@ def basic_detection_dataset(tiny_od_data_path) -> DetectionDataset:
 
 def test_basic_im(basic_im):
     im, target = basic_im
-    assert type(im) == Image
+    assert type(im) == Image.Image
     assert type(target) == dict
 
 
@@ -56,7 +56,7 @@ def test_get_transform(basic_im):
     """ assert that the basic transformation of converting to tensor is
     achieved. """
     im, target = basic_im
-    assert type(im) == Image
+    assert type(im) == Image.Image
     tfms_im, tfms_target = get_transform(train=True)(im, target)
     assert type(tfms_im) == Tensor
     tfms_im, tfms_target = get_transform(train=False)(im, target)
