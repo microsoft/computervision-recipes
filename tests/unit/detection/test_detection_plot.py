@@ -5,7 +5,6 @@ import pytest
 from PIL import Image
 import matplotlib.pyplot as plt
 
-from utils_cv.detection.bbox import _Bbox, AnnotationBbox, DetectionBbox
 from utils_cv.detection.plot import (
     PlotSettings,
     plot_boxes,

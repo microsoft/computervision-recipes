@@ -10,7 +10,7 @@ def test_urls():
     # Test if all urls are valid
     all_urls = Urls.all()
     for url in all_urls:
-        with requests.get(url) as _:
+        with requests.get(url):
             pass
 
 

@@ -30,7 +30,7 @@ class PlotSettings:
         text_font: str = "DejaVuSerifCondensed.ttf",
         text_color: Tuple[int, int, int] = (255, 255, 255),
     ):
-        if is_windows() == True:
+        if is_windows() is True:
             text_font = "arial.ttf"
 
         self.rect_th, self.rect_color, self.text_size, self.text_font, self.text_color = (

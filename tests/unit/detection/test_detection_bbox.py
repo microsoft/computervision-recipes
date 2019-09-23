@@ -59,7 +59,7 @@ def test__bbox_overlap(basic_bbox):
     # test bbox that does not overlap
     non_overlapping_bbox = _Bbox(left=200, top=10, right=300, bottom=1000)
     overlap = basic_bbox.get_overlap_bbox(non_overlapping_bbox)
-    assert overlap == None
+    assert overlap is None
     # test bbox that does overlap
     overlapping_bbox = _Bbox(left=0, top=500, right=100, bottom=2000)
     overlap = basic_bbox.get_overlap_bbox(overlapping_bbox)
@@ -86,8 +86,8 @@ def test__bbox_standardization():
 
 
 def test__bbox_is_valid(basic_bbox):
-    assert basic_bbox.is_valid() == True
-    assert _Bbox(left=0, top=0, right=0, bottom=0).is_valid() == False
+    assert basic_bbox.is_valid() is True
+    assert _Bbox(left=0, top=0, right=0, bottom=0).is_valid() is False
 
 
 def test_annotation_bbox_init(anno_bbox):
