@@ -1,10 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import pytest
-from torch import tensor
 from torchvision.models.detection.faster_rcnn import FasterRCNN
 from collections.abc import Iterable
+import numpy as np
 
 from utils_cv.detection.bbox import DetectionBbox
 from utils_cv.detection.model import (
@@ -38,6 +37,12 @@ def test__apply_threshold(od_sample_detection_bboxes):
 def test_get_pretrained_fasterrcnn():
     """ Simply test that `get_pretrained_fasterrcnn` returns the correct type for now. """
     assert type(get_pretrained_fasterrcnn(4)) == FasterRCNN
+
+
+def test__calculate_ap(od_detection_eval):
+    """ Test `_calculate_ap`. """
+    ret = _calculate_ap(od_detection_eval)
+    assert type(ret) == np.float64
 
 
 def test_detection_learner_init(od_detection_dataset):
@@ -112,4 +117,4 @@ def test_detection_dataset_predict_dl(
     od_detection_learner, od_detection_dataset
 ):
     """ Simply test that `predict_dl` works. """
-    bboxes = od_detection_learner.predict_dl(od_detection_dataset.test_dl)
+    od_detection_learner.predict_dl(od_detection_dataset.test_dl)

@@ -6,7 +6,6 @@ from utils_cv.common.gpu import (
     linux_with_gpu,
     is_linux,
     is_windows,
-    linux_with_gpu,
     which_processor,
 )
 

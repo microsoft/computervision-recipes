@@ -4,7 +4,6 @@
 # This test is based on the test suite implemented for Recommenders project
 # https://github.com/Microsoft/Recommenders/tree/master/tests
 
-import os
 import papermill as pm
 import pytest
 import scrapbook as sb

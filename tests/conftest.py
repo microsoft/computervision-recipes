@@ -14,7 +14,6 @@ import urllib.request
 import random
 from torch import tensor
 from pathlib import Path
-from PIL import Image
 from fastai.vision import cnn_learner, models
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List
