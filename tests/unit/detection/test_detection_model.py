@@ -77,6 +77,7 @@ def test_detection_learner_plot_precision_loss_curves(od_detection_learner):
     od_detection_learner.plot_precision_loss_curves()
 
 
+@pytest.mark.linuxgpu
 def test_detection_learner_evalute(od_detection_learner):
     """ Simply test that `evaluate` works. """
     od_detection_learner.evaluate()
