@@ -32,9 +32,9 @@ schedules:
 
 trigger: none
 
-pr:
-- staging 
-- master
+# pr:
+# - staging 
+# - master
 
 jobs:
 - job: Smoke

@@ -4,6 +4,7 @@
 from torchvision.models.detection.faster_rcnn import FasterRCNN
 from collections.abc import Iterable
 import numpy as np
+import pytest
 
 from utils_cv.detection.bbox import DetectionBbox
 from utils_cv.detection.model import (
@@ -39,6 +40,7 @@ def test_get_pretrained_fasterrcnn():
     assert type(get_pretrained_fasterrcnn(4)) == FasterRCNN
 
 
+@pytest.mark.linuxgpu
 def test__calculate_ap(od_detection_eval):
     """ Test `_calculate_ap`. """
     ret = _calculate_ap(od_detection_eval)
@@ -63,11 +65,13 @@ def test_detection_learner_init_model(od_detection_dataset):
     assert learner.model != get_pretrained_fasterrcnn(classes)
 
 
+@pytest.mark.linuxgpu
 def test_detection_learner_train_one_epoch(od_detection_learner):
     """ Simply test that a small training loop works. """
     od_detection_learner.fit(epochs=1)
 
 
+@pytest.mark.linuxgpu
 def test_detection_learner_plot_precision_loss_curves(od_detection_learner):
     """ Simply test that `plot_precision_loss_curves` works. """
     od_detection_learner.plot_precision_loss_curves()
@@ -78,12 +82,14 @@ def test_detection_learner_evalute(od_detection_learner):
     od_detection_learner.evaluate()
 
 
+@pytest.mark.linuxgpu
 def test_detection_learner_predict(od_detection_learner, od_cup_path):
     """ Simply test that `predict` works. """
     bboxes = od_detection_learner.predict(od_cup_path)
     assert type(bboxes) == list
 
 
+@pytest.mark.linuxgpu
 def test_detection_learner_predict_threshold(
     od_detection_learner, od_cup_path
 ):
@@ -93,6 +99,7 @@ def test_detection_learner_predict_threshold(
     assert len(bboxes) == 0
 
 
+@pytest.mark.linuxgpu
 def test_detection_learner_predict_batch(
     od_detection_learner, od_detection_dataset
 ):
@@ -103,6 +110,7 @@ def test_detection_learner_predict_batch(
     assert isinstance(generator, Iterable)
 
 
+@pytest.mark.linuxgpu
 def test_detection_learner_predict_batch_threshold(
     od_detection_learner, od_detection_dataset
 ):
@@ -113,6 +121,7 @@ def test_detection_learner_predict_batch_threshold(
     assert isinstance(generator, Iterable)
 
 
+@pytest.mark.linuxgpu
 def test_detection_dataset_predict_dl(
     od_detection_learner, od_detection_dataset
 ):

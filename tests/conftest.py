@@ -470,6 +470,7 @@ def od_detection_dataset(tiny_od_data_path):
     return DetectionDataset(tiny_od_data_path)
 
 
+@pytest.mark.linuxgpu
 @pytest.fixture(scope="session")
 def od_detection_learner(od_detection_dataset):
     """ returns a basic detection learner that has been trained for one epoch. """
