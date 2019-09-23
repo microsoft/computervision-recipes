@@ -98,11 +98,13 @@ def test__get_precision_recall_settings():
     assert len(ret) == 5
 
 
+@pytest.mark.linuxgpu
 def test__plot_pr_curve_iou_range(od_detection_eval, basic_ax):
     """ Test that `_plot_pr_curve_iou_range` works. """
     _plot_pr_curve_iou_range(basic_ax, od_detection_eval.coco_eval["bbox"])
 
 
+@pytest.mark.linuxgpu
 def test__plot_pr_curve_iou_mean(od_detection_eval, basic_ax):
     """ Test that `_plot_pr_curve_iou_mean` works. """
     _plot_pr_curve_iou_mean(basic_ax, od_detection_eval.coco_eval["bbox"])
