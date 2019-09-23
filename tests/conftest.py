@@ -403,6 +403,11 @@ def od_data_path_labels() -> List[str]:
 
 @pytest.fixture(scope="session")
 def od_sample_raw_preds():
+    device = (
+        torch.device("cuda")
+        if torch.cuda.is_available()
+        else torch.device("cpu")
+    )
     return [
         {
             "boxes": tensor(
@@ -413,11 +418,11 @@ def od_sample_raw_preds():
                     [215.0, 193.0, 316.0, 471.0],
                     [109.0, 209.0, 209.0, 420.0],
                 ],
-                device="cuda:0",
+                device=device,
             ),
-            "labels": tensor([3, 2, 1, 2, 1], device="cuda:0"),
+            "labels": tensor([3, 2, 1, 2, 1], device=device),
             "scores": tensor(
-                [0.9985, 0.9979, 0.9945, 0.1470, 0.0903], device="cuda:0"
+                [0.9985, 0.9979, 0.9945, 0.1470, 0.0903], device=device
             ),
         }
     ]
