@@ -17,7 +17,10 @@ def test_01_notebook_run(detection_notebooks):
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__),
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            EPOCHS=5,
+        ),
         kernel_name=KERNEL_NAME,
     )
 

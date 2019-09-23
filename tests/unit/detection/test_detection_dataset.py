@@ -90,8 +90,9 @@ def test_detection_dataset_init_basic(tiny_od_data_path, od_data_path_labels):
     assert len(data.train_ds) == 20
 
 
-def test_detection_dataset_init_train_pct(tiny_od_data_path,
-        od_data_path_labels):
+def test_detection_dataset_init_train_pct(
+    tiny_od_data_path, od_data_path_labels
+):
     """ Tests that initialization with train_pct."""
     data = DetectionDataset(tiny_od_data_path, train_pct=0.75)
     validate_detection_dataset(data, od_data_path_labels)
@@ -104,7 +105,9 @@ def test_detection_dataset_show_ims(basic_detection_dataset):
     basic_detection_dataset.show_ims()
 
 
-def test_detection_dataset_init_anno_im_dirs(func_tiny_od_data_path, od_data_path_labels):
+def test_detection_dataset_init_anno_im_dirs(
+    func_tiny_od_data_path, od_data_path_labels
+):
     """ Tests that initialization with renamed anno/im dirs.
     NOTE: this test doesn't use the normal tiny_od_data_path fixture since it
     modifies the files in it. instead it uses the function level fixture.

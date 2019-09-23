@@ -48,9 +48,7 @@ def test_plot_boxes(od_cup_path, od_cup_anno_bboxes, basic_plot_settings):
 
     # with update plot_settings
     plot_boxes(
-        im=im,
-        bboxes=od_cup_anno_bboxes,
-        plot_settings=basic_plot_settings
+        im=im, bboxes=od_cup_anno_bboxes, plot_settings=basic_plot_settings
     )
 
 
@@ -65,20 +63,27 @@ def test_plot_grid(od_cup_anno_bboxes, od_cup_path):
     # test callable args
     def callable_args():
         return od_cup_anno_bboxes, od_cup_path
+
     plot_grid(display_bboxes, callable_args, rows=1)
 
     # test iterable args
     od_cup_paths = [od_cup_path, od_cup_path, od_cup_path]
     od_cup_annos = [od_cup_anno_bboxes, od_cup_anno_bboxes, od_cup_anno_bboxes]
+
     def iterator_args():
         for path, bboxes in zip(od_cup_paths, od_cup_annos):
             yield bboxes, path
+
     plot_grid(display_bboxes, iterator_args(), rows=1)
 
 
-def test_plot_detection_vs_ground_truth(od_cup_path, od_cup_det_bboxes, od_cup_anno_bboxes, basic_ax):
+def test_plot_detection_vs_ground_truth(
+    od_cup_path, od_cup_det_bboxes, od_cup_anno_bboxes, basic_ax
+):
     """ Test that `plot_detection_vs_ground_truth` works. """
-    plot_detection_vs_ground_truth(od_cup_path, od_cup_det_bboxes, od_cup_anno_bboxes, ax=basic_ax)
+    plot_detection_vs_ground_truth(
+        od_cup_path, od_cup_det_bboxes, od_cup_anno_bboxes, ax=basic_ax
+    )
 
 
 def test__setup_pr_axes(basic_ax):
@@ -90,7 +95,7 @@ def test__get_precision_recall_settings():
     """ Test that `_get_precision_recall_settings` works. """
     ret = _get_precision_recall_settings(1)
     assert len(ret) == 5
-    ret = _get_precision_recall_settings(slice(0,2))
+    ret = _get_precision_recall_settings(slice(0, 2))
     assert len(ret) == 5
 
 

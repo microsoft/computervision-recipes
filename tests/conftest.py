@@ -30,7 +30,6 @@ from utils_cv.detection.model import (
 )
 
 
-
 def path_classification_notebooks():
     """ Returns the path of the classification notebooks folder. """
     return os.path.abspath(
@@ -168,8 +167,8 @@ def func_tiny_od_data_path(tmp_session) -> str:
     """ Returns the path to the fridge object detection dataset. """
     return unzip_url(
         od_urls.fridge_objects_tiny_path,
-        fpath=f'{tmp_session}/tmp',
-        dest=f'{tmp_session}/tmp',
+        fpath=f"{tmp_session}/tmp",
+        dest=f"{tmp_session}/tmp",
         exist_ok=True,
     )
 
@@ -348,29 +347,33 @@ def od_cup_path(tmp_session) -> str:
 
 @pytest.fixture(scope="session")
 def od_cup_anno_bboxes(tmp_session, od_cup_path) -> List[AnnotationBbox]:
-    return [AnnotationBbox(
-        left=61,
-        top=59,
-        right=273,
-        bottom=244,
-        label_name="cup",
-        label_idx="0",
-        im_path=od_cup_path,
-    )]
+    return [
+        AnnotationBbox(
+            left=61,
+            top=59,
+            right=273,
+            bottom=244,
+            label_name="cup",
+            label_idx="0",
+            im_path=od_cup_path,
+        )
+    ]
 
 
 @pytest.fixture(scope="session")
 def od_cup_det_bboxes(tmp_session, od_cup_path) -> List[DetectionBbox]:
-    return [DetectionBbox(
-        left=61,
-        top=59,
-        right=273,
-        bottom=244,
-        label_name="cup",
-        label_idx="0",
-        im_path=od_cup_path,
-        score=0.99,
-    )]
+    return [
+        DetectionBbox(
+            left=61,
+            top=59,
+            right=273,
+            bottom=244,
+            label_name="cup",
+            label_idx="0",
+            im_path=od_cup_path,
+            score=0.99,
+        )
+    ]
 
 
 @pytest.fixture(scope="session")

@@ -49,7 +49,9 @@ def test_detection_learner_init(od_detection_dataset):
 def test_detection_learner_init_model(od_detection_dataset):
     """ Tests detection learner with model settings. """
     classes = len(od_detection_dataset.labels)
-    model = get_pretrained_fasterrcnn(num_classes=classes, min_size=600, max_size=2000)
+    model = get_pretrained_fasterrcnn(
+        num_classes=classes, min_size=600, max_size=2000
+    )
     learner = DetectionLearner(od_detection_dataset, model=model)
     assert type(learner) == DetectionLearner
     assert learner.model == model
@@ -77,25 +79,37 @@ def test_detection_learner_predict(od_detection_learner, od_cup_path):
     assert type(bboxes) == list
 
 
-def test_detection_learner_predict_threshold(od_detection_learner, od_cup_path):
+def test_detection_learner_predict_threshold(
+    od_detection_learner, od_cup_path
+):
     """ Simply test that `predict` works with a threshold by setting a really high threshold. """
     bboxes = od_detection_learner.predict(od_cup_path, threshold=0.9999)
     assert type(bboxes) == list
     assert len(bboxes) == 0
 
 
-def test_detection_learner_predict_batch(od_detection_learner, od_detection_dataset):
+def test_detection_learner_predict_batch(
+    od_detection_learner, od_detection_dataset
+):
     """ Simply test that `predict_batch` works. """
-    generator = od_detection_learner.predict_batch(od_detection_dataset.test_dl)
+    generator = od_detection_learner.predict_batch(
+        od_detection_dataset.test_dl
+    )
     assert isinstance(generator, Iterable)
 
 
-def test_detection_learner_predict_batch_threshold(od_detection_learner, od_detection_dataset):
+def test_detection_learner_predict_batch_threshold(
+    od_detection_learner, od_detection_dataset
+):
     """ Simply test that `predict_batch` works with a threshold by setting it really high.. """
-    generator = od_detection_learner.predict_batch(od_detection_dataset.test_dl, threshold=0.9999)
+    generator = od_detection_learner.predict_batch(
+        od_detection_dataset.test_dl, threshold=0.9999
+    )
     assert isinstance(generator, Iterable)
 
 
-def test_detection_dataset_predict_dl(od_detection_learner, od_detection_dataset):
+def test_detection_dataset_predict_dl(
+    od_detection_learner, od_detection_dataset
+):
     """ Simply test that `predict_dl` works. """
     bboxes = od_detection_learner.predict_dl(od_detection_dataset.test_dl)

@@ -188,9 +188,9 @@ class DetectionDataset:
         self.anno_bboxes = []
         for anno_idx, anno_filename in enumerate(anno_filenames):
             anno_path = self.root / self.anno_dir / str(anno_filename)
-            assert os.path.exists(anno_path), (
-                f"Cannot find annotation file: {anno_path}"
-            )
+            assert os.path.exists(
+                anno_path
+            ), f"Cannot find annotation file: {anno_path}"
             anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
 
             # TODO For now, ignore all images without a single bounding box in it, otherwise throws error during training.
@@ -203,7 +203,7 @@ class DetectionDataset:
                 self.im_paths.append(im_paths[anno_idx])
             self.anno_paths.append(anno_path)
             self.anno_bboxes.append(anno_bboxes)
-        assert(len(self.im_paths) == len(self.anno_paths)) 
+        assert len(self.im_paths) == len(self.anno_paths)
 
         # Get list of all labels
         labels = []
@@ -215,7 +215,9 @@ class DetectionDataset:
         # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
-                anno_bbox.label_idx = self.labels.index(anno_bbox.label_name) +1   
+                anno_bbox.label_idx = (
+                    self.labels.index(anno_bbox.label_name) + 1
+                )
 
     def split_train_test(
         self, train_pct: float = 0.8
