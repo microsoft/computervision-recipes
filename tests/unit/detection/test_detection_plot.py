@@ -110,6 +110,7 @@ def test__plot_pr_curve_iou_mean(od_detection_eval, basic_ax):
     _plot_pr_curve_iou_mean(basic_ax, od_detection_eval.coco_eval["bbox"])
 
 
+@pytest.mark.linuxgpu
 def test_plot_pr_curves(od_detection_eval):
     """ Test that `plot_pr_curves` works. """
     plot_pr_curves(od_detection_eval)
