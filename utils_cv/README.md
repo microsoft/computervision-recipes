@@ -1,6 +1,6 @@
 # Computer Vision Utilities # 
 
-This package (`cv_utils`) contains functions to simplify common tasks
+This package (`utils_cv`) contains functions to simplify common tasks
 used when developing and evaluating computer vision systems.  A short
 description of the sub-modules is provided below. For more details
 about what functions are available and how to use them, please review
@@ -22,3 +22,7 @@ This sub-module contains helper functions for image classification.
 ### [similarity](./similarity)
 
 This sub-module includes helper functions for image similarity.
+
+### [detection](./detection)
+
+This sub-module includes helper functions for object detection.
