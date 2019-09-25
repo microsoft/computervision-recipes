@@ -14,7 +14,7 @@ trigger:
 jobs:
 - job: WindowsCPU
   pool:
-    vmImage: 'vs2017-win2016'
+    name: cvbpwinpool
 
   steps:
   - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"

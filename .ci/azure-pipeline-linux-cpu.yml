@@ -14,7 +14,8 @@ trigger:
 jobs:
 - job: LinuxCPU
   pool:
-    vmImage: 'ubuntu-16.04'
+    # vmImage: 'ubuntu-16.04'
+    name: cvbplinuxpool
 
   steps:
 
