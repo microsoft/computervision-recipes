@@ -150,7 +150,7 @@ def plot_grid(
 
     fig, axes = plt.subplots(rows, cols, figsize=figsize)
 
-    if rows == 1:
+    if rows == 1 or cols == 1:
         axes = [axes]
 
     for row in axes:
