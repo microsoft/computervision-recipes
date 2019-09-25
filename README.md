@@ -32,9 +32,7 @@ To get started:
     git clone https://github.com/Microsoft/ComputerVision
     ```
 1. Install the conda environment, you'll find the `environment.yml` file in the root directory. To build the conda environment:
-    > If you are on Windows uncomment `- git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI` before running the following
-
-    > If you are on Linux uncomment `- pycocotools>=2.0`
+    > If you are using Windows, remove `- pycocotools>=2.0` from the `environment.yaml`
     ```
     conda env create -f environment.yml
     ```
@@ -47,6 +45,9 @@ To get started:
     ```
     jupyter labextension install jupyter-webrtc
     ```
+    > If you are using Windows run at this point:
+    > pip install Cython
+    > pip install git+https://github.com/philferriere/cocoapi.git#egg=pycocotools^&subdirectory=PythonAPI
 1. Start the Jupyter notebook server
     ```
     jupyter notebook

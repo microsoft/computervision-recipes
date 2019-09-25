@@ -6,6 +6,9 @@ Object Detection is one of the main problems in Computer Vision. Traditionally, 
 
 This repository uses [torchvision's](https://pytorch.org/docs/stable/torchvision/index.html) Faster R-CNN implementation which has been shown to work well on a wide variety of Computer Vision problems. See the [FAQ](FAQ.md) for an explanation of the underlying data science aspects.
 
+We recommend running these samples on a machine with GPU, on either Windows or Linux. While a GPU is technically not required, training gets prohibitively slow even when using only a few dozens of images.
+
+
 ```diff
 + (August 2019) This is work-in-progress and more functionality and documentation will be added continuously.
 ```
@@ -14,23 +17,6 @@ This repository uses [torchvision's](https://pytorch.org/docs/stable/torchvision
 ## Frequently asked questions
 
 Answers to frequently asked questions such as "How does the technology work?" can be found in the [FAQ](FAQ.md) located in this folder. For generic questions such as "How many training examples do I need?" or "How to monitor GPU usage during training?" see the [FAQ.md](../classification/FAQ.md) in the classification folder.
-
-
-## Getting Started
-
-To get started, simply follow the repository-wide installation instructions in this [readme](../README.md/#getting-started) to create a conda environment called _cv_. No other steps are required. To activate the _cv_ environment run:
-  ```
-  conda activate cv
-  ```
-
-AT THIS POINT, INSTALLATION ON WINDOWS MACHINES REQUIRES A FEW EXTRA STEPS. THESE ARE:
-- BEFORE RUNNING *conda env create -f environment.yml*
-   - REMOVE *pycocotools>=2.0* FROM environment.yaml file
-- AFTER RUNNING *conda env create -f environment.yml* AND *conda activate cv* ALSO RUN
-   - pip install Cython
-   - pip install git+https://github.com/philferriere/cocoapi.git#egg=pycocotools^&subdirectory=PythonAPI
-
-We recommend running these samples on a machine with GPU, on either Windows or Linux. While a GPU is technically not required, training gets prohibitively slow even when using only a few dozens of images.
 
 
 ## Notebooks
