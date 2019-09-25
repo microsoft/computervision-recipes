@@ -70,4 +70,4 @@ def test_copy_files(tmp):
 
 def test_get_font():
     font = get_font(size=12)
-    assert type(font) == ImageFont
+    assert type(font) == ImageFont.FreeTypeFont
