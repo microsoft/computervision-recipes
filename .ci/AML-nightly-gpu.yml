@@ -21,20 +21,20 @@ variables:
   value : 'cvws'
 
 
-schedules:
-- cron: "56 22 * * *"
-  displayName: Daily run
-  branches:
-    include:
-    - master
-    - staging
-  always: true
+# schedules:
+# - cron: "56 22 * * *"
+#   displayName: Daily run
+#   branches:
+#     include:
+#     - master
+#     - staging
+#   always: true
 
 trigger: none
 
-pr:
-- staging 
-- master
+# pr:
+# - staging 
+# - master
 
 jobs:
 - job: Smoke
