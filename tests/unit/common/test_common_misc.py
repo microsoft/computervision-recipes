@@ -3,9 +3,10 @@
 
 import os
 from pathlib import Path
+from PIL import ImageFont
 
 from fastai.vision import ImageList
-from utils_cv.common.misc import copy_files, set_random_seed
+from utils_cv.common.misc import copy_files, set_random_seed, get_font
 
 
 def test_set_random_seed(tiny_ic_data_path):
@@ -65,3 +66,11 @@ def test_copy_files(tmp):
     copy_files([file_in_child, file_in_parent], dst, remove=True)
     assert not os.path.isfile(file_in_parent)
     assert not os.path.isfile(file_in_child)
+
+
+def test_get_font():
+    font = get_font(size=12)
+    assert (
+        type(font) == ImageFont.FreeTypeFont
+        or type(font) == ImageFont.ImageFont
+    )

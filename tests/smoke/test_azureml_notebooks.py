@@ -133,3 +133,6 @@ def test_24_notebook_run(
         ),
         kernel_name=KERNEL_NAME,
     )
+
+
+# TODO add test for hyperparam object detection notebook

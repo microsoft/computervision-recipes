@@ -13,6 +13,17 @@ class Urls:
 
     # traditional datasets
     fridge_objects_path = urljoin(base, "odFridgeObjects.zip")
+    fridge_objects_watermark_path = urljoin(
+        base, "odFridgeObjectsWatermark.zip"
+    )
+    fridge_objects_tiny_path = urljoin(base, "odFridgeObjectsTiny.zip")
+    fridge_objects_watermark_tiny_path = urljoin(
+        base, "odFridgeObjectsWatermarkTiny.zip"
+    )
+
+    @classmethod
+    def all(cls) -> List[str]:
+        return [v for k, v in cls.__dict__.items() if k.endswith("_path")]
 
 
 def coco_labels() -> List[str]:

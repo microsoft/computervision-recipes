@@ -46,16 +46,19 @@ bottom={self.bottom}]\
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
     def rect(self) -> List[int]:
         return [self.left, self.top, self.right, self.bottom]
 
     def width(self) -> int:
-        width = self.right - self.left + 1
+        width = self.right - self.left
         assert width >= 0
         return width
 
     def height(self) -> int:
-        height = self.bottom - self.top + 1
+        height = self.bottom - self.top
         assert height >= 0
         return height
 
@@ -90,10 +93,12 @@ bottom={self.bottom}]\
         self.bottom = bottom_new
 
     def crop(self, max_width: int, max_height: int) -> "Bbox":
-        self.left = min(max(self.left, 0), max_width)
-        self.top = min(max(self.top, 0), max_height)
-        self.right = min(max(self.right, 0), max_width)
-        self.bottom = min(max(self.bottom, 0), max_height)
+        if max_height > self.height():
+            raise Exception("crop height cannot be bigger than bbox height.")
+        if max_width > self.width():
+            raise Exception("crop width cannot be bigger than bbox width.")
+        self.right = self.left + max_width
+        self.bottom = self.top + max_height
         self.standardize()
         return self
 
@@ -125,7 +130,9 @@ class AnnotationBbox(_Bbox):
         super().__init__(left, top, right, bottom)
         self.set_meta(label_idx, im_path, label_name)
 
-    def set_meta(self, label_idx: int, im_path: str, label_name):
+    def set_meta(
+        self, label_idx: int, im_path: str = None, label_name: str = None
+    ):
         self.label_idx = label_idx
         self.im_path = im_path
         self.label_name = label_name

@@ -42,7 +42,7 @@ def _get_det_bboxes(
 
     det_bboxes = []
     for label, box, score in zip(pred_labels, pred_boxes, pred_scores):
-        label_name = labels[label-1]
+        label_name = labels[label - 1]
         det_bbox = DetectionBbox.from_array(
             box,
             score=score,
@@ -102,7 +102,10 @@ def get_pretrained_fasterrcnn(
 
     For a list of all parameters see:
         https://github.com/pytorch/vision/blob/master/torchvision/models/detection/faster_rcnn.py
+
     """
+    # TODO - reconsider that num_classes includes background. This doesn't feel intuitive.
+
     # load a model pre-trained pre-trained on COCO
     model = fasterrcnn_resnet50_fpn(
         pretrained=True,
@@ -151,7 +154,7 @@ class DetectionLearner:
 
         # setup model, default to fasterrcnn
         if self.model is None:
-            self.model = get_pretrained_fasterrcnn(len(dataset.labels)+1)
+            self.model = get_pretrained_fasterrcnn(len(dataset.labels) + 1)
         self.model.to(self.device)
 
     def __getattr__(self, attr):
@@ -177,7 +180,7 @@ class DetectionLearner:
 
         # reduce learning rate every step_size epochs by a factor of gamma (by default) 0.1.
         if step_size is None:
-            step_size = int(np.round(epochs/1.5)) 
+            step_size = int(np.round(epochs / 1.5))
 
         # construct our optimizer
         params = [p for p in self.model.parameters() if p.requires_grad]
