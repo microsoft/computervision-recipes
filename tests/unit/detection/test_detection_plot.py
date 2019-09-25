@@ -34,7 +34,6 @@ def test_plot_setting_init(basic_plot_settings):
     assert basic_plot_settings.rect_th is not None
     assert basic_plot_settings.rect_color is not None
     assert basic_plot_settings.text_size is not None
-    assert basic_plot_settings.text_font is not None
     assert basic_plot_settings.text_color is not None
 
 

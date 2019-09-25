@@ -9,14 +9,14 @@ from typing import List, Union, Tuple, Callable, Any, Iterator
 from pathlib import Path
 
 import PIL
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 import numpy as np
 import matplotlib.pyplot as plt
 
 from .references.coco_eval import CocoEvaluator
 from .bbox import _Bbox, AnnotationBbox, DetectionBbox
-from ..common.gpu import is_windows
+from ..common.misc import get_font
 
 
 class PlotSettings:
@@ -27,17 +27,12 @@ class PlotSettings:
         rect_th: int = 4,
         rect_color: Tuple[int, int, int] = (255, 0, 0),
         text_size: int = 25,
-        text_font: str = "DejaVuSerifCondensed.ttf",
         text_color: Tuple[int, int, int] = (255, 255, 255),
     ):
-        if is_windows() is True:
-            text_font = "arial.ttf"
-
-        self.rect_th, self.rect_color, self.text_size, self.text_font, self.text_color = (
+        self.rect_th, self.rect_color, self.text_size, self.text_color = (
             rect_th,
             rect_color,
             text_size,
-            text_font,
             text_color,
         )
 
@@ -72,9 +67,8 @@ def plot_boxes(
                 width=plot_settings.rect_th,
             )
 
-            font = ImageFont.truetype(
-                plot_settings.text_font, plot_settings.text_size
-            )
+            # gets font
+            font = get_font(size=plot_settings.text_size)
 
             # write prediction class
             draw.text(
@@ -152,7 +146,7 @@ def plot_grid(
     Returns nothing but plots graph
     """
     fig_height = rows * 8
-    figsize = (16, fig_height)
+    figsize = (figsize[0], fig_height)
 
     fig, axes = plt.subplots(rows, cols, figsize=figsize)
 
