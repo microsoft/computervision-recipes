@@ -46,8 +46,8 @@ To get started:
     jupyter labextension install jupyter-webrtc
     ```
     > If you are using Windows run at this point:
-    > pip install Cython
-    > pip install git+https://github.com/philferriere/cocoapi.git#egg=pycocotools^&subdirectory=PythonAPI
+    > - `pip install Cython`
+    > - `pip install git+https://github.com/philferriere/cocoapi.git#egg=pycocotools^&subdirectory=PythonAPI`
 1. Start the Jupyter notebook server
     ```
     jupyter notebook
