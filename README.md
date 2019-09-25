@@ -14,13 +14,13 @@ We hope that these examples and utilities can significantly reduce the “time t
 
 ## Scenarios
 
-The following is a summary of commonly used Computer Vision scenarios that are covered in this repository. For each of these scenarios, we give you the tools to effectively build your own model. This includes tasks such as fine-tuning your own model on your own data, to more complex tasks such as hard-negative mining and even model deployment.
+The following is a summary of commonly used Computer Vision scenarios that are covered in this repository. For each of these scenarios, we give you the tools to effectively build your own model. This includes tasks such as fine-tuning your own model on your own data, to more complex tasks such as hard-negative mining and even model deployment. See all supported scenarios [here](scenarios).
 
 | Scenario | Description |
 | -------- | ----------- |
-| [Classification](classification) | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
-| [Similarity](similarity)  | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
-| [Detection](detection) | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
+| [Classification](scenarios/classification) | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
+| [Similarity](scenarios/similarity)  | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
+| [Detection](scenarios/detection) | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
 
 ## Getting Started
 To get started:
