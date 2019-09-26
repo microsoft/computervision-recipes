@@ -35,8 +35,8 @@ def path_classification_notebooks():
         os.path.join(
             os.path.dirname(__file__),
             os.path.pardir,
+            "scenarios",
             "classification",
-            "notebooks",
         )
     )
 
@@ -47,8 +47,8 @@ def path_similarity_notebooks():
         os.path.join(
             os.path.dirname(__file__),
             os.path.pardir,
+            "scenarios",
             "similarity",
-            "notebooks",
         )
     )
 
@@ -57,7 +57,7 @@ def path_detection_notebooks():
     """ Returns the path of the similarity notebooks folder. """
     return os.path.abspath(
         os.path.join(
-            os.path.dirname(__file__), os.path.pardir, "detection", "notebooks"
+            os.path.dirname(__file__), os.path.pardir, "scenarios", "detection"
         )
     )
 

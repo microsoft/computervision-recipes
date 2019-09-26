@@ -134,9 +134,18 @@ def _calculate_ap(e: CocoEvaluator) -> float:
     """ Calculate the Average Precision (AP) by averaging all iou
     thresholds across all labels.
 
-    see `utils.detection.plot:_get_precision_recall_settings` to
-    get information on the precision_setting variable below and what the
-    indicies mean.
+    coco_eval.eval['precision'] is a 5-dimensional array. Each dimension
+    represents the following:
+    1. [T] 10 evenly distributed thresholds for IoU, from 0.5 to 0.95.
+    2. [R] 101 recall thresholds, from 0 to 101
+    3. [K] label, set to slice(0, None) to get precision over all the labels in
+    the dataset. Then take the mean over all labels.
+    4. [A] area size range of the target (all-0, small-1, medium-2, large-3)
+    5. [M] The maximum number of detection frames in a single image where index
+    0 represents max_det=1, 1 represents max_det=10, 2 represents max_det=100
+
+    Therefore, coco_eval.eval['precision'][0, :, 0, 0, 2] represents the value
+    of 101 precisions corresponding to 101 recalls from 0 to 100 when IoU=0.5.
     """
     precision_settings = (slice(0, None), slice(0, None), slice(0, None), 0, 2)
     coco_eval = e.coco_eval["bbox"].eval["precision"]

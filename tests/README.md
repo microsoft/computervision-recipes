@@ -4,7 +4,8 @@ This project provides folders for unit, smoke and integration tests with Python 
 
  * In the unit tests we just make sure the notebook runs. 
  * In the smoke tests, we run AzureML notebooks.
- * The integration test folder is a holding spot for future tests.
+ * The integration tests are used to check that the models are performing at a
+   given threshold.
  
 For more information, see a [quick introduction to unit, smoke and integration tests](https://miguelgfierro.com/blog/2018/a-beginners-guide-to-python-testing/).
 
