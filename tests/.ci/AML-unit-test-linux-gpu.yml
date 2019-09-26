@@ -4,7 +4,7 @@
 variables:
 - group: AzureMLConfig
 - name  : 'test'
-  value : '.ci/run_pytest.py'
+  value : 'tests/.ci/run_pytest.py'
 - name  : 'testfolder'
   value : 'tests/unit'
 - name  : 'testmarkers'
