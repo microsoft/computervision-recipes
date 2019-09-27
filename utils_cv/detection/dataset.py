@@ -73,10 +73,10 @@ def parse_pascal_voc_anno(
     for obj in objs:
         label = obj.find("name").text
         bnd_box = obj.find("bndbox")
-        left = int(bnd_box[0].text)
-        top = int(bnd_box[1].text)
-        right = int(bnd_box[2].text)
-        bottom = int(bnd_box[3].text)
+        left = int(bnd_box.find('xmin').text)
+        top = int(bnd_box.find('ymin').text)
+        right = int(bnd_box.find('xmax').text)
+        bottom = int(bnd_box.find('ymax').text)
 
         # Set mapping of label name to label index
         if labels is None:
@@ -109,7 +109,7 @@ class DetectionDataset:
         batch_size: int = 2,
         transforms: object = get_transform(train=True),
         train_pct: float = 0.5,
-        annotation_dir: str = "annotations",
+        anno_dir: str = "annotations",
         im_dir: str = "images",
     ):
         """ initialize dataset
@@ -133,7 +133,7 @@ class DetectionDataset:
         # TODO think about how transforms are working...
         self.transforms = transforms
         self.im_dir = im_dir
-        self.anno_dir = annotation_dir
+        self.anno_dir = anno_dir
         self.batch_size = batch_size
         self.train_pct = train_pct
 
@@ -188,9 +188,9 @@ class DetectionDataset:
         self.anno_bboxes = []
         for anno_idx, anno_filename in enumerate(anno_filenames):
             anno_path = self.root / self.anno_dir / str(anno_filename)
-            assert os.path.exists(anno_path), (
-                "Cannot find annotation file: " + anno_path
-            )
+            assert os.path.exists(
+                anno_path
+            ), f"Cannot find annotation file: {anno_path}"
             anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
 
             # TODO For now, ignore all images without a single bounding box in it, otherwise throws error during training.
@@ -203,7 +203,7 @@ class DetectionDataset:
                 self.im_paths.append(im_paths[anno_idx])
             self.anno_paths.append(anno_path)
             self.anno_bboxes.append(anno_bboxes)
-        assert(len(self.im_paths) == len(self.anno_paths)) 
+        assert len(self.im_paths) == len(self.anno_paths)
 
         # Get list of all labels
         labels = []
@@ -215,7 +215,9 @@ class DetectionDataset:
         # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
-                anno_bbox.label_idx = self.labels.index(anno_bbox.label_name) +1   
+                anno_bbox.label_idx = (
+                    self.labels.index(anno_bbox.label_name) + 1
+                )
 
     def split_train_test(
         self, train_pct: float = 0.8
@@ -259,7 +261,7 @@ class DetectionDataset:
     ) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
         """ Get random annotation and corresponding image
 
-        Returns a list of annotatoons and the image path
+        Returns a list of annotations and the image path
         """
         idx = randrange(len(self.anno_paths))
         return self.anno_bboxes[idx], self.im_paths[idx]
