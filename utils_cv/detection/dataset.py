@@ -73,10 +73,10 @@ def parse_pascal_voc_anno(
     for obj in objs:
         label = obj.find("name").text
         bnd_box = obj.find("bndbox")
-        left = int(bnd_box[0].text)
-        top = int(bnd_box[1].text)
-        right = int(bnd_box[2].text)
-        bottom = int(bnd_box[3].text)
+        left = int(bnd_box.find('xmin').text)
+        top = int(bnd_box.find('ymin').text)
+        right = int(bnd_box.find('xmax').text)
+        bottom = int(bnd_box.find('ymax').text)
 
         # Set mapping of label name to label index
         if labels is None:
