@@ -11,16 +11,6 @@ The goal of this repository is to accelerate the development of computer vision 
 
 We hope that these examples and utilities can significantly reduce the “time to market” by simplifying the experience from defining the business problem to development of solution by orders of magnitude. In addition, the example notebooks would serve as guidelines and showcase best practices and usage of the tools in a wide variety of languages.
 
-## Scenarios
-
-The following is a summary of commonly used Computer Vision scenarios that are covered in this repository. For each of these scenarios, we give you the tools to effectively build your own model. This includes tasks such as fine-tuning your own model on your own data, to more complex tasks such as hard-negative mining and even model deployment. See all supported scenarios [here](scenarios).
-
-| Scenario | Description |
-| -------- | ----------- |
-| [Classification](scenarios/classification) | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
-| [Similarity](scenarios/similarity)  | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
-| [Detection](scenarios/detection) | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
-
 ## Get Started
 
 To get started, navigate to the [Setup Guide](SETUP.md), which lists
@@ -28,7 +18,17 @@ instructions on how to setup the compute environment and dependencies needed to 
 notebooks in this repo. Once your environment is setup, navigate to the
 [Scenarios](scenarios) folder and start exploring the notebooks.
 
-## Introduction
+## Scenarios
+
+The following is a summary of commonly used Computer Vision scenarios that are covered in this repository. For each of these scenarios, we give you the tools to effectively build your own model. This includes simple tasks such as fine-tuning your own model on your own data, to more complex tasks such as hard-negative mining and even model deployment. See all supported scenarios [here](scenarios).
+
+| Scenario | Description |
+| -------- | ----------- |
+| [Classification](scenarios/classification) | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
+| [Similarity](scenarios/similarity)  | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
+| [Detection](scenarios/detection) | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
+
+## Computer Vision on Azure
 
 Note that for certain computer vision problems, you may not need to build your own models. Instead, pre-built or easily customizable solutions exist which do not require any custom coding or machine learning expertise. We strongly recommend evaluating if these can sufficiently solve your problem. If these solutions are not applicable, or the accuracy of these solutions is not sufficient, then resorting to more complex and time-consuming custom approaches may be necessary.
 
@@ -39,8 +39,6 @@ are a set of pre-trained REST APIs which can be called for image tagging, face r
 
 - [Custom Vision](https://azure.microsoft.com/en-us/services/cognitive-services/custom-vision-service/)
 is a SaaS service to train and deploy a model as a REST API given a user-provided training set. All steps including image upload, annotation, and model deployment can be performed using either the UI or a Python SDK. Training image classification or object detection models can be achieved with minimal machine learning expertise. The Custom Vision offers more flexibility than using the pre-trained cognitive services APIs, but requires the user to bring and annotate their own data.
-
-## Build Your Own Computer Vision Model
 
 If you need to train your own model, the following services and links provide additional information that is likely useful.
 
