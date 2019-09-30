@@ -6,6 +6,7 @@ from pathlib import Path
 import random
 import shutil
 from typing import List, Union
+from PIL import ImageFont
 
 import numpy as np
 
@@ -61,3 +62,22 @@ def copy_files(
 
         if remove:
             os.remove(fpath)
+
+
+def get_font(size: int = 12) -> ImageFont:
+    """ Gets a font object. """
+    font = None
+    for font in "Tahoma Verdana Arial Helvetica DejaVuSans".split():
+        try:
+            font = ImageFont.truetype(f"{font}.ttf", size)
+        except (AttributeError, IOError):
+            font = None
+        if font:
+            break
+    else:
+        try:
+            font = ImageFont.load_default()
+        except (AttributeError, IOError):
+            font = None
+
+    return font

@@ -50,8 +50,8 @@ def _get_file_name(url: str) -> str:
 
 def unzip_url(
     url: str,
-    fpath: Union[Path, str] = data_path(),
-    dest: Union[Path, str] = data_path(),
+    fpath: Union[Path, str] = None,
+    dest: Union[Path, str] = None,
     exist_ok: bool = False,
 ) -> str:
     """ Download file from URL to {fpath} and unzip to {dest}.
@@ -74,13 +74,21 @@ def unzip_url(
         if not exist_ok:
             raise FileExistsError(path, "Use param {{exist_ok}} to ignore.")
 
+    if fpath is None and dest is None:
+        fpath = data_path()
+        dest = data_path()
+    if fpath is None and dest is not None:
+        fpath = dest
+    if dest is None and fpath is not None:
+        dest = fpath
+
     os.makedirs(dest, exist_ok=True)
     os.makedirs(fpath, exist_ok=True)
 
     fname = _get_file_name(url)
     fname_without_extension = fname.split(".")[0]
     zip_file = Path(os.path.join(fpath, fname))
-    unzipped_dir = Path(os.path.join(fpath, fname_without_extension))
+    unzipped_dir = Path(os.path.join(dest, fname_without_extension))
 
     # download zipfile if zipfile not exists
     if zip_file.is_file():
@@ -99,7 +107,7 @@ def unzip_url(
         z.extractall(fpath)
         z.close()
 
-    return os.path.realpath(os.path.join(fpath, fname_without_extension))
+    return os.path.realpath(unzipped_dir)
 
 
 def unzip_urls(
@@ -114,7 +122,7 @@ def unzip_urls(
     # download all data urls
     paths = list()
     for url in urls:
-        paths.append(unzip_url(url, dest, exist_ok=True))
+        paths.append(unzip_url(url, fpath=dest, dest=dest, exist_ok=True))
 
     return paths
 

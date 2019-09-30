@@ -1,0 +1,19 @@
+# This file is almost similar to azure-pipelines-gpu.yml file, key difference is 
+# we are running our builds only on Linux machine.  
+# Pull request against these pipelines will trigger this build
+pr:
+- master
+- staging
+
+#Any commit to this branch will trigger the build.
+trigger:
+- staging
+- master
+
+jobs:
+- job: WindowsGPU
+  pool:
+    name: cvbpwinpool
+
+  steps:
+  - template: templates/unit-test-steps-not-linuxgpu.yml  # Template reference

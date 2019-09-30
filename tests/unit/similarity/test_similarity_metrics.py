@@ -6,29 +6,42 @@ import numpy as np
 from pytest import approx
 
 from utils_cv.similarity.data import comparative_set_builder
-from utils_cv.similarity.metrics import compute_distances, positive_image_ranks, recall_at_k, vector_distance
+from utils_cv.similarity.metrics import (
+    compute_distances,
+    positive_image_ranks,
+    recall_at_k,
+    vector_distance,
+)
 
 
 def test_vector_distance():
     vec1 = np.array([-1, 0, 1.0])
     vec2 = np.array([1, -6.2, 2])
-    assert vector_distance(vec1, vec2, "l2", l2_normalize = False) == approx(distance.euclidean(vec1, vec2))
+    assert vector_distance(vec1, vec2, "l2", l2_normalize=False) == approx(
+        distance.euclidean(vec1, vec2)
+    )
     vec1 = vec1 / np.linalg.norm(vec1, 2)
     vec2 = vec2 / np.linalg.norm(vec2, 2)
-    assert vector_distance(vec1, vec2, "l2") == approx(distance.euclidean(vec1, vec2))
+    assert vector_distance(vec1, vec2, "l2") == approx(
+        distance.euclidean(vec1, vec2)
+    )
 
 
 def test_compute_distances():
     query_feature = [-1, 0.2, 2]
-    feature_dict = {"a": [0, 3, 1], "b": [-2, -7.2, -3], "c": [1,2,3]}
+    feature_dict = {"a": [0, 3, 1], "b": [-2, -7.2, -3], "c": [1, 2, 3]}
     distances = compute_distances(query_feature, feature_dict)
     assert len(distances) == 3
-    assert distances[1][0] == 'b'
-    assert vector_distance(query_feature, feature_dict["b"]) == approx(distances[1][1])
+    assert distances[1][0] == "b"
+    assert vector_distance(query_feature, feature_dict["b"]) == approx(
+        distances[1][1]
+    )
 
 
 def test_positive_image_ranks(tiny_ic_databunch):
-    comparative_sets = comparative_set_builder(tiny_ic_databunch.valid_ds, num_sets = 3, num_negatives=50)
+    comparative_sets = comparative_set_builder(
+        tiny_ic_databunch.valid_ds, num_sets=3, num_negatives=50
+    )
     comparative_sets[0].pos_dist = 1.0
     comparative_sets[0].neg_dists = np.array([0, 5.7, 2.1])
     comparative_sets[1].pos_dist = -0.1

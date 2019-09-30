@@ -10,6 +10,7 @@
 # E402  module level import not at top of file
 # E731  do not assign a lambda expression, use a def
 # F821  undefined name 'get_ipython' --> from generated python files using nbconvert
+# W605  invalid escape sequence '\W'
 
-ignore = E203, E266, E501, W503, F405, E402, E731, F821
+ignore = E203, E266, E501, W503, F405, E402, E731, F821, W605
 max-line-length = 79

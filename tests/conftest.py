@@ -10,12 +10,23 @@
 import os
 import pytest
 import torch
+import urllib.request
+import random
+from torch import tensor
+from pathlib import Path
 from fastai.vision import cnn_learner, models
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List
 from tempfile import TemporaryDirectory
 from utils_cv.common.data import unzip_url
-from utils_cv.classification.data import Urls
+from utils_cv.classification.data import Urls as ic_urls
+from utils_cv.detection.data import Urls as od_urls
+from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox
+from utils_cv.detection.dataset import DetectionDataset
+from utils_cv.detection.model import (
+    get_pretrained_fasterrcnn,
+    DetectionLearner,
+)
 
 
 def path_classification_notebooks():
@@ -24,8 +35,8 @@ def path_classification_notebooks():
         os.path.join(
             os.path.dirname(__file__),
             os.path.pardir,
+            "scenarios",
             "classification",
-            "notebooks",
         )
     )
 
@@ -36,8 +47,17 @@ def path_similarity_notebooks():
         os.path.join(
             os.path.dirname(__file__),
             os.path.pardir,
+            "scenarios",
             "similarity",
-            "notebooks",
+        )
+    )
+
+
+def path_detection_notebooks():
+    """ Returns the path of the similarity notebooks folder. """
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__), os.path.pardir, "scenarios", "detection"
         )
     )
 
@@ -108,6 +128,21 @@ def similarity_notebooks():
     return paths
 
 
+@pytest.fixture(scope="module")
+def detection_notebooks():
+    folder_notebooks = path_detection_notebooks()
+
+    # Path for the notebooks
+    paths = {
+        "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
+        "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
+        "11": os.path.join(
+            folder_notebooks, "11_exploring_hyperparameters_on_azureml.ipynb"
+        ),
+    }
+    return paths
+
+
 # ----- Function fixtures ----------------------------------------------------------
 
 
@@ -126,6 +161,17 @@ def tmp(tmp_path_factory):
         yield td
 
 
+@pytest.fixture(scope="function")
+def func_tiny_od_data_path(tmp_session) -> str:
+    """ Returns the path to the fridge object detection dataset. """
+    return unzip_url(
+        od_urls.fridge_objects_tiny_path,
+        fpath=f"{tmp_session}/tmp",
+        dest=f"{tmp_session}/tmp",
+        exist_ok=True,
+    )
+
+
 # ----- Session fixtures ----------------------------------------------------------
 
 
@@ -136,28 +182,47 @@ def tmp_session(tmp_path_factory):
         yield td
 
 
+# ------|-- Classification/Similarity ---------------------------------------------
+
+
 @pytest.fixture(scope="session")
 def tiny_ic_multidata_path(tmp_session) -> List[str]:
     """ Returns the path to multiple dataset. """
     return [
         unzip_url(
-            Urls.fridge_objects_watermark_tiny_path, tmp_session, exist_ok=True
+            ic_urls.fridge_objects_watermark_tiny_path,
+            fpath=tmp_session,
+            dest=tmp_session,
+            exist_ok=True,
         ),
-        unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True),
+        unzip_url(
+            ic_urls.fridge_objects_tiny_path,
+            fpath=tmp_session,
+            dest=tmp_session,
+            exist_ok=True,
+        ),
     ]
 
 
 @pytest.fixture(scope="session")
 def tiny_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
-    return unzip_url(Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True)
+    return unzip_url(
+        ic_urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
 
 
 @pytest.fixture(scope="session")
 def tiny_multilabel_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
     return unzip_url(
-        Urls.multilabel_fridge_objects_tiny_path, tmp_session, exist_ok=True
+        ic_urls.multilabel_fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
     )
 
 
@@ -165,7 +230,10 @@ def tiny_multilabel_ic_data_path(tmp_session) -> str:
 def multilabel_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
     return unzip_url(
-        Urls.multilabel_fridge_objects_path, tmp_session, exist_ok=True
+        ic_urls.multilabel_fridge_objects_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
     )
 
 
@@ -173,7 +241,10 @@ def multilabel_ic_data_path(tmp_session) -> str:
 def tiny_ic_databunch(tmp_session):
     """ Returns a databunch object for the tiny fridge objects dataset. """
     im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+        ic_urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
     )
     return (
         ImageList.from_folder(im_paths)
@@ -219,7 +290,10 @@ def testing_im_list(tmp_session):
     """ Set of 5 images from the can/ folder of the Fridge Objects dataset
      used to test positive example rank calculations"""
     im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+        ic_urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
     )
     can_im_paths = os.listdir(os.path.join(im_paths, "can"))
     can_im_paths = [
@@ -234,7 +308,10 @@ def testing_databunch(tmp_session):
     and returns its validation component that is used
     to test comparative_set_builder"""
     im_paths = unzip_url(
-        Urls.fridge_objects_tiny_path, tmp_session, exist_ok=True
+        ic_urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
     )
     can_im_paths = os.listdir(os.path.join(im_paths, "can"))
     can_im_paths = [
@@ -255,6 +332,173 @@ def testing_databunch(tmp_session):
     return validation_bunch
 
 
+# ------|-- Detection -------------------------------------------------------------
+
+
+@pytest.fixture(scope="session")
+def od_cup_path(tmp_session) -> str:
+    """ Returns the path to the downloaded cup image. """
+    IM_URL = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup.jpg"
+    im_path = os.path.join(tmp_session, "example.jpg")
+    urllib.request.urlretrieve(IM_URL, im_path)
+    return im_path
+
+
+@pytest.fixture(scope="session")
+def od_cup_anno_bboxes(tmp_session, od_cup_path) -> List[AnnotationBbox]:
+    return [
+        AnnotationBbox(
+            left=61,
+            top=59,
+            right=273,
+            bottom=244,
+            label_name="cup",
+            label_idx="0",
+            im_path=od_cup_path,
+        )
+    ]
+
+
+@pytest.fixture(scope="session")
+def od_cup_det_bboxes(tmp_session, od_cup_path) -> List[DetectionBbox]:
+    return [
+        DetectionBbox(
+            left=61,
+            top=59,
+            right=273,
+            bottom=244,
+            label_name="cup",
+            label_idx="0",
+            im_path=od_cup_path,
+            score=0.99,
+        )
+    ]
+
+
+@pytest.fixture(scope="session")
+def tiny_od_data_path(tmp_session) -> str:
+    """ Returns the path to the fridge object detection dataset. """
+    return unzip_url(
+        od_urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
+
+
+@pytest.fixture(scope="session")
+def od_sample_im_anno(tiny_od_data_path) -> str:
+    """ Returns an annotation and image path from the tiny_od_data_path fixture.
+    Specifically, using the paths for 1.xml and 1.jpg
+    """
+    anno_path = Path(tiny_od_data_path) / "annotations" / "1.xml"
+    im_path = Path(tiny_od_data_path) / "images" / "1.jpg"
+    return (anno_path, im_path)
+
+
+@pytest.fixture(scope="session")
+def od_data_path_labels() -> List[str]:
+    return ["water_bottle", "can", "milk_bottle", "carton"]
+
+
+@pytest.fixture(scope="session")
+def od_sample_raw_preds():
+    device = (
+        torch.device("cuda")
+        if torch.cuda.is_available()
+        else torch.device("cpu")
+    )
+    return [
+        {
+            "boxes": tensor(
+                [
+                    [109.0, 190.0, 205.0, 408.0],
+                    [340.0, 326.0, 465.0, 549.0],
+                    [214.0, 181.0, 315.0, 460.0],
+                    [215.0, 193.0, 316.0, 471.0],
+                    [109.0, 209.0, 209.0, 420.0],
+                ],
+                device=device,
+            ),
+            "labels": tensor([3, 2, 1, 2, 1], device=device),
+            "scores": tensor(
+                [0.9985, 0.9979, 0.9945, 0.1470, 0.0903], device=device
+            ),
+        }
+    ]
+
+
+@pytest.fixture(scope="session")
+def od_sample_detection_bboxes():
+    return [
+        DetectionBbox.from_array(
+            [109.0, 190.0, 205.0, 408.0],
+            label_idx=3,
+            label_name="carton",
+            score=0.9985,
+        ),
+        DetectionBbox.from_array(
+            [340.0, 326.0, 465.0, 549.0],
+            label_idx=2,
+            label_name="milk_bottle",
+            score=0.9979,
+        ),
+        DetectionBbox.from_array(
+            [214.0, 181.0, 315.0, 460.0],
+            label_idx=1,
+            label_name="can",
+            score=0.9945,
+        ),
+        DetectionBbox.from_array(
+            [215.0, 193.0, 316.0, 471.0],
+            label_idx=2,
+            label_name="milk_bottle",
+            score=0.1470,
+        ),
+        DetectionBbox.from_array(
+            [109.0, 209.0, 209.0, 420.0],
+            label_idx=1,
+            label_name="can",
+            score=0.0903,
+        ),
+    ]
+
+
+@pytest.fixture(scope="session")
+def od_detection_dataset(tiny_od_data_path):
+    """ returns a basic detection dataset. """
+    return DetectionDataset(tiny_od_data_path)
+
+
+@pytest.mark.gpu
+@pytest.fixture(scope="session")
+def od_detection_learner(od_detection_dataset):
+    """ returns a basic detection learner that has been trained for one epoch. """
+    model = get_pretrained_fasterrcnn(
+        num_classes=len(od_detection_dataset.labels) + 1,
+        min_size=100,
+        max_size=200,
+        rpn_pre_nms_top_n_train=500,
+        rpn_pre_nms_top_n_test=250,
+        rpn_post_nms_top_n_train=500,
+        rpn_post_nms_top_n_test=250,
+    )
+    learner = DetectionLearner(od_detection_dataset, model=model)
+    learner.fit(1)
+    return learner
+
+
+@pytest.mark.gpu
+@pytest.fixture(scope="session")
+def od_detection_eval(od_detection_learner):
+    """ returns the eval results of a detection learner after one epoch of training. """
+    return od_detection_learner.evaluate()
+
+
+# ----- AML Settings ----------------------------------------------------------
+
+
+# TODO i can't find where this function is being used
 def pytest_addoption(parser):
     parser.addoption(
         "--subscription_id",

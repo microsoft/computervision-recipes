@@ -1,15 +1,28 @@
 # Computer Vision
+In recent years, we see an extra-ordinary growth in Computer Vision, with applications in face recognition, image understanding, search, drones, mapping, semi-autonomous and autonomous vehicles. Key essence to many of these applications are visual recognition tasks such  as image classification, object detection and image similarity. Researchers have been applying newer deep learning methods to achieve state-of-the-art(SOTA) results on these challenging visual recognition tasks. 
 
-This repository provides examples and best practice guidelines for building computer vision systems. All examples are given as Jupyter notebooks, and use PyTorch as the deep learning library.
+This repository provides examples and best practice guidelines for building computer vision systems. The focus of the repository is on state-of-the-art methods that are popular among researchers and practitioners working on problems involving image recognition, object detection and image similarity.
+
+These examples are provided as Jupyter notebooks and common utility functions. All examples use PyTorch as the deep learning library.
+
 
 ## Overview
 
 The goal of this repository is to accelerate the development of computer vision applications. Rather than creating implementions from scratch, the focus is on providing examples and links to existing state-of-the-art libraries. In addition, having worked in this space for many years, we aim to answer common questions, point out frequently observed pitfalls, and show how to use the cloud for training and deployment.
 
-The current main priority is to support image classification. Additionally, we also provide a basic (but often sufficiently accurate) example for image similarity. See the [projects](https://github.com/Microsoft/ComputerVision/projects) and [milestones](https://github.com/Microsoft/ComputerVision/milestones) pages in this repository for more details.
+We hope that these examples and utilities can significantly reduce the “time to market” by simplifying the experience from defining the business problem to development of solution by orders of magnitude. In addition, the example notebooks would serve as guidelines and showcase best practices and usage of the tools in a wide variety of languages.
+
+## Scenarios
+
+The following is a summary of commonly used Computer Vision scenarios that are covered in this repository. For each of these scenarios, we give you the tools to effectively build your own model. This includes tasks such as fine-tuning your own model on your own data, to more complex tasks such as hard-negative mining and even model deployment. See all supported scenarios [here](scenarios).
+
+| Scenario | Description |
+| -------- | ----------- |
+| [Classification](scenarios/classification) | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
+| [Similarity](scenarios/similarity)  | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
+| [Detection](scenarios/detection) | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
 
 ## Getting Started
-
 To get started:
 
 1. (Optional) Create an Azure Data Science Virtual Machine with e.g. a V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm), [price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). 
@@ -19,6 +32,7 @@ To get started:
     git clone https://github.com/Microsoft/ComputerVision
     ```
 1. Install the conda environment, you'll find the `environment.yml` file in the root directory. To build the conda environment:
+    > If you are using Windows, remove `- pycocotools>=2.0` from the `environment.yaml`
     ```
     conda env create -f environment.yml
     ```
@@ -31,14 +45,14 @@ To get started:
     ```
     jupyter labextension install jupyter-webrtc
     ```
+    > If you are using Windows run at this point:
+    > - `pip install Cython`
+    > - `pip install git+https://github.com/philferriere/cocoapi.git#egg=pycocotools^&subdirectory=PythonAPI`
 1. Start the Jupyter notebook server
     ```
     jupyter notebook
     ```
-1. At this point, you should be able to run the notebooks in this repo. Explore our notebooks on the following computer vision domains. Make sure to change the kernel to "Python (cv)".
-    - [/classification](classification#notebooks)
-    - [/similarity](similarity#notebooks)
-
+1. At this point, you should be able to run the [notebooks](#scenarios) in this repo. 
 
 As an alternative to the steps above, and if one wants to install only
 the 'utils_cv' library (without creating a new conda environment),
@@ -50,7 +64,6 @@ pip install git+https://github.com/microsoft/ComputerVision.git@master#egg=utils
 
 or by downloading the repo and then running `pip install .` in the
 root directory.
-
 
 ## Introduction
 

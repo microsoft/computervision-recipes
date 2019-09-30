@@ -6,11 +6,12 @@ from azureml.core.authentication import InteractiveLoginAuthentication
 from azureml.core.authentication import AuthenticationException
 from azureml.core import Workspace
 
+
 def get_auth():
-    """ 
+    """
     Method to get the correct Azure ML Authentication type
-    
-    Always start with CLI Authentication and if it fails, fall back 
+
+    Always start with CLI Authentication and if it fails, fall back
     to interactive login
     """
     try:
@@ -25,18 +26,18 @@ def get_auth():
 def get_or_create_workspace(
     subscription_id: str,
     resource_group: str,
-    workspace_name:str,
-    workspace_region: str
-    ) -> Workspace:
+    workspace_name: str,
+    workspace_region: str,
+) -> Workspace:
     """
     Returns workspace if one exists already with the name
     otherwise creates a new one.
 
     Args
     subscription_id: Azure subscription id
-    resource_group: Azure resource group to create workspace and related resources  
-    workspace_name: name of azure ml workspace  
-    workspace_region: region for workspace 
+    resource_group: Azure resource group to create workspace and related resources
+    workspace_name: name of azure ml workspac
+    workspace_region: region for workspace
     """
 
     try:
@@ -48,7 +49,7 @@ def get_or_create_workspace(
             auth=get_auth(),
         )
 
-    except:
+    except Exception:
         # this call might take a minute or two.
         print("Creating new workspace")
         ws = Workspace.create(
@@ -57,7 +58,7 @@ def get_or_create_workspace(
             resource_group=resource_group,
             create_resource_group=True,
             location=workspace_region,
-            auth=get_auth()
-            )
+            auth=get_auth(),
+        )
 
     return ws

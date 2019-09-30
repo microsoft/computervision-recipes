@@ -16,12 +16,12 @@ def line_graph(
     x_guides: List[int],
     x_name: str,
     y_name: str,
-    legend_loc: str="lower right",
+    legend_loc: str = "lower right",
 ):
     """Plot line graph(s).
-    
+
     Args:
-        values: List of graphs or a graph to plot 
+        values: List of graphs or a graph to plot
         labels: List of labels or a label for graph.
             If labels is a string, this function assumes the values is a single graph.
         x_guides: List of guidelines (a vertical dotted line)
@@ -38,17 +38,17 @@ def line_graph(
 
     for x in x_guides:
         plt.axvline(x=x, color="gray", lw=1, linestyle="--")
-        
+
     plt.xlabel(x_name)
     plt.ylabel(y_name)
     plt.legend(loc=legend_loc)
 
-    
+
 def show_ims(
     im_paths: Union[str, List[str]],
-    labels: Union[str, List[str]]=None,
-    size: int=3,
-    rows: int=1,
+    labels: Union[str, List[str]] = None,
+    size: int = 3,
+    rows: int = 1,
 ):
     """Show image files
     Args:
@@ -64,13 +64,13 @@ def show_ims(
         im_paths = [im_paths]
     else:
         ims = [mpimg.imread(im_path) for im_path in im_paths]
-    
-    cols = math.ceil(len(ims)/rows)
-    _, axes = plt.subplots(rows, cols, figsize=(size*cols, size*rows))
+
+    cols = math.ceil(len(ims) / rows)
+    _, axes = plt.subplots(rows, cols, figsize=(size * cols, size * rows))
     axes = np.array(axes).reshape(-1)
     for ax in axes:
         ax.set_axis_off()
-    
+
     for i, (im_path, im) in enumerate(zip(im_paths, ims)):
         if labels is None:
             axes[i].set_title(Path(im_path).stem)
