@@ -7,6 +7,10 @@ We hope that these examples and utilities can significantly reduce the “time t
 
 These examples are provided as [Jupyter notebooks](scenarios) and common [utility functions](utils_cv). All examples use PyTorch as the underlying deep learning library.
 
+## Target Audience
+
+Our target audience for this repository includes data scientists and machine learning engineers with varying levels of Computer Vision knowledge as our content is source-only and targets custom machine learning modelling. The utilities and examples provided are intended to be solution accelerators for real-world vision problems. 
+
 ## Get Started
 
 To get started, navigate to the [Setup Guide](SETUP.md), which lists
