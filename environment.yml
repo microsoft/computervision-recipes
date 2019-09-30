@@ -17,9 +17,9 @@ channels:
 - fastai
 dependencies:
 - python==3.6.8
-- pytorch==1.0.0
-- torchvision  
-- fastai==1.0.48
+- pytorch>=1.2.0
+- torchvision>=0.3.0
+- fastai==1.0.57
 - ipykernel>=4.6.1
 - jupyter>=1.0.0
 - pytest>=3.6.4
@@ -34,8 +34,9 @@ dependencies:
 - pre-commit>=1.14.4
 - pyyaml>=5.1.2
 - requests>=2.22.0
-- cython
+- cython>=0.29.1
 - pip:
   - nvidia-ml-py3
   - nteract-scrapbook
   - azureml-sdk[notebooks,contrib]>=1.0.30
+  - git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI

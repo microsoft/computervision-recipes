@@ -26,6 +26,8 @@ from matplotlib.axes import Axes
 from matplotlib.text import Annotation
 import pandas as pd
 
+from utils_cv.common.gpu import db_num_workers
+
 
 Time = float
 parameter_flag = "PARAMETERS"
@@ -255,7 +257,7 @@ class ParameterSweeper:
             .split_by_rand_pct(valid_pct=0.33)
             .label_from_folder()
             .transform(tfms=tfms, size=im_size)
-            .databunch(bs=bs)
+            .databunch(bs=bs, num_workers=db_num_workers())
             .normalize(imagenet_stats)
         )
 

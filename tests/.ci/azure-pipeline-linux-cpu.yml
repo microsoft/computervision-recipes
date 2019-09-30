@@ -1,0 +1,26 @@
+# This build definition runs unit test across Linux and Windows GPU Hosted agents.
+# We need this file to make sure our code works across windows and linux and identifies
+# any platform breaking changes that gets introduced.
+# Pull request against these pipelines will trigger this build
+pr:
+- master
+- staging
+
+#Any commit to this branch will trigger the build.
+trigger:
+- staging
+- master
+
+jobs:
+- job: LinuxCPU
+  pool:
+    # vmImage: 'ubuntu-16.04'
+    name: cvbplinuxpool
+
+  steps:
+
+  - bash: |
+      echo "##vso[task.prependpath]/usr/share/miniconda/bin"
+    displayName: Add Conda to PATH
+
+  - template: templates/unit-test-steps-not-linuxgpu.yml  # Template reference
