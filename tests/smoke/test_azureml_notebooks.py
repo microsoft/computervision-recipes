@@ -15,128 +15,128 @@ OUTPUT_NOTEBOOK = "output.ipynb"
 # ----- Image classification ----------------------------------------------------------
 
 
-# @pytest.mark.azuremlnotebooks
-# def test_ic_20_notebook_run(
-#     classification_notebooks,
-#     subscription_id,
-#     resource_group,
-#     workspace_name,
-#     workspace_region,
-# ):
-#     notebook_path = classification_notebooks["20_azure_workspace_setup"]
-#     pm.execute_notebook(
-#         notebook_path,
-#         OUTPUT_NOTEBOOK,
-#         parameters=dict(
-#             PM_VERSION=pm.__version__,
-#             subscription_id=subscription_id,
-#             resource_group=resource_group,
-#             workspace_name=workspace_name,
-#             workspace_region=workspace_region,
-#         ),
-#         kernel_name=KERNEL_NAME,
-#     )
+@pytest.mark.azuremlnotebooks
+def test_ic_20_notebook_run(
+    classification_notebooks,
+    subscription_id,
+    resource_group,
+    workspace_name,
+    workspace_region,
+):
+    notebook_path = classification_notebooks["20_azure_workspace_setup"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            subscription_id=subscription_id,
+            resource_group=resource_group,
+            workspace_name=workspace_name,
+            workspace_region=workspace_region,
+        ),
+        kernel_name=KERNEL_NAME,
+    )
 
 
-# @pytest.mark.azuremlnotebooks
-# def test_ic_21_notebook_run(
-#     classification_notebooks,
-#     subscription_id,
-#     resource_group,
-#     workspace_name,
-#     workspace_region,
-# ):
-#     notebook_path = classification_notebooks[
-#         "21_deployment_on_azure_container_instances"
-#     ]
-#     pm.execute_notebook(
-#         notebook_path,
-#         OUTPUT_NOTEBOOK,
-#         parameters=dict(
-#             PM_VERSION=pm.__version__,
-#             subscription_id=subscription_id,
-#             resource_group=resource_group,
-#             workspace_name=workspace_name,
-#             workspace_region=workspace_region,
-#         ),
-#         kernel_name=KERNEL_NAME,
-#     )
+@pytest.mark.azuremlnotebooks
+def test_ic_21_notebook_run(
+    classification_notebooks,
+    subscription_id,
+    resource_group,
+    workspace_name,
+    workspace_region,
+):
+    notebook_path = classification_notebooks[
+        "21_deployment_on_azure_container_instances"
+    ]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            subscription_id=subscription_id,
+            resource_group=resource_group,
+            workspace_name=workspace_name,
+            workspace_region=workspace_region,
+        ),
+        kernel_name=KERNEL_NAME,
+    )
 
 
-# @pytest.mark.azuremlnotebooks
-# def test_ic_22_notebook_run(
-#     classification_notebooks,
-#     subscription_id,
-#     resource_group,
-#     workspace_name,
-#     workspace_region,
-# ):
-#     notebook_path = classification_notebooks[
-#         "22_deployment_on_azure_kubernetes_service"
-#     ]
-#     pm.execute_notebook(
-#         notebook_path,
-#         OUTPUT_NOTEBOOK,
-#         parameters=dict(
-#             PM_VERSION=pm.__version__,
-#             subscription_id=subscription_id,
-#             resource_group=resource_group,
-#             workspace_name=workspace_name,
-#             workspace_region=workspace_region,
-#         ),
-#         kernel_name=KERNEL_NAME,
-#     )
+@pytest.mark.azuremlnotebooks
+def test_ic_22_notebook_run(
+    classification_notebooks,
+    subscription_id,
+    resource_group,
+    workspace_name,
+    workspace_region,
+):
+    notebook_path = classification_notebooks[
+        "22_deployment_on_azure_kubernetes_service"
+    ]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            subscription_id=subscription_id,
+            resource_group=resource_group,
+            workspace_name=workspace_name,
+            workspace_region=workspace_region,
+        ),
+        kernel_name=KERNEL_NAME,
+    )
 
 
-# @pytest.mark.azuremlnotebooks
-# def test_ic_23_notebook_run(
-#     classification_notebooks,
-#     subscription_id,
-#     resource_group,
-#     workspace_name,
-#     workspace_region,
-# ):
-#     notebook_path = classification_notebooks["23_aci_aks_web_service_testing"]
-#     pm.execute_notebook(
-#         notebook_path,
-#         OUTPUT_NOTEBOOK,
-#         parameters=dict(
-#             PM_VERSION=pm.__version__,
-#             subscription_id=subscription_id,
-#             resource_group=resource_group,
-#             workspace_name=workspace_name,
-#             workspace_region=workspace_region,
-#         ),
-#         kernel_name=KERNEL_NAME,
-#     )
+@pytest.mark.azuremlnotebooks
+def test_ic_23_notebook_run(
+    classification_notebooks,
+    subscription_id,
+    resource_group,
+    workspace_name,
+    workspace_region,
+):
+    notebook_path = classification_notebooks["23_aci_aks_web_service_testing"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            subscription_id=subscription_id,
+            resource_group=resource_group,
+            workspace_name=workspace_name,
+            workspace_region=workspace_region,
+        ),
+        kernel_name=KERNEL_NAME,
+    )
 
 
-# @pytest.mark.azuremlnotebooks
-# def test_ic_24_notebook_run(
-#     classification_notebooks,
-#     subscription_id,
-#     resource_group,
-#     workspace_name,
-#     workspace_region,
-# ):
-#     notebook_path = classification_notebooks[
-#         "24_exploring_hyperparameters_on_azureml"
-#     ]
-#     pm.execute_notebook(
-#         notebook_path,
-#         OUTPUT_NOTEBOOK,
-#         parameters=dict(
-#             PM_VERSION=pm.__version__,
-#             subscription_id=subscription_id,
-#             resource_group=resource_group,
-#             workspace_name=workspace_name,
-#             workspace_region=workspace_region,
-#             MAX_NODES=2,
-#             MAX_TOTAL_RUNS=1,
-#             IM_SIZES=[30, 40],
-#         ),
-#         kernel_name=KERNEL_NAME,
-#     )
+@pytest.mark.azuremlnotebooks
+def test_ic_24_notebook_run(
+    classification_notebooks,
+    subscription_id,
+    resource_group,
+    workspace_name,
+    workspace_region,
+):
+    notebook_path = classification_notebooks[
+        "24_exploring_hyperparameters_on_azureml"
+    ]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            subscription_id=subscription_id,
+            resource_group=resource_group,
+            workspace_name=workspace_name,
+            workspace_region=workspace_region,
+            MAX_NODES=2,
+            MAX_TOTAL_RUNS=1,
+            IM_SIZES=[30, 40],
+        ),
+        kernel_name=KERNEL_NAME,
+    )
 
 
 # # ----- Object detection ----------------------------------------------------------
