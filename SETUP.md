@@ -30,10 +30,6 @@ The easiest way to get started is to use the [Azure Data Science Virtual Machine
 
 Here are some ways you can create the DSVM:
 
-__Virtual Machine Builder__
-
-One easy way to create your DSVM is to use the [VM Builder](../contrib/vm_builder) tool located inside of the 'contrib' folder in the root directory of the repo. Simply run `python contrib/vm_builder/vm_builder.py` at the root level of the repo and this tool will preconfigure your virtual machine with the appropriate settings for working with this repository.
-
 __Provision a Data Science VM with the Azure Portal or CLI__
 
 You can also spin up a Data Science VM directly using the Azure portal. To do so, follow
@@ -44,6 +40,10 @@ You can alternatively use the Azure command line (CLI) as well. Follow
 [this](https://docs.microsoft.com/en-us/cli/azure/azure-cli-vm-tutorial?view=azure-cli-latest)
 link to learn more about the Azure CLI and how it can be used to provision
 resources.
+
+__Virtual Machine Builder__
+
+One easy way to create your DSVM is to use the [VM Builder](../contrib/vm_builder) tool located inside of the 'contrib' folder in the root directory of the repo. Simply run `python contrib/vm_builder/vm_builder.py` at the root level of the repo and this tool will preconfigure your virtual machine with the appropriate settings for working with this repository.
 
 ## System Requirement
 
