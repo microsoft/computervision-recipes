@@ -163,6 +163,7 @@ def test_od_11_notebook_run(
             MAX_NODES=3,
             IM_MAX_SIZES=[200],
             LEARNING_RATES=[1e-5, 3e-3],
+            UTILS_DIR="utils_cv",
         ),
         kernel_name=KERNEL_NAME,
     )
