@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import copy
 import math
 from pathlib import Path
 from random import randrange
@@ -34,7 +35,7 @@ def get_transform(train: bool) -> List[object]:
     """
     transforms = []
     transforms.append(ToTensor())
-    if train:
+    if train is True:
         transforms.append(RandomHorizontalFlip(0.5))
         # TODO we can add more 'default' transformations here
     return Compose(transforms)
@@ -73,10 +74,10 @@ def parse_pascal_voc_anno(
     for obj in objs:
         label = obj.find("name").text
         bnd_box = obj.find("bndbox")
-        left = int(bnd_box.find('xmin').text)
-        top = int(bnd_box.find('ymin').text)
-        right = int(bnd_box.find('xmax').text)
-        bottom = int(bnd_box.find('ymax').text)
+        left = int(bnd_box.find("xmin").text)
+        top = int(bnd_box.find("ymin").text)
+        right = int(bnd_box.find("xmax").text)
+        bottom = int(bnd_box.find("ymax").text)
 
         # Set mapping of label name to label index
         if labels is None:
@@ -130,7 +131,6 @@ class DetectionDataset:
         """
 
         self.root = Path(root)
-        # TODO think about how transforms are working...
         self.transforms = transforms
         self.im_dir = im_dir
         self.anno_dir = anno_dir
@@ -231,17 +231,14 @@ class DetectionDataset:
         Return
             A training and testing dataset in that order
         """
-        # TODO Is it possible to make these lines in split_train_test() a bit
-        # more intuitive?
-
         test_num = math.floor(len(self) * (1 - train_pct))
         indices = torch.randperm(len(self)).tolist()
 
         self.transforms = get_transform(train=True)
-        train = Subset(self, indices[test_num:])
+        train = copy.deepcopy(Subset(self, indices[test_num:]))
 
         self.transforms = get_transform(train=False)
-        test = Subset(self, indices[: test_num + 1])
+        test = copy.deepcopy(Subset(self, indices[: test_num + 1]))
 
         return train, test
 
