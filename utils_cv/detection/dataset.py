@@ -112,7 +112,8 @@ class DetectionDataset:
         self,
         root: Union[str, Path],
         batch_size: int = 2,
-        transforms: object = get_transform(train=True),
+        train_transforms: object = get_transform(train=True),
+        test_transforms: object = get_transform(train=False),
         train_pct: float = 0.5,
         anno_dir: str = "annotations",
         im_dir: str = "images",
@@ -128,14 +129,16 @@ class DetectionDataset:
             root: the root path of the dataset containing the image and
             annotation folders
             batch_size: batch size for dataloaders
-            transforms: the transformations to apply
+            train_transforms: the transformations to apply to the train set
+            test_transforms: the transformations to apply to the test set
             train_pct: the ratio of training to testing data
             annotation_dir: the name of the annotation subfolder under the root directory
             im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
         """
 
         self.root = Path(root)
-        self.transforms = transforms
+        self.train_transforms = train_transforms
+        self.test_transforms = test_transforms
         self.im_dir = im_dir
         self.anno_dir = anno_dir
         self.batch_size = batch_size
@@ -239,10 +242,10 @@ class DetectionDataset:
         indices = torch.randperm(len(self)).tolist()
 
         train = copy.deepcopy(Subset(self, indices[test_num:]))
-        train.dataset.transforms = get_transform(train=True)
+        train.dataset.transforms = self.train_transforms
 
         test = copy.deepcopy(Subset(self, indices[: test_num + 1]))
-        test.dataset.transforms = get_transform(train=False)
+        test.dataset.transforms = self.test_transforms
 
         return train, test
 
