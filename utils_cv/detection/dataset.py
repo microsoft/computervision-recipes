@@ -10,6 +10,7 @@ from typing import List, Tuple, Union
 
 import torch
 from torch.utils.data import Dataset, Subset, DataLoader
+from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
@@ -35,8 +36,11 @@ def get_transform(train: bool) -> List[object]:
     """
     transforms = []
     transforms.append(ToTensor())
-    if train is True:
+    if train:
         transforms.append(RandomHorizontalFlip(0.5))
+        transforms.append(
+            ColorJitter(brightness=0.2, contrast=0.2, saturation=0.4, hue=0.05)
+        )
         # TODO we can add more 'default' transformations here
     return Compose(transforms)
 
@@ -234,11 +238,11 @@ class DetectionDataset:
         test_num = math.floor(len(self) * (1 - train_pct))
         indices = torch.randperm(len(self)).tolist()
 
-        self.transforms = get_transform(train=True)
         train = copy.deepcopy(Subset(self, indices[test_num:]))
+        train.dataset.transforms = get_transform(train=True)
 
-        self.transforms = get_transform(train=False)
         test = copy.deepcopy(Subset(self, indices[: test_num + 1]))
+        test.dataset.transforms = get_transform(train=False)
 
         return train, test
 
