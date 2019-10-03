@@ -41,7 +41,6 @@ def get_transform(train: bool) -> List[object]:
         transforms.append(
             ColorJitter(brightness=0.2, contrast=0.2, saturation=0.4, hue=0.05)
         )
-        # TODO we can add more 'default' transformations here
     return Compose(transforms)
 
 
