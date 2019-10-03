@@ -289,6 +289,43 @@ class DetectionDataset:
         """
         plot_grid(display_bboxes, self._get_random_anno, rows=rows, cols=cols)
 
+    def show_im_transformations(
+        self, idx: int = None, rows: int = 1, cols: int = 3
+    ) -> None:
+        """ Show a set of images after transfomrations have been applied.
+
+        Args:
+            idx: the index to of the image to show the transformations for.
+            rows: number of rows to display
+            cols: number of cols to dipslay, NOTE: use 3 for best looing grid
+
+        Returns None but displays a grid of randomly applied transformations.
+        """
+        if not hasattr(self, "transforms"):
+            print(
+                (
+                    "Transformations are not applied ot the base dataset object.\n"
+                    "Call this function on either the train_ds or test_ds instead:\n\n"
+                    "    my_detection_data.train_ds.dataset.show_im_transformations()"
+                )
+            )
+        else:
+            if idx is None:
+                idx = randrange(len(self.anno_paths))
+
+            def plotter(im, ax):
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.imshow(im)
+
+            def im_gen() -> torch.Tensor:
+                return self[idx][0].permute(1, 2, 0)
+
+            plot_grid(plotter, im_gen, rows=rows, cols=cols)
+
+            print(f"Transformations applied on {self.im_paths[idx]}:")
+            [print(transform) for transform in self.transforms.transforms]
+
     def _get_random_anno(
         self
     ) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
