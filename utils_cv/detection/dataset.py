@@ -21,6 +21,26 @@ from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 from utils_cv.common.gpu import db_num_workers
 
 
+class ColorJitterTransform(object):
+    """ Wrapper for torchvision's ColorJitter to make sure 'target
+    object is passed along """
+
+    def __init__(self, brightness, contrast, saturation, hue):
+        self.brightness = brightness
+        self.contrast = contrast
+        self.saturation = saturation
+        self.hue = hue
+
+    def __call__(self, im, target):
+        im = ColorJitter(
+            brightness=self.brightness,
+            contrast=self.contrast,
+            saturation=self.saturation,
+            hue=self.hue,
+        )(im)
+        return im, target
+
+
 def get_transform(train: bool) -> List[object]:
     """ Gets basic the transformations to apply to images.
 
@@ -35,12 +55,22 @@ def get_transform(train: bool) -> List[object]:
         A list of transforms to apply.
     """
     transforms = []
+
+    # transformations to apply before image is turned into a tensor
+    if train:
+        transforms.append(
+            ColorJitterTransform(
+                brightness=0.2, contrast=0.2, saturation=0.4, hue=0.05
+            )
+        )
+
+    # transform im to tensor
     transforms.append(ToTensor())
+
+    # transformations to apply after image is turned into a tensor
     if train:
         transforms.append(RandomHorizontalFlip(0.5))
-        transforms.append(
-            ColorJitter(brightness=0.2, contrast=0.2, saturation=0.4, hue=0.05)
-        )
+
     return Compose(transforms)
 
 
