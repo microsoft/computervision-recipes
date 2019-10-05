@@ -21,13 +21,16 @@ class Urls:
         base, "odFridgeObjectsWatermarkTiny.zip"
     )
 
+    # mask datasets
+    penn_fudan_ped_path = 'https://www.cis.upenn.edu/~jshi/ped_html/PennFudanPed.zip'
+
     @classmethod
     def all(cls) -> List[str]:
         return [v for k, v in cls.__dict__.items() if k.endswith("_path")]
 
 
 def coco_labels() -> List[str]:
-    """ List of Coco labels with the original idexing.
+    """ List of Coco labels with the original indexing.
 
     Reference: https://github.com/pytorch/vision/blob/master/docs/source/models.rst
 

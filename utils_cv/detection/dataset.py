@@ -3,23 +3,29 @@
 
 import os
 import math
+import numpy as np
 from pathlib import Path
 from random import randrange
-from typing import List, Tuple, Union
+from typing import Callable, List, Tuple, Union
 
 import torch
 from torch.utils.data import Dataset, Subset, DataLoader
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import display_bboxes, plot_grid
-from .bbox import AnnotationBbox
+from .plot import display_bboxes, display_image, plot_grid, plot_mask
+from .bbox import _Bbox, AnnotationBbox
+from .data import Urls
+from .mask import binarise_mask
 from .references.utils import collate_fn
 from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
-from utils_cv.common.gpu import db_num_workers
+from ..common.data import unzip_url, get_files_in_directory
+from ..common.gpu import db_num_workers
+
+Trans = Callable[[object, dict], Tuple[object, dict]]
 
 
-def get_transform(train: bool) -> List[object]:
+def get_transform(train: bool) -> Trans:
     """ Gets basic the transformations to apply to images.
 
     Source:
@@ -32,8 +38,7 @@ def get_transform(train: bool) -> List[object]:
     Returns:
         A list of transforms to apply.
     """
-    transforms = []
-    transforms.append(ToTensor())
+    transforms = [ToTensor()]
     if train:
         transforms.append(RandomHorizontalFlip(0.5))
         # TODO we can add more 'default' transformations here
@@ -43,11 +48,13 @@ def get_transform(train: bool) -> List[object]:
 def parse_pascal_voc_anno(
     anno_path: str, labels: List[str] = None
 ) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
-    """ Extract the annotations and image path from labelling in Pascal VOC format.
+    """ Extract the annotations and image path from labelling in Pascal VOC
+    format.
 
     Args:
         anno_path: the path to the annotation xml file
-        labels: list of all possible labels, used to compute label index for each label name
+        labels: list of all possible labels, used to compute label index for
+                each label name
 
     Return
         A tuple of annotations and the image path
@@ -57,7 +64,8 @@ def parse_pascal_voc_anno(
     tree = ET.parse(anno_path)
     root = tree.getroot()
 
-    # get image path from annotation. Note that the path field might not be set.
+    # get image path from annotation. Note that the path field might not be
+    # set.
     anno_dir = os.path.dirname(anno_path)
     if root.find("path"):
         im_path = os.path.realpath(
@@ -93,13 +101,14 @@ def parse_pascal_voc_anno(
         assert anno_bbox.is_valid()
         anno_bboxes.append(anno_bbox)
 
-    return (anno_bboxes, im_path)
+    return anno_bboxes, im_path
 
 
-class DetectionDataset:
+class DetectionDataset(Dataset):
     """ An object detection dataset.
 
-    The dunder methods __init__, __getitem__, and __len__ were inspired from code found here:
+    The dunder methods __init__, __getitem__, and __len__ were inspired from
+    code found here:
     https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html#writing-a-custom-dataset-for-pennfudan
     """
 
@@ -107,7 +116,10 @@ class DetectionDataset:
         self,
         root: Union[str, Path],
         batch_size: int = 2,
-        transforms: object = get_transform(train=True),
+        transforms: Union[Trans, Tuple[Trans, Trans]] = (
+                get_transform(train=True),
+                get_transform(train=False)
+        ),
         train_pct: float = 0.5,
         anno_dir: str = "annotations",
         im_dir: str = "images",
@@ -121,16 +133,21 @@ class DetectionDataset:
 
         Args:
             root: the root path of the dataset containing the image and
-            annotation folders
+                  annotation folders
             batch_size: batch size for dataloaders
             transforms: the transformations to apply
             train_pct: the ratio of training to testing data
-            annotation_dir: the name of the annotation subfolder under the root directory
-            im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
+            anno_dir: the name of the annotation subfolder under the root
+                      directory
+            im_dir: the name of the image subfolder under the root directory.
+                    If set to 'None' then infers image location from annotation
+                    .xml files
         """
 
         self.root = Path(root)
         # TODO think about how transforms are working...
+        if transforms and len(transforms) == 1:
+            self.transforms = (transforms, ) * 2
         self.transforms = transforms
         self.im_dir = im_dir
         self.anno_dir = anno_dir
@@ -140,29 +157,31 @@ class DetectionDataset:
         # read annotations
         self._read_annos()
 
+        self._get_dataloader(train_pct)
+
+    def _get_dataloader(self, train_pct):
         # create training and validation datasets
-        self.train_ds, self.test_ds = self.split_train_test(
+        train_ds, test_ds = self.split_train_test(
             train_pct=train_pct
         )
 
         # create training and validation data loaders
         self.train_dl = DataLoader(
-            self.train_ds,
+            train_ds,
             batch_size=self.batch_size,
             shuffle=True,
             num_workers=db_num_workers(),
             collate_fn=collate_fn,
         )
-
         self.test_dl = DataLoader(
-            self.test_ds,
+            test_ds,
             batch_size=self.batch_size,
             shuffle=False,
             num_workers=db_num_workers(),
             collate_fn=collate_fn,
         )
 
-    def _read_annos(self) -> List[str]:
+    def _read_annos(self) -> None:
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible labels. """
 
@@ -193,7 +212,8 @@ class DetectionDataset:
             ), f"Cannot find annotation file: {anno_path}"
             anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
 
-            # TODO For now, ignore all images without a single bounding box in it, otherwise throws error during training.
+            # TODO For now, ignore all images without a single bounding box in
+            #      it, otherwise throws error during training.
             if len(anno_bboxes) == 0:
                 continue
 
@@ -212,7 +232,8 @@ class DetectionDataset:
                 labels.append(anno_bbox.label_name)
         self.labels = list(set(labels))
 
-        # Set for each bounding box label name also what its integer representation is
+        # Set for each bounding box label name also what its integer
+        # representation is
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
                 anno_bbox.label_idx = (
@@ -226,24 +247,31 @@ class DetectionDataset:
 
         Args:
             train_pct: the ratio of images to use for training vs
-            testing
 
         Return
             A training and testing dataset in that order
         """
         # TODO Is it possible to make these lines in split_train_test() a bit
-        # more intuitive?
+        #      more intuitive?
 
         test_num = math.floor(len(self) * (1 - train_pct))
         indices = torch.randperm(len(self)).tolist()
 
-        self.transforms = get_transform(train=True)
-        train = Subset(self, indices[test_num:])
+        train_idx = indices[test_num:]
+        test_idx = indices[: test_num + 1]
 
-        self.transforms = get_transform(train=False)
-        test = Subset(self, indices[: test_num + 1])
+        # indicate whether the data are for training or testing
+        self.is_test = np.zeros((len(self),), dtype=np.bool)
+        self.is_test[test_idx] = True
+
+        train = Subset(self, train_idx)
+        test = Subset(self, test_idx)
 
         return train, test
+
+    def _get_transforms(self, idx):
+        """ Return the corresponding transforms for training and testing data. """
+        return self.transforms[self.is_test[idx]]
 
     def show_ims(self, rows: int = 1, cols: int = 3) -> None:
         """ Show a set of images.
@@ -304,10 +332,89 @@ class DetectionDataset:
         im = Image.open(im_path).convert("RGB")
 
         # and apply transforms if any
-        if self.transforms is not None:
-            im, target = self.transforms(im, target)
+        if self.transforms:
+            im, target = self._get_transforms(idx)(im, target)
 
-        return (im, target)
+        return im, target
 
     def __len__(self):
         return len(self.anno_paths)
+
+
+class PennFudanDataset(DetectionDataset):
+    """ PennFudan dataset.
+
+    Adapted from
+    https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html
+    """
+
+    def __init__(
+        self,
+        anno_dir: str = "PedMasks",
+        im_dir: str = "PNGImages",
+        **kwargs,
+    ):
+        self.SIZE = 10
+        super().__init__(
+            Path(unzip_url(Urls.penn_fudan_ped_path, exist_ok=True)),
+            anno_dir=anno_dir,
+            im_dir=im_dir,
+            **kwargs
+        )
+
+    def _read_annos(self) -> None:
+        # list of images and their masks
+        self.im_paths = get_files_in_directory(self.root / self.im_dir)
+        self.im_paths = self.im_paths[:self.SIZE]
+        self.anno_paths = get_files_in_directory(self.root / self.anno_dir)
+        self.anno_paths = self.anno_paths[:self.SIZE]
+
+    def show_ims(self, rows: int = 1, cols: int = 3) -> None:
+        plot_grid(
+            lambda i, m: display_image(plot_mask(i, m)),
+            self._get_random_anno,
+            rows=rows,
+            cols=cols)
+
+    def _get_random_anno(
+            self
+    ) -> Tuple[Union[str, Path], Union[str, Path]]:
+        idx = randrange(len(self.anno_paths))
+        im_path = self.im_paths[idx]
+        mask_path = self.anno_paths[idx]
+        return im_path, mask_path
+
+    def __getitem__(self, idx):
+        # get binary masks for the instances in the image
+        binary_masks = binarise_mask(Image.open(self.anno_paths[idx]))
+        object_number = len(binary_masks)
+
+        # get the bounding rectangle for each instance
+        bboxes = [_Bbox.from_binary_mask(bmask) for bmask in binary_masks]
+        areas = [b.surface_area() for b in bboxes]
+        rects = [b.rect() for b in bboxes]
+
+        # construct target
+        target = {
+            "area": torch.as_tensor(areas, dtype=torch.float32),
+            "boxes": torch.as_tensor(rects, dtype=torch.float32),
+            "image_id": torch.as_tensor([idx], dtype=torch.int64),
+            # suppose all instances are not crowd
+            "iscrowd": torch.zeros((object_number,), dtype=torch.int64),
+            # there is only one class: person, indexed at 1
+            "labels": torch.ones((object_number,), dtype=torch.int64),
+            "masks": torch.as_tensor(binary_masks, dtype=torch.uint8),
+        }
+
+        # load the image
+        img = Image.open(self.im_paths[idx])
+
+        # image pre-processing if needed
+        if self.transforms is not None:
+            img, target = self._get_transforms(idx)(img, target)
+
+        return img, target
+
+
+
+
