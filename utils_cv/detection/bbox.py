@@ -3,7 +3,7 @@
 
 from .mask import binarise_mask
 from pathlib import Path
-from typing import List, Union
+from typing import List, Type, Union
 import numpy as np
 import torch
 
@@ -199,7 +199,7 @@ class AnnotationBbox(_Bbox):
         cls,
         arrs: List[List[int]],
         **kwargs
-    ) -> List["AnnotationBbox"]:
+    ) -> List[Type["_Bbox"]]:
         """ Create a list of AnnotationBbox objects from a list of
         [left, top, right, bottom].
 
@@ -209,7 +209,7 @@ class AnnotationBbox(_Bbox):
         """
         # duplicate single value key words
         kwargs = {
-            k: v if isinstance(v, List) else [v] * len(arrs) for k, v in
+            k: v if isinstance(v, list) else [v] * len(arrs) for k, v in
             kwargs.items()
         }
         # split dict of lists into list of dicts
@@ -278,12 +278,12 @@ class DetectionBbox(AnnotationBbox):
         self.score = score
 
     @classmethod
-    def from_array(
-        cls, arr: List[int], score: float, **kwargs
-    ) -> "DetectionBbox":
+    def from_array(cls, arr: List[int], **kwargs) -> "DetectionBbox":
         """ Create a Bbox object from an array [left, top, right, bottom]
         This function must take in a score.
         """
+        score = kwargs['score']
+        del kwargs['score']
         bbox = super().from_array(arr, **kwargs)
         bbox.__class__ = DetectionBbox
         bbox.score = score

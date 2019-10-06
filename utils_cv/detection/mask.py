@@ -16,7 +16,7 @@ def binarise_mask(mask: Union[np.ndarray, str, Path]) -> np.ndarray:
     representing different objects, 0 as background.
     """
     # get numpy array from image file
-    if isinstance(mask, str) or isinstance(mask, Path):
+    if isinstance(mask, (str, Path)):
         mask = np.array(Image.open(mask))
 
     # convert to numpy array

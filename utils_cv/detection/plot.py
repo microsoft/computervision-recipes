@@ -5,7 +5,7 @@
 Helper module for visualizations
 """
 import os
-from typing import List, Union, Tuple, Callable, Any, Iterator
+from typing import List, Union, Tuple, Callable, Any, Iterator, Optional
 from pathlib import Path
 
 import PIL
@@ -103,7 +103,7 @@ def plot_mask(
     grayscale mask of [Height, Width] with different values
     representing different objects, 0 as background.
     """
-    if isinstance(im, str) or isinstance(im, Path):
+    if isinstance(im, (str, Path)):
         im = Image.open(im)
     # convert to RGBA for transparentising
     im = im.convert('RGBA')
@@ -135,7 +135,7 @@ def plot_keypoints(
     plot_settings: PlotSettings = PlotSettings(),
 ) -> PIL.Image.Image:
     """ Plot connected keypoints on Image and return the Image. """
-    if isinstance(im, str) or isinstance(im, Path):
+    if isinstance(im, (str, Path)):
         im = Image.open(im)
 
     if len(keypoints) > 0:
@@ -153,7 +153,7 @@ def plot_keypoints(
 
 def display_image(
     im: Union[str, Path, PIL.Image.Image, np.ndarray],
-    ax: Union[None, plt.axes] = None,
+    ax: Optional[plt.axes] = None,
     figsize: Tuple[int, int] = (12, 12),
 ) -> None:
     """ Show an image.
@@ -164,7 +164,7 @@ def display_image(
         figsize: figure size
     """
     # Read image
-    if isinstance(im, str) or isinstance(im, Path):
+    if isinstance(im, (str, Path)):
         im = Image.open(im)
 
     # display the image
@@ -183,7 +183,7 @@ def display_image(
 def display_bboxes(
     bboxes: List[_Bbox],
     im_path: Union[Path, str],
-    ax: Union[None, plt.axes] = None,
+    ax: Optional[plt.axes] = None,
     plot_settings: PlotSettings = PlotSettings(),
     **kwargs,
 ) -> None:

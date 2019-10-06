@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import Callable, List, Tuple, Union, Generator, Optional
+from typing import Callable, List, Tuple, Union, Generator, Optional, Dict, Type
 from pathlib import Path
 
 from PIL import Image
@@ -18,8 +18,9 @@ import matplotlib.pyplot as plt
 
 from .references.engine import train_one_epoch, evaluate
 from .references.coco_eval import CocoEvaluator
-from .bbox import DetectionBbox
+from .bbox import _Bbox, DetectionBbox
 from ..common.gpu import torch_device
+from .data import coco_labels
 from .dataset import DetectionDataset
 
 
@@ -144,7 +145,7 @@ def _tune_keypoint_predictor(model: nn.Module, num_keypoints: int) -> nn.Module:
 
 
 def get_pretrained_fasterrcnn(
-    num_classes: int,
+    num_classes: int = None,
     **kwargs,
 ) -> nn.Module:
     """ Gets a pretrained FasterRCNN model
@@ -165,11 +166,15 @@ def get_pretrained_fasterrcnn(
         fasterrcnn_resnet50_fpn,
         **kwargs,
     )
-    return _tune_box_predictor(model, num_classes)
+
+    if num_classes:
+        model = _tune_box_predictor(model, num_classes)
+
+    return model
 
 
 def get_pretrained_maskrcnn(
-    num_classes: int,
+    num_classes: int = None,
     **kwargs,
 ) -> nn.Module:
     """ Gets a pretrained Mask R-CNN model
@@ -189,13 +194,17 @@ def get_pretrained_maskrcnn(
         maskrcnn_resnet50_fpn,
         **kwargs,
     )
-    model = _tune_box_predictor(model, num_classes)
-    return _tune_mask_predictor(model, num_classes)
+
+    if num_classes:
+        model = _tune_box_predictor(model, num_classes)
+        model = _tune_mask_predictor(model, num_classes)
+
+    return model
 
 
 def get_pretrained_keypointrcnn(
-    num_classes: int,
-    num_keypoints: int,
+    num_classes: int = None,
+    num_keypoints: int = None,
     **kwargs,
 ) -> nn.Module:
     """ Gets a pretrained Keypoint R-CNN model
@@ -207,7 +216,7 @@ def get_pretrained_keypointrcnn(
         The model to fine-tine/inference with
 
     For a list of all parameters see:
-        https://github.com/pytorch/vision/blob/master/torchvision/models/detection/mask_rcnn.py
+        https://github.com/pytorch/vision/blob/master/torchvision/models/detection/keypoint_rcnn.py
 
     """
     # load a model pre-trained on COCO
@@ -215,9 +224,15 @@ def get_pretrained_keypointrcnn(
         keypointrcnn_resnet50_fpn,
         **kwargs,
     )
-    model = _tune_box_predictor(model, num_classes)
-    model = _tune_mask_predictor(model, num_classes)
-    return _tune_keypoint_predictor(model, num_keypoints)
+
+    if num_classes:
+        model = _tune_box_predictor(model, num_classes)
+        model = _tune_mask_predictor(model, num_classes)
+
+    if num_keypoints:
+        model = _tune_keypoint_predictor(model, num_keypoints)
+
+    return model
 
 
 def _calculate_ap(e: CocoEvaluator) -> float:
@@ -242,12 +257,20 @@ def _calculate_ap(e: CocoEvaluator) -> float:
     return np.mean(np.mean(coco_eval[precision_settings]))
 
 
+def _get_num_classes(dataset: Optional[DetectionDataset]) -> int:
+    return (
+        len(dataset.labels) + 1
+        if dataset and "labels" in dataset.__dict__
+        else len(coco_labels())
+    )
+
+
 class DetectionLearner:
     """ Detection Learner for Object Detection"""
 
     def __init__(
             self,
-            dataset: DetectionDataset,
+            dataset: DetectionDataset = None,
             model: nn.Module = None,
             device: torch.device = None,
     ):
@@ -255,12 +278,22 @@ class DetectionLearner:
         self.device = device
         if self.device is None:
             self.device = torch_device()
-        self.model = model
+
         self.dataset = dataset
 
+        if dataset and "labels" in dataset.__dict__:
+            self.labels = ["__background__"] + dataset.labels
+        else:
+            self.labels = coco_labels()
+
         # setup model, default to fasterrcnn
+        self.model = model
         if self.model is None:
-            self.model = get_pretrained_fasterrcnn(len(dataset.labels) + 1)
+            self.model = (
+                get_pretrained_fasterrcnn(len(self.labels))
+                if self.dataset
+                else get_pretrained_fasterrcnn()
+            )
         self.model.to(self.device)
 
     def __getattr__(self, attr):
@@ -283,6 +316,9 @@ class DetectionLearner:
         gamma: float = 0.1,
     ) -> None:
         """ The main training loop. """
+
+        if not self.dataset:
+            return
 
         # reduce learning rate every step_size epochs by a factor of gamma (by default) 0.1.
         if step_size is None:
@@ -344,18 +380,77 @@ class DetectionLearner:
         ax2.set_ylabel("average precision", color="b")
         ax2.plot(self.ap, "b-")
 
-    def evaluate(self, dl: DataLoader = None) -> CocoEvaluator:
-        """ eval code on validation/test set and saves the evaluation results in self.results. """
+    def evaluate(self, dl: DataLoader = None) -> Union[CocoEvaluator, None]:
+        """ eval code on validation/test set and saves the evaluation results
+        in self.results.
+        """
         if dl is None:
+            if not self.dataset:
+                return
             dl = self.dataset.test_dl
         self.results = evaluate(self.model, dl, device=self.device)
         return self.results
+
+    def _transform(
+        self,
+        im: Union[str, Path, Image.Image, np.ndarray],
+    ) -> torch.Tensor:
+        """ Convert the image to the format required by the model. """
+        transform = transforms.Compose([transforms.ToTensor()])
+        im = transform(im)
+        if self.device:
+            im.to(self.device)
+        return im
+
+    @classmethod
+    def _apply_threshold(
+        cls,
+        pred: Dict,
+        threshold: Optional[int] = 0.5,
+        **kwargs,
+    ) -> Dict:
+        """ Return prediction results that are above the threshold if any. """
+        # detach prediction results to cpu
+        pred = {k: v.detach().cpu().numpy() for k, v in pred.items()}
+        # apply score threshold
+        if threshold:
+            selected = pred['scores'] > threshold
+            pred = {k: v[selected] for k, v in pred.items()}
+        return pred
+
+    def _get_det_bboxes(
+        self,
+        pred: Dict,
+        im_path: Union[str, Path]
+    ) -> List[Type[_Bbox]]:
+        return DetectionBbox.from_arrays(
+            pred['boxes'].tolist(),
+            score=pred['scores'].tolist(),
+            label_idx=pred['labels'].tolist(),
+            label_name=np.array(self.labels)[pred['labels']].tolist(),
+            im_path=im_path,
+        )
+
+    def _process_pred_results(
+        self,
+        pred: Dict,
+        im_path: Union[str, Path]
+    ) -> List[Type[_Bbox]]:
+        return self._get_det_bboxes(pred, im_path)
+
+    @classmethod
+    def _pack_pred_results(cls, res: List, infos: Dict) -> List[Dict]:
+        return [
+            {"idx": t["image_id"], "det_bboxes": r} for r, t in
+            zip(res, infos)
+        ]
 
     def predict(
         self,
         im_or_path: Union[np.ndarray, Union[str, Path]],
         threshold: Optional[int] = 0.5,
-    ) -> List[DetectionBbox]:
+        **kwargs,
+    ) -> List[Type[_Bbox]]:
         """ Performs inferencing on an image path or image.
 
         Args:
@@ -365,31 +460,25 @@ class DetectionLearner:
             detected. Note: can be set to None to return all detection bounding
             boxes.
 
-        Raises:
-            TypeError is the im object is a path or str to the image instead of
-            an nd.array
-
         Return a list of DetectionBbox
         """
-        im = (
-            Image.open(im_or_path)
+        im, im_path = (
+            (Image.open(im_or_path), im_or_path)
             if isinstance(im_or_path, (str, Path))
-            else im_or_path
+            else (im_or_path, None)
         )
-
-        transform = transforms.Compose([transforms.ToTensor()])
-        im = transform(im).cuda()
+        im = self._transform(im)
         model = self.model.eval()  # eval mode
         with torch.no_grad():
             pred = model([im])
-        labels = self.dataset.labels
-        det_bboxes = _get_det_bboxes(pred, labels=labels)
 
-        # limit to threshold if threshold is set
-        return _apply_threshold(det_bboxes, threshold)
+        pred = [
+            self._apply_threshold(p, threshold, **kwargs) for p in pred
+        ]
+        return self._process_pred_results(pred[0], im_path)
 
     def predict_dl(
-        self, dl: DataLoader, threshold: Optional[float] = 0.5
+        self, dl: DataLoader, threshold: Optional[float] = 0.5, **kwargs,
     ) -> List[DetectionBbox]:
         """ Predict all images in a dataloader object.
 
@@ -398,14 +487,14 @@ class DetectionLearner:
             threshold: iou threshold for a positive detection. Note: set
             threshold to None to omit a threshold
 
-        Returns a list of DetectionBbox
+        Returns a list of results
         """
         pred_generator = self.predict_batch(dl, threshold=threshold)
-        det_bboxes = [pred for preds in pred_generator for pred in preds]
-        return det_bboxes
+        res = [pred for preds in pred_generator for pred in preds]
+        return res
 
     def predict_batch(
-        self, dl: DataLoader, threshold: Optional[float] = 0.5
+        self, dl: DataLoader, threshold: Optional[float] = 0.5, **kwargs,
     ) -> Generator[List[DetectionBbox], None, None]:
         """ Batch predict
 
@@ -418,27 +507,104 @@ class DetectionLearner:
         image that is scored.
         """
 
-        labels = self.dataset.labels
         model = self.model.eval()
 
         for i, batch in enumerate(dl):
             ims, infos = batch
-            ims = [im.cuda() for im in ims]
+            ims = [im.to(self.device) for im in ims]
             with torch.no_grad():
-                raw_dets = model(list(ims))
+                raw_dets = model(ims)
 
-            det_bbox_batch = []
-            for raw_det, info in zip(raw_dets, infos):
+            raw_dets = [
+                self._apply_threshold(p, threshold, **kwargs) for p in
+                raw_dets
+            ]
+            res = [
+                self._process_pred_results(
+                    p,
+                    dl.dataset.dataset.im_paths[int(t["image_id"].item())]
+                ) for p, t in zip(raw_dets, infos)
+            ]
+            yield DetectionLearner._pack_pred_results(res, infos)
 
-                im_idx = int(info["image_id"].numpy())
-                im_path = dl.dataset.dataset.im_paths[im_idx]
 
-                det_bboxes = _get_det_bboxes(
-                    [raw_det], labels=labels, im_path=im_path
-                )
+class MaskLearner(DetectionLearner):
+    def __init__(
+        self,
+        dataset: DetectionDataset = None,
+        model: nn.Module = None,
+        device: torch.device = None,
+    ):
+        if not model:
+            model = (
+                get_pretrained_maskrcnn(_get_num_classes(dataset))
+                if dataset
+                else get_pretrained_maskrcnn()
+            )
+        super().__init__(dataset, model, device)
 
-                det_bboxes = _apply_threshold(det_bboxes, threshold)
-                det_bbox_batch.append(
-                    {"idx": im_idx, "det_bboxes": det_bboxes}
-                )
-            yield det_bbox_batch
+    @classmethod
+    def _apply_threshold(
+            cls,
+            pred: Dict,
+            threshold: Optional[int] = 0.5,
+            mask_threshold: int = 0.5,
+            **kwargs,
+    ):
+        pred = super()._apply_threshold(pred, threshold=threshold)
+        pred["masks"] = pred["masks"] > mask_threshold
+        return pred
+
+    def _process_pred_results(
+        self,
+        pred: Dict,
+        im_path: Union[str, Path]
+    ) -> Tuple:
+        binary_masks = pred["masks"].squeeze()
+        bboxes = self._get_det_bboxes(pred, im_path)
+        return bboxes, binary_masks
+
+    @classmethod
+    def _pack_pred_results(cls, res: List, infos: Dict) -> List[Dict]:
+        return [
+            {
+                "idx": t["image_id"],
+                "det_bboxes": b,
+                "masks": m,
+            } for (b, m), t in zip(res, infos)
+        ]
+
+
+class KeypointLearner(DetectionLearner):
+    def __init__(
+        self,
+        dataset: DetectionDataset = None,
+        num_keypoints: int = None,
+        model: nn.Module = None,
+        device: torch.device = None,
+    ):
+        if not model:
+            model = (
+                get_pretrained_keypointrcnn(_get_num_classes(dataset), num_keypoints)
+                if dataset and num_keypoints
+                else get_pretrained_keypointrcnn()
+            )
+        super().__init__(dataset, model, device)
+
+    def _process_pred_results(
+        self,
+        pred: Dict,
+        im_path: Union[str, Path]
+    ) -> Tuple:
+        bboxes = self._get_det_bboxes(pred, im_path)
+        return bboxes, pred["keypoints"]
+
+    @classmethod
+    def _pack_pred_results(cls, res: List, infos: Dict) -> List[Dict]:
+        return [
+            {
+                "idx": t["image_id"],
+                "det_bboxes": b,
+                "keypoints": k,
+            } for (b, k), t in zip(res, infos)
+        ]

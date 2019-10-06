@@ -297,7 +297,6 @@ class DetectionDataset(Dataset):
     def __getitem__(self, idx):
         """ Make iterable. """
         # get box/labels from annotations
-        im_path = self.im_paths[idx]
         anno_bboxes = self.anno_bboxes[idx]
         boxes = [
             [anno_bbox.left, anno_bbox.top, anno_bbox.right, anno_bbox.bottom]
@@ -329,7 +328,7 @@ class DetectionDataset(Dataset):
         }
 
         # get image
-        im = Image.open(im_path).convert("RGB")
+        im = Image.open(self.im_paths[idx]).convert("RGB")
 
         # and apply transforms if any
         if self.transforms:
@@ -368,6 +367,8 @@ class PennFudanDataset(DetectionDataset):
         self.im_paths = self.im_paths[:self.SIZE]
         self.anno_paths = get_files_in_directory(self.root / self.anno_dir)
         self.anno_paths = self.anno_paths[:self.SIZE]
+        # there is only one class except background: person, indexed at 1
+        self.labels = ["person"]
 
     def show_ims(self, rows: int = 1, cols: int = 3) -> None:
         plot_grid(
@@ -414,7 +415,3 @@ class PennFudanDataset(DetectionDataset):
             img, target = self._get_transforms(idx)(img, target)
 
         return img, target
-
-
-
-
