@@ -13,7 +13,7 @@ from torch.utils.data import Dataset, Subset, DataLoader
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import display_bboxes, display_image, plot_grid, plot_mask
+from .plot import display_bboxes, display_bbox_mask, plot_grid
 from .bbox import _Bbox, AnnotationBbox
 from .data import Urls
 from .mask import binarise_mask
@@ -372,7 +372,7 @@ class PennFudanDataset(DetectionDataset):
 
     def show_ims(self, rows: int = 1, cols: int = 3) -> None:
         plot_grid(
-            lambda i, m: display_image(plot_mask(i, m)),
+            display_bbox_mask,
             self._get_random_anno,
             rows=rows,
             cols=cols)

@@ -210,6 +210,22 @@ def display_bboxes(
     display_image(im, ax=ax, **kwargs)
 
 
+def display_bbox_mask(
+    im_path: Union[Path, str],
+    mask_path: Union[Path, str],
+    ax: Optional[plt.axes] = None,
+) -> None:
+    """ Draw image with bounding boxes and mask. """
+    bboxes = AnnotationBbox.from_mask(
+        mask_path,
+        label_idx=1,
+        label_name='person',
+    )
+    im = plot_mask(im_path, mask_path)
+    im = plot_boxes(im, bboxes)
+    display_image(im, ax)
+
+
 def plot_grid(
     plot_func: Callable[..., None],
     args: Union[Callable, Iterator, Any],
