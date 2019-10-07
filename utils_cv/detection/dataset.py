@@ -5,7 +5,7 @@ import os
 import math
 import numpy as np
 from pathlib import Path
-from random import randrange
+import random
 from typing import Callable, List, Tuple, Union
 
 import torch
@@ -123,6 +123,7 @@ class DetectionDataset(Dataset):
         train_pct: float = 0.5,
         anno_dir: str = "annotations",
         im_dir: str = "images",
+        seed: int = None,
     ):
         """ initialize dataset
 
@@ -153,6 +154,7 @@ class DetectionDataset(Dataset):
         self.anno_dir = anno_dir
         self.batch_size = batch_size
         self.train_pct = train_pct
+        self.seed = seed
 
         # read annotations
         self._read_annos()
@@ -255,6 +257,8 @@ class DetectionDataset(Dataset):
         #      more intuitive?
 
         test_num = math.floor(len(self) * (1 - train_pct))
+        if self.seed:
+            torch.manual_seed(self.seed)
         indices = torch.randperm(len(self)).tolist()
 
         train_idx = indices[test_num:]
@@ -273,15 +277,18 @@ class DetectionDataset(Dataset):
         """ Return the corresponding transforms for training and testing data. """
         return self.transforms[self.is_test[idx]]
 
-    def show_ims(self, rows: int = 1, cols: int = 3) -> None:
+    def show_ims(self, rows: int = 1, cols: int = 3, seed: int = None) -> None:
         """ Show a set of images.
 
         Args:
             rows: the number of rows images to display
             cols: cols to display, NOTE: use 3 for best looking grid
+            seed: random seed for selecting images
 
         Returns None but displays a grid of annotated images.
         """
+        if seed or self.seed:
+            random.seed(seed or self.seed)
         plot_grid(display_bboxes, self._get_random_anno, rows=rows, cols=cols)
 
     def _get_random_anno(
@@ -291,7 +298,7 @@ class DetectionDataset(Dataset):
 
         Returns a list of annotations and the image path
         """
-        idx = randrange(len(self.anno_paths))
+        idx = random.randrange(len(self.anno_paths))
         return self.anno_bboxes[idx], self.im_paths[idx]
 
     def __getitem__(self, idx):
@@ -370,17 +377,17 @@ class PennFudanDataset(DetectionDataset):
         # there is only one class except background: person, indexed at 1
         self.labels = ["person"]
 
-    def show_ims(self, rows: int = 1, cols: int = 3) -> None:
+    def show_ims(self, rows: int = 1, cols: int = 3, seed: int = None) -> None:
+        if seed or self.seed:
+            random.seed(seed or self.seed)
         plot_grid(
             display_bbox_mask,
             self._get_random_anno,
             rows=rows,
             cols=cols)
 
-    def _get_random_anno(
-            self
-    ) -> Tuple[Union[str, Path], Union[str, Path]]:
-        idx = randrange(len(self.anno_paths))
+    def _get_random_anno(self) -> Tuple[Union[str, Path], Union[str, Path]]:
+        idx = random.randrange(len(self.anno_paths))
         im_path = self.im_paths[idx]
         mask_path = self.anno_paths[idx]
         return im_path, mask_path
