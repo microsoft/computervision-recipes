@@ -104,7 +104,7 @@ def unzip_url(
         _raise_file_exists_error(unzipped_dir)
     else:
         z = ZipFile(zip_file, "r")
-        z.extractall(fpath)
+        z.extractall(unzipped_dir)
         z.close()
 
     return os.path.realpath(unzipped_dir)
