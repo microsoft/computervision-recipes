@@ -73,10 +73,10 @@ def parse_pascal_voc_anno(
     for obj in objs:
         label = obj.find("name").text
         bnd_box = obj.find("bndbox")
-        left = int(bnd_box.find('xmin').text)
-        top = int(bnd_box.find('ymin').text)
-        right = int(bnd_box.find('xmax').text)
-        bottom = int(bnd_box.find('ymax').text)
+        left = int(bnd_box.find("xmin").text)
+        top = int(bnd_box.find("ymin").text)
+        right = int(bnd_box.find("xmax").text)
+        bottom = int(bnd_box.find("ymax").text)
 
         # Set mapping of label name to label index
         if labels is None:
@@ -193,9 +193,17 @@ class DetectionDataset:
             ), f"Cannot find annotation file: {anno_path}"
             anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
 
-            # TODO For now, ignore all images without a single bounding box in it, otherwise throws error during training.
+            # Torchvision needs at least one ground truth bounding box per image. Hence for images without a single
+            # annotated object, adding a tiny bounding box with "background" label 0.
             if len(anno_bboxes) == 0:
-                continue
+                anno_bboxes = [
+                    AnnotationBbox.from_array(
+                        [1, 1, 5, 5],
+                        label_name=None,
+                        label_idx=0,
+                        im_path=im_path,
+                    )
+                ]
 
             if self.im_dir is None:
                 self.im_paths.append(im_path)
@@ -241,7 +249,7 @@ class DetectionDataset:
         train = Subset(self, indices[test_num:])
 
         self.transforms = get_transform(train=False)
-        test = Subset(self, indices[: test_num + 1])
+        test = Subset(self, indices[:test_num])
 
         return train, test
 
