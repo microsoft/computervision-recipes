@@ -111,6 +111,7 @@ class DetectionDataset:
         train_pct: float = 0.5,
         anno_dir: str = "annotations",
         im_dir: str = "images",
+        require_annotation_files = True
     ):
         """ initialize dataset
 
@@ -127,6 +128,8 @@ class DetectionDataset:
             train_pct: the ratio of training to testing data
             annotation_dir: the name of the annotation subfolder under the root directory
             im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
+            require_annotation_files: is true (default) then will throw an error if no anntation can be found for a given image. Otherwise use image
+                as negative, ie assume that the image does not contain any of the objects of interest.
         """
 
         self.root = Path(root)
@@ -136,6 +139,7 @@ class DetectionDataset:
         self.anno_dir = anno_dir
         self.batch_size = batch_size
         self.train_pct = train_pct
+        self.require_annotation_files = require_annotation_files
 
         # read annotations
         self._read_annos()
@@ -146,21 +150,7 @@ class DetectionDataset:
         )
 
         # create training and validation data loaders
-        self.train_dl = DataLoader(
-            self.train_ds,
-            batch_size=self.batch_size,
-            shuffle=True,
-            num_workers=db_num_workers(),
-            collate_fn=collate_fn,
-        )
-
-        self.test_dl = DataLoader(
-            self.test_ds,
-            batch_size=self.batch_size,
-            shuffle=False,
-            num_workers=db_num_workers(),
-            collate_fn=collate_fn,
-        )
+        self.init_data_loaders()
 
     def _read_annos(self) -> List[str]:
         """ Parses all Pascal VOC formatted annotation files to extract all
@@ -182,16 +172,21 @@ class DetectionDataset:
                 os.path.splitext(s)[0] + ".xml" for s in im_filenames
             ]
 
-        # Parse all annotations
+        # Read all annotations
         self.im_paths = []
         self.anno_paths = []
         self.anno_bboxes = []
         for anno_idx, anno_filename in enumerate(anno_filenames):
             anno_path = self.root / self.anno_dir / str(anno_filename)
-            assert os.path.exists(
-                anno_path
-            ), f"Cannot find annotation file: {anno_path}"
-            anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
+
+            # Parse annotation file if present
+            if os.path.exists(anno_path):
+                anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
+            else:
+                if self.require_annotation_files:
+                    raise FileNotFoundError(anno_path)
+                anno_bboxes = [] 
+                im_path = im_paths[anno_idx]
 
             # Torchvision needs at least one ground truth bounding box per image. Hence for images without a single
             # annotated object, adding a tiny bounding box with "background" label 0.
@@ -217,15 +212,19 @@ class DetectionDataset:
         labels = []
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
-                labels.append(anno_bbox.label_name)
+                if anno_bbox.label_name is not None:
+                    labels.append(anno_bbox.label_name)
         self.labels = list(set(labels))
 
         # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
-                anno_bbox.label_idx = (
-                    self.labels.index(anno_bbox.label_name) + 1
-                )
+                if anno_bbox.label_name is None: #background rectangle is assigned id 0 by design
+                    anno_bbox.label_idx = 0
+                else:
+                    anno_bbox.label_idx = (
+                        self.labels.index(anno_bbox.label_name) + 1
+                    )
 
     def split_train_test(
         self, train_pct: float = 0.8
@@ -252,6 +251,24 @@ class DetectionDataset:
         test = Subset(self, indices[:test_num])
 
         return train, test
+
+    def init_data_loaders(self):
+        # create training and validation data loaders
+        self.train_dl = DataLoader(
+            self.train_ds,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=db_num_workers(),
+            collate_fn=collate_fn,
+        )
+
+        self.test_dl = DataLoader(
+            self.test_ds,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=db_num_workers(),
+            collate_fn=collate_fn,
+        )
 
     def show_ims(self, rows: int = 1, cols: int = 3) -> None:
         """ Show a set of images.
