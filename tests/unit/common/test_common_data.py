@@ -99,7 +99,7 @@ def test_unzip_url_exist_ok(tmp_path):
         exist_ok=True,
     )
     # should unzip all four data class directories
-    assert len(os.listdir(fridge_object_path)) == 4
+    assert len(os.listdir(str(Path(fridge_object_path) / "fridgeObjectsWatermark"))) == 4
 
 
 def test_unzip_url_not_exist_ok(tmp_path):
@@ -123,7 +123,7 @@ def test_unzip_url_not_exist_ok(tmp_path):
     )
 
     # should unzip all four data class directories
-    assert len(os.listdir(fridge_object_path)) == 4
+    assert len(os.listdir(str(Path(fridge_object_path) / "fridgeObjects"))) == 4
 
 
 def test_unzip_urls(tmp_path):

@@ -164,12 +164,12 @@ def tmp(tmp_path_factory):
 @pytest.fixture(scope="function")
 def func_tiny_od_data_path(tmp_session) -> str:
     """ Returns the path to the fridge object detection dataset. """
-    return unzip_url(
+    return str(Path(unzip_url(
         od_urls.fridge_objects_tiny_path,
         fpath=f"{tmp_session}/tmp",
         dest=f"{tmp_session}/tmp",
         exist_ok=True,
-    )
+    )) / "odFridgeObjectsTiny")
 
 
 # ----- Session fixtures ----------------------------------------------------------
@@ -189,63 +189,63 @@ def tmp_session(tmp_path_factory):
 def tiny_ic_multidata_path(tmp_session) -> List[str]:
     """ Returns the path to multiple dataset. """
     return [
-        unzip_url(
+        str(Path(unzip_url(
             ic_urls.fridge_objects_watermark_tiny_path,
             fpath=tmp_session,
             dest=tmp_session,
             exist_ok=True,
-        ),
-        unzip_url(
+        )) / "fridgeObjectsWatermarkTiny"),
+        str(Path(unzip_url(
             ic_urls.fridge_objects_tiny_path,
             fpath=tmp_session,
             dest=tmp_session,
             exist_ok=True,
-        ),
+        )) / "fridgeObjectsTiny"),
     ]
 
 
 @pytest.fixture(scope="session")
 def tiny_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
-    return unzip_url(
+    return str(Path(unzip_url(
         ic_urls.fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
-    )
+    )) / "fridgeObjectsTiny")
 
 
 @pytest.fixture(scope="session")
 def tiny_multilabel_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
-    return unzip_url(
+    return str(Path(unzip_url(
         ic_urls.multilabel_fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
-    )
+    )) / "multilabelFridgeObjectsTiny")
 
 
 @pytest.fixture(scope="session")
 def multilabel_ic_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
-    return unzip_url(
+    return str(Path(unzip_url(
         ic_urls.multilabel_fridge_objects_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
-    )
+    )) / "multilabelFridgeObjects")
 
 
 @pytest.fixture(scope="session")
 def tiny_ic_databunch(tmp_session):
     """ Returns a databunch object for the tiny fridge objects dataset. """
-    im_paths = unzip_url(
+    im_paths = str(Path(unzip_url(
         ic_urls.fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
-    )
+    )) / "fridgeObjectsTiny")
     return (
         ImageList.from_folder(im_paths)
         .split_by_rand_pct(valid_pct=0.1, seed=20)
@@ -289,12 +289,12 @@ def model_pred_scores(tiny_ic_databunch):
 def testing_im_list(tmp_session):
     """ Set of 5 images from the can/ folder of the Fridge Objects dataset
      used to test positive example rank calculations"""
-    im_paths = unzip_url(
+    im_paths = str(Path(unzip_url(
         ic_urls.fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
-    )
+    )) / "fridgeObjectsTiny")
     can_im_paths = os.listdir(os.path.join(im_paths, "can"))
     can_im_paths = [
         os.path.join(im_paths, "can", im_name) for im_name in can_im_paths
@@ -307,12 +307,12 @@ def testing_databunch(tmp_session):
     """ Builds a databunch from the Fridge Objects
     and returns its validation component that is used
     to test comparative_set_builder"""
-    im_paths = unzip_url(
+    im_paths = str(Path(unzip_url(
         ic_urls.fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
-    )
+    )) / "fridgeObjectsTiny")
     can_im_paths = os.listdir(os.path.join(im_paths, "can"))
     can_im_paths = [
         os.path.join(im_paths, "can", im_name) for im_name in can_im_paths
@@ -378,12 +378,12 @@ def od_cup_det_bboxes(tmp_session, od_cup_path) -> List[DetectionBbox]:
 @pytest.fixture(scope="session")
 def tiny_od_data_path(tmp_session) -> str:
     """ Returns the path to the fridge object detection dataset. """
-    return unzip_url(
+    return str(Path(unzip_url(
         od_urls.fridge_objects_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
-    )
+    )) / "odFridgeObjectsTiny")
 
 
 @pytest.fixture(scope="session")
