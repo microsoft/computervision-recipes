@@ -13,13 +13,13 @@ from torch.utils.data import Dataset, Subset, DataLoader
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import display_bboxes, display_bbox_mask, plot_grid
-from .bbox import _Bbox, AnnotationBbox
-from .data import Urls
+from .plot import display_bboxes, display_bbox_mask, display_bbox_mask_keypoint, plot_grid
+from .bbox import AnnotationBbox
+from .data import coco_labels, Urls
 from .mask import binarise_mask
 from .references.utils import collate_fn
-from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
-from ..common.data import unzip_url, get_files_in_directory
+from .references.transforms import Compose, RandomHorizontalFlip, ToTensor
+from ..common.data import data_path, get_files_in_directory, unzip_url
 from ..common.gpu import db_num_workers
 
 Trans = Callable[[object, dict], Tuple[object, dict]]
@@ -305,33 +305,22 @@ class DetectionDataset(Dataset):
         """ Make iterable. """
         # get box/labels from annotations
         anno_bboxes = self.anno_bboxes[idx]
-        boxes = [
-            [anno_bbox.left, anno_bbox.top, anno_bbox.right, anno_bbox.bottom]
-            for anno_bbox in anno_bboxes
-        ]
+        boxes = [anno_bbox.rect() for anno_bbox in anno_bboxes]
         labels = [anno_bbox.label_idx for anno_bbox in anno_bboxes]
-
-        # convert everything into a torch.Tensor
-        boxes = torch.as_tensor(boxes, dtype=torch.float32)
-        labels = torch.as_tensor(labels, dtype=torch.int64)
 
         # get area for evaluation with the COCO metric, to separate the
         # metric scores between small, medium and large boxes.
-        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-
-        # suppose all instances are not crowd (torchvision specific)
-        iscrowd = torch.zeros((len(boxes),), dtype=torch.int64)
-
-        # unique id
-        im_id = torch.tensor([idx])
+        area = [b.surface_area() for b in anno_bboxes]
 
         # setup target dic
         target = {
-            "boxes": boxes,
-            "labels": labels,
-            "image_id": im_id,
-            "area": area,
-            "iscrowd": iscrowd,
+            "boxes": torch.as_tensor(boxes, dtype=torch.float32),
+            "labels": torch.as_tensor(labels, dtype=torch.int64),
+            # unique id
+            "image_id": torch.tensor([idx]),
+            "area": torch.as_tensor(area, dtype=torch.float32),
+            # suppose all instances are not crowd (torchvision specific)
+            "iscrowd": torch.zeros((len(boxes),), dtype=torch.int64),
         }
 
         # get image
@@ -374,6 +363,13 @@ class PennFudanDataset(DetectionDataset):
         self.im_paths = self.im_paths[:self.SIZE]
         self.anno_paths = get_files_in_directory(self.root / self.anno_dir)
         self.anno_paths = self.anno_paths[:self.SIZE]
+        self.anno_bboxes = [
+            AnnotationBbox.from_mask(
+                mask,
+                label_idx=1,
+                label_name="person") for mask
+            in self.anno_paths
+        ]
         # there is only one class except background: person, indexed at 1
         self.labels = ["person"]
 
@@ -386,21 +382,19 @@ class PennFudanDataset(DetectionDataset):
             rows=rows,
             cols=cols)
 
-    def _get_random_anno(self) -> Tuple[Union[str, Path], Union[str, Path]]:
+    def _get_random_anno(
+        self
+    ) -> Tuple[Union[str, Path], Union[str, Path], List[AnnotationBbox]]:
         idx = random.randrange(len(self.anno_paths))
-        im_path = self.im_paths[idx]
-        mask_path = self.anno_paths[idx]
-        return im_path, mask_path
+        return self.im_paths[idx], self.anno_paths[idx], self.anno_bboxes[idx]
 
     def __getitem__(self, idx):
         # get binary masks for the instances in the image
         binary_masks = binarise_mask(Image.open(self.anno_paths[idx]))
-        object_number = len(binary_masks)
 
         # get the bounding rectangle for each instance
-        bboxes = [_Bbox.from_binary_mask(bmask) for bmask in binary_masks]
-        areas = [b.surface_area() for b in bboxes]
-        rects = [b.rect() for b in bboxes]
+        rects = [b.rect() for b in self.anno_bboxes[idx]]
+        areas = [b.surface_area() for b in self.anno_bboxes[idx]]
 
         # construct target
         target = {
@@ -408,14 +402,255 @@ class PennFudanDataset(DetectionDataset):
             "boxes": torch.as_tensor(rects, dtype=torch.float32),
             "image_id": torch.as_tensor([idx], dtype=torch.int64),
             # suppose all instances are not crowd
-            "iscrowd": torch.zeros((object_number,), dtype=torch.int64),
+            "iscrowd": torch.zeros((len(areas),), dtype=torch.int64),
             # there is only one class: person, indexed at 1
-            "labels": torch.ones((object_number,), dtype=torch.int64),
+            "labels": torch.ones((len(areas),), dtype=torch.int64),
             "masks": torch.as_tensor(binary_masks, dtype=torch.uint8),
         }
 
         # load the image
-        img = Image.open(self.im_paths[idx])
+        im = Image.open(self.im_paths[idx]).convert("RGB")
+
+        # image pre-processing if needed
+        if self.transforms is not None:
+            im, target = self._get_transforms(idx)(im, target)
+
+        return im, target
+
+
+class COCOInstancesVal2017(DetectionDataset):
+    """ COCO Instances Val 2017 dataset.
+
+    Annotation URL: http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+    Annotation Path: annotations/instances_val2017.json
+    Image URL: http://images.cocodataset.org/zips/val2017.zip
+    Image Path: val2017/file_name
+    """
+
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        self.SIZE = 20
+        anno_dir = Path(unzip_url(
+            Urls.coco_val2017_annotation_path,
+            exist_ok=True)).parent / "annotations"
+        im_dir = Path(unzip_url(Urls.coco_val2017_image_path, exist_ok=True))
+        self.anno_file = anno_dir / "instances_val2017.json"
+        super().__init__(
+            data_path(),
+            anno_dir=anno_dir,
+            im_dir=im_dir,
+            **kwargs
+        )
+
+    def _read_annos(self) -> None:
+        from pycocotools.coco import COCO
+        self.coco = COCO(self.anno_file)
+        img_ids = list(self.coco.imgs.keys())
+        self.im_paths = img_ids[:self.SIZE]
+        self.anno_paths = [self.coco.imgToAnns[i] for i in img_ids][:self.SIZE]
+        valid_idxes = [i for i, x in enumerate(self.anno_paths) if len(x) != 0]
+        self.im_paths = [self.im_paths[i] for i in valid_idxes]
+        self.anno_paths = [self.anno_paths[i] for i in valid_idxes]
+        self.anno_bboxes = [
+            [
+                AnnotationBbox.from_array_xywh(
+                    anno["bbox"],
+                    label_idx=None,
+                    label_name=coco_labels()[anno["category_id"]]
+                ) for anno in annos
+            ] for annos in self.anno_paths
+        ]
+        self.labels = list(set([
+            bbox.label_name for bboxes in self.anno_bboxes for bbox in bboxes
+        ]))
+
+        for anno_bboxes in self.anno_bboxes:
+            for anno_bbox in anno_bboxes:
+                anno_bbox.label_idx = (
+                    self.labels.index(anno_bbox.label_name) + 1
+                )
+
+    def show_ims(self, rows: int = 1, cols: int = 3, seed: int = None) -> None:
+        if seed or self.seed:
+            random.seed(seed or self.seed)
+        plot_grid(
+            display_bbox_mask,
+            self._get_random_anno,
+            rows=rows,
+            cols=cols)
+
+    def _get_im_path(self, idx: int) -> Union[str, Path]:
+        filename = self.coco.imgs[self.im_paths[idx]]["file_name"]
+        im_path = Path(self.im_dir) / filename
+        return im_path
+
+    def _get_mask(self, idx: int) -> np.ndarray:
+        return np.array([
+            self.coco.annToMask(anno) for anno in self.anno_paths[idx]
+        ])
+
+    def _get_random_anno(
+        self
+    ) -> Tuple[Union[str, Path], np.ndarray, List[AnnotationBbox]]:
+        idx = random.randrange(len(self.anno_paths))
+        im_path = self._get_im_path(idx)
+        mask = self._get_mask(idx)
+        bboxes = self.anno_bboxes[idx]
+        return im_path, mask, bboxes
+
+    def __getitem__(self, idx):
+        # get binary masks for the instances in the image
+        binary_masks = self._get_mask(idx)
+
+        # get the bounding rectangle for each instance
+        bboxes = self.anno_bboxes[idx]
+        areas = [b.surface_area() for b in bboxes]
+        rects = [b.rect() for b in bboxes]
+        labels = [b.label_idx for b in bboxes]
+
+        # construct target
+        target = {
+            "area": torch.as_tensor(areas, dtype=torch.float32),
+            "boxes": torch.as_tensor(rects, dtype=torch.float32),
+            "image_id": torch.as_tensor([idx], dtype=torch.int64),
+            # TODO: Need to deal with iscrowd
+            "iscrowd": torch.zeros((len(bboxes),), dtype=torch.int64),
+            "labels": torch.as_tensor(labels, dtype=torch.int64),
+            "masks": torch.as_tensor(binary_masks, dtype=torch.uint8),
+        }
+
+        # load the image
+        img = Image.open(self._get_im_path(idx)).convert("RGB")
+
+        # image pre-processing if needed
+        if self.transforms is not None:
+            img, target = self._get_transforms(idx)(img, target)
+
+        return img, target
+
+
+class COCOPersonKeypointsVal2017(DetectionDataset):
+    """ COCO Instances Val 2017 dataset.
+
+    Annotation URL: http://images.cocodataset.org/annotations/annotations_trainval2017.zip
+    Annotation Path: annotations/person_keypoints_val2017.json
+    Image URL: http://images.cocodataset.org/zips/val2017.zip
+    Image Path: val2017/file_name
+    """
+
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        self.SIZE = 50
+        anno_dir = Path(unzip_url(
+            Urls.coco_val2017_annotation_path,
+            exist_ok=True)).parent / "annotations"
+        im_dir = Path(unzip_url(Urls.coco_val2017_image_path, exist_ok=True))
+        self.anno_file = anno_dir / "person_keypoints_val2017.json"
+        super().__init__(
+            data_path(),
+            anno_dir=anno_dir,
+            im_dir=im_dir,
+            **kwargs
+        )
+
+    def _read_annos(self) -> None:
+        from pycocotools.coco import COCO
+        self.coco = COCO(self.anno_file)
+        img_ids = list(self.coco.imgs.keys())
+        self.im_paths = img_ids[:self.SIZE]
+        self.anno_paths = [self.coco.imgToAnns[i] for i in img_ids][:self.SIZE]
+        valid_idxes = [i for i, x in enumerate(self.anno_paths) if len(x) != 0]
+        self.im_paths = [self.im_paths[i] for i in valid_idxes]
+        self.anno_paths = [self.anno_paths[i] for i in valid_idxes]
+        self.anno_bboxes = [
+            [
+                AnnotationBbox.from_array_xywh(
+                    anno["bbox"],
+                    label_idx=None,
+                    label_name=coco_labels()[anno["category_id"]]
+                ) for anno in annos
+            ] for annos in self.anno_paths
+        ]
+        self.labels = list(set([
+            bbox.label_name for bboxes in self.anno_bboxes for bbox in bboxes
+        ]))
+
+        for anno_bboxes in self.anno_bboxes:
+            for anno_bbox in anno_bboxes:
+                anno_bbox.label_idx = (
+                        self.labels.index(anno_bbox.label_name) + 1
+                )
+
+    def show_ims(self, rows: int = 1, cols: int = 3, seed: int = None) -> None:
+        if seed or self.seed:
+            random.seed(seed or self.seed)
+        plot_grid(
+            display_bbox_mask_keypoint,
+            self._get_random_anno,
+            rows=rows,
+            cols=cols)
+
+    def _get_im_path(self, idx: int) -> Union[str, Path]:
+        filename = self.coco.imgs[self.im_paths[idx]]["file_name"]
+        im_path = Path(self.im_dir) / filename
+        return im_path
+
+    def _get_mask(self, idx: int) -> np.ndarray:
+        return np.array([
+            self.coco.annToMask(anno)
+            for anno in self.anno_paths[idx]
+        ])
+
+    def _get_keypoints(self, idx: int) -> np.ndarray:
+        keypoints = np.array([
+            anno["keypoints"] for anno in self.anno_paths[idx]
+        ])
+        keypoints = keypoints.reshape((len(keypoints), -1, 3)) if keypoints.size else None
+        return keypoints
+
+    def _get_random_anno(
+        self
+    ) -> Tuple[Union[str, Path], np.ndarray, List[AnnotationBbox], np.ndarray]:
+        idx = random.randrange(len(self.anno_paths))
+        print(idx)
+        im_path = self._get_im_path(idx)
+        mask = self._get_mask(idx)
+        bboxes = self.anno_bboxes[idx]
+        keypoints = self._get_keypoints(idx)
+        return im_path, mask, bboxes, keypoints
+
+    def __getitem__(self, idx):
+        # get binary masks for the instances in the image
+        binary_masks = self._get_mask(idx)
+
+        # get the bounding rectangle for each instance
+        bboxes = self.anno_bboxes[idx]
+        areas = [b.surface_area() for b in bboxes]
+        rects = [b.rect() for b in bboxes]
+        labels = [b.label_idx for b in bboxes]
+
+        # get the keypoints
+        keypoints = self._get_keypoints(idx)
+
+        # construct target
+        target = {
+            "area": torch.as_tensor(areas, dtype=torch.float32),
+            "boxes": torch.as_tensor(rects, dtype=torch.float32),
+            "image_id": torch.as_tensor([idx], dtype=torch.int64),
+            # TODO: Need to deal with iscrowd
+            "iscrowd": torch.zeros((len(bboxes),), dtype=torch.int64),
+            "labels": torch.as_tensor(labels, dtype=torch.int64),
+            "masks": torch.as_tensor(binary_masks, dtype=torch.uint8),
+        }
+        if keypoints:
+            target["keypoints"] = torch.as_tensor(keypoints, dtype=torch.float32)
+
+        # load the image
+        img = Image.open(self._get_im_path(idx)).convert("RGB")
 
         # image pre-processing if needed
         if self.transforms is not None:

@@ -195,6 +195,13 @@ class AnnotationBbox(_Bbox):
         return bbox
 
     @classmethod
+    def from_array_xywh(cls, arr: List[int], **kwargs) -> "AnnotationBbox":
+        bbox = super().from_array_xywh(arr)
+        bbox.__class__ = AnnotationBbox
+        bbox.set_meta(**kwargs)
+        return bbox
+
+    @classmethod
     def from_arrays(
         cls,
         arrs: List[List[int]],
