@@ -59,7 +59,7 @@ def parse_pascal_voc_anno(
 
     # get image path from annotation. Note that the path field might not be set.
     anno_dir = os.path.dirname(anno_path)
-    if root.find("path"):
+    if root.find("path") is not None:
         im_path = os.path.realpath(
             os.path.join(anno_dir, root.find("path").text)
         )
@@ -269,6 +269,21 @@ class DetectionDataset:
             num_workers=db_num_workers(),
             collate_fn=collate_fn,
         )
+
+    def add_images(self, im_paths, anno_bboxes, target = "train"):
+        assert(len(im_paths) == len(anno_bboxes))
+        for im_path, anno_bbox in zip(im_paths, anno_bboxes):    
+            self.im_paths.append(im_path)
+            self.anno_bboxes.append(anno_bbox)
+            if target.lower() == "train":
+                self.train_ds.indices.append(len(self.im_paths)-1)
+            elif target.lower() == "test":
+                self.test_ds.indices.append(len(self.im_paths)-1)
+            else:
+                raise Exception("Target " + str(target) + " unknown.")
+        
+        # Re-initialize the data loaders
+        self.init_data_loaders()
 
     def show_ims(self, rows: int = 1, cols: int = 3) -> None:
         """ Show a set of images.

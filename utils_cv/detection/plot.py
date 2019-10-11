@@ -57,6 +57,9 @@ def plot_boxes(
     if len(bboxes) > 0:
         draw = ImageDraw.Draw(im)
         for bbox in bboxes:
+            # do not draw background bounding boxes
+            if bbox.label_idx == 0:
+                continue
 
             box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
 
