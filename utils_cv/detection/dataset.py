@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+import copy
 import math
 from pathlib import Path
 from random import randrange
@@ -9,6 +10,7 @@ from typing import List, Tuple, Union
 
 import torch
 from torch.utils.data import Dataset, Subset, DataLoader
+from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
@@ -17,6 +19,26 @@ from .bbox import AnnotationBbox
 from .references.utils import collate_fn
 from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 from utils_cv.common.gpu import db_num_workers
+
+
+class ColorJitterTransform(object):
+    """ Wrapper for torchvision's ColorJitter to make sure 'target
+    object is passed along """
+
+    def __init__(self, brightness, contrast, saturation, hue):
+        self.brightness = brightness
+        self.contrast = contrast
+        self.saturation = saturation
+        self.hue = hue
+
+    def __call__(self, im, target):
+        im = ColorJitter(
+            brightness=self.brightness,
+            contrast=self.contrast,
+            saturation=self.saturation,
+            hue=self.hue,
+        )(im)
+        return im, target
 
 
 def get_transform(train: bool) -> List[object]:
@@ -33,10 +55,22 @@ def get_transform(train: bool) -> List[object]:
         A list of transforms to apply.
     """
     transforms = []
+
+    # transformations to apply before image is turned into a tensor
+    if train:
+        transforms.append(
+            ColorJitterTransform(
+                brightness=0.2, contrast=0.2, saturation=0.4, hue=0.05
+            )
+        )
+
+    # transform im to tensor
     transforms.append(ToTensor())
+
+    # transformations to apply after image is turned into a tensor
     if train:
         transforms.append(RandomHorizontalFlip(0.5))
-        # TODO we can add more 'default' transformations here
+
     return Compose(transforms)
 
 
@@ -107,7 +141,8 @@ class DetectionDataset:
         self,
         root: Union[str, Path],
         batch_size: int = 2,
-        transforms: object = get_transform(train=True),
+        train_transforms: object = get_transform(train=True),
+        test_transforms: object = get_transform(train=False),
         train_pct: float = 0.5,
         anno_dir: str = "annotations",
         im_dir: str = "images",
@@ -124,7 +159,8 @@ class DetectionDataset:
             root: the root path of the dataset containing the image and
             annotation folders
             batch_size: batch size for dataloaders
-            transforms: the transformations to apply
+            train_transforms: the transformations to apply to the train set
+            test_transforms: the transformations to apply to the test set
             train_pct: the ratio of training to testing data
             annotation_dir: the name of the annotation subfolder under the root directory
             im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
@@ -133,8 +169,8 @@ class DetectionDataset:
         """
 
         self.root = Path(root)
-        # TODO think about how transforms are working...
-        self.transforms = transforms
+        self.train_transforms = train_transforms
+        self.test_transforms = test_transforms
         self.im_dir = im_dir
         self.anno_dir = anno_dir
         self.batch_size = batch_size
@@ -238,17 +274,14 @@ class DetectionDataset:
         Return
             A training and testing dataset in that order
         """
-        # TODO Is it possible to make these lines in split_train_test() a bit
-        # more intuitive?
-
         test_num = math.floor(len(self) * (1 - train_pct))
         indices = torch.randperm(len(self)).tolist()
 
-        self.transforms = get_transform(train=True)
-        train = Subset(self, indices[test_num:])
+        train = copy.deepcopy(Subset(self, indices[test_num:]))
+        train.dataset.transforms = self.train_transforms
 
-        self.transforms = get_transform(train=False)
-        test = Subset(self, indices[:test_num])
+        test = copy.deepcopy(Subset(self, indices[: test_num]))
+        test.dataset.transforms = self.test_transforms
 
         return train, test
 
@@ -295,6 +328,43 @@ class DetectionDataset:
         Returns None but displays a grid of annotated images.
         """
         plot_grid(display_bboxes, self._get_random_anno, rows=rows, cols=cols)
+
+    def show_im_transformations(
+        self, idx: int = None, rows: int = 1, cols: int = 3
+    ) -> None:
+        """ Show a set of images after transfomrations have been applied.
+
+        Args:
+            idx: the index to of the image to show the transformations for.
+            rows: number of rows to display
+            cols: number of cols to dipslay, NOTE: use 3 for best looing grid
+
+        Returns None but displays a grid of randomly applied transformations.
+        """
+        if not hasattr(self, "transforms"):
+            print(
+                (
+                    "Transformations are not applied ot the base dataset object.\n"
+                    "Call this function on either the train_ds or test_ds instead:\n\n"
+                    "    my_detection_data.train_ds.dataset.show_im_transformations()"
+                )
+            )
+        else:
+            if idx is None:
+                idx = randrange(len(self.anno_paths))
+
+            def plotter(im, ax):
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.imshow(im)
+
+            def im_gen() -> torch.Tensor:
+                return self[idx][0].permute(1, 2, 0)
+
+            plot_grid(plotter, im_gen, rows=rows, cols=cols)
+
+            print(f"Transformations applied on {self.im_paths[idx]}:")
+            [print(transform) for transform in self.transforms.transforms]
 
     def _get_random_anno(
         self
