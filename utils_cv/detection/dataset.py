@@ -286,7 +286,7 @@ class DetectionDataset:
         return train, test
 
     def init_data_loaders(self):
-        # create training and validation data loaders
+        """ Create training and validation data loaders """
         self.train_dl = DataLoader(
             self.train_ds,
             batch_size=self.batch_size,
@@ -303,14 +303,25 @@ class DetectionDataset:
             collate_fn=collate_fn,
         )
 
-    def add_images(self, im_paths, anno_bboxes, target = "train"):
+    def add_images(self, im_paths: List[str], anno_bboxes: List[AnnotationBbox], target: str = "train"):
+        """ Add new images to either the training or test set. 
+
+        Args:
+            im_paths: path to the images.
+            anno_bboxes: ground truth boxes for each image.
+            target: specify if images are to be added to the training or test set. Valid options: "train" or "test".
+        """
         assert(len(im_paths) == len(anno_bboxes))
         for im_path, anno_bbox in zip(im_paths, anno_bboxes):    
             self.im_paths.append(im_path)
             self.anno_bboxes.append(anno_bbox)
             if target.lower() == "train":
+                self.train_ds.dataset.im_paths.append(im_path)
+                self.train_ds.dataset.anno_bboxes.append(anno_bbox)
                 self.train_ds.indices.append(len(self.im_paths)-1)
             elif target.lower() == "test":
+                self.test_ds.dataset.im_paths.append(im_path)
+                self.test_ds.dataset.anno_bboxes.append(anno_bbox)
                 self.test_ds.indices.append(len(self.im_paths)-1)
             else:
                 raise Exception("Target " + str(target) + " unknown.")
