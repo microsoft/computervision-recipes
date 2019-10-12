@@ -56,6 +56,8 @@ def plot_boxes(
     """
     if len(bboxes) > 0:
         draw = ImageDraw.Draw(im)
+        font = get_font(size=plot_settings.text_size)
+
         for bbox in bboxes:
             # do not draw background bounding boxes
             if bbox.label_idx == 0:
@@ -69,9 +71,6 @@ def plot_boxes(
                 outline=plot_settings.rect_color,
                 width=plot_settings.rect_th,
             )
-
-            # gets font
-            font = get_font(size=plot_settings.text_size)
 
             # write prediction class
             draw.text(
