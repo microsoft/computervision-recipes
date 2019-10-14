@@ -20,18 +20,17 @@ notebooks in this repo. Once your environment is setup, navigate to the
 
 ## Scenarios
 
-The following is a summary of commonly used Computer Vision scenarios that are covered in this repository. We decide between two locations: (i) base: code and notebooks within the "utils_cs" and "scenarios" folders. All assets follows strict coding guidelines with well tested and maintained implementations; (ii) contrib: code and other assets within the "contrib" folder, mainly covering missing scenarios using bleeding edge state-of-the-art approaches however without the testing and maintenance (or any other) guarantees.
-
-For each of the "base" scenarios, we provide the tools to effectively build your own model. This includes simple tasks such as fine-tuning your own model on your own data, to more complex tasks such as hard-negative mining and even model deployment.
+The following is a summary of commonly used Computer Vision scenarios that are covered in this repository. For each of the main scenarios ("base"), we provide the tools to effectively build your own model. This includes simple tasks such as fine-tuning your own model on your own data, to more complex tasks such as hard-negative mining and even model deployment.
 
 | Scenario | Support    | Description |
 | -------- | ----------- | ----------- |
 | [Classification](scenarios/classification) | Base | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
 | [Similarity](scenarios/similarity)  | Base | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
 | [Detection](scenarios/detection) | Base | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
-| [Action recognition](contrib/action_recognition) | Contrib | COMING SOON. Action recognition can be used to identify what action is performed in a video (e.g. "running", "opening a bottle") and at what temporal location.|
+| [Action recognition](contrib/action_recognition) | Contrib | COMING SOON. Action recognition in video footage can be used to identify what action is performed (e.g. "running", "opening a bottle") and at what start/end time.|
 | [Crowd counting](contrib/crowd_counting) | Contrib | COMING SOON. Counting the number of people in low-crowd-density (e.g. less than 10 people) and high-crowd-density (e.g. thousands of people) scenarios.|
 
+We decide between two locations: (i) base: code and notebooks within the "utils_cs" and "scenarios" folders. All assets follows strict coding guidelines with well tested and maintained implementations; (ii) contrib: code and other assets within the "contrib" folder, mainly covering missing scenarios using bleeding edge state-of-the-art approaches however without the testing and maintenance (or any other) guarantees.
 
 ## Computer Vision on Azure
 
