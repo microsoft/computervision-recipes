@@ -46,3 +46,7 @@ Popular datasets:
 
 Popular publications, with recommended papers to read highlighted in yellow:
 <img align="center" src="./media/publications.png"/>  
+
+
+Most pulications focus on accuracy rather than on inferencing speed. The paper "Representation Flow for Action Recognition" is a noteworthy exception with this figure:
+<img align="center" src="./media/inference_speeds.png" width = "500"/>  
