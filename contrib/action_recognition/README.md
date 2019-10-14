@@ -21,7 +21,7 @@ In the tables below, we list datasets which are commonly used and also give an o
 Recommended reading:
 - As introduction to action recognition the blog [Deep Learning for Videos: A 2018 Guide to Action Recognition](http://blog.qure.ai/notes/deep-learning-for-videos-action-recognition-review).
 - [ActionRecognition.net](http://actionrecognition.net/files/dset.php) for the latest state-of-the-art accuracies on popular research benchmark datasets.
-- All papers highlighted in **bold** (and yellow) in the publications table below.
+- All papers highlighted in yellow in the publications table below.
 
 Popular datasets:
 
@@ -44,8 +44,5 @@ Popular datasets:
 
 
 
-Popular publications, with recommended papers to read highlighed in **bold**:
+Popular publications, with recommended papers to read highlighted in yellow:
 <img align="center" src="./media/publications.png"/>  
-
-
-## Etc
