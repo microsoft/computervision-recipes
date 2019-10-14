@@ -1,6 +1,6 @@
 # Action Recognition
 
-This is a placerholder with possible outline. Content will follow soon.
+This is a place holder. Content will follow soon.
 
 ## Overview
 
