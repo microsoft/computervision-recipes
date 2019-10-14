@@ -16,9 +16,7 @@ What our code can do, and what was missing from the repos we use.
 
 ## State-of-the-art
 
-In the tables below, we list datasets which are commonly used and also give an overview of the state-of-the-art. Note that the tables are exhaustive and should cover most major publications until 2018. Expect however some level of incompleteness and slight incorrectness (e.g. publication year being off by plus/minus 1 year due, etc)
-
-  also caused by "rounding/summarizing" the information rather than providing a detailed description.)
+In the tables below, we list datasets which are commonly used and also give an overview of the state-of-the-art. Note that the information below is reasonably exhaustive and should cover most major publications until 2018. Expect however some level of incompleteness and slight incorrectness (e.g. publication year being off by plus/minus 1 year due) since the tables below were mainly compiled to give a high-level picture of where the field is and how it evolved over the last years.
 
 Recommended reading:
 - As introduction to action recognition the blog [Deep Learning for Videos: A 2018 Guide to Action Recognition](http://blog.qure.ai/notes/deep-learning-for-videos-action-recognition-review).
