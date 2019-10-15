@@ -84,7 +84,7 @@ def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
     assert nb_output.scraps["max_accuray"].data > 0.5
     assert (
         nb_output.scraps["max_duration"].data
-        > 1.2 * nb_output.scraps["min_duration"].data
+        > 1.05 * nb_output.scraps["min_duration"].data
     )
 
 
