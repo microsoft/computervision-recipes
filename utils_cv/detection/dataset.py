@@ -146,7 +146,7 @@ class DetectionDataset:
         train_pct: float = 0.5,
         anno_dir: str = "annotations",
         im_dir: str = "images",
-        require_annotation_files = True
+        allow_negatives = False
     ):
         """ initialize dataset
 
@@ -164,7 +164,7 @@ class DetectionDataset:
             train_pct: the ratio of training to testing data
             annotation_dir: the name of the annotation subfolder under the root directory
             im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
-            require_annotation_files: is true (default) then will throw an error if no anntation can be found for a given image. Otherwise use image
+            allow_negatives: is false (default) then will throw an error if no anntation .xml file can be found for a given image. Otherwise use image
                 as negative, ie assume that the image does not contain any of the objects of interest.
         """
 
@@ -175,7 +175,7 @@ class DetectionDataset:
         self.anno_dir = anno_dir
         self.batch_size = batch_size
         self.train_pct = train_pct
-        self.require_annotation_files = require_annotation_files
+        self.allow_negatives = allow_negatives
 
         # read annotations
         self._read_annos()
@@ -219,7 +219,7 @@ class DetectionDataset:
             if os.path.exists(anno_path):
                 anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
             else:
-                if self.require_annotation_files:
+                if not self.allow_negatives:
                     raise FileNotFoundError(anno_path)
                 anno_bboxes = [] 
                 im_path = im_paths[anno_idx]
@@ -310,6 +310,9 @@ class DetectionDataset:
             im_paths: path to the images.
             anno_bboxes: ground truth boxes for each image.
             target: specify if images are to be added to the training or test set. Valid options: "train" or "test".
+
+        Raises:
+            Exception if `target` variable is neither 'train' nor 'test'
         """
         assert(len(im_paths) == len(anno_bboxes))
         for im_path, anno_bbox in zip(im_paths, anno_bboxes):    
@@ -324,7 +327,7 @@ class DetectionDataset:
                 self.test_ds.dataset.anno_bboxes.append(anno_bbox)
                 self.test_ds.indices.append(len(self.im_paths)-1)
             else:
-                raise Exception("Target " + str(target) + " unknown.")
+                raise Exception(f"Target {target} unknown.")
         
         # Re-initialize the data loaders
         self.init_data_loaders()
