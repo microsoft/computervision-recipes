@@ -24,6 +24,8 @@ def test_results_widget(model_pred_scores):
     w_results = ResultsWidget(
         dataset=learn.data.valid_ds,
         y_score=pred_scores,
-        y_label=[learn.data.classes[x] for x in np.argmax(pred_scores, axis=1)],
+        y_label=[
+            learn.data.classes[x] for x in np.argmax(pred_scores, axis=1)
+        ],
     )
     w_results.update()
