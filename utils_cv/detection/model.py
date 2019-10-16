@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
+import glob
 from typing import List, Tuple, Union, Generator, Optional
 from pathlib import Path
 
@@ -155,15 +157,18 @@ def _calculate_ap(e: CocoEvaluator) -> float:
 class DetectionLearner:
     """ Detection Learner for Object Detection"""
 
-    def __init__(self, dataset: Dataset, model: nn.Module = None):
+    def __init__(self, dataset: Dataset = None, model: nn.Module = None):
         """ Initialize leaner object. """
+        # if dataset is None, model must not be
+        assert not dataset and model
         self.device = torch_device()
         self.model = model
         self.dataset = dataset
 
         # setup model, default to fasterrcnn
         if self.model is None:
-            self.model = get_pretrained_fasterrcnn(len(dataset.labels) + 1)
+            if self.dataset:
+                self.model = get_pretrained_fasterrcnn(len(dataset.labels) + 1)
         self.model.to(self.device)
 
     def __getattr__(self, attr):
@@ -285,7 +290,8 @@ class DetectionLearner:
         model = self.model.eval()  # eval mode
         with torch.no_grad():
             pred = model([im])
-        labels = self.dataset.labels
+
+        labels = self.dataset.labels if self.dataset else self.labels
         det_bboxes = _get_det_bboxes(pred, labels=labels)
 
         # limit to threshold if threshold is set
@@ -321,7 +327,8 @@ class DetectionLearner:
         image that is scored.
         """
 
-        labels = self.dataset.labels
+        # labels = self.dataset.labels
+        labels = dl.dataset.dataset.labels
         model = self.model.eval()
 
         for i, batch in enumerate(dl):
@@ -345,3 +352,82 @@ class DetectionLearner:
                     {"idx": im_idx, "det_bboxes": det_bboxes}
                 )
             yield det_bbox_batch
+
+    def save(self, name: str, path: str = None, overwrite: bool = True) -> str:
+        """ Saves the model """
+        if path is None:
+            path = Path(self.dataset.root) / "models"
+
+        # make dir if not exist
+        if not Path(path).exists():
+            os.mkdir(path)
+
+        pt_location = Path(path) / f"{name}.pt"
+        label_location = Path(path) / f"{name}.labels"
+        if not overwrite:
+            if pt_location.exists() or label_location.exists():
+                raise Exception(
+                    "Can't save here. File already exists. Change your location or set `overwrite=True`"
+                )
+
+        # save pt
+        torch.save(self.model.state_dict(), pt_location)
+
+        # save labels
+        label_file = open(label_location, "w")
+        label_file.write(",".join(self.dataset.labels))
+        label_file.close()
+
+    def load(self, name: str = None, path: str = None) -> None:
+        """ Loads a model. """
+
+        # set path if not specified
+        if not path:
+            path = Path(self.dataset.root) / "models"
+
+        if name:
+            pt_path = path / f"{name}.pt"
+            if not pt_path.exists():
+                raise Exception(
+                    f"No model file named {name}.pt exists at this location"
+                )
+
+            label_path = path / f"{name}.labels"
+            print(label_path)
+            if not label_path.exists():
+                raise Exception(
+                    f"No model file named {name}.labels exists at this location"
+                )
+
+        else:
+            os.chdir(path)
+            models = []
+            labels = []
+
+            for model in glob.glob("*.pt"):
+                models.append(model)
+
+            for label in glob.glob("*.labels"):
+                labels.append(label)
+
+            if len(models) == 0:
+                raise Exception(
+                    f"No model file ending with .pt/.labels found at this location."
+                )
+            elif len(models) > 1:
+                print(
+                    "Multiple model and label files were found. Please specify on in the `name` argument."
+                )
+                for model in models:
+                    print(model)
+                exit()
+            else:
+                pt_path = path / models[0]
+                label_path = path / labels[0]
+
+        # load into model
+        self.model.load_state_dict(torch.load(pt_path))
+
+        # load labels model
+        label_file = open(label_path, "r")
+        self.labels = label_file.read().strip().split(",")
