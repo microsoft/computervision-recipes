@@ -269,10 +269,10 @@ class DetectionLearner:
     """ Detection Learner for Object Detection"""
 
     def __init__(
-            self,
-            dataset: DetectionDataset = None,
-            model: nn.Module = None,
-            device: torch.device = None,
+        self,
+        dataset: DetectionDataset = None,
+        model: nn.Module = None,
+        device: torch.device = None,
     ):
         """ Initialize leaner object. """
         self.device = device
@@ -407,6 +407,7 @@ class DetectionLearner:
         cls,
         pred: Dict,
         threshold: Optional[int] = 0.5,
+        mask_threshold: Optional[int] = 0.5,
         **kwargs,
     ) -> Dict:
         """ Return prediction results that are above the threshold if any. """
@@ -416,6 +417,8 @@ class DetectionLearner:
         if threshold:
             selected = pred['scores'] > threshold
             pred = {k: v[selected] for k, v in pred.items()}
+        if "masks" in pred and mask_threshold:
+            pred["masks"] = pred["masks"] > mask_threshold
         return pred
 
     def _get_det_bboxes(
@@ -435,15 +438,40 @@ class DetectionLearner:
         self,
         pred: Dict,
         im_path: Union[str, Path]
-    ) -> List[Type[_Bbox]]:
-        return self._get_det_bboxes(pred, im_path)
+    ) -> Union[List[Type[_Bbox]], Tuple]:
+
+        res = self._get_det_bboxes(pred, im_path)
+        if "masks" in pred:
+            res = (res, pred["masks"].squeeze())
+        elif "keypoints" in pred:
+            res = (res, pred["keypoints"])
+        return res
 
     @classmethod
     def _pack_pred_results(cls, res: List, infos: Dict) -> List[Dict]:
-        return [
-            {"idx": t["image_id"], "det_bboxes": r} for r, t in
-            zip(res, infos)
-        ]
+        if not isinstance(res[0], tuple):
+            return [
+                {
+                    "idx": t["image_id"],
+                    "det_bboxes": r
+                } for r, t in zip(res, infos)
+            ]
+        elif res[0][1].shape[2] != 3:
+            return [
+                {
+                    "idx": t["image_id"],
+                    "det_bboxes": b,
+                    "masks": m,
+                } for (b, m), t in zip(res, infos)
+            ]
+        else:
+            return [
+                {
+                    "idx": t["image_id"],
+                    "det_bboxes": b,
+                    "keypoints": k,
+                } for (b, k), t in zip(res, infos)
+            ]
 
     def predict(
         self,
@@ -478,7 +506,7 @@ class DetectionLearner:
         return self._process_pred_results(pred[0], im_path)
 
     def predict_dl(
-        self, dl: DataLoader, threshold: Optional[float] = 0.5, **kwargs,
+        self, dl: DataLoader, threshold: Optional[float] = 0.5,
     ) -> List[DetectionBbox]:
         """ Predict all images in a dataloader object.
 
@@ -526,85 +554,3 @@ class DetectionLearner:
                 ) for p, t in zip(raw_dets, infos)
             ]
             yield DetectionLearner._pack_pred_results(res, infos)
-
-
-class MaskLearner(DetectionLearner):
-    def __init__(
-        self,
-        dataset: DetectionDataset = None,
-        model: nn.Module = None,
-        device: torch.device = None,
-    ):
-        if not model:
-            model = (
-                get_pretrained_maskrcnn(_get_num_classes(dataset))
-                if dataset
-                else get_pretrained_maskrcnn()
-            )
-        super().__init__(dataset, model, device)
-
-    @classmethod
-    def _apply_threshold(
-            cls,
-            pred: Dict,
-            threshold: Optional[int] = 0.5,
-            mask_threshold: int = 0.5,
-            **kwargs,
-    ):
-        pred = super()._apply_threshold(pred, threshold=threshold)
-        pred["masks"] = pred["masks"] > mask_threshold
-        return pred
-
-    def _process_pred_results(
-        self,
-        pred: Dict,
-        im_path: Union[str, Path]
-    ) -> Tuple:
-        binary_masks = pred["masks"].squeeze()
-        bboxes = self._get_det_bboxes(pred, im_path)
-        return bboxes, binary_masks
-
-    @classmethod
-    def _pack_pred_results(cls, res: List, infos: Dict) -> List[Dict]:
-        return [
-            {
-                "idx": t["image_id"],
-                "det_bboxes": b,
-                "masks": m,
-            } for (b, m), t in zip(res, infos)
-        ]
-
-
-class KeypointLearner(DetectionLearner):
-    def __init__(
-        self,
-        dataset: DetectionDataset = None,
-        num_keypoints: int = None,
-        model: nn.Module = None,
-        device: torch.device = None,
-    ):
-        if not model:
-            model = (
-                get_pretrained_keypointrcnn(_get_num_classes(dataset), num_keypoints)
-                if dataset and num_keypoints
-                else get_pretrained_keypointrcnn()
-            )
-        super().__init__(dataset, model, device)
-
-    def _process_pred_results(
-        self,
-        pred: Dict,
-        im_path: Union[str, Path]
-    ) -> Tuple:
-        bboxes = self._get_det_bboxes(pred, im_path)
-        return bboxes, pred["keypoints"]
-
-    @classmethod
-    def _pack_pred_results(cls, res: List, infos: Dict) -> List[Dict]:
-        return [
-            {
-                "idx": t["image_id"],
-                "det_bboxes": b,
-                "keypoints": k,
-            } for (b, k), t in zip(res, infos)
-        ]

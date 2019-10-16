@@ -105,6 +105,7 @@ def plot_mask(
     """
     if isinstance(im, (str, Path)):
         im = Image.open(im)
+
     # convert to RGBA for transparentising
     im = im.convert('RGBA')
     binary_masks = binarise_mask(mask)
@@ -211,9 +212,9 @@ def display_bboxes(
 
 
 def display_bbox_mask(
+    bboxes: List[AnnotationBbox],
     im_path: Union[Path, str],
     mask_path: Union[Path, str],
-    bboxes: List[AnnotationBbox],
     ax: Optional[plt.axes] = None,
 ) -> None:
     """ Draw image with bounding boxes and mask. """
@@ -226,9 +227,9 @@ def display_bbox_mask(
 
 
 def display_bbox_mask_keypoint(
+    bboxes: List[AnnotationBbox],
     im_path: Union[Path, str],
     mask_path: Union[Path, str],
-    bboxes: List[AnnotationBbox],
     keypoints: np.ndarray,
     ax: Optional[plt.axes] = None,
 ) -> None:

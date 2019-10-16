@@ -22,6 +22,7 @@ class Urls:
     )
 
     # mask datasets
+    fridge_objects_mask_path = 'https://github.com/simonzhaoms/testdata/raw/master/odFridgeObjects-mask.zip'
     penn_fudan_ped_path = "https://www.cis.upenn.edu/~jshi/ped_html/PennFudanPed.zip"
     coco_val2017_annotation_path = "http://images.cocodataset.org/annotations/annotations_trainval2017.zip"
     coco_val2017_image_path = "http://images.cocodataset.org/zips/val2017.zip"
