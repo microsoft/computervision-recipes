@@ -81,7 +81,34 @@ class COCOKeypoints:
 
 
 class COCOPersonKeypoints(COCOKeypoints):
-    """ Util to represent keypoints. """
+    """ Util to represent keypoints.
+
+    The Keypoint R-CNN model in PyTorch is pretrained on
+    [COCO train2017](http://cocodataset.org/#keypoints-2017).
+
+    The format of COCO annotation file can be found at
+    http://cocodataset.org/#format-data
+
+    The keypoints details can be viewed using the following Python code:
+
+    ```
+    from pprint import pprint
+    from zipfile import ZipFile
+    import json
+    import urllib.request
+
+    url = 'http://images.cocodataset.org/annotations/annotations_trainval2017.zip'  # 242 MB
+    name = url.split('/')[-1]
+    urllib.request.urlretrieve(url, name)
+    with ZipFile(name) as zf:
+        zf.extractall()
+
+    with open('./annotations/person_keypoints_val2017.json') as f:  # 9.6 MB
+        keypoints = json.load(f)
+
+    pprint(keypoints['categories'])
+    ```
+    """
     skeleton = [
         [15, 13],
         [13, 11],
