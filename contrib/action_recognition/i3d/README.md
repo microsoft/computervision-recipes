@@ -1,7 +1,7 @@
 Setup environment
 ```
 conda env create -f environment.yaml
-conda activate pytorchi3d
+conda activate i3d
 ```
 
 Download pretrained models

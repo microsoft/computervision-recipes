@@ -1,28 +1,19 @@
-name: pytorchi3d
+name: i3d
 dependencies:
-  # The python interpreter version.
-  # Currently Azure ML only supports 3.5.2 and later.
 - python=3.6.2
 - pandas
 - numpy
 - ipykernel
 - matplotlib
 - pip:
-    # Required packages for AzureML execution, history, and data preparation.
-  #- azureml-defaults
-  - torch
+  - torch==1.2.0
   - torchvision
-  #- horovod==0.16.4
   - pillow
   - fire
   - tensorboardX
   - tensorboard
-  - tqdm
-  - h5py
   - yacs
-  - opencv-python-headless
-  - git+https://github.com/NVIDIA/apex
-  - opencv-contrib-python
+  - opencv-contrib-python-headless
   
 channels:
 - conda-forge
