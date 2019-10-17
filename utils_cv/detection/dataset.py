@@ -71,7 +71,7 @@ def parse_pascal_voc_anno(
     # get image path from annotation. Note that the path field might not be
     # set.
     anno_dir = os.path.dirname(anno_path)
-    if root.find("path"):
+    if root.find("path") is not None:
         im_path = os.path.realpath(
             os.path.join(anno_dir, root.find("path").text)
         )
