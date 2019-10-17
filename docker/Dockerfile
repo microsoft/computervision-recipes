@@ -52,7 +52,7 @@ ENV PATH="${HOME}/conda/envs/cv/bin:${PATH}"
 FROM $ENV AS final
 
 # Install Conda dependencies
-RUN conda env update -f computervision/environment.yml && \
+RUN conda env create -f computervision/environment.yml && \
     conda clean -fay && \
     python -m ipykernel install --user --name 'cv' --display-name 'python3'
 
