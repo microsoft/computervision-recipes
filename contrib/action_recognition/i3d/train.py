@@ -2,8 +2,6 @@ import os
 import time
 import sys
 import numpy as np
-from apex import amp
-
 import fire
 import torch
 import torch.nn as nn
@@ -11,23 +9,20 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from torch.autograd import Variable
-from tensorboardX import SummaryWriter
 import torchvision
 from torchvision import datasets, transforms
+from tensorboardX import SummaryWriter
+from default import _C as config
+from default import update_config
 
 from videotransforms import (
     GroupRandomCrop, GroupRandomHorizontalFlip,
     GroupScale, GroupCenterCrop, GroupNormalize, Stack
 )
 from models.pytorch_i3d import InceptionI3d
-
 from metrics import accuracy, AverageMeter
-
 from dataset import I3DDataSet 
-from tensorboardX import SummaryWriter
 
-from default import _C as config
-from default import update_config
 
 # to work with vscode debugger https://github.com/joblib/joblib/issues/864
 import multiprocessing
@@ -65,8 +60,7 @@ def train(train_loader, model, criterion, optimizer, epoch, writer=None):
 
         loss = loss / config.TRAIN.GRAD_ACCUM_STEPS
         
-        with amp.scale_loss(loss, optimizer) as scaled_loss:
-            scaled_loss.backward()
+        loss.backward()
 
         if step % config.TRAIN.GRAD_ACCUM_STEPS == 0:
             optimizer.step()
@@ -159,6 +153,7 @@ def run(*options, cfg=None):
     update_config(config, options=options, config_file=cfg)
 
     print("Training ", config.TRAIN.MODALITY, " model.")
+    print("Batch size:", config.TRAIN.BATCH_SIZE, " Gradient accumulation steps:", config.TRAIN.GRAD_ACCUM_STEPS)
 
     torch.backends.cudnn.benchmark = config.CUDNN.BENCHMARK
 
@@ -237,7 +232,7 @@ def run(*options, cfg=None):
 
     i3d_model = i3d_model.cuda()
 
-    i3d_model, optimizer = amp.initialize(i3d_model, optimizer, opt_level="O1")
+    # i3d_model, optimizer = amp.initialize(i3d_model, optimizer, opt_level="O1")
 
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer,
