@@ -11,7 +11,7 @@ import torchvision
 from torchvision import datasets, transforms
 
 from videotransforms import (
-    Stack, GroupNormalize, ToTorchFormatTensor, GroupScale, GroupCenterCrop
+    GroupScale, GroupCenterCrop, GroupNormalize, Stack
 )
 
 from models.pytorch_i3d import InceptionI3d
@@ -33,8 +33,6 @@ def load_model(modality, state_dict_file):
     model = InceptionI3d(config.DATASET.NUM_CLASSES, in_channels=channels)
     state_dict = torch.load(state_dict_file)
     model.load_state_dict(state_dict)
-
-    # model = torch.nn.DataParallel(model).cuda()
     model = model.cuda()
 
     return model
@@ -49,7 +47,6 @@ def test(model, test_loader, modality):
     with torch.no_grad():
         end = time.time()
         for step, (input, target) in enumerate(test_loader):
-            #print("step", step)
             target_list.append(target)
             input = input.cuda(non_blocking=True)
 
@@ -78,13 +75,13 @@ def run(*options, cfg=None):
 
     # Setup Augmentation/Transformation pipeline
     input_size = config.TRAIN.INPUT_SIZE
-    resize_range_min = config.TRAIN.RESIZE_RANGE_MIN
+    resize_range_min = config.TRAIN.RESIZE_MIN
 
     # Data-parallel
     devices_lst = list(range(torch.cuda.device_count()))
     print("Devices {}".format(devices_lst))
 
-    if (config.TEST.MODALITY == "RGB") or (config.TEST.MODALITY == "both"):
+    if (config.TEST.MODALITY == "RGB") or (config.TEST.MODALITY == "combined"):
 
         rgb_loader = torch.utils.data.DataLoader(
             I3DDataSet(
@@ -109,7 +106,7 @@ def run(*options, cfg=None):
         rgb_model_file = config.TEST.MODEL_RGB
         if not os.path.exists(rgb_model_file):
             raise FileNotFoundError(rgb_model_file, " does not exist")
-        rgb_model = load_model(modality, rgb_model_file)
+        rgb_model = load_model(modality="RGB", state_dict_file=rgb_model_file)
 
         print("scoring with rgb model")
         targets, rgb_predictions = test(rgb_model, rgb_loader, "RGB")
@@ -120,7 +117,7 @@ def run(*options, cfg=None):
         rgb_top1_accuracy = accuracy(rgb_predictions, targets, topk=(1, ))
         print("rgb top1 accuracy: ", rgb_top1_accuracy[0].cpu().numpy().tolist())
     
-    if (config.TEST.MODALITY == "flow") or (config.TEST.MODALITY == "both"):
+    if (config.TEST.MODALITY == "flow") or (config.TEST.MODALITY == "combined"):
 
         flow_loader = torch.utils.data.DataLoader(
             I3DDataSet(
@@ -145,7 +142,7 @@ def run(*options, cfg=None):
         flow_model_file = config.TEST.MODEL_FLOW
         if not os.path.exists(flow_model_file):
             raise FileNotFoundError(flow_model_file, " does not exist")
-        flow_model = load_model(modality, flow_model_file)
+        flow_model = load_model(modality="flow", state_dict_file=flow_model_file)
 
         print("scoring with flow model")
         targets, flow_predictions = test(flow_model, flow_loader, "flow")
@@ -156,7 +153,7 @@ def run(*options, cfg=None):
         flow_top1_accuracy = accuracy(flow_predictions, targets, topk=(1, ))
         print("flow top1 accuracy: ", flow_top1_accuracy[0].cpu().numpy().tolist())
 
-    if config.TEST.MODALITY == "both":
+    if config.TEST.MODALITY == "combined":
         predictions = torch.stack([rgb_predictions, flow_predictions])
         predictions_mean = torch.mean(predictions, dim=0)
         top1accuracy = accuracy(predictions_mean, targets, topk=(1, ))

@@ -90,4 +90,4 @@ class Stack(object):
 
     def __call__(self, img_tensors):
         # Stack tensors and permute from D x C x H x W to C x D x H x W
-        return torch.stack(img_tensors, dim=0).permute(1, 0, 2, 3)
+        return torch.stack(img_tensors, dim=0).permute(1, 0, 2, 3).float()
