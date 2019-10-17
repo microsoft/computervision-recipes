@@ -2,5 +2,3 @@ MODEL:
   NAME: "i3d_flow"
 TRAIN:
   MODALITY: "flow"
-  BATCH_SIZE: 30
-  MAX_EPOCHS: 50
