@@ -2,6 +2,9 @@
 
 This is a place holder. Content will follow soon.
 
+![](./media/action_recognition.gif)
+*Example of action recognition*
+
 ## Overview
 
 Also give as example either a screenshot of Jun Ki's demo, or play here his recording
