@@ -2,9 +2,9 @@
 # Licensed under the MIT License.
 
 import os
-import glob
 from typing import List, Tuple, Union, Generator, Optional
 from pathlib import Path
+import shutil
 
 from PIL import Image
 import numpy as np
@@ -158,17 +158,26 @@ class DetectionLearner:
     """ Detection Learner for Object Detection"""
 
     def __init__(self, dataset: Dataset = None, model: nn.Module = None):
-        """ Initialize leaner object. """
-        # if dataset is None, model must not be
-        assert not dataset and model
+        """ Initialize leaner object.
+
+        Args:
+            dataset: the dataset. This class will infer labels if dataset is present.
+            model: the nn.Module you wish to use
+        """
+        # if model is None, dataset must not be
+        if not model:
+            assert dataset is not None
+
         self.device = torch_device()
         self.model = model
         self.dataset = dataset
 
         # setup model, default to fasterrcnn
         if self.model is None:
-            if self.dataset:
-                self.model = get_pretrained_fasterrcnn(len(dataset.labels) + 1)
+            self.model = get_pretrained_fasterrcnn(
+                len(self.dataset.labels) + 1
+            )
+
         self.model.to(self.device)
 
     def __getattr__(self, attr):
@@ -362,72 +371,92 @@ class DetectionLearner:
         if not Path(path).exists():
             os.mkdir(path)
 
-        pt_location = Path(path) / f"{name}.pt"
-        label_location = Path(path) / f"{name}.labels"
-        if not overwrite:
-            if pt_location.exists() or label_location.exists():
+        # make dir to contain all model/meta files
+        model_path = Path(path) / name
+        if model_path.exists():
+            if overwrite:
+                shutil.rmtree(str(model_path))
+            else:
                 raise Exception(
-                    "Can't save here. File already exists. Change your location or set `overwrite=True`"
+                    f"Model of {name} already exists in {path}. Set `overwrite=True` or use another name"
                 )
+        os.mkdir(model_path)
+
+        # set names
+        pt_path = model_path / f"model.pt"
+        meta_path = model_path / f"meta.txt"
 
         # save pt
-        torch.save(self.model.state_dict(), pt_location)
+        torch.save(self.model.state_dict(), pt_path)
 
-        # save labels
-        label_file = open(label_location, "w")
-        label_file.write(",".join(self.dataset.labels))
-        label_file.close()
+        # save meta file
+        meta_file = open(meta_path, "w")
+        meta_file.write(",".join(self.dataset.labels))
+        meta_file.close()
+
+        print(f"Model is saved to {model_path}")
 
     def load(self, name: str = None, path: str = None) -> None:
         """ Loads a model. """
 
-        # set path if not specified
+        # set path
         if not path:
-            path = Path(self.dataset.root) / "models"
+            if self.dataset:
+                path = Path(self.dataset.root) / "models"
+            else:
+                raise Exception("Specify a `path` parameter")
 
+        # if name is given..
         if name:
-            pt_path = path / f"{name}.pt"
+            model_path = path / name
+
+            pt_path = model_path / "model.pt"
             if not pt_path.exists():
                 raise Exception(
-                    f"No model file named {name}.pt exists at this location"
+                    f"No model file named model.pt exists in {model_path}"
                 )
 
-            label_path = path / f"{name}.labels"
-            print(label_path)
-            if not label_path.exists():
+            meta_path = model_path / "meta.txt"
+            if not meta_path.exists():
                 raise Exception(
-                    f"No model file named {name}.labels exists at this location"
+                    f"No model file named meta.txt exists in {model_path}"
                 )
 
+        # if no name is given, we assume there is only one model, otherwise we
+        # throw an error
         else:
-            os.chdir(path)
-            models = []
-            labels = []
-
-            for model in glob.glob("*.pt"):
-                models.append(model)
-
-            for label in glob.glob("*.labels"):
-                labels.append(label)
+            models = [f.path for f in os.scandir(path) if f.is_dir()]
 
             if len(models) == 0:
-                raise Exception(
-                    f"No model file ending with .pt/.labels found at this location."
-                )
+                raise Exception(f"No model found in {path}.")
             elif len(models) > 1:
                 print(
-                    "Multiple model and label files were found. Please specify on in the `name` argument."
+                    f"Multiple models were found in {path}. Please specify which you wish to use in the `name` argument."
                 )
                 for model in models:
                     print(model)
                 exit()
             else:
-                pt_path = path / models[0]
-                label_path = path / labels[0]
+                pt_path = Path(models[0]) / "model.pt"
+                meta_path = Path(models[0]) / "meta.txt"
 
         # load into model
         self.model.load_state_dict(torch.load(pt_path))
 
-        # load labels model
-        label_file = open(label_path, "r")
-        self.labels = label_file.read().strip().split(",")
+        # load meta info
+        meta_file = open(meta_path, "r")
+        self.labels = meta_file.read().strip().split(",")
+
+    @classmethod
+    def from_model(
+        cls, name: str = None, path: str = None
+    ) -> "DetectionLearner":
+        """ Todo """
+        meta_path = Path(path) / name / "meta.txt"
+        meta_file = open(meta_path, "r")
+        labels = meta_file.read().strip().split(",")
+
+        model = get_pretrained_fasterrcnn(len(labels) + 1, 600, 600)
+        detection_learner = DetectionLearner(model=model)
+        detection_learner.load(name=name, path=path)
+        return detection_learner
