@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import os
 import time
 import sys
@@ -73,7 +76,6 @@ def run(*options, cfg=None):
         torch.cuda.manual_seed_all(config.SEED)
     np.random.seed(seed=config.SEED)
 
-    # Setup Augmentation/Transformation pipeline
     input_size = config.TRAIN.INPUT_SIZE
     resize_range_min = config.TRAIN.RESIZE_MIN
 

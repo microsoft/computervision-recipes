@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+# Adapted from https://github.com/feiyunzhang/i3d-non-local-pytorch/blob/master/dataset.py
+
 import torch.utils.data as data
 import torch
 
