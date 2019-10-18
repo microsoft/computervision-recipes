@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-=======
->>>>>>> f3bf37106de4839ab03af79636bdf83b4d7dfa52
 # From https://github.com/feiyunzhang/i3d-non-local-pytorch/blob/master/main.py
 
 import torch
