@@ -1,6 +1,9 @@
+<<<<<<< HEAD
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+=======
+>>>>>>> f3bf37106de4839ab03af79636bdf83b4d7dfa52
 import os
 import time
 import sys
@@ -235,6 +238,11 @@ def run(*options, cfg=None):
 
     i3d_model = i3d_model.cuda()
 
+<<<<<<< HEAD
+=======
+    # i3d_model, optimizer = amp.initialize(i3d_model, optimizer, opt_level="O1")
+
+>>>>>>> f3bf37106de4839ab03af79636bdf83b4d7dfa52
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer,
         factor=0.1,

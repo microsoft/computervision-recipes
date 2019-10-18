@@ -1,6 +1,9 @@
+<<<<<<< HEAD
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+=======
+>>>>>>> f3bf37106de4839ab03af79636bdf83b4d7dfa52
 from pathlib import Path
 from PIL import Image
 import torch
