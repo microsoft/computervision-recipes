@@ -1,0 +1,7 @@
+__pycache__/
+models/__pycache__/
+log/
+.vscode/
+checkpoints/
+pretrained_models/
+inference/.ipynb_checkpoints/
