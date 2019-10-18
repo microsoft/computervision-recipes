@@ -26,12 +26,16 @@ for a in $(ls rars); do unrar x "rars/${a}" videos/; done;
 Edit the _C.DATASET.DIR option in [default.py](default.py) to point towards the rawframes input data directory.
 
 ## Setup environment
+Setup environment
+
 ```
 conda env create -f environment.yaml
 conda activate i3d
 ```
 
 ## Download pretrained models
+Download pretrained models
+
 ```
 bash download_models.sh
 ```
