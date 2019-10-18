@@ -1,0 +1,20 @@
+name: i3d
+dependencies:
+- python=3.6.2
+- pandas
+- numpy
+- ipykernel
+- matplotlib
+- pip:
+  - torch==1.2.0
+  - torchvision
+  - pillow
+  - fire
+  - tensorboardX
+  - tensorboard
+  - yacs
+  - opencv-contrib-python-headless
+  
+channels:
+- conda-forge
+- anaconda
