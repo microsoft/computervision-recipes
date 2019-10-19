@@ -19,7 +19,6 @@ ARG ANACONDA="https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64
 RUN curl ${ANACONDA} -o anaconda.sh && \
     /bin/bash anaconda.sh -b -p conda && \
     rm anaconda.sh 
-ENV PATH="${HOME}/conda/bin:${PATH}"
 ENV PATH="${HOME}/conda/envs/cv/bin:${PATH}"
 
 # Clone Computer Vision repo
@@ -44,7 +43,6 @@ WORKDIR ${HOME}
 
 COPY --from=cpu ${HOME} .
 
-ENV PATH="${HOME}/conda/bin:${PATH}"
 ENV PATH="${HOME}/conda/envs/cv/bin:${PATH}"
 
 
