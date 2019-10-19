@@ -235,7 +235,7 @@ def get_pretrained_keypointrcnn(
     return model
 
 
-def _calculate_ap(e: CocoEvaluator) -> float:
+def _calculate_ap(e: CocoEvaluator) -> Dict[str, float]:
     """ Calculate the Average Precision (AP) by averaging all iou
     thresholds across all labels.
 
@@ -253,8 +253,11 @@ def _calculate_ap(e: CocoEvaluator) -> float:
     of 101 precisions corresponding to 101 recalls from 0 to 100 when IoU=0.5.
     """
     precision_settings = (slice(0, None), slice(0, None), slice(0, None), 0, 2)
-    coco_eval = e.coco_eval["bbox"].eval["precision"]
-    return np.mean(np.mean(coco_eval[precision_settings]))
+    ap = {
+        k: np.mean(np.mean(v.eval["precision"][precision_settings]))
+        for k, v in e.coco_eval.items()
+    }
+    return ap
 
 
 def _get_num_classes(dataset: Optional[DetectionDataset]) -> int:
@@ -367,18 +370,22 @@ class DetectionLearner:
         """ Plot training loss from calling `fit` and average precision on the
         test set. """
         fig = plt.figure(figsize=figsize)
-        ax1 = fig.add_subplot(111)
+        ap = {k: [dic[k] for dic in self.ap] for k in self.ap[0]}
 
-        ax1.set_xlim([0, self.epochs - 1])
-        ax1.set_xticks(range(0, self.epochs))
-        ax1.set_title("Loss and Average Precision over epochs")
-        ax1.set_xlabel("epochs")
-        ax1.set_ylabel("loss", color="g")
-        ax1.plot(self.losses, "g-")
+        for i, (k, v) in enumerate(ap.items()):
 
-        ax2 = ax1.twinx()
-        ax2.set_ylabel("average precision", color="b")
-        ax2.plot(self.ap, "b-")
+            ax1 = fig.add_subplot(1, len(ap), i+1)
+
+            ax1.set_xlim([0, self.epochs - 1])
+            ax1.set_xticks(range(0, self.epochs))
+            ax1.set_title("Loss and Average Precision over epochs")
+            ax1.set_xlabel("epochs")
+            ax1.set_ylabel("loss", color="g")
+            ax1.plot(self.losses, "g-")
+
+            ax2 = ax1.twinx()
+            ax2.set_ylabel("average precision for ".format(k), color="b")
+            ax2.plot(v, "b-")
 
     def evaluate(self, dl: DataLoader = None) -> Union[CocoEvaluator, None]:
         """ eval code on validation/test set and saves the evaluation results

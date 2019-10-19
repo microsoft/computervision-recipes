@@ -382,7 +382,11 @@ def _get_precision_recall_settings(
     return iou_thrs, rec_thrs, cat_ids, area_rng, max_dets
 
 
-def _plot_pr_curve_iou_range(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
+def _plot_pr_curve_iou_range(
+    ax: plt.axes,
+    coco_eval: CocoEvaluator,
+    iou_type: Optional[str] = None,
+) -> None:
     """ Plots the PR curve over varying iou thresholds averaging over [K]
     categories. """
     x = np.arange(0.0, 1.01, 0.01)
@@ -396,7 +400,7 @@ def _plot_pr_curve_iou_range(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
     cmap = plt.cm.get_cmap("hsv", len(iou_thrs))
 
     ax = _setup_pr_axes(
-        ax, "Precision-Recall Curve @ different IoU Thresholds"
+        ax, f"Precision-Recall Curve ({iou_type}) @ different IoU Thresholds"
     )
     for i, c in zip(iou_thrs_idx, iou_thrs):
         arr = coco_eval.eval["precision"][_get_precision_recall_settings(i)]
@@ -406,11 +410,15 @@ def _plot_pr_curve_iou_range(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
     ax.legend(loc="lower left")
 
 
-def _plot_pr_curve_iou_mean(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
+def _plot_pr_curve_iou_mean(
+    ax: plt.axes,
+    coco_eval: CocoEvaluator,
+    iou_type: Optional[str] = None,
+) -> None:
     """ Plots the PR curve, averaging over iou thresholds and [K] labels. """
     x = np.arange(0.0, 1.01, 0.01)
     ax = _setup_pr_axes(
-        ax, "Precision-Recall Curve - Mean over IoU Thresholds"
+        ax, f"Precision-Recall Curve ({iou_type})- Mean over IoU Thresholds"
     )
     avg_arr = np.mean(  # mean over K labels
         np.mean(  # mean over iou thresholds
@@ -451,7 +459,10 @@ def plot_pr_curves(
         raise Exception(
             "`accumulate()` has not been called on the passed in coco_eval object."
         )
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
-    _plot_pr_curve_iou_range(ax1, coco_eval)
-    _plot_pr_curve_iou_mean(ax2, coco_eval)
+
+    fig, axes = plt.subplots(len(evaluator.coco_eval), 2, figsize=figsize)
+    for i, (k, coco_eval) in enumerate(evaluator.coco_eval.items()):
+        _plot_pr_curve_iou_range(axes[i, 0], coco_eval, k)
+        _plot_pr_curve_iou_mean(axes[i, 1], coco_eval, k)
+
     plt.show()
