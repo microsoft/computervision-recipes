@@ -118,7 +118,8 @@ bottom={self.bottom}]\
         if (overlap_left > overlap_right) or (overlap_top > overlap_bottom):
             return None
         else:
-            # TODO think about whether this actually works for classes that inherit _Bbox
+            # TODO think about whether this actually works for classes that
+            #      inherit _Bbox
             return _Bbox(
                 overlap_left, overlap_top, overlap_right, overlap_bottom
             )

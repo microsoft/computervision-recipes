@@ -17,7 +17,6 @@ import matplotlib.pyplot as plt
 from .references.coco_eval import CocoEvaluator
 from .bbox import _Bbox, AnnotationBbox, DetectionBbox
 from ..common.misc import get_font
-from .keypoint import COCOPersonKeypoints
 from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 
 
@@ -32,15 +31,11 @@ class PlotSettings:
         text_color: Tuple[int, int, int] = (255, 255, 255),
         mask_color: Tuple[int, int, int] = (2, 166, 101),
         mask_alpha: float = 0.5,
-        keypoint_th: int = 4,
-        keypoint_color: Tuple[int, int, int] = (0, 0, 255),
     ):
         self.rect_th = rect_th
         self.rect_color = rect_color
         self.text_size = text_size
         self.text_color = text_color
-        self.keypoint_th = keypoint_th
-        self.keypoint_color = keypoint_color
         self.mask_color = mask_color
         self.mask_alpha = mask_alpha
 
@@ -124,30 +119,10 @@ def plot_mask(
     ]
     # merge masks into img one by one
     for cmask in colored_masks:
-        tmask = Image.fromarray(transparentise_mask(cmask, plot_settings.mask_alpha))
+        tmask = Image.fromarray(
+            transparentise_mask(cmask, plot_settings.mask_alpha)
+        )
         im = Image.alpha_composite(im, tmask)
-
-    return im
-
-
-def plot_keypoints(
-    im: Union[str, Path, PIL.Image.Image],
-    keypoints: Union[List[float], List[List[float]], List[List[List[float]]], np.ndarray],
-    plot_settings: PlotSettings = PlotSettings(),
-) -> PIL.Image.Image:
-    """ Plot connected keypoints on Image and return the Image. """
-    if isinstance(im, (str, Path)):
-        im = Image.open(im)
-
-    if len(keypoints) > 0:
-        keypoints = COCOPersonKeypoints(keypoints)
-        draw = ImageDraw.Draw(im)
-        for line in keypoints.get_lines():
-            draw.line(
-                line,
-                fill=plot_settings.keypoint_color,
-                width=plot_settings.keypoint_th
-            )
 
     return im
 
@@ -221,23 +196,6 @@ def display_bbox_mask(
     im = Image.open(im_path)
     if mask_path is not None:
         im = plot_mask(im_path, mask_path)
-    if bboxes is not None:
-        im = plot_boxes(im, bboxes)
-    display_image(im, ax)
-
-
-def display_bbox_mask_keypoint(
-    bboxes: List[AnnotationBbox],
-    im_path: Union[Path, str],
-    mask_path: Union[Path, str],
-    keypoints: np.ndarray,
-    ax: Optional[plt.axes] = None,
-) -> None:
-    im = Image.open(im_path)
-    if mask_path is not None:
-        im = plot_mask(im_path, mask_path)
-    if keypoints is not None:
-        im = plot_keypoints(im, keypoints)
     if bboxes is not None:
         im = plot_boxes(im, bboxes)
     display_image(im, ax)
@@ -395,8 +353,9 @@ def _plot_pr_curve_iou_range(
         0.5, 0.95, np.round((0.95 - 0.5) / 0.05) + 1, endpoint=True
     )
 
-    # get_cmap() - a function that maps each index in 0, 1, ..., n-1 to a distinct
-    # RGB color; the keyword argument name must be a standard mpl colormap name.
+    # get_cmap() - a function that maps each index in 0, 1, ..., n-1 to a
+    # distinct RGB color; the keyword argument name must be a standard mpl
+    # colormap name.
     cmap = plt.cm.get_cmap("hsv", len(iou_thrs))
 
     ax = _setup_pr_axes(

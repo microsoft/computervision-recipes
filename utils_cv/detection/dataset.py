@@ -12,15 +12,13 @@ import torch
 from torch.utils.data import Dataset, Subset, DataLoader
 import xml.etree.ElementTree as ET
 from PIL import Image
-from pycocotools.coco import COCO
 
 from .plot import (
     display_bboxes,
-    display_bbox_mask_keypoint,
+    display_bbox_mask,
     plot_grid,
 )
 from .bbox import AnnotationBbox
-from .data import coco_labels
 from .mask import binarise_mask
 from .references.utils import collate_fn
 from .references.transforms import Compose, RandomHorizontalFlip, ToTensor
@@ -128,7 +126,6 @@ class DetectionDataset(Dataset):
         anno_dir: str = "annotations",
         im_dir: str = "images",
         mask_dir: str = None,
-        anno_file: str = None,
         seed: int = None,
     ):
         """ initialize dataset
@@ -149,6 +146,11 @@ class DetectionDataset(Dataset):
             im_dir: the name of the image subfolder under the root directory.
                     If set to 'None' then infers image location from annotation
                     .xml files
+            mask_dir: the name of the mask subfolder under the root
+                      directory if the dataset is used for instance
+                      segmentation
+            seed: random seed for splitting dataset to training and testing
+                  data
         """
 
         self.root = Path(root)
@@ -159,7 +161,6 @@ class DetectionDataset(Dataset):
         self.im_dir = im_dir
         self.anno_dir = anno_dir
         self.mask_dir = mask_dir
-        self.anno_file = anno_file
         self.batch_size = batch_size
         self.train_pct = train_pct
         self.seed = seed
@@ -183,6 +184,7 @@ class DetectionDataset(Dataset):
             num_workers=db_num_workers(),
             collate_fn=collate_fn,
         )
+
         self.test_dl = DataLoader(
             test_ds,
             batch_size=self.batch_size,
@@ -195,19 +197,12 @@ class DetectionDataset(Dataset):
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible labels. """
 
-        # For COCO data: A single JSON annotation file should be provided.
-        #
-        # For PASCAL VOC dataset:
         # All annotation files are assumed to be in the anno_dir directory.
         # If im_dir is provided then find all images in that directory, and
         # it's assumed that the annotation filenames end with .xml.
         # If im_dir is not provided, then the image paths are read from inside
         # the .xml annotations.
-        if self.anno_file:
-            self.coco = COCO(self.anno_file)
-            self.SIZE = 20
-            img_ids = list(self.coco.imgs.keys())[:self.SIZE]
-        elif self.im_dir is None:
+        if self.im_dir is None:
             anno_filenames = sorted(os.listdir(self.root / self.anno_dir))
         else:
             im_filenames = sorted(os.listdir(self.root / self.im_dir))
@@ -219,64 +214,43 @@ class DetectionDataset(Dataset):
             ]
 
         # Parse all annotations
-        if self.anno_file:
-            self.im_paths = [
-                Path(self.im_dir) / self.coco.imgs[i]["file_name"]
-                for i in img_ids
-            ]
-            self.annos_list = [self.coco.imgToAnns[i] for i in img_ids]
-            # ignore images without annotated objects
-            valid_idxes = [
-                i for i, annos in enumerate(self.annos_list) if len(annos) != 0
-            ]
-            self.im_paths = [self.im_paths[i] for i in valid_idxes]
-            self.annos_list = [self.annos_list[i] for i in valid_idxes]
-            self.anno_bboxes = [
-                [
-                    AnnotationBbox.from_array_xywh(
-                        anno["bbox"],
-                        label_idx=None,
-                        label_name=coco_labels()[anno["category_id"]]
-                    ) for anno in annos
-                ] for annos in self.annos_list
-            ]
-        else:
-            self.im_paths = []
-            self.anno_paths = []
-            self.anno_bboxes = []
-            self.mask_paths = []
-            for anno_idx, anno_filename in enumerate(anno_filenames):
-                anno_path = self.root / self.anno_dir / str(anno_filename)
-                assert os.path.exists(
-                    anno_path
-                ), f"Cannot find annotation file: {anno_path}"
-                anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
+        self.im_paths = []
+        self.anno_paths = []
+        self.anno_bboxes = []
+        self.mask_paths = []
+        for anno_idx, anno_filename in enumerate(anno_filenames):
+            anno_path = self.root / self.anno_dir / str(anno_filename)
+            assert os.path.exists(
+                anno_path
+            ), f"Cannot find annotation file: {anno_path}"
+            anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
 
-                # TODO For now, ignore all images without a single bounding box
-                #      in it, otherwise throws error during training.
-                if len(anno_bboxes) == 0:
+            # TODO For now, ignore all images without a single bounding box
+            #      in it, otherwise throws error during training.
+            if len(anno_bboxes) == 0:
+                continue
+
+            if self.im_dir is None:
+                self.im_paths.append(im_path)
+            else:
+                self.im_paths.append(im_paths[anno_idx])
+
+            if self.mask_dir:
+                # Assume mask image name matches image name but has .png
+                # extension
+                mask_name = os.path.basename(self.im_paths[-1])
+                mask_name = mask_name[:mask_name.rindex('.')] + ".png"
+                mask_name = self.root / self.mask_dir / mask_name
+                # For mask prediction, if no mask provided, ignore the image
+                if not mask_name.exists():
+                    del self.im_paths[-1]
                     continue
 
-                if self.im_dir is None:
-                    self.im_paths.append(im_path)
-                else:
-                    self.im_paths.append(im_paths[anno_idx])
+                self.mask_paths.append(mask_name)
 
-                if self.mask_dir:
-                    mask_name = os.path.basename(self.im_paths[-1])
-                    mask_name = mask_name[:mask_name.rindex('.')] + ".png"
-                    mask_name = self.root / self.mask_dir / mask_name
-                    # For mask prediction, if no mask provided, ignore the image
-                    if not mask_name.exists():
-                        del self.im_paths[-1]
-                        continue
-
-                    self.mask_paths.append(mask_name)
-
-                self.anno_paths.append(anno_path)
-                self.anno_bboxes.append(anno_bboxes)
-
-            assert len(self.im_paths) == len(self.anno_paths)
+            self.anno_paths.append(anno_path)
+            self.anno_bboxes.append(anno_bboxes)
+        assert len(self.im_paths) == len(self.anno_paths)
 
         # Get list of all labels
         labels = []
@@ -300,6 +274,7 @@ class DetectionDataset(Dataset):
 
         Args:
             train_pct: the ratio of images to use for training vs
+            testing
 
         Return
             A training and testing dataset in that order
@@ -325,7 +300,8 @@ class DetectionDataset(Dataset):
         return train, test
 
     def _get_transforms(self, idx):
-        """ Return the corresponding transforms for training and testing data. """
+        """ Return the corresponding transforms for training and testing data.
+        """
         return self.transforms[self.is_test[idx]]
 
     def show_ims(self, rows: int = 1, cols: int = 3, seed: int = None) -> None:
@@ -342,34 +318,18 @@ class DetectionDataset(Dataset):
             random.seed(seed or self.seed)
 
         plot_func = (
-            display_bbox_mask_keypoint
-            if self.mask_paths or self.anno_file
+            display_bbox_mask
+            if self.mask_paths
             else display_bboxes
         )
         plot_grid(plot_func, self._get_random_anno, rows=rows, cols=cols)
 
     def _get_binary_masks(self, idx: int) -> Union[np.ndarray, None]:
         binary_masks = None
-        if self.anno_file and [a for a in self.annos_list[idx] if "segmentation" in a]:
-            binary_masks = np.array([
-                self.coco.annToMask(a) for a in self.annos_list[idx]
-                if "segmentation" in a
-            ])
-        elif self.mask_paths:
+        if self.mask_paths:
             binary_masks = binarise_mask(Image.open(self.mask_paths[idx]))
 
         return binary_masks
-
-    def _get_keypoints(self, idx: int) -> Union[np.ndarray, None]:
-        keypoints = None
-        if self.anno_file and [a for a in self.annos_list[idx] if "keypoints" in a]:
-            keypoints = np.array([a["keypoints"] for a in self.annos_list[idx] if "keypoints" in a])
-            keypoints = (
-                keypoints.reshape((len(keypoints), -1, 3))
-                if keypoints.size else None
-            )
-
-        return keypoints
 
     def _get_random_anno(self) -> Tuple:
         """ Get random annotation and corresponding image
@@ -381,11 +341,8 @@ class DetectionDataset(Dataset):
         # get mask if any
         mask = self._get_binary_masks(idx)
 
-        # get keypoints if any
-        keypoints = self._get_keypoints(idx)
-
-        if mask is not None or keypoints is not None:
-            return self.anno_bboxes[idx], self.im_paths[idx], mask, keypoints
+        if mask is not None:
+            return self.anno_bboxes[idx], self.im_paths[idx], mask
         else:
             return self.anno_bboxes[idx], self.im_paths[idx]
 
@@ -415,14 +372,6 @@ class DetectionDataset(Dataset):
         binary_masks = self._get_binary_masks(idx)
         if binary_masks is not None:
             target["masks"] = torch.as_tensor(binary_masks, dtype=torch.uint8)
-
-        # get keypoints
-        keypoints = self._get_keypoints(idx)
-        if keypoints is not None:
-            target["keypoints"] = torch.as_tensor(
-                keypoints,
-                dtype=torch.float32,
-            )
 
         # get image
         im = Image.open(self.im_paths[idx]).convert("RGB")

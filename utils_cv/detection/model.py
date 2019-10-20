@@ -9,9 +9,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torchvision import transforms
-from torchvision.models.detection import fasterrcnn_resnet50_fpn, maskrcnn_resnet50_fpn, keypointrcnn_resnet50_fpn
+from torchvision.models.detection import fasterrcnn_resnet50_fpn, maskrcnn_resnet50_fpn
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torchvision.models.detection.keypoint_rcnn import KeypointRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
@@ -90,13 +89,19 @@ def _get_pretrained_rcnn(
 
     Args:
         model_func: pretrained R-CNN model generating functions, such as
-                    fasterrcnn_resnet50_fpn(), get_pretrained_fasterrcnn(), etc.
-        min_size: minimum size of the image to be rescaled before feeding it to the backbone
-        max_size: maximum size of the image to be rescaled before feeding it to the backbone
-        rpn_pre_nms_top_n_train: number of proposals to keep before applying NMS during training
-        rpn_pre_nms_top_n_test: number of proposals to keep before applying NMS during testing
-        rpn_post_nms_top_n_train: number of proposals to keep after applying NMS during training
-        rpn_post_nms_top_n_test: number of proposals to keep after applying NMS during testing
+            fasterrcnn_resnet50_fpn(), get_pretrained_fasterrcnn(), etc.
+        min_size: minimum size of the image to be rescaled before feeding it to
+            the backbone
+        max_size: maximum size of the image to be rescaled before feeding it to
+            the backbone
+        rpn_pre_nms_top_n_train: number of proposals to keep before applying
+            NMS during training
+        rpn_pre_nms_top_n_test: number of proposals to keep before applying NMS
+            during testing
+        rpn_post_nms_top_n_train: number of proposals to keep after applying
+            NMS during training
+        rpn_post_nms_top_n_test: number of proposals to keep after applying NMS
+            during testing
         rpn_nms_thresh: NMS threshold used for postprocessing the RPN proposals
 
     Returns
@@ -129,18 +134,15 @@ def _tune_box_predictor(model: nn.Module, num_classes: int) -> nn.Module:
 
 
 def _tune_mask_predictor(model: nn.Module, num_classes: int) -> nn.Module:
-    # get the number of input features of mask predictor from the pretrained model
+    # get the number of input features of mask predictor from the pretrained
+    # model
     in_features = model.roi_heads.mask_predictor.conv5_mask.in_channels
     # replace the mask predictor with a new one
-    model.roi_heads.mask_predictor = MaskRCNNPredictor(in_features, 256, num_classes)
-    return model
-
-
-def _tune_keypoint_predictor(model: nn.Module, num_keypoints: int) -> nn.Module:
-    # get the number of input features of keypoint predictor from the pretrained model
-    in_features = model.roi_heads.keypoint_predictor.kps_score_lowres.in_channels
-    # replace the keypoint predictor with a new one
-    model.roi_heads.keypoint_predictor = KeypointRCNNPredictor(in_features, num_keypoints)
+    model.roi_heads.mask_predictor = MaskRCNNPredictor(
+        in_features,
+        256,
+        num_classes
+    )
     return model
 
 
@@ -151,7 +153,8 @@ def get_pretrained_fasterrcnn(
     """ Gets a pretrained FasterRCNN model
 
     Args:
-        num_classes: number of output classes of the model (including the background).
+        num_classes: number of output classes of the model (including the
+            background).
 
     Returns
         The model to fine-tine/inference with
@@ -159,7 +162,8 @@ def get_pretrained_fasterrcnn(
     For a list of all parameters see:
         https://github.com/pytorch/vision/blob/master/torchvision/models/detection/faster_rcnn.py
     """
-    # TODO - reconsider that num_classes includes background. This doesn't feel intuitive.
+    # TODO - reconsider that num_classes includes background. This doesn't feel
+    #     intuitive.
 
     # load a model pre-trained on COCO
     model = _get_pretrained_rcnn(
@@ -180,7 +184,8 @@ def get_pretrained_maskrcnn(
     """ Gets a pretrained Mask R-CNN model
 
     Args:
-        num_classes: number of output classes of the model (including the background)
+        num_classes: number of output classes of the model (including the
+            background)
 
     Returns
         The model to fine-tine/inference with
@@ -198,39 +203,6 @@ def get_pretrained_maskrcnn(
     if num_classes:
         model = _tune_box_predictor(model, num_classes)
         model = _tune_mask_predictor(model, num_classes)
-
-    return model
-
-
-def get_pretrained_keypointrcnn(
-    num_classes: int = None,
-    num_keypoints: int = None,
-    **kwargs,
-) -> nn.Module:
-    """ Gets a pretrained Keypoint R-CNN model
-
-    Args:
-        num_classes: number of output classes of the model (including the background)
-        num_keypoints: number of keypoints for the specific category
-    Returns
-        The model to fine-tine/inference with
-
-    For a list of all parameters see:
-        https://github.com/pytorch/vision/blob/master/torchvision/models/detection/keypoint_rcnn.py
-
-    """
-    # load a model pre-trained on COCO
-    model = _get_pretrained_rcnn(
-        keypointrcnn_resnet50_fpn,
-        **kwargs,
-    )
-
-    if num_classes:
-        model = _tune_box_predictor(model, num_classes)
-        model = _tune_mask_predictor(model, num_classes)
-
-    if num_keypoints:
-        model = _tune_keypoint_predictor(model, num_keypoints)
 
     return model
 
@@ -323,7 +295,8 @@ class DetectionLearner:
         if not self.dataset:
             return
 
-        # reduce learning rate every step_size epochs by a factor of gamma (by default) 0.1.
+        # reduce learning rate every step_size epochs by a factor of gamma (by
+        # default) 0.1.
         if step_size is None:
             step_size = int(np.round(epochs / 1.5))
 
@@ -450,8 +423,6 @@ class DetectionLearner:
         res = self._get_det_bboxes(pred, im_path)
         if "masks" in pred:
             res = (res, pred["masks"].squeeze())
-        elif "keypoints" in pred:
-            res = (res, pred["keypoints"])
         return res
 
     @classmethod
@@ -463,21 +434,13 @@ class DetectionLearner:
                     "det_bboxes": r
                 } for r, t in zip(res, infos)
             ]
-        elif res[0][1].shape[2] != 3:
+        else:
             return [
                 {
                     "idx": t["image_id"],
                     "det_bboxes": b,
                     "masks": m,
                 } for (b, m), t in zip(res, infos)
-            ]
-        else:
-            return [
-                {
-                    "idx": t["image_id"],
-                    "det_bboxes": b,
-                    "keypoints": k,
-                } for (b, k), t in zip(res, infos)
             ]
 
     def predict(
@@ -489,11 +452,11 @@ class DetectionLearner:
         """ Performs inferencing on an image path or image.
 
         Args:
-            im_or_path: the image array which you can get from `Image.open(path)` OR a
-            image path
+            im_or_path: the image array which you can get from
+                `Image.open(path)` OR a image path
             threshold: the threshold to use to calculate whether the object was
-            detected. Note: can be set to None to return all detection bounding
-            boxes.
+                detected. Note: can be set to None to return all detection
+                bounding boxes.
 
         Return a list of DetectionBbox
         """

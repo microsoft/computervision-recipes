@@ -23,7 +23,8 @@ def line_graph(
     Args:
         values: List of graphs or a graph to plot
         labels: List of labels or a label for graph.
-            If labels is a string, this function assumes the values is a single graph.
+            If labels is a string, this function assumes the values is a
+            single graph.
         x_guides: List of guidelines (a vertical dotted line)
         x_name: x axis label
         y_name: y axis label
@@ -45,7 +46,7 @@ def line_graph(
 
 
 def show_ims(
-    im_paths: Union[str, List[str], np.ndarray, List[np.ndarray], List[object]],
+    im_paths: Union[str, List[str], np.ndarray, List[np.ndarray]],
     labels: Union[str, List[str]] = None,
     size: int = 3,
     rows: int = 1,
@@ -60,10 +61,17 @@ def show_ims(
     if isinstance(im_paths, (str, Path, np.ndarray)):
         if labels is not None and isinstance(labels, str):
             labels = [labels]
-        ims = [mpimg.imread(im_paths) if not isinstance(im_paths, np.ndarray) else im_paths]
+        ims = [
+            mpimg.imread(im_paths)
+            if not isinstance(im_paths, np.ndarray) else im_paths
+        ]
         im_paths = [im_paths if not isinstance(im_paths, np.ndarray) else None]
     else:
-        ims = [mpimg.imread(im_path) if not isinstance(im_path, np.ndarray) else im_path for im_path in im_paths]
+        ims = [
+            mpimg.imread(im_path)
+            if not isinstance(im_path, np.ndarray) else im_path
+            for im_path in im_paths
+        ]
 
     cols = math.ceil(len(ims) / rows)
     _, axes = plt.subplots(rows, cols, figsize=(size * cols, size * rows))
