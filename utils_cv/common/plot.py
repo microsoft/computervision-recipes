@@ -23,8 +23,7 @@ def line_graph(
     Args:
         values: List of graphs or a graph to plot
         labels: List of labels or a label for graph.
-            If labels is a string, this function assumes the values is a
-            single graph.
+            If labels is a string, this function assumes the values is a single graph.
         x_guides: List of guidelines (a vertical dotted line)
         x_name: x axis label
         y_name: y axis label

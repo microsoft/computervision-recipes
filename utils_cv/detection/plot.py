@@ -59,7 +59,12 @@ def plot_boxes(
     """
     if len(bboxes) > 0:
         draw = ImageDraw.Draw(im)
+        font = get_font(size=plot_settings.text_size)
+
         for bbox in bboxes:
+            # do not draw background bounding boxes
+            if bbox.label_idx == 0:
+                continue
 
             box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
 
@@ -69,9 +74,6 @@ def plot_boxes(
                 outline=plot_settings.rect_color,
                 width=plot_settings.rect_th,
             )
-
-            # gets font
-            font = get_font(size=plot_settings.text_size)
 
             # write prediction class
             draw.text(
@@ -219,7 +221,7 @@ def plot_grid(
         function will call the function and use the returned values each time.
         rows: rows to plot
         cols: cols to plot, default is 3. NOTE: use cols=3 for best looking
-              grid
+        grid
         figsize: figure size (will be dynamically modified in the code
 
     Returns nothing but plots graph
@@ -353,9 +355,8 @@ def _plot_pr_curve_iou_range(
         0.5, 0.95, np.round((0.95 - 0.5) / 0.05) + 1, endpoint=True
     )
 
-    # get_cmap() - a function that maps each index in 0, 1, ..., n-1 to a
-    # distinct RGB color; the keyword argument name must be a standard mpl
-    # colormap name.
+    # get_cmap() - a function that maps each index in 0, 1, ..., n-1 to a distinct
+    # RGB color; the keyword argument name must be a standard mpl colormap name.
     cmap = plt.cm.get_cmap("hsv", len(iou_thrs))
 
     ax = _setup_pr_axes(

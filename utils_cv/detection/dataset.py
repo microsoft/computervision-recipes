@@ -10,21 +10,38 @@ from typing import Callable, List, Tuple, Union
 
 import torch
 from torch.utils.data import Dataset, Subset, DataLoader
+from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import (
-    display_bboxes,
-    display_bbox_mask,
-    plot_grid,
-)
+from .plot import display_bboxes, display_bbox_mask, plot_grid
 from .bbox import AnnotationBbox
 from .mask import binarise_mask
 from .references.utils import collate_fn
-from .references.transforms import Compose, RandomHorizontalFlip, ToTensor
+from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 from ..common.gpu import db_num_workers
 
 Trans = Callable[[object, dict], Tuple[object, dict]]
+
+
+class ColorJitterTransform(object):
+    """ Wrapper for torchvision's ColorJitter to make sure 'target
+    object is passed along """
+
+    def __init__(self, brightness, contrast, saturation, hue):
+        self.brightness = brightness
+        self.contrast = contrast
+        self.saturation = saturation
+        self.hue = hue
+
+    def __call__(self, im, target):
+        im = ColorJitter(
+            brightness=self.brightness,
+            contrast=self.contrast,
+            saturation=self.saturation,
+            hue=self.hue,
+        )(im)
+        return im, target
 
 
 def get_transform(train: bool) -> Trans:
@@ -40,23 +57,34 @@ def get_transform(train: bool) -> Trans:
     Returns:
         A list of transforms to apply.
     """
-    transforms = [ToTensor()]
+    transforms = []
+
+    # transformations to apply before image is turned into a tensor
+    if train:
+        transforms.append(
+            ColorJitterTransform(
+                brightness=0.2, contrast=0.2, saturation=0.4, hue=0.05
+            )
+        )
+
+    # transform im to tensor
+    transforms.append(ToTensor())
+
+    # transformations to apply after image is turned into a tensor
     if train:
         transforms.append(RandomHorizontalFlip(0.5))
-        # TODO we can add more 'default' transformations here
+
     return Compose(transforms)
 
 
 def parse_pascal_voc_anno(
     anno_path: str, labels: List[str] = None
 ) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
-    """ Extract the annotations and image path from labelling in Pascal VOC
-    format.
+    """ Extract the annotations and image path from labelling in Pascal VOC format.
 
     Args:
         anno_path: the path to the annotation xml file
-        labels: list of all possible labels, used to compute label index for
-                each label name
+        labels: list of all possible labels, used to compute label index for each label name
 
     Return
         A tuple of annotations and the image path
@@ -66,8 +94,7 @@ def parse_pascal_voc_anno(
     tree = ET.parse(anno_path)
     root = tree.getroot()
 
-    # get image path from annotation. Note that the path field might not be
-    # set.
+    # get image path from annotation. Note that the path field might not be set.
     anno_dir = os.path.dirname(anno_path)
     if root.find("path") is not None:
         im_path = os.path.realpath(
@@ -83,10 +110,10 @@ def parse_pascal_voc_anno(
     for obj in objs:
         label = obj.find("name").text
         bnd_box = obj.find("bndbox")
-        left = int(bnd_box.find('xmin').text)
-        top = int(bnd_box.find('ymin').text)
-        right = int(bnd_box.find('xmax').text)
-        bottom = int(bnd_box.find('ymax').text)
+        left = int(bnd_box.find("xmin").text)
+        top = int(bnd_box.find("ymin").text)
+        right = int(bnd_box.find("xmax").text)
+        bottom = int(bnd_box.find("ymax").text)
 
         # Set mapping of label name to label index
         if labels is None:
@@ -106,11 +133,10 @@ def parse_pascal_voc_anno(
     return anno_bboxes, im_path
 
 
-class DetectionDataset(Dataset):
+class DetectionDataset:
     """ An object detection dataset.
 
-    The dunder methods __init__, __getitem__, and __len__ were inspired from
-    code found here:
+    The dunder methods __init__, __getitem__, and __len__ were inspired from code found here:
     https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html#writing-a-custom-dataset-for-pennfudan
     """
 
@@ -118,15 +144,14 @@ class DetectionDataset(Dataset):
         self,
         root: Union[str, Path],
         batch_size: int = 2,
-        transforms: Union[Trans, Tuple[Trans, Trans]] = (
-                get_transform(train=True),
-                get_transform(train=False)
-        ),
+        train_transforms: Trans = get_transform(train=True),
+        test_transforms: Trans = get_transform(train=False),
         train_pct: float = 0.5,
         anno_dir: str = "annotations",
         im_dir: str = "images",
         mask_dir: str = None,
         seed: int = None,
+        allow_negatives = False
     ):
         """ initialize dataset
 
@@ -137,61 +162,40 @@ class DetectionDataset(Dataset):
 
         Args:
             root: the root path of the dataset containing the image and
-                  annotation folders
+            annotation folders
             batch_size: batch size for dataloaders
-            transforms: the transformations to apply
+            train_transforms: the transformations to apply to the train set
+            test_transforms: the transformations to apply to the test set
             train_pct: the ratio of training to testing data
-            anno_dir: the name of the annotation subfolder under the root
-                      directory
-            im_dir: the name of the image subfolder under the root directory.
-                    If set to 'None' then infers image location from annotation
-                    .xml files
-            mask_dir: the name of the mask subfolder under the root
-                      directory if the dataset is used for instance
-                      segmentation
-            seed: random seed for splitting dataset to training and testing
-                  data
+            anno_dir: the name of the annotation subfolder under the root directory
+            im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
+            allow_negatives: is false (default) then will throw an error if no anntation .xml file can be found for a given image. Otherwise use image
+                as negative, ie assume that the image does not contain any of the objects of interest.
+            mask_dir: the name of the mask subfolder under the root directory if the dataset is used for instance segmentation
+            seed: random seed for splitting dataset to training and testing data
         """
 
         self.root = Path(root)
-        # TODO think about how transforms are working...
-        if transforms and len(transforms) == 1:
-            self.transforms = (transforms, ) * 2
-        self.transforms = transforms
+        self.train_transforms = train_transforms
+        self.test_transforms = test_transforms
         self.im_dir = im_dir
         self.anno_dir = anno_dir
         self.mask_dir = mask_dir
         self.batch_size = batch_size
         self.train_pct = train_pct
+        self.allow_negatives = allow_negatives
         self.seed = seed
 
         # read annotations
         self._read_annos()
 
-        self._get_dataloader(train_pct)
-
-    def _get_dataloader(self, train_pct):
         # create training and validation datasets
-        train_ds, test_ds = self.split_train_test(
+        self.train_ds, self.test_ds = self.split_train_test(
             train_pct=train_pct
         )
 
         # create training and validation data loaders
-        self.train_dl = DataLoader(
-            train_ds,
-            batch_size=self.batch_size,
-            shuffle=True,
-            num_workers=db_num_workers(),
-            collate_fn=collate_fn,
-        )
-
-        self.test_dl = DataLoader(
-            test_ds,
-            batch_size=self.batch_size,
-            shuffle=False,
-            num_workers=db_num_workers(),
-            collate_fn=collate_fn,
-        )
+        self.init_data_loaders()
 
     def _read_annos(self) -> None:
         """ Parses all Pascal VOC formatted annotation files to extract all
@@ -213,22 +217,34 @@ class DetectionDataset(Dataset):
                 os.path.splitext(s)[0] + ".xml" for s in im_filenames
             ]
 
-        # Parse all annotations
+        # Read all annotations
         self.im_paths = []
         self.anno_paths = []
         self.anno_bboxes = []
         self.mask_paths = []
         for anno_idx, anno_filename in enumerate(anno_filenames):
             anno_path = self.root / self.anno_dir / str(anno_filename)
-            assert os.path.exists(
-                anno_path
-            ), f"Cannot find annotation file: {anno_path}"
-            anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
 
-            # TODO For now, ignore all images without a single bounding box
-            #      in it, otherwise throws error during training.
+            # Parse annotation file if present
+            if os.path.exists(anno_path):
+                anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
+            else:
+                if not self.allow_negatives:
+                    raise FileNotFoundError(anno_path)
+                anno_bboxes = [] 
+                im_path = im_paths[anno_idx]
+
+            # Torchvision needs at least one ground truth bounding box per image. Hence for images without a single
+            # annotated object, adding a tiny bounding box with "background" label 0.
             if len(anno_bboxes) == 0:
-                continue
+                anno_bboxes = [
+                    AnnotationBbox.from_array(
+                        [1, 1, 5, 5],
+                        label_name=None,
+                        label_idx=0,
+                        im_path=im_path,
+                    )
+                ]
 
             if self.im_dir is None:
                 self.im_paths.append(im_path)
@@ -256,16 +272,19 @@ class DetectionDataset(Dataset):
         labels = []
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
-                labels.append(anno_bbox.label_name)
+                if anno_bbox.label_name is not None:
+                    labels.append(anno_bbox.label_name)
         self.labels = list(set(labels))
 
-        # Set for each bounding box label name also what its integer
-        # representation is
+        # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
-                anno_bbox.label_idx = (
-                    self.labels.index(anno_bbox.label_name) + 1
-                )
+                if anno_bbox.label_name is None: #background rectangle is assigned id 0 by design
+                    anno_bbox.label_idx = 0
+                else:
+                    anno_bbox.label_idx = (
+                        self.labels.index(anno_bbox.label_name) + 1
+                    )
 
     def split_train_test(
         self, train_pct: float = 0.8
@@ -279,30 +298,65 @@ class DetectionDataset(Dataset):
         Return
             A training and testing dataset in that order
         """
-        # TODO Is it possible to make these lines in split_train_test() a bit
-        #      more intuitive?
-
         test_num = math.floor(len(self) * (1 - train_pct))
         if self.seed:
             torch.manual_seed(self.seed)
         indices = torch.randperm(len(self)).tolist()
 
-        train_idx = indices[test_num:]
-        test_idx = indices[: test_num + 1]
+        train = copy.deepcopy(Subset(self, indices[test_num:]))
+        train.dataset.transforms = self.train_transforms
 
-        # indicate whether the data are for training or testing
-        self.is_test = np.zeros((len(self),), dtype=np.bool)
-        self.is_test[test_idx] = True
-
-        train = Subset(self, train_idx)
-        test = Subset(self, test_idx)
+        test = copy.deepcopy(Subset(self, indices[: test_num]))
+        test.dataset.transforms = self.test_transforms
 
         return train, test
 
-    def _get_transforms(self, idx):
-        """ Return the corresponding transforms for training and testing data.
+    def init_data_loaders(self):
+        """ Create training and validation data loaders """
+        self.train_dl = DataLoader(
+            self.train_ds,
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=db_num_workers(),
+            collate_fn=collate_fn,
+        )
+
+        self.test_dl = DataLoader(
+            self.test_ds,
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=db_num_workers(),
+            collate_fn=collate_fn,
+        )
+
+    def add_images(self, im_paths: List[str], anno_bboxes: List[AnnotationBbox], target: str = "train"):
+        """ Add new images to either the training or test set. 
+
+        Args:
+            im_paths: path to the images.
+            anno_bboxes: ground truth boxes for each image.
+            target: specify if images are to be added to the training or test set. Valid options: "train" or "test".
+
+        Raises:
+            Exception if `target` variable is neither 'train' nor 'test'
         """
-        return self.transforms[self.is_test[idx]]
+        assert(len(im_paths) == len(anno_bboxes))
+        for im_path, anno_bbox in zip(im_paths, anno_bboxes):    
+            self.im_paths.append(im_path)
+            self.anno_bboxes.append(anno_bbox)
+            if target.lower() == "train":
+                self.train_ds.dataset.im_paths.append(im_path)
+                self.train_ds.dataset.anno_bboxes.append(anno_bbox)
+                self.train_ds.indices.append(len(self.im_paths)-1)
+            elif target.lower() == "test":
+                self.test_ds.dataset.im_paths.append(im_path)
+                self.test_ds.dataset.anno_bboxes.append(anno_bbox)
+                self.test_ds.indices.append(len(self.im_paths)-1)
+            else:
+                raise Exception(f"Target {target} unknown.")
+        
+        # Re-initialize the data loaders
+        self.init_data_loaders()
 
     def show_ims(self, rows: int = 1, cols: int = 3, seed: int = None) -> None:
         """ Show a set of images.
@@ -323,6 +377,43 @@ class DetectionDataset(Dataset):
             else display_bboxes
         )
         plot_grid(plot_func, self._get_random_anno, rows=rows, cols=cols)
+
+    def show_im_transformations(
+        self, idx: int = None, rows: int = 1, cols: int = 3
+    ) -> None:
+        """ Show a set of images after transfomrations have been applied.
+
+        Args:
+            idx: the index to of the image to show the transformations for.
+            rows: number of rows to display
+            cols: number of cols to dipslay, NOTE: use 3 for best looing grid
+
+        Returns None but displays a grid of randomly applied transformations.
+        """
+        if not hasattr(self, "transforms"):
+            print(
+                (
+                    "Transformations are not applied ot the base dataset object.\n"
+                    "Call this function on either the train_ds or test_ds instead:\n\n"
+                    "    my_detection_data.train_ds.dataset.show_im_transformations()"
+                )
+            )
+        else:
+            if idx is None:
+                idx = randrange(len(self.anno_paths))
+
+            def plotter(im, ax):
+                ax.set_xticks([])
+                ax.set_yticks([])
+                ax.imshow(im)
+
+            def im_gen() -> torch.Tensor:
+                return self[idx][0].permute(1, 2, 0)
+
+            plot_grid(plotter, im_gen, rows=rows, cols=cols)
+
+            print(f"Transformations applied on {self.im_paths[idx]}:")
+            [print(transform) for transform in self.transforms.transforms]
 
     def _get_binary_masks(self, idx: int) -> Union[np.ndarray, None]:
         binary_masks = None
@@ -349,23 +440,35 @@ class DetectionDataset(Dataset):
     def __getitem__(self, idx):
         """ Make iterable. """
         # get box/labels from annotations
+        im_path = self.im_paths[idx]
         anno_bboxes = self.anno_bboxes[idx]
-        boxes = [anno_bbox.rect() for anno_bbox in anno_bboxes]
+        boxes = [
+            [anno_bbox.left, anno_bbox.top, anno_bbox.right, anno_bbox.bottom]
+            for anno_bbox in anno_bboxes
+        ]
         labels = [anno_bbox.label_idx for anno_bbox in anno_bboxes]
+
+        # convert everything into a torch.Tensor
+        boxes = torch.as_tensor(boxes, dtype=torch.float32)
+        labels = torch.as_tensor(labels, dtype=torch.int64)
 
         # get area for evaluation with the COCO metric, to separate the
         # metric scores between small, medium and large boxes.
-        area = [b.surface_area() for b in anno_bboxes]
+        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+
+        # suppose all instances are not crowd (torchvision specific)
+        iscrowd = torch.zeros((len(boxes),), dtype=torch.int64)
+
+        # unique id
+        im_id = torch.tensor([idx])
 
         # setup target dic
         target = {
-            "boxes": torch.as_tensor(boxes, dtype=torch.float32),
-            "labels": torch.as_tensor(labels, dtype=torch.int64),
-            # unique id
-            "image_id": torch.tensor([idx]),
-            "area": torch.as_tensor(area, dtype=torch.float32),
-            # suppose all instances are not crowd (torchvision specific)
-            "iscrowd": torch.zeros((len(boxes),), dtype=torch.int64),
+            "boxes": boxes,
+            "labels": labels,
+            "image_id": im_id,
+            "area": area,
+            "iscrowd": iscrowd,
         }
 
         # get masks
@@ -374,11 +477,11 @@ class DetectionDataset(Dataset):
             target["masks"] = torch.as_tensor(binary_masks, dtype=torch.uint8)
 
         # get image
-        im = Image.open(self.im_paths[idx]).convert("RGB")
+        im = Image.open(im_path).convert("RGB")
 
         # and apply transforms if any
-        if self.transforms:
-            im, target = self._get_transforms(idx)(im, target)
+        if self.transforms is not None:
+            im, target = self.transforms(im, target)
 
         return im, target
 

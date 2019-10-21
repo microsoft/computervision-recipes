@@ -30,7 +30,7 @@ def _get_det_bboxes(
 
     Args:
         pred: the output of passing in an image to torchvision's FasterRCNN
-              model
+        model
         labels: list of labels
         im_path: the image path of the preds
 
@@ -90,18 +90,12 @@ def _get_pretrained_rcnn(
     Args:
         model_func: pretrained R-CNN model generating functions, such as
             fasterrcnn_resnet50_fpn(), get_pretrained_fasterrcnn(), etc.
-        min_size: minimum size of the image to be rescaled before feeding it to
-            the backbone
-        max_size: maximum size of the image to be rescaled before feeding it to
-            the backbone
-        rpn_pre_nms_top_n_train: number of proposals to keep before applying
-            NMS during training
-        rpn_pre_nms_top_n_test: number of proposals to keep before applying NMS
-            during testing
-        rpn_post_nms_top_n_train: number of proposals to keep after applying
-            NMS during training
-        rpn_post_nms_top_n_test: number of proposals to keep after applying NMS
-            during testing
+        min_size: minimum size of the image to be rescaled before feeding it to the backbone
+        max_size: maximum size of the image to be rescaled before feeding it to the backbone
+        rpn_pre_nms_top_n_train: number of proposals to keep before applying NMS during training
+        rpn_pre_nms_top_n_test: number of proposals to keep before applying NMS during testing
+        rpn_post_nms_top_n_train: number of proposals to keep after applying NMS during training
+        rpn_post_nms_top_n_test: number of proposals to keep after applying NMS during testing
         rpn_nms_thresh: NMS threshold used for postprocessing the RPN proposals
 
     Returns
@@ -153,8 +147,7 @@ def get_pretrained_fasterrcnn(
     """ Gets a pretrained FasterRCNN model
 
     Args:
-        num_classes: number of output classes of the model (including the
-            background).
+        num_classes: number of output classes of the model (including the background).
 
     Returns
         The model to fine-tine/inference with
@@ -295,8 +288,7 @@ class DetectionLearner:
         if not self.dataset:
             return
 
-        # reduce learning rate every step_size epochs by a factor of gamma (by
-        # default) 0.1.
+        # reduce learning rate every step_size epochs by a factor of gamma (by default) 0.1.
         if step_size is None:
             step_size = int(np.round(epochs / 1.5))
 
@@ -361,9 +353,7 @@ class DetectionLearner:
             ax2.plot(v, "b-")
 
     def evaluate(self, dl: DataLoader = None) -> Union[CocoEvaluator, None]:
-        """ eval code on validation/test set and saves the evaluation results
-        in self.results.
-        """
+        """ eval code on validation/test set and saves the evaluation results in self.results. """
         if dl is None:
             if not self.dataset:
                 return
@@ -452,11 +442,10 @@ class DetectionLearner:
         """ Performs inferencing on an image path or image.
 
         Args:
-            im_or_path: the image array which you can get from
-                `Image.open(path)` OR a image path
+            im_or_path: the image array which you can get from `Image.open(path)` OR a image path
             threshold: the threshold to use to calculate whether the object was
-                detected. Note: can be set to None to return all detection
-                bounding boxes.
+            detected. Note: can be set to None to return all detection bounding
+            boxes.
 
         Return a list of DetectionBbox
         """
@@ -476,7 +465,7 @@ class DetectionLearner:
         return self._process_pred_results(pred[0], im_path)
 
     def predict_dl(
-        self, dl: DataLoader, threshold: Optional[float] = 0.5,
+        self, dl: DataLoader, threshold: Optional[float] = 0.5
     ) -> List[DetectionBbox]:
         """ Predict all images in a dataloader object.
 
