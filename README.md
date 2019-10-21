@@ -21,7 +21,7 @@ notebooks in this repo. Once your environment is setup, navigate to the
 
 ## Scenarios
 
-The following is a summary of commonly used Computer Vision scenarios that are covered in this repository. For each of these scenarios, we give you the tools to effectively build your own model. This includes simple tasks such as fine-tuning your own model on your own data, to more complex tasks such as hard-negative mining and even model deployment. See all supported scenarios [here](scenarios).
+The following is a summary of commonly used Computer Vision scenarios that are covered in this repository. For each of the main scenarios ("base"), we provide the tools to effectively build your own model. This includes simple tasks such as fine-tuning your own model on your own data, to more complex tasks such as hard-negative mining and even model deployment.
 
 | Scenario | Support     | Description |
 | -------- | ----------- | ----------- |
