@@ -4,6 +4,7 @@
 import os
 from typing import List, Tuple, Union, Generator, Optional
 from pathlib import Path
+import json
 import shutil
 
 from PIL import Image
@@ -157,25 +158,44 @@ def _calculate_ap(e: CocoEvaluator) -> float:
 class DetectionLearner:
     """ Detection Learner for Object Detection"""
 
-    def __init__(self, dataset: Dataset = None, model: nn.Module = None):
+    def __init__(
+        self,
+        dataset: Dataset = None,
+        model: nn.Module = None,
+        im_size: int = None,
+    ):
         """ Initialize leaner object.
+
+        You can only specify an image size `im_size` if `model` is not given.
 
         Args:
             dataset: the dataset. This class will infer labels if dataset is present.
             model: the nn.Module you wish to use
+            im_size: image size for your model
         """
         # if model is None, dataset must not be
         if not model:
             assert dataset is not None
 
+        # not allowed to specify im size if you're providing a model
+        if model:
+            assert im_size is None
+
+        # if im_size is not specified, use 500
+        if im_size is None:
+            im_size = 500
+
         self.device = torch_device()
         self.model = model
         self.dataset = dataset
+        self.im_size = im_size
 
         # setup model, default to fasterrcnn
         if self.model is None:
             self.model = get_pretrained_fasterrcnn(
-                len(self.dataset.labels) + 1
+                len(self.dataset.labels) + 1,
+                min_size=self.im_size,
+                max_size=self.im_size,
             )
 
         self.model.to(self.device)
@@ -384,15 +404,15 @@ class DetectionLearner:
 
         # set names
         pt_path = model_path / f"model.pt"
-        meta_path = model_path / f"meta.txt"
+        meta_path = model_path / f"meta.json"
 
         # save pt
         torch.save(self.model.state_dict(), pt_path)
 
         # save meta file
-        meta_file = open(meta_path, "w")
-        meta_file.write(",".join(self.dataset.labels))
-        meta_file.close()
+        meta_data = {"labels": self.dataset.labels, "im_size": self.im_size}
+        with open(meta_path, "w") as meta_file:
+            json.dump(meta_data, meta_file)
 
         print(f"Model is saved to {model_path}")
 
@@ -416,7 +436,7 @@ class DetectionLearner:
                     f"No model file named model.pt exists in {model_path}"
                 )
 
-            meta_path = model_path / "meta.txt"
+            meta_path = model_path / "meta.json"
             if not meta_path.exists():
                 raise Exception(
                     f"No model file named meta.txt exists in {model_path}"
@@ -438,25 +458,33 @@ class DetectionLearner:
                 exit()
             else:
                 pt_path = Path(models[0]) / "model.pt"
-                meta_path = Path(models[0]) / "meta.txt"
+                meta_path = Path(models[0]) / "meta.json"
 
         # load into model
         self.model.load_state_dict(torch.load(pt_path))
 
         # load meta info
-        meta_file = open(meta_path, "r")
-        self.labels = meta_file.read().strip().split(",")
+        with open(meta_path, "r") as meta_file:
+            meta_data = json.load(meta_file)
+            self.labels = meta_data["labels"]
 
     @classmethod
-    def from_model(
+    def from_saved_model(
         cls, name: str = None, path: str = None
     ) -> "DetectionLearner":
-        """ Todo """
-        meta_path = Path(path) / name / "meta.txt"
-        meta_file = open(meta_path, "r")
-        labels = meta_file.read().strip().split(",")
+        """ Create an instance of the DetectionLearner from a saved model. """
+        meta_path = Path(path) / name / "meta.json"
+        assert meta_path.exists()
 
-        model = get_pretrained_fasterrcnn(len(labels) + 1, 600, 600)
+        im_size, labels = None, None
+        with open(meta_path) as json_file:
+            meta_data = json.load(json_file)
+            im_size = meta_data["im_size"]
+            labels = meta_data["labels"]
+
+        model = get_pretrained_fasterrcnn(
+            len(labels) + 1, min_size=im_size, max_size=im_size
+        )
         detection_learner = DetectionLearner(model=model)
         detection_learner.load(name=name, path=path)
         return detection_learner
