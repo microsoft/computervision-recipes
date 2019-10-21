@@ -2,10 +2,11 @@
 # Licensed under the MIT License.
 
 import os
+import copy
 import math
 import numpy as np
 from pathlib import Path
-import random
+from random import randrange
 from typing import Callable, List, Tuple, Union
 
 import torch
@@ -427,7 +428,7 @@ class DetectionDataset:
 
         Returns a list of annotations and the image path
         """
-        idx = random.randrange(len(self.im_paths))
+        idx = randrange(len(self.im_paths))
 
         # get mask if any
         mask = self._get_binary_masks(idx)
