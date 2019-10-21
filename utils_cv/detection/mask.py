@@ -76,4 +76,4 @@ def merge_binary_masks(binary_masks: np.ndarray) -> np.ndarray:
     obj_values = np.arange(len(binary_masks)) + 1
     # label mask from 1 to number of instances
     labeled_masks = binary_masks * obj_values[:, None, None]
-    return np.sum(labeled_masks, axis=0).astype(np.uint8)
+    return np.max(labeled_masks, axis=0).astype(np.uint8)
