@@ -6,7 +6,7 @@ import copy
 import math
 import numpy as np
 from pathlib import Path
-from random import randrange
+import random
 from typing import Callable, List, Tuple, Union
 
 import torch
@@ -152,7 +152,7 @@ class DetectionDataset:
         im_dir: str = "images",
         mask_dir: str = None,
         seed: int = None,
-        allow_negatives = False
+        allow_negatives: bool = False
     ):
         """ initialize dataset
 
@@ -232,7 +232,7 @@ class DetectionDataset:
             else:
                 if not self.allow_negatives:
                     raise FileNotFoundError(anno_path)
-                anno_bboxes = [] 
+                anno_bboxes = []
                 im_path = im_paths[anno_idx]
 
             # Torchvision needs at least one ground truth bounding box per image. Hence for images without a single
@@ -258,12 +258,16 @@ class DetectionDataset:
                 mask_name = os.path.basename(self.im_paths[-1])
                 mask_name = mask_name[:mask_name.rindex('.')] + ".png"
                 mask_name = self.root / self.mask_dir / mask_name
-                # For mask prediction, if no mask provided, ignore the image
+                # For mask prediction, if no mask provided and negatives not
+                # allowed (), ignore the image
                 if not mask_name.exists():
-                    del self.im_paths[-1]
-                    continue
-
-                self.mask_paths.append(mask_name)
+                    if os.path.exists(anno_path):
+                        del self.im_paths[-1]
+                        continue
+                    else:
+                        self.mask_paths.append(None)
+                else:
+                    self.mask_paths.append(mask_name)
 
             self.anno_paths.append(anno_path)
             self.anno_bboxes.append(anno_bboxes)
@@ -280,7 +284,7 @@ class DetectionDataset:
         # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
-                if anno_bbox.label_name is None: #background rectangle is assigned id 0 by design
+                if anno_bbox.label_name is None:  # background rectangle is assigned id 0 by design
                     anno_bbox.label_idx = 0
                 else:
                     anno_bbox.label_idx = (
@@ -330,32 +334,45 @@ class DetectionDataset:
             collate_fn=collate_fn,
         )
 
-    def add_images(self, im_paths: List[str], anno_bboxes: List[AnnotationBbox], target: str = "train"):
-        """ Add new images to either the training or test set. 
+    def add_images(
+        self,
+        im_paths: List[str],
+        anno_bboxes: List[AnnotationBbox],
+        target: str = "train",
+        mask_paths: List[str] = None,
+    ):
+        """ Add new images to either the training or test set.
 
         Args:
             im_paths: path to the images.
             anno_bboxes: ground truth boxes for each image.
             target: specify if images are to be added to the training or test set. Valid options: "train" or "test".
+            mask_paths: path to the masks.
 
         Raises:
             Exception if `target` variable is neither 'train' nor 'test'
         """
         assert(len(im_paths) == len(anno_bboxes))
-        for im_path, anno_bbox in zip(im_paths, anno_bboxes):    
+        for i, (im_path, anno_bbox), mask_path in enumerate(zip(im_paths, anno_bboxes)):
             self.im_paths.append(im_path)
             self.anno_bboxes.append(anno_bbox)
+            if mask_paths is not None:
+                self.mask_paths.append(mask_paths[i])
             if target.lower() == "train":
                 self.train_ds.dataset.im_paths.append(im_path)
                 self.train_ds.dataset.anno_bboxes.append(anno_bbox)
+                if mask_paths is not None:
+                    self.train_ds.dataset.mask_paths.append(mask_paths[i])
                 self.train_ds.indices.append(len(self.im_paths)-1)
             elif target.lower() == "test":
                 self.test_ds.dataset.im_paths.append(im_path)
                 self.test_ds.dataset.anno_bboxes.append(anno_bbox)
+                if mask_paths is not None:
+                    self.test_ds.dataset.mask_paths.append(mask_paths[i])
                 self.test_ds.indices.append(len(self.im_paths)-1)
             else:
                 raise Exception(f"Target {target} unknown.")
-        
+
         # Re-initialize the data loaders
         self.init_data_loaders()
 
@@ -401,7 +418,7 @@ class DetectionDataset:
             )
         else:
             if idx is None:
-                idx = randrange(len(self.anno_paths))
+                idx = random.randrange(len(self.anno_paths))
 
             def plotter(im, ax):
                 ax.set_xticks([])
@@ -419,7 +436,13 @@ class DetectionDataset:
     def _get_binary_masks(self, idx: int) -> Union[np.ndarray, None]:
         binary_masks = None
         if self.mask_paths:
-            binary_masks = binarise_mask(Image.open(self.mask_paths[idx]))
+            if self.mask_paths[idx] is not None:
+                binary_masks = binarise_mask(Image.open(self.mask_paths[idx]))
+            else:
+                # for the tiny bounding box in _read_annos(), make the mask to be the whole box
+                mask = np.zeros(Image.open(self.im_paths[idx]).size[::-1], dtype=np.uint8)
+                mask[1:6, 1:6] = 1
+                binary_masks = binarise_mask(mask)
 
         return binary_masks
 
@@ -428,7 +451,7 @@ class DetectionDataset:
 
         Returns a list of annotations and the image path
         """
-        idx = randrange(len(self.im_paths))
+        idx = random.randrange(len(self.im_paths))
 
         # get mask if any
         mask = self._get_binary_masks(idx)
