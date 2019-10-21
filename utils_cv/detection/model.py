@@ -381,8 +381,32 @@ class DetectionLearner:
                 )
             yield det_bbox_batch
 
-    def save(self, name: str, path: str = None, overwrite: bool = True) -> str:
-        """ Saves the model """
+    def save(
+        self, name: str, path: str = None, overwrite: bool = True
+    ) -> None:
+        """ Saves the model
+
+        Save your model in the following format:
+        /data_path()
+        +-- <name>
+        |   +-- meta.json
+        |   +-- model.pt
+
+        The meta.json will contain information like the labels and the im_size
+        The model.pt will contain the weights of the model
+
+        Args:
+            name: the name you wish to save your model under
+            path: optional path to save your model to, will use `data_path`
+            otherwise
+            overwrite: overwite existing models
+
+        Raise:
+            Exception if model file already exists but overwrite is set to
+            false
+
+        Returns None
+        """
         if path is None:
             path = Path(self.dataset.root) / "models"
 
@@ -416,7 +440,23 @@ class DetectionLearner:
         print(f"Model is saved to {model_path}")
 
     def load(self, name: str = None, path: str = None) -> None:
-        """ Loads a model. """
+        """ Loads a model.
+
+        Loads a model that is saved in the format that is outputted in the
+        `save` function.
+
+        Args:
+            name: The name of the model you wish to load. If no name is
+            specified, the function will still look for a model under the path
+            specified by `data_path`. If multiple models are available in that
+            path, it will require you to pass in a name to specify which one to
+            use.
+            path: Pass in a path if the model is not located in the
+            `data_path`. Otherwise it will assume that it is.
+
+        Raise:
+            Exception if passed in name/path is invalid and doesn't exist
+        """
 
         # set path
         if not path:
@@ -468,10 +508,19 @@ class DetectionLearner:
             self.labels = meta_data["labels"]
 
     @classmethod
-    def from_saved_model(
-        cls, name: str = None, path: str = None
-    ) -> "DetectionLearner":
-        """ Create an instance of the DetectionLearner from a saved model. """
+    def from_saved_model(cls, name: str, path: str) -> "DetectionLearner":
+        """ Create an instance of the DetectionLearner from a saved model.
+
+        This function expects the format that is outputted in the `save`
+        function.
+
+        Args:
+            name: the name of the model you wish to load
+            path: the path to get your model from
+
+        Returns:
+            A DetectionLearner object that can inference.
+        """
         meta_path = Path(path) / name / "meta.json"
         assert meta_path.exists()
 
