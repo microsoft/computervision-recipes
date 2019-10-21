@@ -1,0 +1,4 @@
+MODEL:
+  NAME: "i3d_rgb"
+TRAIN:
+  MODALITY: "RGB"

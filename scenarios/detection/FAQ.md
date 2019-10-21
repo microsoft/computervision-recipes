@@ -5,6 +5,7 @@
 This document tries to answer frequent questions related to object detection. For generic Machine Learning questions, such as "How many training examples do I need?" or "How to monitor GPU usage during training?" see also the image classification [FAQ](https://github.com/microsoft/ComputerVision/blob/master/classification/FAQ.md).
 
 * General
+  * [Why Torchvision?](#why-torchvision)
 
 * Data
   * [How to annotate images?](#how-to-annotate-images)
@@ -17,6 +18,10 @@ This document tries to answer frequent questions related to object detection. Fo
   * [Mean Average Precision](#mean-average-precision)
 
 ## General
+
+### Why Torchvision?
+
+Torchvision has a large active user-base and hence its object detection implementation is easy to use, well tested, and uses state-of-the-art technology which has proven itself in the community. For these reasons we decided to use Torchvision as our object detection library. For advanced users who want to experiment with the latest cutting-edge technology, we recommend to start with our Torchvision notebooks and then also to look into more researchy implementations such as the [mmdetection](https://github.com/open-mmlab/mmdetection) repository. 
 
 ## Data
 
