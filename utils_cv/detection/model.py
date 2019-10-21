@@ -356,7 +356,6 @@ class DetectionLearner:
         image that is scored.
         """
 
-        # labels = self.dataset.labels
         labels = dl.dataset.dataset.labels
         model = self.model.eval()
 
