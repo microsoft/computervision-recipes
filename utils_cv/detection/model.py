@@ -356,7 +356,7 @@ class DetectionLearner:
         image that is scored.
         """
 
-        labels = dl.dataset.dataset.labels
+        labels = self.dataset.labels
         model = self.model.eval()
 
         for i, batch in enumerate(dl):
