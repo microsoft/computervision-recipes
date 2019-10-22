@@ -133,7 +133,7 @@ def parse_pascal_voc_anno(
 class DetectionDataset:
     """ An object detection dataset.
 
-    The dunder methods __init__, __getitem__, and __len__ were inspired from code found here:
+    The implementation of the dunder methods __init__, __getitem__, and __len__ were inspired from code found here:
     https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html#writing-a-custom-dataset-for-pennfudan
     """
 
@@ -146,7 +146,7 @@ class DetectionDataset:
         train_pct: float = 0.5,
         anno_dir: str = "annotations",
         im_dir: str = "images",
-        allow_negatives = False
+        allow_negatives: bool = False,
     ):
         """ initialize dataset
 
@@ -164,8 +164,7 @@ class DetectionDataset:
             train_pct: the ratio of training to testing data
             annotation_dir: the name of the annotation subfolder under the root directory
             im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
-            allow_negatives: is false (default) then will throw an error if no anntation .xml file can be found for a given image. Otherwise use image
-                as negative, ie assume that the image does not contain any of the objects of interest.
+            allow_negatives: is false (default) then will throw an error if no anntation .xml file can be found for a given image. Otherwise use image as negative, ie assume that the image does not contain any of the objects of interest.
         """
 
         self.root = Path(root)
@@ -221,7 +220,7 @@ class DetectionDataset:
             else:
                 if not self.allow_negatives:
                     raise FileNotFoundError(anno_path)
-                anno_bboxes = [] 
+                anno_bboxes = []
                 im_path = im_paths[anno_idx]
 
             # Torchvision needs at least one ground truth bounding box per image. Hence for images without a single
@@ -255,7 +254,9 @@ class DetectionDataset:
         # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
-                if anno_bbox.label_name is None: #background rectangle is assigned id 0 by design
+                if (
+                    anno_bbox.label_name is None
+                ):  # background rectangle is assigned id 0 by design
                     anno_bbox.label_idx = 0
                 else:
                     anno_bbox.label_idx = (
@@ -280,7 +281,7 @@ class DetectionDataset:
         train = copy.deepcopy(Subset(self, indices[test_num:]))
         train.dataset.transforms = self.train_transforms
 
-        test = copy.deepcopy(Subset(self, indices[: test_num]))
+        test = copy.deepcopy(Subset(self, indices[:test_num]))
         test.dataset.transforms = self.test_transforms
 
         return train, test
@@ -303,8 +304,13 @@ class DetectionDataset:
             collate_fn=collate_fn,
         )
 
-    def add_images(self, im_paths: List[str], anno_bboxes: List[AnnotationBbox], target: str = "train"):
-        """ Add new images to either the training or test set. 
+    def add_images(
+        self,
+        im_paths: List[str],
+        anno_bboxes: List[AnnotationBbox],
+        target: str = "train",
+    ):
+        """ Add new images to either the training or test set.
 
         Args:
             im_paths: path to the images.
@@ -314,21 +320,21 @@ class DetectionDataset:
         Raises:
             Exception if `target` variable is neither 'train' nor 'test'
         """
-        assert(len(im_paths) == len(anno_bboxes))
-        for im_path, anno_bbox in zip(im_paths, anno_bboxes):    
+        assert len(im_paths) == len(anno_bboxes)
+        for im_path, anno_bbox in zip(im_paths, anno_bboxes):
             self.im_paths.append(im_path)
             self.anno_bboxes.append(anno_bbox)
             if target.lower() == "train":
                 self.train_ds.dataset.im_paths.append(im_path)
                 self.train_ds.dataset.anno_bboxes.append(anno_bbox)
-                self.train_ds.indices.append(len(self.im_paths)-1)
+                self.train_ds.indices.append(len(self.im_paths) - 1)
             elif target.lower() == "test":
                 self.test_ds.dataset.im_paths.append(im_path)
                 self.test_ds.dataset.anno_bboxes.append(anno_bbox)
-                self.test_ds.indices.append(len(self.im_paths)-1)
+                self.test_ds.indices.append(len(self.im_paths) - 1)
             else:
                 raise Exception(f"Target {target} unknown.")
-        
+
         # Re-initialize the data loaders
         self.init_data_loaders()
 
