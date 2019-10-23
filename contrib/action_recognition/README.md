@@ -2,17 +2,28 @@
 
 This is a place holder. Content will follow soon.
 
-## Overview
+![](./media/action_recognition.gif)
 
-Also give as example either a screenshot of Jun Ki's demo, or play here his recording
+*Example of action recognition*
+
+## Overview
 
 | Folders |  Description |
 | -------- |  ----------- |
+| [i3d](i3d)  | Scripts for fine-tuning a pre-trained Two-Stream Inflated 3D ConvNet (I3D) model on the HMDB-51 dataset
 | [video_annotation](video_annotation)  | Instructions and helper functions to annotate the start and end position of actions in video footage|
 
-## Functionality and value-add
+## Functionality
 
-What our code can do, and what was missing from the repos we use.
+In [i3d](i3d) we show how to fine-tune a Two-Stream Inflated 3D ConvNet (I3D) model. This model was introduced in \[[1](https://arxiv.org/pdf/1705.07750.pdf)\] and achieved state-of-the-art in action classification on the HMDB-51 and UCF-101 datasets. The paper demonstrated the effectiveness of pre-training action recognition models on large datasets - in this case the Kinetics Human Action Video dataset consisting of 306k examples and 400 classes. We provide code for replicating the results of this paper on HMDB-51. We use models pre-trained on Kinetics from [https://github.com/piergiaj/pytorch-i3d](https://github.com/piergiaj/pytorch-i3d). Evaluating the model on the test set of the HMDB-51 dataset (split 1) using [i3d/test.py](i3d/test.py) should yield the following results:
+
+| Model | Paper top 1 accuracy (average over 3 splits) | Our models top 1 accuracy (split 1 only) |
+| ------- | -------| ------- |
+| RGB | 74.8 | 73.7 |
+| Optical flow | 77.1 | 77.5 |
+| Two-Stream | 80.7 | 81.2 |
+
+In order to train an action recognition model for a specific task, annotated training data from the relevant domain is needed. In [video_annotation](video_annotation), we provide tips and examples for how to use a best-in-class video annotation tool ([VGG Image Annotator](http://www.robots.ox.ac.uk/~vgg/software/via/)) to label the start and end positions of actions in videos.
 
 ## State-of-the-art
 
@@ -50,3 +61,6 @@ Popular publications, with recommended papers to read highlighted in yellow:
 
 Most pulications focus on accuracy rather than on inferencing speed. The paper "Representation Flow for Action Recognition" is a noteworthy exception with this figure:
 <img align="center" src="./media/inference_speeds.png" width = "500"/>  
+
+\[1\] J. Carreira and A. Zisserman. Quo vadis, action recognition?
+a new model and the kinetics dataset. In CVPR, 2017.
