@@ -1,8 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 from typing import List, Tuple, Union, Generator, Optional
 from pathlib import Path
+import json
+import shutil
 
 from PIL import Image
 import numpy as np
@@ -155,15 +158,46 @@ def _calculate_ap(e: CocoEvaluator) -> float:
 class DetectionLearner:
     """ Detection Learner for Object Detection"""
 
-    def __init__(self, dataset: Dataset, model: nn.Module = None):
-        """ Initialize leaner object. """
+    def __init__(
+        self,
+        dataset: Dataset = None,
+        model: nn.Module = None,
+        im_size: int = None,
+    ):
+        """ Initialize leaner object.
+
+        You can only specify an image size `im_size` if `model` is not given.
+
+        Args:
+            dataset: the dataset. This class will infer labels if dataset is present.
+            model: the nn.Module you wish to use
+            im_size: image size for your model
+        """
+        # if model is None, dataset must not be
+        if not model:
+            assert dataset is not None
+
+        # not allowed to specify im size if you're providing a model
+        if model:
+            assert im_size is None
+
+        # if im_size is not specified, use 500
+        if im_size is None:
+            im_size = 500
+
         self.device = torch_device()
         self.model = model
         self.dataset = dataset
+        self.im_size = im_size
 
         # setup model, default to fasterrcnn
         if self.model is None:
-            self.model = get_pretrained_fasterrcnn(len(dataset.labels) + 1)
+            self.model = get_pretrained_fasterrcnn(
+                len(self.dataset.labels) + 1,
+                min_size=self.im_size,
+                max_size=self.im_size,
+            )
+
         self.model.to(self.device)
 
     def __getattr__(self, attr):
@@ -285,7 +319,8 @@ class DetectionLearner:
         model = self.model.eval()  # eval mode
         with torch.no_grad():
             pred = model([im])
-        labels = self.dataset.labels
+
+        labels = self.dataset.labels if self.dataset else self.labels
         det_bboxes = _get_det_bboxes(pred, labels=labels)
 
         # limit to threshold if threshold is set
@@ -345,3 +380,159 @@ class DetectionLearner:
                     {"idx": im_idx, "det_bboxes": det_bboxes}
                 )
             yield det_bbox_batch
+
+    def save(
+        self, name: str, path: str = None, overwrite: bool = True
+    ) -> None:
+        """ Saves the model
+
+        Save your model in the following format:
+        /data_path()
+        +-- <name>
+        |   +-- meta.json
+        |   +-- model.pt
+
+        The meta.json will contain information like the labels and the im_size
+        The model.pt will contain the weights of the model
+
+        Args:
+            name: the name you wish to save your model under
+            path: optional path to save your model to, will use `data_path`
+            otherwise
+            overwrite: overwite existing models
+
+        Raise:
+            Exception if model file already exists but overwrite is set to
+            false
+
+        Returns None
+        """
+        if path is None:
+            path = Path(self.dataset.root) / "models"
+
+        # make dir if not exist
+        if not Path(path).exists():
+            os.mkdir(path)
+
+        # make dir to contain all model/meta files
+        model_path = Path(path) / name
+        if model_path.exists():
+            if overwrite:
+                shutil.rmtree(str(model_path))
+            else:
+                raise Exception(
+                    f"Model of {name} already exists in {path}. Set `overwrite=True` or use another name"
+                )
+        os.mkdir(model_path)
+
+        # set names
+        pt_path = model_path / f"model.pt"
+        meta_path = model_path / f"meta.json"
+
+        # save pt
+        torch.save(self.model.state_dict(), pt_path)
+
+        # save meta file
+        meta_data = {"labels": self.dataset.labels, "im_size": self.im_size}
+        with open(meta_path, "w") as meta_file:
+            json.dump(meta_data, meta_file)
+
+        print(f"Model is saved to {model_path}")
+
+    def load(self, name: str = None, path: str = None) -> None:
+        """ Loads a model.
+
+        Loads a model that is saved in the format that is outputted in the
+        `save` function.
+
+        Args:
+            name: The name of the model you wish to load. If no name is
+            specified, the function will still look for a model under the path
+            specified by `data_path`. If multiple models are available in that
+            path, it will require you to pass in a name to specify which one to
+            use.
+            path: Pass in a path if the model is not located in the
+            `data_path`. Otherwise it will assume that it is.
+
+        Raise:
+            Exception if passed in name/path is invalid and doesn't exist
+        """
+
+        # set path
+        if not path:
+            if self.dataset:
+                path = Path(self.dataset.root) / "models"
+            else:
+                raise Exception("Specify a `path` parameter")
+
+        # if name is given..
+        if name:
+            model_path = path / name
+
+            pt_path = model_path / "model.pt"
+            if not pt_path.exists():
+                raise Exception(
+                    f"No model file named model.pt exists in {model_path}"
+                )
+
+            meta_path = model_path / "meta.json"
+            if not meta_path.exists():
+                raise Exception(
+                    f"No model file named meta.txt exists in {model_path}"
+                )
+
+        # if no name is given, we assume there is only one model, otherwise we
+        # throw an error
+        else:
+            models = [f.path for f in os.scandir(path) if f.is_dir()]
+
+            if len(models) == 0:
+                raise Exception(f"No model found in {path}.")
+            elif len(models) > 1:
+                print(
+                    f"Multiple models were found in {path}. Please specify which you wish to use in the `name` argument."
+                )
+                for model in models:
+                    print(model)
+                exit()
+            else:
+                pt_path = Path(models[0]) / "model.pt"
+                meta_path = Path(models[0]) / "meta.json"
+
+        # load into model
+        self.model.load_state_dict(torch.load(pt_path))
+
+        # load meta info
+        with open(meta_path, "r") as meta_file:
+            meta_data = json.load(meta_file)
+            self.labels = meta_data["labels"]
+
+    @classmethod
+    def from_saved_model(cls, name: str, path: str) -> "DetectionLearner":
+        """ Create an instance of the DetectionLearner from a saved model.
+
+        This function expects the format that is outputted in the `save`
+        function.
+
+        Args:
+            name: the name of the model you wish to load
+            path: the path to get your model from
+
+        Returns:
+            A DetectionLearner object that can inference.
+        """
+        meta_path = Path(path) / name / "meta.json"
+        assert meta_path.exists()
+
+        im_size, labels = None, None
+        with open(meta_path) as json_file:
+            meta_data = json.load(json_file)
+            im_size = meta_data["im_size"]
+            labels = meta_data["labels"]
+
+        model = get_pretrained_fasterrcnn(
+            len(labels) + 1, min_size=im_size, max_size=im_size
+        )
+        detection_learner = DetectionLearner(model=model)
+        detection_learner.load(name=name, path=path)
+        return detection_learner
