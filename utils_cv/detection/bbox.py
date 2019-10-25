@@ -35,11 +35,12 @@ class _Bbox:
 
     @classmethod
     def from_array_xywh(cls, arr: List[int]) -> "_Bbox":
-        """ create a Bbox object from an array [left, top, width, height] """
-        return _Bbox(arr[0], arr[1], arr[0] + arr[2], arr[1] + arr[3])
+        """ Create a Bbox object from an array [left, top, width, height] """
+        return _Bbox(arr[0], arr[1], arr[0] + arr[2] - 1, arr[1] + arr[3] - 1)
 
     @classmethod
     def get_rect_from_binary_mask(cls, binary_mask: np.ndarray) -> List[int]:
+        """ Get the bounding box rectangle from a binary numpy mask. """
         pos = np.where(binary_mask)
         left = np.min(pos[1])
         right = np.max(pos[1])
@@ -67,13 +68,20 @@ class _Bbox:
         rects: Union[torch.Tensor, np.ndarray, List[List[int]]],
         width: int,
     ) -> Union[torch.Tensor, np.ndarray, List[List[int]]]:
-        """ Flip rectangles horizontally. """
+        """ Flip rectangles horizontally.
+
+        Args:
+            rects: list of rectangles in the form of [left, top, right, bottom]
+            width: width of the image which the rectangles are from
+        """
         islist = False
         if isinstance(rects, list):
+            # convert list to np.ndarray
             islist = True
             rects = np.asarray(rects)
-        rects[:, [0, 2]] = width - rects[:, [2, 0]]
+        rects[:, [0, 2]] = (width - 1) - rects[:, [2, 0]]
         if islist:
+            # convert np.ndarray back if rects was list
             rects = rects.tolist()
         return rects
 
@@ -155,11 +163,15 @@ bottom={self.bottom}]\
             return False
         return True
 
-    def hflip(self, width) -> None:
-        self.left, self.right = (width - x for x in [self.right, self.left])
+    def hflip(self, width) -> "_Bbox":
+        """ Flip the bounding box horizontally. """
+        self.left, self.right = (width - 1 - x for x in [self.right, self.left])
+        return self
 
-    def vflip(self, height) -> None:
-        self.top, self.bottom = (height - x for x in [self.bottom, self.top])
+    def vflip(self, height) -> "_Bbox":
+        """ Flip the bounding box vertically. """
+        self.top, self.bottom = (height - 1 - x for x in [self.bottom, self.top])
+        return self
 
 
 class AnnotationBbox(_Bbox):

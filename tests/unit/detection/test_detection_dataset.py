@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import numpy as np
 import pytest
 import torch
 from pathlib import Path
@@ -23,6 +24,9 @@ def basic_im(od_cup_path) -> Tuple[Image.Image, dict]:
 
     boxes = torch.as_tensor([[61, 59, 273, 244]], dtype=torch.float32)
     labels = torch.as_tensor([[0]], dtype=torch.int64)
+    masks = np.zeros((500, 500), dtype=np.bool)
+    masks[100:200, 100:200] = True
+    masks = torch.as_tensor(masks, dtype=torch.uint8)
 
     target = {
         "boxes": boxes,
@@ -30,13 +34,14 @@ def basic_im(od_cup_path) -> Tuple[Image.Image, dict]:
         "image_id": None,
         "area": None,
         "iscrowd": False,
+        "masks": masks,
     }
 
-    return (im, target)
+    return im, target
 
 
 @pytest.fixture(scope="session")
-def od_sample_bboxes() -> str:
+def od_sample_bboxes() -> List[_Bbox]:
     """ Returns the true bboxes from the `od_sample_im_anno` fixture. """
     return [_Bbox(left=100, top=173, right=233, bottom=521)]
 
@@ -75,23 +80,45 @@ def test_parse_pascal_voc(od_sample_im_anno, od_sample_bboxes):
 
 
 def validate_detection_dataset(data: DetectionDataset, labels: List[str]):
-    assert len(data) == 39
+    assert len(data) == 39 if data.mask_paths is None else 31
     assert type(data) == DetectionDataset
     assert len(data.labels) == 4
     for label in data.labels:
         assert label in labels
 
+    if data.mask_paths:
+        assert len(data.mask_paths) == len(data.im_paths)
 
-def test_detection_dataset_init_basic(tiny_od_data_path, od_data_path_labels):
+
+def test_detection_dataset_init_basic(
+    tiny_od_data_path,
+    od_data_path_labels,
+    tiny_od_mask_data_path
+):
     """ Tests that initialization of the Detection Dataset works. """
     data = DetectionDataset(tiny_od_data_path)
     validate_detection_dataset(data, od_data_path_labels)
     assert len(data.test_ds) == 19
     assert len(data.train_ds) == 20
 
+    # test random seed
+    data = DetectionDataset(tiny_od_data_path, seed=9)
+    data2 = DetectionDataset(tiny_od_data_path, seed=9)
+    assert data.train_dl.dataset.indices == data2.train_dl.dataset.indices
+    assert data.test_dl.dataset.indices == data2.test_dl.dataset.indices
+
+    # test mask data
+    data = DetectionDataset(
+        tiny_od_mask_data_path,
+        mask_dir="segmentation-objects"
+    )
+    validate_detection_dataset(data, od_data_path_labels)
+    assert len(data.test_ds) == 15
+    assert len(data.train_ds) == 16
+
 
 def test_detection_dataset_init_train_pct(
-    tiny_od_data_path, od_data_path_labels
+    tiny_od_data_path, od_data_path_labels, tiny_od_mask_data_path
 ):
     """ Tests that initialization with train_pct."""
     data = DetectionDataset(tiny_od_data_path, train_pct=0.75)
@@ -99,15 +126,33 @@ def test_detection_dataset_init_train_pct(
     assert len(data.test_ds) == 9
     assert len(data.train_ds) == 30
 
+    # test mask data
+    data = DetectionDataset(
+        tiny_od_mask_data_path,
+        train_pct=0.75,
+        mask_dir="segmentation-objects"
+    )
+    validate_detection_dataset(data, od_data_path_labels)
+    assert len(data.test_ds) == 7
+    assert len(data.train_ds) == 24
 
-def test_detection_dataset_show_ims(basic_detection_dataset):
+
+def test_detection_dataset_show_ims(
+    basic_detection_dataset,
+    od_detection_mask_dataset
+):
     # simply test that this is error free for now
     basic_detection_dataset.show_ims()
+    od_detection_mask_dataset.show_ims()
 
 
-def test_detection_dataset_show_im_transformations(basic_detection_dataset):
+def test_detection_dataset_show_im_transformations(
+    basic_detection_dataset,
+    od_detection_mask_dataset
+):
     # simply test that this is error free for now
     basic_detection_dataset.show_im_transformations()
+    od_detection_mask_dataset.show_im_transformations()
 
 
 def test_detection_dataset_init_anno_im_dirs(

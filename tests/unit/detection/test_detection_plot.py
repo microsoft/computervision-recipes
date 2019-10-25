@@ -4,6 +4,7 @@
 import pytest
 from PIL import Image
 import matplotlib.pyplot as plt
+import numpy as np
 
 from utils_cv.detection.plot import (
     PlotSettings,
@@ -16,6 +17,9 @@ from utils_cv.detection.plot import (
     _plot_pr_curve_iou_range,
     _plot_pr_curve_iou_mean,
     plot_pr_curves,
+    plot_mask,
+    display_image,
+    display_bbox_mask,
 )
 
 
@@ -35,6 +39,8 @@ def test_plot_setting_init(basic_plot_settings):
     assert basic_plot_settings.rect_color is not None
     assert basic_plot_settings.text_size is not None
     assert basic_plot_settings.text_color is not None
+    assert basic_plot_settings.mask_color is not None
+    assert basic_plot_settings.mask_alpha is not None
 
 
 def test_plot_boxes(od_cup_path, od_cup_anno_bboxes, basic_plot_settings):
@@ -50,9 +56,52 @@ def test_plot_boxes(od_cup_path, od_cup_anno_bboxes, basic_plot_settings):
     )
 
 
+def test_plot_mask(od_mask_rects):
+    """ Test that `plot_mask` works. """
+    plot_setting = PlotSettings()
+    _, mask, rects, im = od_mask_rects
+    # plot mask
+    im = plot_mask(im, mask, plot_settings=plot_setting).convert('RGB')
+    im = np.transpose(np.array(im), (2, 0, 1))
+    # validate each channel matches the mask
+    for ch in im:
+        ch_uniques = np.unique(ch)
+        foreground_uniques = np.unique(ch[np.where(mask != 0)])
+        assert len(foreground_uniques) == 1
+        assert foreground_uniques[0] == ch_uniques[1]
+        background_uniques = np.unique(ch[np.where(mask == 0)])
+        assert len(background_uniques) == 1
+        assert background_uniques[0] == ch_uniques[0]
+
+
+def test_display_image(od_cup_path, basic_ax):
+    """ Test that `display_image` works. """
+    # test image path
+    display_image(od_cup_path, basic_ax)
+    # test PIL.Image
+    display_image(Image.open(od_cup_path), basic_ax)
+    # test numpy array
+    display_image(np.array(Image.open(od_cup_path)), basic_ax)
+
+
 def test_display_bboxes(od_cup_anno_bboxes, od_cup_path):
     """ Test that `display_bboxes` works. """
     display_bboxes(bboxes=od_cup_anno_bboxes, im_path=od_cup_path)
+
+
+def test_display_bbox_mask(
+    od_cup_anno_bboxes,
+    od_cup_path,
+    od_cup_mask_path,
+    basic_ax
+):
+    """ Test that `display_bbox_mask` works. """
+    display_bbox_mask(
+        bboxes=od_cup_anno_bboxes,
+        im_path=od_cup_path,
+        mask_path=od_cup_mask_path,
+        ax=basic_ax
+    )
 
 
 def test_plot_grid(od_cup_anno_bboxes, od_cup_path):
@@ -110,6 +159,7 @@ def test__plot_pr_curve_iou_mean(od_detection_eval, basic_ax):
 
 
 @pytest.mark.gpu
-def test_plot_pr_curves(od_detection_eval):
+def test_plot_pr_curves(od_detection_eval, od_detection_mask_eval):
     """ Test that `plot_pr_curves` works. """
     plot_pr_curves(od_detection_eval)
+    plot_pr_curves(od_detection_mask_eval)

@@ -23,6 +23,7 @@ class Urls:
 
     # mask datasets
     fridge_objects_mask_path = 'https://github.com/simonzhaoms/testdata/raw/master/odFridgeObjects-mask.zip'
+    fridge_objects_mask_tiny_path = 'https://github.com/simonzhaoms/testdata/raw/master/odFridgeObjects-mask-tiny.zip'
 
     @classmethod
     def all(cls) -> List[str]:

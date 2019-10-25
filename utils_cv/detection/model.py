@@ -438,7 +438,7 @@ class DetectionLearner:
         im_or_path: Union[np.ndarray, Union[str, Path]],
         threshold: Optional[int] = 0.5,
         **kwargs,
-    ) -> List[Type[_Bbox]]:
+    ) -> Union[List[Type[_Bbox]], Tuple]:
         """ Performs inferencing on an image path or image.
 
         Args:

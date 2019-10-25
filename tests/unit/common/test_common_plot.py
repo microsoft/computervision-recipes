@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 from pathlib import Path
+from PIL import Image
 import matplotlib.pyplot as plt
 from utils_cv.common.plot import line_graph, show_ims
 
@@ -34,4 +35,8 @@ def test_show_ims(tiny_ic_data_path):
     plt.close()
 
     show_ims(ims, ["a"] * len(ims))
+    plt.close()
+
+    # test images in the form of np.ndarray
+    show_ims([Image.open(p) for p in ims])
     plt.close()

@@ -105,16 +105,8 @@ def plot_mask(
 
     # convert to RGBA for transparentising
     im = im.convert('RGBA')
+    # colorise masks
     binary_masks = binarise_mask(mask)
-
-    # # allow single color as palette to be used for all instance
-    # if isinstance(palette, tuple):
-    #     palette = [palette]
-    # # in case number of colors in palette is less than number of instances
-    # palette = (palette*len(binary_masks))[:len(binary_masks)]
-    # colorise each binary mask
-    # colored_masks = [colorise_binary_mask(bmask, color) for bmask, color in
-    #                  zip(binary_masks, palette)]
     colored_masks = [
         colorise_binary_mask(bmask, plot_settings.mask_color) for bmask in
         binary_masks
@@ -420,9 +412,10 @@ def plot_pr_curves(
             "`accumulate()` has not been called on the passed in coco_eval object."
         )
 
-    fig, axes = plt.subplots(len(evaluator.coco_eval), 2, figsize=figsize)
+    nrows = len(evaluator.coco_eval)
+    fig, axes = plt.subplots(nrows, 2, figsize=figsize)
     for i, (k, coco_eval) in enumerate(evaluator.coco_eval.items()):
-        _plot_pr_curve_iou_range(axes[i, 0], coco_eval, k)
-        _plot_pr_curve_iou_mean(axes[i, 1], coco_eval, k)
+        _plot_pr_curve_iou_range(axes[i, 0] if nrows > 1 else axes[0], coco_eval, k)
+        _plot_pr_curve_iou_mean(axes[i, 1] if nrows > 1 else axes[1], coco_eval, k)
 
     plt.show()
