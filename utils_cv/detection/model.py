@@ -500,7 +500,9 @@ class DetectionLearner:
                 meta_path = Path(models[0]) / "meta.json"
 
         # load into model
-        self.model.load_state_dict(torch.load(pt_path))
+        self.model.load_state_dict(
+            torch.load(pt_path, map_location=torch_device())
+        )
 
         # load meta info
         with open(meta_path, "r") as meta_file:
@@ -521,7 +523,9 @@ class DetectionLearner:
         Returns:
             A DetectionLearner object that can inference.
         """
-        meta_path = Path(path) / name / "meta.json"
+        path = Path(path)
+
+        meta_path = path / name / "meta.json"
         assert meta_path.exists()
 
         im_size, labels = None, None
