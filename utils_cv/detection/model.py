@@ -248,6 +248,7 @@ class DetectionLearner:
         # store data in these arrays to plot later
         self.losses = []
         self.ap = []
+        self.ap_iou_point_5 = []
 
         # main training loop
         self.epochs = epochs
@@ -270,7 +271,7 @@ class DetectionLearner:
             # evaluate
             e = self.evaluate(dl=self.dataset.test_dl)
             self.ap.append(_calculate_ap(e))
-            self.ap_iou_05.append(_calculate_ap(e, iou_threshold_idx=0))
+            self.ap_iou_point_5.append(_calculate_ap(e, iou_threshold_idx=0))
 
     def plot_precision_loss_curves(
         self, figsize: Tuple[int, int] = (10, 5)
