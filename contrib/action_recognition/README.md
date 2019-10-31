@@ -1,17 +1,19 @@
 # Action Recognition
 
-This is a place holder. Content will follow soon.
+Action Recognition, sometimes refered to as Human Activity Recognition (HAR), is a field of computer vision used to identify what *actions* are perfomed over some set of continuous frames. This technique often uses a video as input and is able to identify the actions performed.
 
 ![](./media/action_recognition.gif)
-
 *Example of action recognition*
+
+In this sub-repo, we demonstrate two implementations for activity recognition using two different techiques: 1) [R(2+1)d](https://arxiv.org/abs/1711.11248) and 2) [i3d](https://arxiv.org/pdf/1705.07750.pdf).
 
 ## Overview
 
 | Folders |  Description |
 | -------- |  ----------- |
-| [i3d](i3d)  | Scripts for fine-tuning a pre-trained Two-Stream Inflated 3D ConvNet (I3D) model on the HMDB-51 dataset
-| [video_annotation](video_annotation)  | Instructions and helper functions to annotate the start and end position of actions in video footage|
+| [r(2+1)d](r(2+1)d)  | Coming Soon. |
+| [i3d](i3d)  | Scripts for fine-tuning a pre-trained Two-Stream Inflated 3D ConvNet (I3D) model on the HMDB-51 dataset |
+| [video_annotation](video_annotation)  | Instructions and helper functions to annotate the start and end position of actions in video footage |
 
 ## Functionality
 
