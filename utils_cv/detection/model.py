@@ -218,6 +218,12 @@ class DetectionLearner:
             )
         )
 
+    def add_labels(self, labels: List[str]):
+        """ Add labels to this detector. This class does not expect a label
+        '__background__' in first element of the label list. Make sure it is
+        omitted before adding it. """
+        self.labels = labels
+
     def fit(
         self,
         epochs: int,
