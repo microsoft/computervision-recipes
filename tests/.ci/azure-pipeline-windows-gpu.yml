@@ -17,3 +17,19 @@ jobs:
 
   steps:
   - template: templates/unit-test-steps-not-linuxgpu.yml  # Template reference
+  
+  - script: |
+     call conda env remove -n cv -y
+     rmdir /s /q C:\Anaconda\envs\cv
+
+    workingDirectory: tests
+    displayName: 'Conda remove'
+    continueOnError: true
+    condition: succeededOrFailed()
+    timeoutInMinutes: 10
+
+  - script: |
+     del /q /S %LOCALAPPDATA%\Temp\*
+     for /d %%i in (%LOCALAPPDATA%\Temp\*) do @rmdir /s /q "%%i"
+    displayName: 'Remove Temp Files'
+    condition: succeededOrFailed()

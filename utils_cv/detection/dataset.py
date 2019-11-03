@@ -137,7 +137,7 @@ def parse_pascal_voc_anno(
 class DetectionDataset:
     """ An object detection dataset.
 
-    The dunder methods __init__, __getitem__, and __len__ were inspired from code found here:
+    The implementation of the dunder methods __init__, __getitem__, and __len__ were inspired from code found here:
     https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html#writing-a-custom-dataset-for-pennfudan
     """
 
@@ -170,8 +170,7 @@ class DetectionDataset:
             train_pct: the ratio of training to testing data
             anno_dir: the name of the annotation subfolder under the root directory
             im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
-            allow_negatives: is false (default) then will throw an error if no anntation .xml file can be found for a given image. Otherwise use image
-                as negative, ie assume that the image does not contain any of the objects of interest.
+            allow_negatives: is false (default) then will throw an error if no anntation .xml file can be found for a given image. Otherwise use image as negative, ie assume that the image does not contain any of the objects of interest.
             mask_dir: the name of the mask subfolder under the root directory if the dataset is used for instance segmentation
             seed: random seed for splitting dataset to training and testing data
         """
@@ -284,7 +283,9 @@ class DetectionDataset:
         # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
-                if anno_bbox.label_name is None:  # background rectangle is assigned id 0 by design
+                if (
+                    anno_bbox.label_name is None
+                ):  # background rectangle is assigned id 0 by design
                     anno_bbox.label_idx = 0
                 else:
                     anno_bbox.label_idx = (
@@ -311,7 +312,7 @@ class DetectionDataset:
         train = copy.deepcopy(Subset(self, indices[test_num:]))
         train.dataset.transforms = self.train_transforms
 
-        test = copy.deepcopy(Subset(self, indices[: test_num]))
+        test = copy.deepcopy(Subset(self, indices[:test_num]))
         test.dataset.transforms = self.test_transforms
 
         return train, test
@@ -352,8 +353,8 @@ class DetectionDataset:
         Raises:
             Exception if `target` variable is neither 'train' nor 'test'
         """
-        assert(len(im_paths) == len(anno_bboxes))
-        for i, (im_path, anno_bbox), mask_path in enumerate(zip(im_paths, anno_bboxes)):
+        assert len(im_paths) == len(anno_bboxes)
+        for i, (im_path, anno_bbox) in enumerate(zip(im_paths, anno_bboxes)):
             self.im_paths.append(im_path)
             self.anno_bboxes.append(anno_bbox)
             if mask_paths is not None:
@@ -363,13 +364,13 @@ class DetectionDataset:
                 self.train_ds.dataset.anno_bboxes.append(anno_bbox)
                 if mask_paths is not None:
                     self.train_ds.dataset.mask_paths.append(mask_paths[i])
-                self.train_ds.indices.append(len(self.im_paths)-1)
+                self.train_ds.indices.append(len(self.im_paths) - 1)
             elif target.lower() == "test":
                 self.test_ds.dataset.im_paths.append(im_path)
                 self.test_ds.dataset.anno_bboxes.append(anno_bbox)
                 if mask_paths is not None:
                     self.test_ds.dataset.mask_paths.append(mask_paths[i])
-                self.test_ds.indices.append(len(self.im_paths)-1)
+                self.test_ds.indices.append(len(self.im_paths) - 1)
             else:
                 raise Exception(f"Target {target} unknown.")
 

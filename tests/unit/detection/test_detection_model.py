@@ -6,6 +6,9 @@ from torchvision.models.detection.mask_rcnn import MaskRCNN
 from collections.abc import Iterable
 import numpy as np
 import pytest
+import shutil
+from pathlib import Path
+from typing import Union
 
 from utils_cv.detection.bbox import DetectionBbox
 from utils_cv.detection.model import (
@@ -199,3 +202,77 @@ def test_detection_dataset_predict_dl(
 
     # test mask learner
     od_detection_mask_learner.predict_dl(od_detection_mask_dataset.test_dl)
+
+
+def validate_saved_model(name: str, path: str) -> bool:
+    """ Tests that saved model is there """
+    assert (Path(path)).exists()
+    assert (Path(path) / name).exists()
+    assert (Path(path) / name / "meta.json").exists()
+    assert (Path(path) / name / "model.pt").exists()
+
+
+@pytest.mark.gpu
+def test_detection_save_model(od_detection_learner, tiny_od_data_path):
+    """ Test that save function works. """
+
+    # test without path (default to using data_path()/models)
+    model_name = "my_test_model"
+    od_detection_learner.save(model_name)
+    validate_saved_model(model_name, Path(tiny_od_data_path) / "models")
+
+    # test with path
+    od_detection_learner.save(
+        model_name, str(Path(tiny_od_data_path) / "layer")
+    )
+    validate_saved_model(model_name, str(Path(tiny_od_data_path) / "layer"))
+
+    # test with overwrite
+    with pytest.raises(Exception):
+        od_detection_learner.save(model_name, overwrite=False)
+
+
+@pytest.mark.gpu
+@pytest.fixture(scope="session")
+def saved_model(od_detection_learner, tiny_od_data_path) -> Union[str, Path]:
+    """ A saved model so that loading functions can reuse. """
+    model_name = "test_fixture_model"
+    od_detection_learner.save(model_name)
+    assert (Path(tiny_od_data_path) / "models" / model_name).exists()
+    return model_name, Path(tiny_od_data_path) / "models"
+
+
+@pytest.mark.gpu
+def test_detection_load_model(
+    od_detection_learner, tiny_od_data_path, saved_model
+):
+    """ Test that load function works. """
+
+    # test basic loading
+    name, path = saved_model
+    od_detection_learner.load(name=name)
+    od_detection_learner.load(name=name, path=path)
+    assert od_detection_learner.labels is not None
+
+    # do not specify name or path, it should quietly exit
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        od_detection_learner.load()
+    assert pytest_wrapped_e.type == SystemExit
+
+    # test of no model files exists
+    shutil.rmtree(path / name)
+    shutil.rmtree(Path(tiny_od_data_path) / "models")
+
+    with pytest.raises(Exception):
+        od_detection_learner.load()
+
+    # test if only one model file exists in the `data_path`
+    od_detection_learner.save("test_fixture_model")
+    od_detection_learner.load()
+
+
+@pytest.mark.gpu
+def test_detection_init_from_saved_model(saved_model):
+    """ Test that we can create an detection learner from a saved model. """
+    name, path = saved_model
+    DetectionLearner.from_saved_model(name, path)
