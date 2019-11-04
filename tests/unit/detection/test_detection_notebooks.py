@@ -89,4 +89,3 @@ def test_12_notebook_run(detection_notebooks, tiny_od_data_path):
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     assert len(nb_output.scraps["valid_accs"].data) == 1
     assert len(nb_output.scraps["hard_im_scores"].data) == 10
-

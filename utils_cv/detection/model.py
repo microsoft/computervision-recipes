@@ -205,7 +205,7 @@ def get_pretrained_maskrcnn(
 
 def _calculate_ap(
     e: CocoEvaluator, iou_threshold_idx: Union[int, slice] = slice(0, None)
-) -> float:
+) -> Dict[str, float]:
     """ Calculate the Average Precision (AP) by averaging all iou
     thresholds across all labels.
 

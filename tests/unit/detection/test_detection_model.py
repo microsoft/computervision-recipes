@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import shutil
 from pathlib import Path
-from typing import Union
+from typing import Tuple
 
 from utils_cv.detection.bbox import DetectionBbox
 from utils_cv.detection.model import (
@@ -204,7 +204,7 @@ def test_detection_dataset_predict_dl(
     od_detection_mask_learner.predict_dl(od_detection_mask_dataset.test_dl)
 
 
-def validate_saved_model(name: str, path: str) -> bool:
+def validate_saved_model(name: str, path: str) -> None:
     """ Tests that saved model is there """
     assert (Path(path)).exists()
     assert (Path(path) / name).exists()
@@ -234,7 +234,7 @@ def test_detection_save_model(od_detection_learner, tiny_od_data_path):
 
 @pytest.mark.gpu
 @pytest.fixture(scope="session")
-def saved_model(od_detection_learner, tiny_od_data_path) -> Union[str, Path]:
+def saved_model(od_detection_learner, tiny_od_data_path) -> Tuple[str, Path]:
     """ A saved model so that loading functions can reuse. """
     model_name = "test_fixture_model"
     od_detection_learner.save(model_name)
