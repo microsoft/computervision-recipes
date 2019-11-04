@@ -402,7 +402,7 @@ class DetectionLearner:
         transform = transforms.Compose([transforms.ToTensor()])
         im = transform(im)
         if self.device:
-            im.to(self.device)
+            im = im.to(self.device)
         return im
 
     @classmethod
