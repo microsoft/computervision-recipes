@@ -110,7 +110,7 @@ def test_detection_dataset_init_basic(
     # test mask data
     data = DetectionDataset(
         tiny_od_mask_data_path,
-        mask_dir="segmentation-objects"
+        mask_dir="segmentation-masks"
     )
     validate_detection_dataset(data, od_data_path_labels)
     assert len(data.test_ds) == 15
@@ -130,7 +130,7 @@ def test_detection_dataset_init_train_pct(
     data = DetectionDataset(
         tiny_od_mask_data_path,
         train_pct=0.75,
-        mask_dir="segmentation-objects"
+        mask_dir="segmentation-masks"
     )
     validate_detection_dataset(data, od_data_path_labels)
     assert len(data.test_ds) == 7
