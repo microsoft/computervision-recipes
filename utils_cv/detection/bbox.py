@@ -171,12 +171,16 @@ bottom={self.bottom}]\
 
     def hflip(self, width) -> "_Bbox":
         """ Flip the bounding box horizontally. """
-        self.left, self.right = (width - 1 - x for x in [self.right, self.left])
+        self.left, self.right = (
+            width - 1 - x for x in [self.right, self.left]
+        )
         return self
 
     def vflip(self, height) -> "_Bbox":
         """ Flip the bounding box vertically. """
-        self.top, self.bottom = (height - 1 - x for x in [self.bottom, self.top])
+        self.top, self.bottom = (
+            height - 1 - x for x in [self.bottom, self.top]
+        )
         return self
 
 

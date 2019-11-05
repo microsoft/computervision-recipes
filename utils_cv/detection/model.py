@@ -2,7 +2,16 @@
 # Licensed under the MIT License.
 
 import os
-from typing import Callable, List, Tuple, Union, Generator, Optional, Dict, Type
+from typing import (
+    Callable,
+    List,
+    Tuple,
+    Union,
+    Generator,
+    Optional,
+    Dict,
+    Type,
+)
 from pathlib import Path
 import json
 import shutil
@@ -12,7 +21,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torchvision import transforms
-from torchvision.models.detection import fasterrcnn_resnet50_fpn, maskrcnn_resnet50_fpn
+from torchvision.models.detection import (
+    fasterrcnn_resnet50_fpn,
+    maskrcnn_resnet50_fpn,
+)
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torch.utils.data import Dataset, DataLoader
@@ -31,7 +43,7 @@ def _get_det_bboxes(
 
     Args:
         pred: the output of passing in an image to torchvision's FasterRCNN
-        model
+            model
         labels: list of labels
         im_path: the image path of the preds
 
@@ -119,6 +131,7 @@ def _get_pretrained_rcnn(
 
 
 def _tune_box_predictor(model: nn.Module, num_classes: int) -> nn.Module:
+    """ Tune box predictor in the model. """
     # get number of input features for the classifier
     in_features = model.roi_heads.box_predictor.cls_score.in_features
 
@@ -129,6 +142,7 @@ def _tune_box_predictor(model: nn.Module, num_classes: int) -> nn.Module:
 
 
 def _tune_mask_predictor(model: nn.Module, num_classes: int) -> nn.Module:
+    """ Tune mask predictor in the model. """
     # get the number of input features of mask predictor from the pretrained
     # model
     in_features = model.roi_heads.mask_predictor.conv5_mask.in_channels
@@ -426,7 +440,8 @@ class DetectionLearner:
         self,
         pred: Dict,
         im_path: Union[str, Path]
-    ) -> List[Type[_Bbox]]:
+    ) -> List[DetectionBbox]:
+        """ Gets the bounding boxes and labels from the prediction object. """
         return DetectionBbox.from_arrays(
             pred['boxes'].tolist(),
             score=pred['scores'].tolist(),
@@ -440,6 +455,7 @@ class DetectionLearner:
         pred: Dict,
         im_path: Union[str, Path]
     ) -> Union[List[Type[_Bbox]], Tuple]:
+        """ Extract bounding boxes and masks from the prediction object. """
 
         res = self._get_det_bboxes(pred, im_path)
         if "masks" in pred:
@@ -448,6 +464,7 @@ class DetectionLearner:
 
     @classmethod
     def _pack_pred_results(cls, res: List, infos: Dict) -> List[Dict]:
+        """ Pack up bounding boxes and mask into list of dict. """
         if not isinstance(res[0], tuple):
             return [
                 {
@@ -473,8 +490,8 @@ class DetectionLearner:
         """ Performs inferencing on an image path or image.
 
         Args:
-            im_or_path: the image array which you can get from `Image.open(path)` OR a
-            image path
+            im_or_path: the image array which you can get from
+                `Image.open(path)` OR a image path
             threshold: the threshold to use to calculate whether the object was
             detected. Note: can be set to None to return all detection bounding
             boxes.
@@ -563,8 +580,8 @@ class DetectionLearner:
         Args:
             name: the name you wish to save your model under
             path: optional path to save your model to, will use `data_path`
-            otherwise
-            overwrite: overwite existing models
+                otherwise
+            overwrite: overwrite existing models
 
         Raise:
             Exception if model file already exists but overwrite is set to

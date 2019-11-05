@@ -435,13 +435,18 @@ class DetectionDataset:
             [print(transform) for transform in self.transforms.transforms]
 
     def _get_binary_masks(self, idx: int) -> Union[np.ndarray, None]:
+        """ Return binary masks for objects in the mask image. """
         binary_masks = None
         if self.mask_paths:
             if self.mask_paths[idx] is not None:
                 binary_masks = binarise_mask(Image.open(self.mask_paths[idx]))
             else:
-                # for the tiny bounding box in _read_annos(), make the mask to be the whole box
-                mask = np.zeros(Image.open(self.im_paths[idx]).size[::-1], dtype=np.uint8)
+                # for the tiny bounding box in _read_annos(), make the mask to
+                # be the whole box
+                mask = np.zeros(
+                    Image.open(self.im_paths[idx]).size[::-1],
+                    dtype=np.uint8
+                )
                 mask[1:6, 1:6] = 1
                 binary_masks = binarise_mask(mask)
 
