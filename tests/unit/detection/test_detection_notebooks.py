@@ -7,6 +7,7 @@
 import papermill as pm
 import pytest
 import scrapbook as sb
+import torch
 
 # Unless manually modified, python3 should be
 # the name of the current jupyter kernel

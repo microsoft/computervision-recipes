@@ -57,8 +57,11 @@ def show_ims(
         size (int): MatplotLib plot size.
         rows (int): rows of the images
     """
-    if not im_paths:
+    if im_paths is None or len(im_paths) == 0:
         return
+
+    if isinstance(im_paths, np.ndarray) and not np.issubdtype(im_paths.dtype, np.number):
+        im_paths = im_paths.tolist()
 
     if isinstance(im_paths, (str, Path, np.ndarray)):
         im_paths = [im_paths]
