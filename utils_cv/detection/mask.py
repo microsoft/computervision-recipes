@@ -24,7 +24,8 @@ def binarise_mask(mask: Union[np.ndarray, str, Path]) -> np.ndarray:
 
     # if all values are False or True, consider it's already binarised
     if mask.ndim == 3:
-        assert np.unique(mask).tolist() == [False, True], "'mask' should be grayscale."
+        assert all(i in [False, True] for i in np.unique(mask).tolist()), \
+            "'mask' should be grayscale."
         return mask
 
     assert mask.ndim == 2, "'mask' should have at least 2 channels."
@@ -60,7 +61,8 @@ def transparentise_mask(
 
     Assume channel is the third dimension of mask, and no alpha channel.
     """
-    assert colored_mask.shape[2] == 3, "'colored_mask' should be of 3-channels RGB."
+    assert colored_mask.shape[2] == 3, \
+        "'colored_mask' should be of 3-channels RGB."
     # convert (0, 0, 0) to (0, 0, 0, 0) and
     # all other (x, y, z) to (x, y, z, alpha*255)
     binary_mask = (colored_mask != 0).any(axis=2)

@@ -415,7 +415,11 @@ def plot_pr_curves(
     nrows = len(evaluator.coco_eval)
     fig, axes = plt.subplots(nrows, 2, figsize=figsize)
     for i, (k, coco_eval) in enumerate(evaluator.coco_eval.items()):
-        _plot_pr_curve_iou_range(axes[i, 0] if nrows > 1 else axes[0], coco_eval, k)
-        _plot_pr_curve_iou_mean(axes[i, 1] if nrows > 1 else axes[1], coco_eval, k)
+        _plot_pr_curve_iou_range(
+            axes[i, 0] if nrows > 1 else axes[0], coco_eval, k
+        )
+        _plot_pr_curve_iou_mean(
+            axes[i, 1] if nrows > 1 else axes[1], coco_eval, k
+        )
 
     plt.show()
