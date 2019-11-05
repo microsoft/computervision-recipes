@@ -459,7 +459,7 @@ class DetectionLearner:
 
         res = self._get_det_bboxes(pred, im_path)
         if "masks" in pred:
-            res = (res, pred["masks"].squeeze())
+            res = (res, pred["masks"].squeeze(1))
         return res
 
     @classmethod
