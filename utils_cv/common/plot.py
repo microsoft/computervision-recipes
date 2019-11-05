@@ -52,25 +52,21 @@ def show_ims(
 ):
     """Show image files
     Args:
-        im_paths (str or List[str]): Image filepaths
+        im_paths (str or List[str] or numpy.ndarray or List[numpy.ndarray]): Image filepaths
         labels (str or List[str]): Image labels. If None, show image file name.
         size (int): MatplotLib plot size.
         rows (int): rows of the images
     """
     if isinstance(im_paths, (str, Path, np.ndarray)):
+        im_paths = [im_paths]
         if labels is not None and isinstance(labels, str):
             labels = [labels]
-        ims = [
-            mpimg.imread(im_paths)
-            if not isinstance(im_paths, np.ndarray) else im_paths
-        ]
-        im_paths = [im_paths if not isinstance(im_paths, np.ndarray) else None]
-    else:
-        ims = [
-            mpimg.imread(im_path)
-            if not isinstance(im_path, np.ndarray) else im_path
-            for im_path in im_paths
-        ]
+
+    ims, im_paths = zip(*[
+        (mpimg.imread(im_path), im_path)
+        if not isinstance(im_path, np.ndarray) else (im_path, None)
+        for im_path in im_paths
+    ])
 
     cols = math.ceil(len(ims) / rows)
     _, axes = plt.subplots(rows, cols, figsize=(size * cols, size * rows))
