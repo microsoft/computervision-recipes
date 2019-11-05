@@ -133,13 +133,16 @@ def get_pretrained_fasterrcnn(
     return model
 
 
-def _calculate_ap(e: CocoEvaluator) -> float:
+def _calculate_ap(
+    e: CocoEvaluator, iou_threshold_idx: Union[int, slice] = slice(0, None)
+) -> float:
     """ Calculate the Average Precision (AP) by averaging all iou
     thresholds across all labels.
 
     coco_eval.eval['precision'] is a 5-dimensional array. Each dimension
     represents the following:
-    1. [T] 10 evenly distributed thresholds for IoU, from 0.5 to 0.95.
+    1. [T] 10 evenly distributed thresholds for IoU, from 0.5 to 0.95. By
+    default, we use slice(0, None) which is the average from 0.5 to 0.95.
     2. [R] 101 recall thresholds, from 0 to 101
     3. [K] label, set to slice(0, None) to get precision over all the labels in
     the dataset. Then take the mean over all labels.
@@ -150,7 +153,13 @@ def _calculate_ap(e: CocoEvaluator) -> float:
     Therefore, coco_eval.eval['precision'][0, :, 0, 0, 2] represents the value
     of 101 precisions corresponding to 101 recalls from 0 to 100 when IoU=0.5.
     """
-    precision_settings = (slice(0, None), slice(0, None), slice(0, None), 0, 2)
+    precision_settings = (
+        iou_threshold_idx,
+        slice(0, None),
+        slice(0, None),
+        0,
+        2,
+    )
     coco_eval = e.coco_eval["bbox"].eval["precision"]
     return np.mean(np.mean(coco_eval[precision_settings]))
 
@@ -209,6 +218,12 @@ class DetectionLearner:
             )
         )
 
+    def add_labels(self, labels: List[str]):
+        """ Add labels to this detector. This class does not expect a label
+        '__background__' in first element of the label list. Make sure it is
+        omitted before adding it. """
+        self.labels = labels
+
     def fit(
         self,
         epochs: int,
@@ -239,6 +254,7 @@ class DetectionLearner:
         # store data in these arrays to plot later
         self.losses = []
         self.ap = []
+        self.ap_iou_point_5 = []
 
         # main training loop
         self.epochs = epochs
@@ -261,6 +277,7 @@ class DetectionLearner:
             # evaluate
             e = self.evaluate(dl=self.dataset.test_dl)
             self.ap.append(_calculate_ap(e))
+            self.ap_iou_point_5.append(_calculate_ap(e, iou_threshold_idx=0))
 
     def plot_precision_loss_curves(
         self, figsize: Tuple[int, int] = (10, 5)
