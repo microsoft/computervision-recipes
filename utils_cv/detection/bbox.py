@@ -1,11 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from .mask import binarise_mask
 from pathlib import Path
-from typing import List, Type, Union
+from typing import List, Union
 import numpy as np
 import torch
+
+from .mask import binarise_mask
 
 
 class _Bbox:
@@ -40,7 +41,12 @@ class _Bbox:
 
     @classmethod
     def get_rect_from_binary_mask(cls, binary_mask: np.ndarray) -> List[int]:
-        """ Get the bounding box rectangle from a binary numpy mask. """
+        """ Get the bounding box rectangle from a binary numpy mask.
+
+        Args:
+            binary_mask: boolean numpy array.  True indicates the pixel belongs
+                to the object in the mask, otherwise, False.
+        """
         pos = np.where(binary_mask)
         left = np.min(pos[1])
         right = np.max(pos[1])
@@ -218,7 +224,7 @@ class AnnotationBbox(_Bbox):
         cls,
         arrs: List[List[int]],
         **kwargs
-    ) -> List[Type["_Bbox"]]:
+    ) -> List["AnnotationBbox"]:
         """ Create a list of AnnotationBbox objects from a list of
         [left, top, right, bottom].
 
@@ -242,6 +248,9 @@ class AnnotationBbox(_Bbox):
         binary_mask: np.ndarray,
         **kwargs
     ) -> "AnnotationBbox":
+        """ Create a AnnotationBbox object from a mask of boolean numpy
+        array.
+        """
         arr = _Bbox.get_rect_from_binary_mask(binary_mask)
         return cls.from_array(arr, **kwargs)
 

@@ -22,8 +22,6 @@ from .references.engine import train_one_epoch, evaluate
 from .references.coco_eval import CocoEvaluator
 from .bbox import _Bbox, DetectionBbox
 from ..common.gpu import torch_device
-from .data import coco_labels
-from .dataset import DetectionDataset
 
 
 def _get_det_bboxes(
