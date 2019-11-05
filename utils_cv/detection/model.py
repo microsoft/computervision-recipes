@@ -431,7 +431,7 @@ class DetectionLearner:
             pred['boxes'].tolist(),
             score=pred['scores'].tolist(),
             label_idx=pred['labels'].tolist(),
-            label_name=np.array(self.labels)[pred['labels']].tolist(),
+            label_name=np.array(self.labels)[pred['labels'] - 1].tolist(),
             im_path=im_path,
         )
 
