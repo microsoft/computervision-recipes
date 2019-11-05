@@ -55,6 +55,7 @@ def test_01_notebook_run(detection_notebooks, tiny_od_data_path):
     assert len(set([len(d) for d in training_ap])) == 1
 
 
+@pytest.mark.gpu
 @pytest.mark.notebooks
 def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
     notebook_path = detection_notebooks["02"]
@@ -64,7 +65,7 @@ def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
         parameters=dict(
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_od_mask_data_path,
-            DEVICE=torch.device('cuda'),
+            DEVICE='cuda',
             THRESHOLD=0.1,
             EPOCHS=1,
         ),
