@@ -45,25 +45,34 @@ def line_graph(
 
 
 def show_ims(
-    im_paths: Union[str, List[str]],
+    im_paths: Union[str, List[str], np.ndarray, List[np.ndarray]],
     labels: Union[str, List[str]] = None,
     size: int = 3,
     rows: int = 1,
 ):
     """Show image files
     Args:
-        im_paths (str or List[str]): Image filepaths
+        im_paths (str or List[str] or numpy.ndarray or List[numpy.ndarray]): Image filepaths
         labels (str or List[str]): Image labels. If None, show image file name.
         size (int): MatplotLib plot size.
         rows (int): rows of the images
     """
-    if isinstance(im_paths, (str, Path)):
+    if im_paths is None or len(im_paths) == 0:
+        return
+
+    if isinstance(im_paths, np.ndarray) and not np.issubdtype(im_paths.dtype, np.number):
+        im_paths = im_paths.tolist()
+
+    if isinstance(im_paths, (str, Path, np.ndarray)):
+        im_paths = [im_paths]
         if labels is not None and isinstance(labels, str):
             labels = [labels]
-        ims = [mpimg.imread(im_paths)]
-        im_paths = [im_paths]
-    else:
-        ims = [mpimg.imread(im_path) for im_path in im_paths]
+
+    ims, im_paths = zip(*[
+        (mpimg.imread(im_path), im_path)
+        if not isinstance(im_path, np.ndarray) else (im_path, None)
+        for im_path in im_paths
+    ])
 
     cols = math.ceil(len(ims) / rows)
     _, axes = plt.subplots(rows, cols, figsize=(size * cols, size * rows))
@@ -73,7 +82,7 @@ def show_ims(
 
     for i, (im_path, im) in enumerate(zip(im_paths, ims)):
         if labels is None:
-            axes[i].set_title(Path(im_path).stem)
+            axes[i].set_title(Path(im_path).stem if im_path else '')
         else:
             axes[i].set_title(labels[i])
         axes[i].imshow(im)

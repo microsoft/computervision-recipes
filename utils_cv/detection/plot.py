@@ -5,7 +5,7 @@
 Helper module for visualizations
 """
 import os
-from typing import List, Union, Tuple, Callable, Any, Iterator
+from typing import List, Union, Tuple, Callable, Any, Iterator, Optional
 from pathlib import Path
 
 import PIL
@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from .references.coco_eval import CocoEvaluator
 from .bbox import _Bbox, AnnotationBbox, DetectionBbox
 from ..common.misc import get_font
+from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 
 
 class PlotSettings:
@@ -28,13 +29,15 @@ class PlotSettings:
         rect_color: Tuple[int, int, int] = (255, 0, 0),
         text_size: int = 25,
         text_color: Tuple[int, int, int] = (255, 255, 255),
+        mask_color: Tuple[int, int, int] = (2, 166, 101),
+        mask_alpha: float = 0.5,
     ):
-        self.rect_th, self.rect_color, self.text_size, self.text_color = (
-            rect_th,
-            rect_color,
-            text_size,
-            text_color,
-        )
+        self.rect_th = rect_th
+        self.rect_color = rect_color
+        self.text_size = text_size
+        self.text_color = text_color
+        self.mask_color = mask_color
+        self.mask_alpha = mask_alpha
 
 
 def plot_boxes(
@@ -86,12 +89,73 @@ def plot_boxes(
     return im
 
 
+def plot_mask(
+    im: Union[str, Path, PIL.Image.Image],
+    mask: Union[str, Path, np.ndarray],
+    plot_settings: PlotSettings = PlotSettings(),
+) -> PIL.Image.Image:
+    """ Put mask onto image.
+
+    Assume the mask is already binary masks of [N, Height, Width], or
+    grayscale mask of [Height, Width] with different values
+    representing different objects, 0 as background.
+    """
+    if isinstance(im, (str, Path)):
+        im = Image.open(im)
+
+    # convert to RGBA for transparentising
+    im = im.convert('RGBA')
+    # colorise masks
+    binary_masks = binarise_mask(mask)
+    colored_masks = [
+        colorise_binary_mask(bmask, plot_settings.mask_color) for bmask in
+        binary_masks
+    ]
+    # merge masks into img one by one
+    for cmask in colored_masks:
+        tmask = Image.fromarray(
+            transparentise_mask(cmask, plot_settings.mask_alpha)
+        )
+        im = Image.alpha_composite(im, tmask)
+
+    return im
+
+
+def display_image(
+    im: Union[str, Path, PIL.Image.Image, np.ndarray],
+    ax: Optional[plt.axes] = None,
+    figsize: Tuple[int, int] = (12, 12),
+) -> None:
+    """ Show an image.
+
+    Args:
+        im: Image or path
+        ax: an optional ax to specify where you wish the figure to be drawn on
+        figsize: figure size
+    """
+    # Read image
+    if isinstance(im, (str, Path)):
+        im = Image.open(im)
+
+    # display the image
+    if ax is not None:
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.imshow(im)
+    else:
+        plt.figure(figsize=figsize)
+        plt.imshow(im)
+        plt.xticks([])
+        plt.yticks([])
+        plt.show()
+
+
 def display_bboxes(
     bboxes: List[_Bbox],
     im_path: Union[Path, str],
-    ax: Union[None, plt.axes] = None,
+    ax: Optional[plt.axes] = None,
     plot_settings: PlotSettings = PlotSettings(),
-    figsize: Tuple[int, int] = (12, 12),
+    **kwargs,
 ) -> None:
     """ Draw image with bounding boxes.
 
@@ -99,6 +163,7 @@ def display_bboxes(
         bboxes: A list of _Bbox, could be DetectionBbox or AnnotationBbox
         im_path: the location of image path to draw
         ax: an optional ax to specify where you wish the figure to be drawn on
+        plot_settings: plotting parameters
 
     Returns nothing, but plots the image with bounding boxes and labels.
     """
@@ -112,16 +177,22 @@ def display_bboxes(
     im = plot_boxes(im, bboxes, title=title, plot_settings=plot_settings)
 
     # display the output image
-    if ax is not None:
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.imshow(im)
-    else:
-        plt.figure(figsize=figsize)
-        plt.imshow(im)
-        plt.xticks([])
-        plt.yticks([])
-        plt.show()
+    display_image(im, ax=ax, **kwargs)
+
+
+def display_bbox_mask(
+    bboxes: List[AnnotationBbox],
+    im_path: Union[Path, str],
+    mask_path: Union[Path, str],
+    ax: Optional[plt.axes] = None,
+) -> None:
+    """ Draw image with bounding boxes and mask. """
+    im = Image.open(im_path)
+    if mask_path is not None:
+        im = plot_mask(im_path, mask_path)
+    if bboxes is not None:
+        im = plot_boxes(im, bboxes)
+    display_image(im, ax)
 
 
 def plot_grid(
@@ -252,7 +323,7 @@ def _get_precision_recall_settings(
 
     Args:
         iou_thrs: the IoU thresholds to return
-        rec_thrs: the recall thrsholds to return
+        rec_thrs: the recall thresholds to return
         cat_ids: label ids to use for evaluation
         area_rng: object area ranges for evaluation
         max_dets: thresholds on max detections per image
@@ -260,12 +331,16 @@ def _get_precision_recall_settings(
     Return the settings as a tuple to be passed into:
     `coco_eval.eval['precision']`
     """
-    return (iou_thrs, rec_thrs, cat_ids, area_rng, max_dets)
+    return iou_thrs, rec_thrs, cat_ids, area_rng, max_dets
 
 
-def _plot_pr_curve_iou_range(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
+def _plot_pr_curve_iou_range(
+    ax: plt.axes,
+    coco_eval: CocoEvaluator,
+    iou_type: Optional[str] = None,
+) -> None:
     """ Plots the PR curve over varying iou thresholds averaging over [K]
-    categoyies. """
+    categories. """
     x = np.arange(0.0, 1.01, 0.01)
     iou_thrs_idx = range(0, 10)
     iou_thrs = np.linspace(
@@ -277,7 +352,7 @@ def _plot_pr_curve_iou_range(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
     cmap = plt.cm.get_cmap("hsv", len(iou_thrs))
 
     ax = _setup_pr_axes(
-        ax, "Precision-Recall Curve @ different IoU Thresholds"
+        ax, f"Precision-Recall Curve ({iou_type}) @ different IoU Thresholds"
     )
     for i, c in zip(iou_thrs_idx, iou_thrs):
         arr = coco_eval.eval["precision"][_get_precision_recall_settings(i)]
@@ -287,11 +362,15 @@ def _plot_pr_curve_iou_range(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
     ax.legend(loc="lower left")
 
 
-def _plot_pr_curve_iou_mean(ax: plt.axes, coco_eval: CocoEvaluator) -> None:
+def _plot_pr_curve_iou_mean(
+    ax: plt.axes,
+    coco_eval: CocoEvaluator,
+    iou_type: Optional[str] = None,
+) -> None:
     """ Plots the PR curve, averaging over iou thresholds and [K] labels. """
     x = np.arange(0.0, 1.01, 0.01)
     ax = _setup_pr_axes(
-        ax, "Precision-Recall Curve - Mean over IoU Thresholds"
+        ax, f"Precision-Recall Curve ({iou_type})- Mean over IoU Thresholds"
     )
     avg_arr = np.mean(  # mean over K labels
         np.mean(  # mean over iou thresholds
@@ -332,7 +411,15 @@ def plot_pr_curves(
         raise Exception(
             "`accumulate()` has not been called on the passed in coco_eval object."
         )
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
-    _plot_pr_curve_iou_range(ax1, coco_eval)
-    _plot_pr_curve_iou_mean(ax2, coco_eval)
+
+    nrows = len(evaluator.coco_eval)
+    fig, axes = plt.subplots(nrows, 2, figsize=figsize)
+    for i, (k, coco_eval) in enumerate(evaluator.coco_eval.items()):
+        _plot_pr_curve_iou_range(
+            axes[i, 0] if nrows > 1 else axes[0], coco_eval, k
+        )
+        _plot_pr_curve_iou_mean(
+            axes[i, 1] if nrows > 1 else axes[1], coco_eval, k
+        )
+
     plt.show()

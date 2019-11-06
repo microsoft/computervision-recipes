@@ -7,16 +7,18 @@
 # you can move it to a conftest.py file. You don't need to import the fixture you want to use in a test, it
 # automatically gets discovered by pytest."
 
+import numpy as np
 import os
 import pytest
 import torch
 import urllib.request
 import random
+from PIL import Image
 from torch import tensor
 from pathlib import Path
 from fastai.vision import cnn_learner, models
 from fastai.vision.data import ImageList, imagenet_stats
-from typing import List
+from typing import List, Tuple
 from tempfile import TemporaryDirectory
 from utils_cv.common.data import unzip_url
 from utils_cv.classification.data import Urls as ic_urls
@@ -25,6 +27,7 @@ from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox
 from utils_cv.detection.dataset import DetectionDataset
 from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
+    get_pretrained_maskrcnn,
     DetectionLearner,
 )
 
@@ -54,7 +57,7 @@ def path_similarity_notebooks():
 
 
 def path_detection_notebooks():
-    """ Returns the path of the similarity notebooks folder. """
+    """ Returns the path of the detection notebooks folder. """
     return os.path.abspath(
         os.path.join(
             os.path.dirname(__file__), os.path.pardir, "scenarios", "detection"
@@ -136,10 +139,11 @@ def detection_notebooks():
     paths = {
         "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
         "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
+        "02": os.path.join(folder_notebooks, "02_mask_rcnn.ipynb"),
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters_on_azureml.ipynb"
         ),
-        "12": os.path.join(folder_notebooks, "12_hard_negative_sampling.ipynb"),    
+        "12": os.path.join(folder_notebooks, "12_hard_negative_sampling.ipynb"),
     }
     return paths
 
@@ -346,6 +350,15 @@ def od_cup_path(tmp_session) -> str:
 
 
 @pytest.fixture(scope="session")
+def od_cup_mask_path(tmp_session) -> str:
+    """ Returns the path to the downloaded cup image. """
+    im_url = "https://github.com/simonzhaoms/testdata/raw/master/unittest/segmentation-masks/cvbp_cup.png"
+    im_path = os.path.join(tmp_session, "example_mask.png")
+    urllib.request.urlretrieve(im_url, im_path)
+    return im_path
+
+
+@pytest.fixture(scope="session")
 def od_cup_anno_bboxes(tmp_session, od_cup_path) -> List[AnnotationBbox]:
     return [
         AnnotationBbox(
@@ -354,7 +367,7 @@ def od_cup_anno_bboxes(tmp_session, od_cup_path) -> List[AnnotationBbox]:
             right=273,
             bottom=244,
             label_name="cup",
-            label_idx="0",
+            label_idx=0,
             im_path=od_cup_path,
         )
     ]
@@ -369,11 +382,32 @@ def od_cup_det_bboxes(tmp_session, od_cup_path) -> List[DetectionBbox]:
             right=273,
             bottom=244,
             label_name="cup",
-            label_idx="0",
+            label_idx=0,
             im_path=od_cup_path,
             score=0.99,
         )
     ]
+
+
+@pytest.fixture(scope="session")
+def od_mask_rects() -> Tuple:
+    """ Returns synthetic mask and rectangles ([left, top, right, bottom]) for
+    object detection.
+    """
+    height = width = 100
+
+    mask = np.zeros((height, width), dtype=np.uint8)
+    mask[:10, :20] = 1
+    mask[20:40, 30:60] = 2
+    # corresponding binary masks of the mask above
+    binary_masks = np.zeros((2, height, width), dtype=np.bool)
+    binary_masks[0, :10, :20] = True
+    binary_masks[1, 20:40, 30:60] = True
+    # corresponding rectangles of the mask above
+    rects = [[0, 0, 19, 9], [30, 20, 59, 39]]
+    # a completely black image
+    im = Image.fromarray(np.zeros((height, width, 3), dtype=np.uint8))
+    return binary_masks, mask, rects, im
 
 
 @pytest.fixture(scope="session")
@@ -388,13 +422,24 @@ def tiny_od_data_path(tmp_session) -> str:
 
 
 @pytest.fixture(scope="session")
-def od_sample_im_anno(tiny_od_data_path) -> str:
+def tiny_od_mask_data_path(tmp_session) -> str:
+    """ Returns the path to the fridge object detection mask dataset. """
+    return unzip_url(
+        od_urls.fridge_objects_mask_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
+
+
+@pytest.fixture(scope="session")
+def od_sample_im_anno(tiny_od_data_path) -> Tuple[Path, ...]:
     """ Returns an annotation and image path from the tiny_od_data_path fixture.
     Specifically, using the paths for 1.xml and 1.jpg
     """
     anno_path = Path(tiny_od_data_path) / "annotations" / "1.xml"
     im_path = Path(tiny_od_data_path) / "images" / "1.jpg"
-    return (anno_path, im_path)
+    return anno_path, im_path
 
 
 @pytest.fixture(scope="session")
@@ -471,6 +516,12 @@ def od_detection_dataset(tiny_od_data_path):
     return DetectionDataset(tiny_od_data_path)
 
 
+@pytest.fixture(scope="session")
+def od_detection_mask_dataset(tiny_od_mask_data_path):
+    """ returns a basic detection mask dataset. """
+    return DetectionDataset(tiny_od_mask_data_path, mask_dir="segmentation-masks")
+
+
 @pytest.mark.gpu
 @pytest.fixture(scope="session")
 def od_detection_learner(od_detection_dataset):
@@ -491,9 +542,34 @@ def od_detection_learner(od_detection_dataset):
 
 @pytest.mark.gpu
 @pytest.fixture(scope="session")
+def od_detection_mask_learner(od_detection_mask_dataset):
+    """ returns a basic detection learner that has been trained for one epoch. """
+    model = get_pretrained_maskrcnn(
+        num_classes=len(od_detection_mask_dataset.labels) + 1,
+        min_size=100,
+        max_size=200,
+        rpn_pre_nms_top_n_train=500,
+        rpn_pre_nms_top_n_test=250,
+        rpn_post_nms_top_n_train=500,
+        rpn_post_nms_top_n_test=250,
+    )
+    learner = DetectionLearner(od_detection_mask_dataset, model=model)
+    learner.fit(1)
+    return learner
+
+
+@pytest.mark.gpu
+@pytest.fixture(scope="session")
 def od_detection_eval(od_detection_learner):
     """ returns the eval results of a detection learner after one epoch of training. """
     return od_detection_learner.evaluate()
+
+
+@pytest.mark.gpu
+@pytest.fixture(scope="session")
+def od_detection_mask_eval(od_detection_mask_learner):
+    """ returns the eval results of a detection learner after one epoch of training. """
+    return od_detection_mask_learner.evaluate()
 
 
 # ----- AML Settings ----------------------------------------------------------
