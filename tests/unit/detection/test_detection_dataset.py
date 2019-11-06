@@ -86,7 +86,7 @@ def test_detection_dataset_init_basic(tiny_od_data_path, od_data_path_labels):
     """ Tests that initialization of the Detection Dataset works. """
     data = DetectionDataset(tiny_od_data_path)
     validate_detection_dataset(data, od_data_path_labels)
-    assert len(data.test_ds) == 20
+    assert len(data.test_ds) == 19
     assert len(data.train_ds) == 20
 
 
@@ -96,13 +96,18 @@ def test_detection_dataset_init_train_pct(
     """ Tests that initialization with train_pct."""
     data = DetectionDataset(tiny_od_data_path, train_pct=0.75)
     validate_detection_dataset(data, od_data_path_labels)
-    assert len(data.test_ds) == 10
+    assert len(data.test_ds) == 9
     assert len(data.train_ds) == 30
 
 
 def test_detection_dataset_show_ims(basic_detection_dataset):
     # simply test that this is error free for now
     basic_detection_dataset.show_ims()
+
+
+def test_detection_dataset_show_im_transformations(basic_detection_dataset):
+    # simply test that this is error free for now
+    basic_detection_dataset.show_im_transformations()
 
 
 def test_detection_dataset_init_anno_im_dirs(
