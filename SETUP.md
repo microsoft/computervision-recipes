@@ -3,7 +3,7 @@
 This document describes how to setup all the dependencies to run the notebooks
 in this repository.
 
-Many computer visions scenarios are extremely computationlly heavy. Training a
+Many computer visions scenarios are extremely computationally heavy. Training a
 model often requires a machine that has a GPU, and would otherwise be too slow.
 We recommend using the GPU-enabled [Azure Data Science Virtual Machine (DSVM)](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/) since it comes prepared with a lot of the prerequisites needed to efficiently do computer vision.
 
@@ -112,10 +112,11 @@ $ssh -L local_port:remote_address:remote_port  <username>@<server-ip>
 
 For example, if I want to run `jupyter notebook --port 8888` on my VM and I
 wish to run the Jupyter notebooks on my local broswer on `localhost:9999`, I
-would ssh into my VM using the following commend:
+would ssh into my VM using the following command:
+
 ```
 $ssh -L 9999:localhost:8888 <username>@<server-ip>
 ```
 
-This command will allow your local machine's port 9999 to access your remote
-machine's port 8888.
+This command will allow your local machine's port `9999` to access your remote
+machine's port `8888`.
