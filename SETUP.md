@@ -113,6 +113,7 @@ $ssh -L local_port:remote_address:remote_port  <username>@<server-ip>
 For example, if I want to run `jupyter notebook --port 8888` on my VM and I
 wish to run the Jupyter notebooks on my local broswer on `localhost:9999`, I
 would ssh into my VM using the following command:
+
 ```
 $ssh -L 9999:localhost:8888 <username>@<server-ip>
 ```
