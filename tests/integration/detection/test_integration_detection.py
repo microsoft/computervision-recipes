@@ -51,11 +51,11 @@ def test_02_notebook_run(detection_notebooks):
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     training_losses = nb_output.scraps["training_losses"].data
     assert len(training_losses) == epochs
-    assert training_losses[-1] < 0.8
+    assert training_losses[-1] < 0.85
     training_aps = nb_output.scraps["training_average_precision"].data
     assert len(training_aps) == epochs
     for d in training_aps[-1].values():
-        assert d > 0.2
+        assert d > 0.15
 
 
 @pytest.mark.notebooks
