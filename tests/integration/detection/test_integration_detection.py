@@ -35,7 +35,7 @@ def test_01_notebook_run(detection_notebooks):
 @pytest.mark.notebooks
 @pytest.mark.linuxgpu
 def test_02_notebook_run(detection_notebooks):
-    epochs = 3
+    epochs = 5
     notebook_path = detection_notebooks["02"]
     pm.execute_notebook(
         notebook_path,
