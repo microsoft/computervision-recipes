@@ -23,11 +23,13 @@ def test_01_notebook_run(detection_notebooks):
     )
 
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-    assert len(nb_output.scraps["training_losses"].data) == epochs
-    for d in nb_output.scraps["training_average_precision"].data.values():
-        assert len(d) == epochs
-        assert d[-1] < 0.5
-        assert d[-1] > 0.5
+    training_losses = nb_output.scraps["training_losses"].data
+    assert len(training_losses) == epochs
+    assert training_losses[-1] < 0.5
+    training_aps = nb_output.scraps["training_average_precision"].data
+    assert len(training_aps) == epochs
+    for d in training_aps[-1].values():
+        assert d > 0.5
 
 
 @pytest.mark.notebooks
@@ -41,17 +43,19 @@ def test_02_notebook_run(detection_notebooks):
         parameters=dict(
             PM_VERSION=pm.__version__,
             EPOCHS=epochs,
-            DEVICE=torch.device('cuda')
+            DEVICE='cuda'
         ),
         kernel_name=KERNEL_NAME,
     )
 
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-    assert len(nb_output.scraps["training_losses"].data) == epochs
-    for d in nb_output.scraps["training_average_precision"].data.values():
-        assert len(d) == epochs
-        assert d[-1] < 0.8
-        assert d[-1] > 0.2
+    training_losses = nb_output.scraps["training_losses"].data
+    assert len(training_losses) == epochs
+    assert training_losses[-1] < 0.8
+    training_aps = nb_output.scraps["training_average_precision"].data
+    assert len(training_aps) == epochs
+    for d in training_aps[-1].values():
+        assert d > 0.2
 
 
 @pytest.mark.notebooks
