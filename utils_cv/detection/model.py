@@ -2,24 +2,25 @@
 # Licensed under the MIT License.
 
 import os
-from typing import List, Tuple, Union, Generator, Optional
-from pathlib import Path
+import itertools
 import json
+from pathlib import Path
 import shutil
+from typing import List, Tuple, Union, Generator, Optional
 
-from PIL import Image
 import numpy as np
+from PIL import Image
 import torch
 import torch.nn as nn
 from torchvision import transforms
 from torchvision.models.detection import fasterrcnn_resnet50_fpn
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, Subset
 import matplotlib.pyplot as plt
 
 from .references.engine import train_one_epoch, evaluate
 from .references.coco_eval import CocoEvaluator
-from .bbox import DetectionBbox
+from .bbox import boxes_iou, DetectionBbox
 from ..common.gpu import torch_device
 
 
@@ -162,6 +163,141 @@ def _calculate_ap(
     )
     coco_eval = e.coco_eval["bbox"].eval["precision"]
     return np.mean(np.mean(coco_eval[precision_settings]))
+
+
+def _im_eval_detections(
+    score_threshold: float,
+    iou_threshold: float,
+    gt_bboxes: List[DetectionBbox],
+    det_bboxes: List[DetectionBbox],
+):
+    """ Count number of wrong detections and number of missed objects for a single image """
+    # Remove all detections with confidence score below a certain threshold
+    if score_threshold is not None:
+        det_bboxes = [
+            bbox for bbox in det_bboxes if bbox.score > score_threshold
+        ]
+
+    # Image level statistics.
+    # Store (i) if image has at least one missing ground truth; (ii) if image has at least one incorrect detection.
+    im_missed_gt = False
+    im_wrong_det = False
+
+    # Object level statistics.
+    # Store (i) if grount truth objects were found; (ii) if detections are correct.
+    found_gts = [False] * len(gt_bboxes)
+    correct_dets = [False] * len(det_bboxes)
+
+    # Check if any object was detected in an image
+    if len(det_bboxes) == 0:
+        if len(gt_bboxes) > 0:
+            im_missed_gt = True
+
+    else:
+        # loop over ground truth objects and all detections for a given image
+        for gt_index, gt_bbox in enumerate(gt_bboxes):
+            gt_label = gt_bbox.label_name
+
+            for det_index, det_bbox in enumerate(det_bboxes):
+                det_label = det_bbox.label_name
+                iou_overlap = boxes_iou(gt_bbox, det_bbox)
+
+                # mark as good if detection has same label as the ground truth,
+                # and if the intersection-over-union area is above a threshold
+                if gt_label == det_label and iou_overlap >= iou_threshold:
+                    found_gts[gt_index] = True
+                    correct_dets[det_index] = True
+
+        # Check if image has at least one wrong detection, or at least one missing ground truth
+        im_wrong_det = min(correct_dets) == 0
+        if len(gt_bboxes) > 0 and min(found_gts) == 0:
+            im_missed_gt = True
+
+    # Count
+    obj_missed_gt = len(found_gts) - np.sum(found_gts)
+    obj_wrong_det = len(correct_dets) - np.sum(correct_dets)
+    return (im_wrong_det, im_missed_gt, obj_wrong_det, obj_missed_gt)
+
+
+def ims_eval_detections(
+    detections: List[List[DetectionBbox]],
+    data_ds: Subset,
+    detections_neg: List[List[DetectionBbox]] = None,
+    iou_threshold: float = 0.5,
+    score_thresholds: List[float] = np.linspace(0, 1, 51),
+):
+    """ Count number of wrong detections and number of missed objects for multiple image """
+    # get detection bounding boxes and corresponding ground truth for all images
+    det_bboxes_list = [d["det_bboxes"] for d in detections]
+    gt_bboxes_list = [
+        data_ds.dataset.anno_bboxes[d["idx"]] for d in detections
+    ]
+
+    # Get counts for test images
+    out = [
+        [
+            _im_eval_detections(
+                score_threshold,
+                iou_threshold,
+                gt_bboxes_list[i],
+                det_bboxes_list[i],
+            )
+            for i in range(len(det_bboxes_list))
+        ]
+        for score_threshold in score_thresholds
+    ]
+    out = np.array(out)
+    im_wrong_det_counts = np.sum(out[:, :, 0], 1)
+    im_missed_gt_counts = np.sum(out[:, :, 1], 1)
+    obj_wrong_det_counts = np.sum(out[:, :, 2], 1)
+    obj_missed_gt_counts = np.sum(out[:, :, 3], 1)
+
+    # Count how many images have either a wrong detection or a missed ground truth
+    im_error_counts = np.sum(np.max(out[:, :, 0:2], 2), 1)
+
+    # Get counts for negative images
+    if detections_neg:
+        neg_scores = [
+            [box.score for box in d["det_bboxes"]] for d in detections_neg
+        ]
+        neg_scores = [scores for scores in neg_scores if scores != []]
+        im_neg_det_counts = [
+            np.sum([np.max(scores) > thres for scores in neg_scores])
+            for thres in score_thresholds
+        ]
+        obj_neg_det_counts = [
+            np.sum(np.array(list(itertools.chain(*neg_scores))) > thres)
+            for thres in score_thresholds
+        ]
+        assert (
+            len(im_neg_det_counts)
+            == len(obj_neg_det_counts)
+            == len(score_thresholds)
+        )
+
+    else:
+        im_neg_det_counts = None
+        obj_neg_det_counts = None
+
+    assert (
+        len(im_error_counts)
+        == len(im_wrong_det_counts)
+        == len(im_missed_gt_counts)
+        == len(obj_missed_gt_counts)
+        == len(obj_wrong_det_counts)
+        == len(score_thresholds)
+    )
+
+    return (
+        score_thresholds,
+        im_error_counts,
+        im_wrong_det_counts,
+        im_missed_gt_counts,
+        obj_wrong_det_counts,
+        obj_missed_gt_counts,
+        im_neg_det_counts,
+        obj_neg_det_counts,
+    )
 
 
 class DetectionLearner:
