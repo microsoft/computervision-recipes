@@ -80,21 +80,32 @@ def test_detection_learner_init_model(od_detection_dataset):
 @pytest.mark.gpu
 def test_detection_learner_train_one_epoch(
     od_detection_learner,
-    od_detection_mask_learner
 ):
     """ Simply test that a small training loop works. """
     od_detection_learner.fit(epochs=1)
-    # test mask learner
+
+
+@pytest.mark.gpu
+def test_detection_mask_learner_train_one_epoch(
+    od_detection_mask_learner,
+):
+    """ Simply test that a small training loop works for mask learner. """
     od_detection_mask_learner.fit(epochs=1)
 
 
 @pytest.mark.gpu
 def test_detection_learner_plot_precision_loss_curves(
     od_detection_learner,
-    od_detection_mask_learner
 ):
     """ Simply test that `plot_precision_loss_curves` works. """
     od_detection_learner.plot_precision_loss_curves()
+
+
+@pytest.mark.gpu
+def test_detection_mask_learner_plot_precision_loss_curves(
+    od_detection_mask_learner,
+):
+    """ Simply test that `plot_precision_loss_curves` works for mask learner. """
     # test mask learner
     od_detection_mask_learner.plot_precision_loss_curves()
 
@@ -102,11 +113,16 @@ def test_detection_learner_plot_precision_loss_curves(
 @pytest.mark.gpu
 def test_detection_learner_evaluate(
     od_detection_learner,
-    od_detection_mask_learner
 ):
     """ Simply test that `evaluate` works. """
     od_detection_learner.evaluate()
-    # test mask learner
+
+
+@pytest.mark.gpu
+def test_detection_mask_learner_evaluate(
+    od_detection_mask_learner,
+):
+    """ Simply test that `evaluate` works for mask learner. """
     od_detection_mask_learner.evaluate()
 
 
@@ -114,13 +130,21 @@ def test_detection_learner_evaluate(
 def test_detection_learner_predict(
     od_detection_learner,
     od_cup_path,
-    od_detection_mask_learner
 ):
     """ Simply test that `predict` works. """
     bboxes = od_detection_learner.predict(od_cup_path)
     assert type(bboxes) == list
-    # test mask learner
-    bboxes, masks = od_detection_mask_learner.predict(od_cup_path, threshold=0.1)
+
+
+@pytest.mark.gpu
+def test_detection_mask_learner_predict(
+    od_detection_mask_learner,
+    od_cup_path,
+):
+    """ Simply test that `predict` works for mask learner. """
+    bboxes, masks = od_detection_mask_learner.predict(
+        od_cup_path, threshold=0.1
+    )
     assert type(bboxes) == list
     assert type(masks) == np.ndarray
     assert len(bboxes) == len(masks)
@@ -130,13 +154,23 @@ def test_detection_learner_predict(
 def test_detection_learner_predict_threshold(
     od_detection_learner,
     od_cup_path,
-    od_detection_mask_learner
 ):
-    """ Simply test that `predict` works with a threshold by setting a really high threshold. """
+    """ Simply test that `predict` works with a threshold by setting a really
+    high threshold.
+    """
     bboxes = od_detection_learner.predict(od_cup_path, threshold=0.9999)
     assert type(bboxes) == list
     assert len(bboxes) == 0
-    # test mask learner
+
+
+@pytest.mark.gpu
+def test_detection_mask_learner_predict_threshold(
+    od_detection_mask_learner,
+    od_cup_path,
+):
+    """ Simply test that `predict` works for mask learner with a threshold by
+    setting a really high threshold.
+    """
     bboxes, masks = od_detection_mask_learner.predict(
         od_cup_path,
         threshold=0.9999,
@@ -152,8 +186,6 @@ def test_detection_learner_predict_threshold(
 def test_detection_learner_predict_batch(
     od_detection_learner,
     od_detection_dataset,
-    od_detection_mask_learner,
-    od_detection_mask_dataset
 ):
     """ Simply test that `predict_batch` works. """
     generator = od_detection_learner.predict_batch(
@@ -161,7 +193,13 @@ def test_detection_learner_predict_batch(
     )
     assert isinstance(generator, Iterable)
 
-    # test mask learner
+
+@pytest.mark.gpu
+def test_detection_mask_learner_predict_batch(
+    od_detection_mask_learner,
+    od_detection_mask_dataset,
+):
+    """ Simply test that `predict_batch` works for mask learner. """
     generator = od_detection_mask_learner.predict_batch(
         od_detection_mask_dataset.test_dl
     )
@@ -172,16 +210,24 @@ def test_detection_learner_predict_batch(
 def test_detection_learner_predict_batch_threshold(
     od_detection_learner,
     od_detection_dataset,
-    od_detection_mask_learner,
-    od_detection_mask_dataset
 ):
-    """ Simply test that `predict_batch` works with a threshold by setting it really high.. """
+    """ Simply test that `predict_batch` works with a threshold by setting it
+    really high.
+    """
     generator = od_detection_learner.predict_batch(
         od_detection_dataset.test_dl, threshold=0.9999
     )
     assert isinstance(generator, Iterable)
 
-    # test mask learner
+
+@pytest.mark.gpu
+def test_detection_mask_learner_predict_batch_threshold(
+    od_detection_mask_learner,
+    od_detection_mask_dataset,
+):
+    """ Simply test that `predict_batch` works for mask learner with a
+    threshold by setting it really high.
+    """
     generator = od_detection_mask_learner.predict_batch(
         od_detection_mask_dataset.test_dl,
         threshold=0.9999,
@@ -194,13 +240,17 @@ def test_detection_learner_predict_batch_threshold(
 def test_detection_dataset_predict_dl(
     od_detection_learner,
     od_detection_dataset,
-    od_detection_mask_learner,
-    od_detection_mask_dataset
 ):
     """ Simply test that `predict_dl` works. """
     od_detection_learner.predict_dl(od_detection_dataset.test_dl)
 
-    # test mask learner
+
+@pytest.mark.gpu
+def test_detection_mask_dataset_predict_dl(
+    od_detection_mask_learner,
+    od_detection_mask_dataset,
+):
+    """ Simply test that `predict_dl` works for mask learner. """
     od_detection_mask_learner.predict_dl(od_detection_mask_dataset.test_dl)
 
 
