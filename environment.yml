@@ -34,6 +34,7 @@ dependencies:
 - pre-commit>=1.14.4
 - pyyaml>=5.1.2
 - requests>=2.22.0
+- cython>=0.29.1
 - pip:
   - nvidia-ml-py3
   - nteract-scrapbook
