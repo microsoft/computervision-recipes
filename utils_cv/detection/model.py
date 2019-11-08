@@ -166,8 +166,8 @@ def _calculate_ap(
 
 
 def _im_eval_detections(
-    score_threshold: float,
     iou_threshold: float,
+    score_threshold: float,
     gt_bboxes: List[DetectionBbox],
     det_bboxes: List[DetectionBbox],
 ):
@@ -237,8 +237,8 @@ def ims_eval_detections(
     out = [
         [
             _im_eval_detections(
-                score_threshold,
                 iou_threshold,
+                score_threshold,
                 gt_bboxes_list[i],
                 det_bboxes_list[i],
             )
