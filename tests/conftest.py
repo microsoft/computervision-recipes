@@ -497,9 +497,10 @@ def od_detection_eval(od_detection_learner):
 
 
 @pytest.fixture(scope="session")
-def od_detections(od_detection_dataset, od_detection_learner):
+def od_detections(od_detection_dataset):
     """ returns output of the object detector for a given test set. """
-    return od_detection_learner.predict_dl(od_detection_dataset.test_dl, threshold=0)
+    learner = DetectionLearner(od_detection_dataset)
+    return learner.predict_dl(od_detection_dataset.test_dl, threshold=0)
 
 
 # ----- AML Settings ----------------------------------------------------------
