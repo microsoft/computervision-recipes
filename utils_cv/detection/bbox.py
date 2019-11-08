@@ -196,23 +196,23 @@ class DetectionBbox(AnnotationBbox):
         return f"{super().__repr__()} | score: {self.score}"
 
 
-def boxes_iou(box1: DetectionBbox, box2: DetectionBbox):
+def bboxes_iou(bbox1: DetectionBbox, bbox2: DetectionBbox):
     """Compute intersection-over-union between two bounding boxes
 
     Args:
-        box1: First bounding box
-        box2: Second bounding box
+        bbox1: First bounding box
+        bbox2: Second bounding box
 
     Returns:
         Returns intersection-over-union of the two bounding boxes
     """
-    overlap_box = box1.get_overlap_bbox(box2)
+    overlap_box = bbox1.get_overlap_bbox(bbox2)
     if overlap_box is not None:
-        box1_area = box1.surface_area()
-        box2_area = box2.surface_area()
+        bbox1_area = bbox1.surface_area()
+        bbox2_area = bbox2.surface_area()
         overlap_box_area = overlap_box.surface_area()
         iou = overlap_box_area / float(
-            box1_area + box2_area - overlap_box_area
+            bbox1_area + bbox2_area - overlap_box_area
         )
     else:
         iou = 0

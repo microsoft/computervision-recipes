@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 from .references.engine import train_one_epoch, evaluate
 from .references.coco_eval import CocoEvaluator
-from .bbox import boxes_iou, DetectionBbox
+from .bbox import bboxes_iou, DetectionBbox
 from ..common.gpu import torch_device
 
 
@@ -200,7 +200,7 @@ def _im_eval_detections(
 
             for det_index, det_bbox in enumerate(det_bboxes):
                 det_label = det_bbox.label_name
-                iou_overlap = boxes_iou(gt_bbox, det_bbox)
+                iou_overlap = bboxes_iou(gt_bbox, det_bbox)
 
                 # mark as good if detection has same label as the ground truth,
                 # and if the intersection-over-union area is above a threshold
