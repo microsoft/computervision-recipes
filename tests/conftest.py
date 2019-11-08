@@ -496,6 +496,7 @@ def od_detection_eval(od_detection_learner):
     return od_detection_learner.evaluate()
 
 
+@pytest.mark.gpu
 @pytest.fixture(scope="session")
 def od_detections(od_detection_dataset):
     """ returns output of the object detector for a given test set. """
