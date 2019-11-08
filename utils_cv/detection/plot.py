@@ -401,16 +401,17 @@ def _plot_counts_curves_obj(
         )
     ax.plot(
         score_thresholds,
-        obj_missed_gt_counts,
+        obj_wrong_det_counts,
         "g:",
-        label="Total number of missed ground truths",
+        label="Total number of wrong detections",
     )
     ax.plot(
         score_thresholds,
-        obj_wrong_det_counts,
+        obj_missed_gt_counts,
         "b:",
-        label="Total number of wrong detections",
+        label="Total number of missed ground truths",
     )
+
 
     ax.legend()
     ax.set_xlabel("Score threshold")
