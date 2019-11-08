@@ -352,7 +352,7 @@ def od_cup_path(tmp_session) -> str:
 @pytest.fixture(scope="session")
 def od_cup_mask_path(tmp_session) -> str:
     """ Returns the path to the downloaded cup image. """
-    im_url = "https://github.com/simonzhaoms/testdata/raw/master/unittest/segmentation-masks/cvbp_cup.png"
+    im_url = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup_mask.png"
     im_path = os.path.join(tmp_session, "example_mask.png")
     urllib.request.urlretrieve(im_url, im_path)
     return im_path
