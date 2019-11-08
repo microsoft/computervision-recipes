@@ -51,6 +51,7 @@ def test__calculate_ap(od_detection_eval):
     assert type(ret) == np.float64
 
 
+@pytest.mark.gpu
 def test_ims_eval_detections(od_detection_dataset, od_detections):
     """ Test `ims_eval_detections`. """
     (

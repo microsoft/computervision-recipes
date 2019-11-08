@@ -116,6 +116,7 @@ def test_plot_pr_curves(od_detection_eval):
     plot_pr_curves(od_detection_eval)
 
 
+@pytest.mark.gpu
 def test_plot_counts_curves(od_detection_dataset, od_detections):
     """ Test that `plot_counts_curves` works. """
     plot_counts_curves(od_detections, od_detection_dataset.test_ds, od_detections)
