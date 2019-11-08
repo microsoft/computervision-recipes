@@ -116,12 +116,13 @@ def test_detection_bbox_from_array(det_bbox):
     assert type(bbox_from_array) == DetectionBbox
 
 
-def test_boxes_iou(basic_bbox): #od_sample_detection_bboxes):
+def test_boxes_iou(): 
     # test bboxes which do not overlap
+    basic_bbox = _Bbox(left=0, top=10, right=100, bottom=1000)
     non_overlapping_bbox = _Bbox(left=200, top=10, right=300, bottom=1000)
     assert boxes_iou(basic_bbox, non_overlapping_bbox) == 0
 
     # test bboxes which overlap
-    overlapping_bbox = _Bbox(left=0, top=500, right=100, bottom=2000)
-    assert boxes_iou(basic_bbox, overlapping_bbox) == pytest.approx(0.251, rel=1e-2)
+    overlapping_bbox = _Bbox(left=10, top=500, right=300, bottom=2000)
+    assert boxes_iou(basic_bbox, overlapping_bbox) == pytest.approx(0.092, rel=1e-2)
     
