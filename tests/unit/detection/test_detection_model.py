@@ -15,29 +15,8 @@ from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
     get_pretrained_maskrcnn,
     DetectionLearner,
-    _get_det_bboxes,
-    _apply_threshold,
     _calculate_ap,
 )
-
-
-def test__get_det_bboxes(od_sample_raw_preds, od_data_path_labels):
-    """ test that `_get_det_bboxes` can convert raw preds to DetectionBboxes. """
-    det_bboxes = _get_det_bboxes(
-        od_sample_raw_preds, labels=od_data_path_labels, im_path=None
-    )
-    assert type(det_bboxes[0]) == DetectionBbox
-    assert len(det_bboxes) == 5
-
-
-def test__apply_threshold(od_sample_detection_bboxes):
-    """ Test `_apply_threshold` and verify it works at different thresholds. """
-    det_bboxes = _apply_threshold(od_sample_detection_bboxes, threshold=0.5)
-    assert len(det_bboxes) == 3
-    det_bboxes = _apply_threshold(od_sample_detection_bboxes, threshold=0.01)
-    assert len(det_bboxes) == 5
-    det_bboxes = _apply_threshold(od_sample_detection_bboxes, threshold=0.995)
-    assert len(det_bboxes) == 2
 
 
 def test_get_pretrained_fasterrcnn():
@@ -132,7 +111,7 @@ def test_detection_learner_predict(
     od_cup_path,
 ):
     """ Simply test that `predict` works. """
-    bboxes = od_detection_learner.predict(od_cup_path)
+    bboxes = od_detection_learner.predict(od_cup_path)["det_bboxes"]
     assert type(bboxes) == list
 
 
@@ -142,9 +121,11 @@ def test_detection_mask_learner_predict(
     od_cup_path,
 ):
     """ Simply test that `predict` works for mask learner. """
-    bboxes, masks = od_detection_mask_learner.predict(
+    pred = od_detection_mask_learner.predict(
         od_cup_path, threshold=0.1
     )
+    bboxes = pred["det_bboxes"]
+    masks = pred["masks"]
     assert type(bboxes) == list
     assert type(masks) == np.ndarray
     assert len(bboxes) == len(masks)
@@ -158,7 +139,7 @@ def test_detection_learner_predict_threshold(
     """ Simply test that `predict` works with a threshold by setting a really
     high threshold.
     """
-    bboxes = od_detection_learner.predict(od_cup_path, threshold=0.9999)
+    bboxes = od_detection_learner.predict(od_cup_path, threshold=0.9999)["det_bboxes"]
     assert type(bboxes) == list
     assert len(bboxes) == 0
 
@@ -171,11 +152,13 @@ def test_detection_mask_learner_predict_threshold(
     """ Simply test that `predict` works for mask learner with a threshold by
     setting a really high threshold.
     """
-    bboxes, masks = od_detection_mask_learner.predict(
+    pred = od_detection_mask_learner.predict(
         od_cup_path,
         threshold=0.9999,
         mask_threshold=0.9999
     )
+    bboxes = pred["det_bboxes"]
+    masks = pred["masks"]
     assert type(bboxes) == list
     assert type(masks) == np.ndarray
     assert len(bboxes) == len(masks)

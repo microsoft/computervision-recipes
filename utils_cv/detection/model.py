@@ -36,52 +36,6 @@ from .bbox import _Bbox, DetectionBbox
 from ..common.gpu import torch_device
 
 
-def _get_det_bboxes(
-    pred: List[dict], labels: List[str], im_path: str = None
-) -> List[DetectionBbox]:
-    """ Gets the bounding boxes and labels from the prediction object
-
-    Args:
-        pred: the output of passing in an image to torchvision's FasterRCNN
-            model
-        labels: list of labels
-        im_path: the image path of the preds
-
-    Return:
-        a list of DetectionBboxes
-    """
-    pred_labels = pred[0]["labels"].detach().cpu().numpy().tolist()
-    pred_boxes = (
-        pred[0]["boxes"].detach().cpu().numpy().astype(np.int32).tolist()
-    )
-    pred_scores = pred[0]["scores"].detach().cpu().numpy().tolist()
-
-    det_bboxes = []
-    for label, box, score in zip(pred_labels, pred_boxes, pred_scores):
-        label_name = labels[label - 1]
-        det_bbox = DetectionBbox.from_array(
-            box,
-            score=score,
-            label_idx=label,
-            label_name=label_name,
-            im_path=im_path,
-        )
-        det_bboxes.append(det_bbox)
-
-    return det_bboxes
-
-
-def _apply_threshold(
-    det_bboxes: List[DetectionBbox], threshold: Optional[float] = 0.5
-) -> List[DetectionBbox]:
-    """ Filters the list of DetectionBboxes by score threshold. """
-    return (
-        [det_bbox for det_bbox in det_bboxes if det_bbox.score > threshold]
-        if threshold is not None
-        else det_bboxes
-    )
-
-
 def _get_pretrained_rcnn(
     model_func: Callable[..., nn.Module],
     # transform parameters
@@ -388,20 +342,26 @@ class DetectionLearner:
 
             ax1.set_xlim([0, self.epochs - 1])
             ax1.set_xticks(range(0, self.epochs))
-            ax1.set_title("Loss and Average Precision over epochs")
             ax1.set_xlabel("epochs")
             ax1.set_ylabel("loss", color="g")
             ax1.plot(self.losses, "g-")
 
             ax2 = ax1.twinx()
-            ax2.set_ylabel("average precision for ".format(k), color="b")
+            ax2.set_ylabel(f"AP for {k}", color="b")
             ax2.plot(v, "b-")
 
-    def evaluate(self, dl: DataLoader = None) -> Union[CocoEvaluator, None]:
-        """ eval code on validation/test set and saves the evaluation results in self.results. """
+        fig.suptitle("Loss and Average Precision (AP) over Epochs")
+
+    def evaluate(self, dl: DataLoader = None) -> CocoEvaluator:
+        """ eval code on validation/test set and saves the evaluation results
+        in self.results.
+
+        Raises:
+            Exception: if both `dl` and `self.dataset` are None.
+        """
         if dl is None:
             if not self.dataset:
-                return
+                raise Exception("No dataset provided for evaluation")
             dl = self.dataset.test_dl
         self.results = evaluate(self.model, dl, device=self.device)
         return self.results
@@ -436,57 +396,35 @@ class DetectionLearner:
             pred["masks"] = pred["masks"] > mask_threshold
         return pred
 
-    def _get_det_bboxes(
+    def _get_det_bboxes_and_mask(
         self,
         pred: Dict,
         im_path: Union[str, Path]
-    ) -> List[DetectionBbox]:
-        """ Gets the bounding boxes and labels from the prediction object. """
-        return DetectionBbox.from_arrays(
-            pred['boxes'].tolist(),
-            score=pred['scores'].tolist(),
-            label_idx=pred['labels'].tolist(),
-            label_name=np.array(self.labels)[pred['labels'] - 1].tolist(),
-            im_path=im_path,
-        )
-
-    def _process_pred_results(
-        self,
-        pred: Dict,
-        im_path: Union[str, Path]
-    ) -> Union[List[Type[_Bbox]], Tuple]:
+    ) -> Dict:
         """ Extract bounding boxes and masks from the prediction object. """
 
-        res = self._get_det_bboxes(pred, im_path)
-        if "masks" in pred:
-            res = (res, pred["masks"].squeeze(1))
-        return res
+        label_names = np.array(self.labels)[pred['labels'] - 1]
+        res = {
+            "det_bboxes":
+                DetectionBbox.from_arrays(
+                    pred['boxes'].tolist(),
+                    score=pred['scores'].tolist(),
+                    label_idx=pred['labels'].tolist(),
+                    label_name=label_names.tolist(),
+                    im_path=im_path,
+                )
+        }
 
-    @classmethod
-    def _pack_pred_results(cls, res: List, infos: Dict) -> List[Dict]:
-        """ Pack up bounding boxes and mask into list of dict. """
-        if not isinstance(res[0], tuple):
-            return [
-                {
-                    "idx": t["image_id"],
-                    "det_bboxes": r
-                } for r, t in zip(res, infos)
-            ]
-        else:
-            return [
-                {
-                    "idx": t["image_id"],
-                    "det_bboxes": b,
-                    "masks": m,
-                } for (b, m), t in zip(res, infos)
-            ]
+        if "masks" in pred:
+            res["masks"] = pred["masks"].squeeze(1)
+        return res
 
     def predict(
         self,
         im_or_path: Union[np.ndarray, Union[str, Path]],
         threshold: Optional[int] = 0.5,
         **kwargs,
-    ) -> Union[List[Type[_Bbox]], Tuple]:
+    ) -> Dict:
         """ Performs inferencing on an image path or image.
 
         Args:
@@ -511,7 +449,7 @@ class DetectionLearner:
         pred = [
             self._apply_threshold(p, threshold, **kwargs) for p in pred
         ]
-        return self._process_pred_results(pred[0], im_path)
+        return self._get_det_bboxes_and_mask(pred[0], im_path)
 
     def predict_dl(
         self, dl: DataLoader, threshold: Optional[float] = 0.5
@@ -552,16 +490,16 @@ class DetectionLearner:
                 raw_dets = model(ims)
 
             raw_dets = [
-                self._apply_threshold(p, threshold, **kwargs) for p in
-                raw_dets
+                self._apply_threshold(p, threshold, **kwargs)
+                for p in raw_dets
             ]
-            res = [
-                self._process_pred_results(
+            preds = [
+                self._get_det_bboxes_and_mask(
                     p,
                     dl.dataset.dataset.im_paths[int(t["image_id"].item())]
                 ) for p, t in zip(raw_dets, infos)
             ]
-            yield DetectionLearner._pack_pred_results(res, infos)
+            yield [{"idx": t["image_id"], **p} for p, t in zip(preds, infos)]
 
     def save(
         self, name: str, path: str = None, overwrite: bool = True

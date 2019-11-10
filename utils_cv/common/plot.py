@@ -45,33 +45,37 @@ def line_graph(
 
 
 def show_ims(
-    im_paths: Union[str, List[str], np.ndarray, List[np.ndarray]],
+    im_or_im_paths: Union[str, List[str], np.ndarray, List[np.ndarray]],
     labels: Union[str, List[str]] = None,
     size: int = 3,
     rows: int = 1,
 ):
     """Show image files
     Args:
-        im_paths (str or List[str] or numpy.ndarray or List[numpy.ndarray]): Image filepaths
+        im_or_im_paths (str or List[str] or numpy.ndarray or List[numpy.ndarray]): Image or image filepaths
         labels (str or List[str]): Image labels. If None, show image file name.
         size (int): MatplotLib plot size.
         rows (int): rows of the images
     """
-    if im_paths is None or len(im_paths) == 0:
-        return
+    if im_or_im_paths is None or len(im_or_im_paths) == 0:
+        raise Exception(f"Empty {im_or_im_paths}")
 
-    if isinstance(im_paths, np.ndarray) and not np.issubdtype(im_paths.dtype, np.number):
-        im_paths = im_paths.tolist()
+    # im_or_im_paths could be a numpy array of image filepaths
+    if isinstance(im_or_im_paths, np.ndarray) and \
+            not np.issubdtype(im_or_im_paths.dtype, np.number):
+        im_or_im_paths = im_or_im_paths.tolist()
 
-    if isinstance(im_paths, (str, Path, np.ndarray)):
-        im_paths = [im_paths]
+    # for single image, make it a list of single element to be used in the
+    # following list comprehension
+    if isinstance(im_or_im_paths, (str, Path, np.ndarray)):
+        im_or_im_paths = [im_or_im_paths]
         if labels is not None and isinstance(labels, str):
             labels = [labels]
 
     ims, im_paths = zip(*[
         (mpimg.imread(im_path), im_path)
         if not isinstance(im_path, np.ndarray) else (im_path, None)
-        for im_path in im_paths
+        for im_path in im_or_im_paths
     ])
 
     cols = math.ceil(len(ims) / rows)

@@ -370,7 +370,7 @@ def _plot_pr_curve_iou_mean(
     """ Plots the PR curve, averaging over iou thresholds and [K] labels. """
     x = np.arange(0.0, 1.01, 0.01)
     ax = _setup_pr_axes(
-        ax, f"Precision-Recall Curve ({iou_type})- Mean over IoU Thresholds"
+        ax, f"Precision-Recall Curve ({iou_type}) - Mean over IoU Thresholds"
     )
     avg_arr = np.mean(  # mean over K labels
         np.mean(  # mean over iou thresholds
