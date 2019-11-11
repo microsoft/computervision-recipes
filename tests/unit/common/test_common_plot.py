@@ -30,7 +30,7 @@ def test_line_graph():
 
 def test_show_ims(tiny_ic_data_path):
     # Naive test to run the function without errors
-    ims = [str(i) for i in Path(tiny_ic_data_path).glob("*.*")]
+    ims = [str(i) for i in Path(tiny_ic_data_path).glob("**/*.*")]
     show_ims(ims)
     plt.close()
 
