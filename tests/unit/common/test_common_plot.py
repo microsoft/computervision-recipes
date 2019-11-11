@@ -4,6 +4,7 @@
 from pathlib import Path
 from PIL import Image
 import matplotlib.pyplot as plt
+import numpy as np
 from utils_cv.common.plot import line_graph, show_ims
 
 
@@ -38,5 +39,5 @@ def test_show_ims(tiny_ic_data_path):
     plt.close()
 
     # test images in the form of np.ndarray
-    show_ims([Image.open(p) for p in ims])
+    show_ims([np.array(Image.open(p)) for p in ims])
     plt.close()
