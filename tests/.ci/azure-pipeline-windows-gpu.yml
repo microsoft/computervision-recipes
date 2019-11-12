@@ -17,8 +17,8 @@ jobs:
 
   steps:
   - script: |
-     call conda env remove -n cv -y
      rmdir /s /q C:\Anaconda\envs\cv
+     call conda env remove -n cv -y
   
   - template: templates/unit-test-steps-not-linuxgpu.yml  # Template reference
   
