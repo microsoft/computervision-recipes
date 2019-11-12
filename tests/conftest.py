@@ -525,7 +525,7 @@ def od_sample_output():
     scores = [0.9985, 0.9979, 0.9945, 0.1470, 0.0903]
     # construct masks
     masks = np.zeros((len(boxes), 1, height, width), dtype=np.float)
-    for rect, mask in boxes, masks:
+    for rect, mask in zip(boxes, masks):
         left, top, right, bottom = [int(x) for x in rect]
         # first line of the bounding box
         masks[:, top, left:(right+1)] = 0.05
