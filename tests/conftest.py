@@ -475,42 +475,6 @@ def od_sample_raw_preds():
 
 
 @pytest.fixture(scope="session")
-def od_sample_detection_bboxes():
-    return [
-        DetectionBbox.from_array(
-            [109.0, 190.0, 205.0, 408.0],
-            label_idx=3,
-            label_name="carton",
-            score=0.9985,
-        ),
-        DetectionBbox.from_array(
-            [340.0, 326.0, 465.0, 549.0],
-            label_idx=2,
-            label_name="milk_bottle",
-            score=0.9979,
-        ),
-        DetectionBbox.from_array(
-            [214.0, 181.0, 315.0, 460.0],
-            label_idx=1,
-            label_name="can",
-            score=0.9945,
-        ),
-        DetectionBbox.from_array(
-            [215.0, 193.0, 316.0, 471.0],
-            label_idx=2,
-            label_name="milk_bottle",
-            score=0.1470,
-        ),
-        DetectionBbox.from_array(
-            [109.0, 209.0, 209.0, 420.0],
-            label_idx=1,
-            label_name="can",
-            score=0.0903,
-        ),
-    ]
-
-
-@pytest.fixture(scope="session")
 def od_sample_output():
     width = 500
     height = 600

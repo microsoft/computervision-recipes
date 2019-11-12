@@ -260,9 +260,8 @@ class DetectionDataset:
                 # For mask prediction, if no mask provided and negatives not
                 # allowed (), ignore the image
                 if not mask_path.exists():
-                    if os.path.exists(anno_path):
-                        del self.im_paths[-1]
-                        continue
+                    if not self.allow_negatives:
+                        raise FileNotFoundError(mask_path)
                     else:
                         self.mask_paths.append(None)
                 else:

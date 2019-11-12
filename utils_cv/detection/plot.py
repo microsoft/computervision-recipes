@@ -153,7 +153,7 @@ def display_image(
 def display_bbox_mask(
     bboxes: List[_Bbox],
     im_path: Union[Path, str],
-    mask_path: Union[Path, str],
+    mask_path: Union[Path, str] = None,
     ax: Optional[plt.axes] = None,
     plot_settings: PlotSettings = PlotSettings(),
     **kwargs,
