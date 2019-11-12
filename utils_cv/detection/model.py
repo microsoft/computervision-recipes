@@ -35,6 +35,37 @@ from .bbox import DetectionBbox
 from ..common.gpu import torch_device
 
 
+def _get_det_bboxes_and_mask(
+    pred: Dict, labels: List[str], im_path: Union[str, Path] = None
+) -> Dict:
+    """ Gets the bounding boxes and masks from the prediction object.
+
+    Args:
+        pred: the output of passing in an image to torchvision's FasterRCNN
+            or MaskRCNN model
+        labels: list of labels without "__background__".
+        im_path: the image path of the preds
+    Return:
+        a dict of DetectionBboxes and masks
+    """
+
+    label_names = np.array(labels)[pred['labels'] - 1]
+    res = {
+        "det_bboxes":
+            DetectionBbox.from_arrays(
+                pred['boxes'].tolist(),
+                score=pred['scores'].tolist(),
+                label_idx=pred['labels'].tolist(),
+                label_name=label_names.tolist(),
+                im_path=im_path,
+            )
+    }
+
+    if "masks" in pred:
+        res["masks"] = pred["masks"].squeeze(1)
+    return res
+
+
 def _apply_threshold(
     pred: Dict,
     threshold: Optional[float] = 0.5,
@@ -386,29 +417,6 @@ class DetectionLearner:
         self.results = evaluate(self.model, dl, device=self.device)
         return self.results
 
-    def _get_det_bboxes_and_mask(
-        self,
-        pred: Dict,
-        im_path: Union[str, Path]
-    ) -> Dict:
-        """ Extract bounding boxes and masks from the prediction object. """
-
-        label_names = np.array(self.labels)[pred['labels'] - 1]
-        res = {
-            "det_bboxes":
-                DetectionBbox.from_arrays(
-                    pred['boxes'].tolist(),
-                    score=pred['scores'].tolist(),
-                    label_idx=pred['labels'].tolist(),
-                    label_name=label_names.tolist(),
-                    im_path=im_path,
-                )
-        }
-
-        if "masks" in pred:
-            res["masks"] = pred["masks"].squeeze(1)
-        return res
-
     def predict(
         self,
         im_or_path: Union[np.ndarray, Union[str, Path]],
@@ -443,8 +451,9 @@ class DetectionLearner:
         with torch.no_grad():
             pred = model([im])
 
-        return self._get_det_bboxes_and_mask(
+        return _get_det_bboxes_and_mask(
             _apply_threshold(pred[0], threshold, **kwargs),
+            self.labels,
             im_path
         )
 
@@ -488,8 +497,9 @@ class DetectionLearner:
             results = []
             for det, info in zip(raw_dets, infos):
                 im_id = int(info["image_id"].item())
-                bboxes_masks = self._get_det_bboxes_and_mask(
+                bboxes_masks = _get_det_bboxes_and_mask(
                     _apply_threshold(det, threshold, **kwargs),
+                    self.labels,
                     dl.dataset.dataset.im_paths[im_id]
                 )
                 results.append({"idx": im_id, **bboxes_masks})

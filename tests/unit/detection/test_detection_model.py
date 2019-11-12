@@ -36,7 +36,7 @@ def test__apply_threshold(od_sample_output):
         )
         for v in pred.values():
             assert len(v) == num
-        for mask, num_pixels in pred["masks"], mask_pixels:
+        for mask, num_pixels in zip(pred["masks"], mask_pixels):
             assert np.sum(mask) == num_pixels
 
 
