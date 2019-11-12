@@ -20,6 +20,10 @@ jobs:
   - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
     displayName: Add conda to PATH
   
+  - script: |
+     call conda env remove -n cv -y
+     rmdir /s /q C:\Anaconda\envs\cv
+  
   - template: templates/unit-test-steps-not-linuxgpu.yml  # Template reference
 
   - script: |
