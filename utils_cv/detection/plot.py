@@ -5,17 +5,18 @@
 Helper module for visualizations
 """
 import os
-from typing import List, Union, Tuple, Callable, Any, Iterator
 from pathlib import Path
-
-import PIL
-from PIL import Image, ImageDraw
+from typing import List, Union, Tuple, Callable, Any, Iterator
 
 import numpy as np
+import PIL
+from PIL import Image, ImageDraw
+from torch.utils.data import Subset
 import matplotlib.pyplot as plt
 
-from .references.coco_eval import CocoEvaluator
 from .bbox import _Bbox, AnnotationBbox, DetectionBbox
+from .model import ims_eval_detections
+from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
 
 
@@ -335,4 +336,133 @@ def plot_pr_curves(
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
     _plot_pr_curve_iou_range(ax1, coco_eval)
     _plot_pr_curve_iou_mean(ax2, coco_eval)
+    plt.show()
+
+
+# ===== Correct/missing detection counts curve =====
+
+
+def _plot_counts_curves_im(
+    ax: plt.axes,
+    score_thresholds: List[float],
+    im_error_counts: List[int],
+    im_wrong_det_counts: List[int],
+    im_missed_gt_counts: List[int],
+    im_neg_det_counts: List[int],
+) -> None:
+    """ Plot image-level correct/incorrect counts vs score thresholds """
+    if im_neg_det_counts:
+        ax.plot(
+            score_thresholds,
+            im_neg_det_counts,
+            "y",
+            label="Negative images with detections",
+        )
+    ax.plot(
+        score_thresholds,
+        im_error_counts,
+        "r",
+        label="Images with missed gt or wrong detections",
+    )
+    ax.plot(
+        score_thresholds,
+        im_wrong_det_counts,
+        "g:",
+        label="Images with wrong detections",
+    )
+    ax.plot(
+        score_thresholds,
+        im_missed_gt_counts,
+        "b:",
+        label="Images with missed ground truth",
+    )
+
+    ax.legend()
+    ax.set_xlabel("Score threshold")
+    ax.set_ylabel("Frequency")
+    ax.set_title("Image counts", fontsize=14)
+    ax.grid(True)
+
+
+def _plot_counts_curves_obj(
+    ax: plt.axes,
+    score_thresholds: List[float],
+    obj_missed_gt_counts: List[int],
+    obj_wrong_det_counts: List[int],
+    obj_neg_det_counts: List[int],
+) -> None:
+    """ Plot object-level correct/incorrect counts vs score thresholds """
+    if obj_neg_det_counts:
+        ax.plot(
+            score_thresholds,
+            obj_neg_det_counts,
+            "y",
+            label="Total number of detections within negative images",
+        )
+    ax.plot(
+        score_thresholds,
+        obj_wrong_det_counts,
+        "g:",
+        label="Total number of wrong detections",
+    )
+    ax.plot(
+        score_thresholds,
+        obj_missed_gt_counts,
+        "b:",
+        label="Total number of missed ground truths",
+    )
+
+
+    ax.legend()
+    ax.set_xlabel("Score threshold")
+    ax.set_ylabel("Frequency")
+    ax.set_title("Object counts", fontsize=14)
+    ax.grid(True)
+
+
+def plot_counts_curves(
+    detections: List[List[DetectionBbox]],
+    data_ds: Subset,
+    detections_neg: List[List[DetectionBbox]] = None,
+    figsize: Tuple[int, int] = (16, 8),
+) -> None:
+    """ Plot object-level and image-level correct/incorrect counts vs score thresholds
+
+    Args:
+        detections: Detector prediction output for all test images
+        data_ds: Test dataset, used to extract ground truth bboxes
+        detections_neg: Detector prediction output for all negative images
+        figsize: the figsize to plot the two graphs across
+
+    Returns nothing, but plots count graphs.
+    """
+    # compute image and object level counts
+    (
+        score_thresholds,
+        im_error_counts,
+        im_wrong_det_counts,
+        im_missed_gt_counts,
+        obj_wrong_det_counts,
+        obj_missed_gt_counts,
+        im_neg_det_counts,
+        obj_neg_det_counts,
+    ) = ims_eval_detections(detections, data_ds, detections_neg)
+
+    # plot
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
+    _plot_counts_curves_im(
+        ax1,
+        score_thresholds,
+        im_error_counts,
+        im_wrong_det_counts,
+        im_missed_gt_counts,
+        im_neg_det_counts,
+    )
+    _plot_counts_curves_obj(
+        ax2,
+        score_thresholds,
+        obj_missed_gt_counts,
+        obj_wrong_det_counts,
+        obj_neg_det_counts,
+    )
     plt.show()

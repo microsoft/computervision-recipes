@@ -16,6 +16,7 @@ from utils_cv.detection.plot import (
     _plot_pr_curve_iou_range,
     _plot_pr_curve_iou_mean,
     plot_pr_curves,
+    plot_counts_curves,
 )
 
 
@@ -113,3 +114,9 @@ def test__plot_pr_curve_iou_mean(od_detection_eval, basic_ax):
 def test_plot_pr_curves(od_detection_eval):
     """ Test that `plot_pr_curves` works. """
     plot_pr_curves(od_detection_eval)
+
+
+@pytest.mark.gpu
+def test_plot_counts_curves(od_detection_dataset, od_detections):
+    """ Test that `plot_counts_curves` works. """
+    plot_counts_curves(od_detections, od_detection_dataset.test_ds, od_detections)

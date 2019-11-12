@@ -496,6 +496,14 @@ def od_detection_eval(od_detection_learner):
     return od_detection_learner.evaluate()
 
 
+@pytest.mark.gpu
+@pytest.fixture(scope="session")
+def od_detections(od_detection_dataset):
+    """ returns output of the object detector for a given test set. """
+    learner = DetectionLearner(od_detection_dataset)
+    return learner.predict_dl(od_detection_dataset.test_dl, threshold=0)
+
+
 # ----- AML Settings ----------------------------------------------------------
 
 
