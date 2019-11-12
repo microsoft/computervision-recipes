@@ -528,9 +528,9 @@ def od_sample_output():
     for rect, mask in zip(boxes, masks):
         left, top, right, bottom = [int(x) for x in rect]
         # first line of the bounding box
-        masks[:, top, left:(right+1)] = 0.05
+        mask[:, top, left:(right+1)] = 0.05
         # other lines of the bounding box
-        masks[:, (top+1):(bottom+1), left:(right+1)] = 0.7
+        mask[:, (top+1):(bottom+1), left:(right+1)] = 0.7
 
     return {
         "boxes": tensor(boxes, dtype=torch.float),
