@@ -37,7 +37,3 @@ def test_show_ims(tiny_ic_data_path):
 
     show_ims(ims, ["a"] * len(ims))
     plt.close()
-
-    # test images in the form of np.ndarray
-    show_ims([np.array(Image.open(p)) for p in ims])
-    plt.close()

@@ -15,8 +15,29 @@ from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
     get_pretrained_maskrcnn,
     DetectionLearner,
+    _apply_threshold,
     _calculate_ap,
 )
+
+
+def test__apply_threshold(od_sample_output):
+    """ Test `_apply_threshold` and verify it works at different thresholds. """
+    # test cases: [(threshold, mask_threshold, num, mask_pixels)]
+    test_cases = [
+        (0.5, 0.5, 3, (21146, 28098, 28458)),
+        (0.01, 0.01, 5, (21243, 28224, 28560, 28458, 21412)),
+        (0.995, 0.995, 2, (0, 0)),
+    ]
+    for threshold, mask_threshold, num, mask_pixels in test_cases:
+        pred = _apply_threshold(
+            od_sample_output,
+            threshold=threshold,
+            mask_threshold=mask_threshold,
+        )
+        for v in pred.values():
+            assert len(v) == num
+        for mask, num_pixels in pred["masks"], mask_pixels:
+            assert np.sum(mask) == num_pixels
 
 
 def test_get_pretrained_fasterrcnn():

@@ -15,7 +15,7 @@ from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import display_bboxes, display_bbox_mask, plot_grid
+from .plot import display_bbox_mask, plot_grid
 from .bbox import AnnotationBbox
 from .mask import binarise_mask
 from .references.utils import collate_fn
@@ -256,17 +256,17 @@ class DetectionDataset:
                 # extension
                 mask_name = os.path.basename(self.im_paths[-1])
                 mask_name = mask_name[:mask_name.rindex('.')] + ".png"
-                mask_name = self.root / self.mask_dir / mask_name
+                mask_path = self.root / self.mask_dir / mask_name
                 # For mask prediction, if no mask provided and negatives not
                 # allowed (), ignore the image
-                if not mask_name.exists():
+                if not mask_path.exists():
                     if os.path.exists(anno_path):
                         del self.im_paths[-1]
                         continue
                     else:
                         self.mask_paths.append(None)
                 else:
-                    self.mask_paths.append(mask_name)
+                    self.mask_paths.append(mask_path)
 
             self.anno_paths.append(anno_path)
             self.anno_bboxes.append(anno_bboxes)
@@ -390,22 +390,17 @@ class DetectionDataset:
         if seed or self.seed:
             random.seed(seed or self.seed)
 
-        plot_func = (
-            display_bbox_mask
-            if self.mask_paths
-            else display_bboxes
-        )
-        plot_grid(plot_func, self._get_random_anno, rows=rows, cols=cols)
+        plot_grid(display_bbox_mask, self._get_random_anno, rows=rows, cols=cols)
 
     def show_im_transformations(
         self, idx: int = None, rows: int = 1, cols: int = 3
     ) -> None:
-        """ Show a set of images after transfomrations have been applied.
+        """ Show a set of images after transformations have been applied.
 
         Args:
             idx: the index to of the image to show the transformations for.
             rows: number of rows to display
-            cols: number of cols to dipslay, NOTE: use 3 for best looing grid
+            cols: number of cols to display, NOTE: use 3 for best looking grid
 
         Returns None but displays a grid of randomly applied transformations.
         """
@@ -434,7 +429,7 @@ class DetectionDataset:
             print(f"Transformations applied on {self.im_paths[idx]}:")
             [print(transform) for transform in self.transforms.transforms]
 
-    def _get_binary_masks(self, idx: int) -> Union[np.ndarray, None]:
+    def _get_binary_mask(self, idx: int) -> Union[np.ndarray, None]:
         """ Return binary masks for objects in the mask image. """
         binary_masks = None
         if self.mask_paths:
@@ -460,12 +455,9 @@ class DetectionDataset:
         idx = random.randrange(len(self.im_paths))
 
         # get mask if any
-        mask = self._get_binary_masks(idx)
+        mask = self._get_binary_mask(idx)
 
-        if mask is not None:
-            return self.anno_bboxes[idx], self.im_paths[idx], mask
-        else:
-            return self.anno_bboxes[idx], self.im_paths[idx]
+        return self.anno_bboxes[idx], self.im_paths[idx], mask
 
     def __getitem__(self, idx):
         """ Make iterable. """
@@ -502,7 +494,7 @@ class DetectionDataset:
         }
 
         # get masks
-        binary_masks = self._get_binary_masks(idx)
+        binary_masks = self._get_binary_mask(idx)
         if binary_masks is not None:
             target["masks"] = torch.as_tensor(binary_masks, dtype=torch.uint8)
 

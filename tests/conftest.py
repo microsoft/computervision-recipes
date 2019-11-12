@@ -511,6 +511,36 @@ def od_sample_detection_bboxes():
 
 
 @pytest.fixture(scope="session")
+def od_sample_output():
+    width = 500
+    height = 600
+    boxes = [
+        [109.0, 190.0, 205.0, 408.0],
+        [340.0, 326.0, 465.0, 549.0],
+        [214.0, 181.0, 315.0, 460.0],
+        [215.0, 193.0, 316.0, 471.0],
+        [109.0, 209.0, 209.0, 420.0],
+    ]
+    labels = [3, 2, 1, 2, 1]
+    scores = [0.9985, 0.9979, 0.9945, 0.1470, 0.0903]
+    # construct masks
+    masks = np.zeros((len(boxes), 1, height, width), dtype=np.float)
+    for rect, mask in boxes, masks:
+        left, top, right, bottom = [int(x) for x in rect]
+        # first line of the bounding box
+        masks[:, top, left:(right+1)] = 0.05
+        # other lines of the bounding box
+        masks[:, (top+1):(bottom+1), left:(right+1)] = 0.7
+
+    return {
+        "boxes": tensor(boxes, dtype=torch.float),
+        "labels": tensor(labels, dtype=torch.int64),
+        "scores": tensor(scores, dtype=torch.float),
+        "masks": tensor(masks),
+    }
+
+
+@pytest.fixture(scope="session")
 def od_detection_dataset(tiny_od_data_path):
     """ returns a basic detection dataset. """
     return DetectionDataset(tiny_od_data_path)

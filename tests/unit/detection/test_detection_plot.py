@@ -9,7 +9,6 @@ import numpy as np
 from utils_cv.detection.plot import (
     PlotSettings,
     plot_boxes,
-    display_bboxes,
     plot_grid,
     plot_detection_vs_ground_truth,
     _setup_pr_axes,
@@ -84,11 +83,6 @@ def test_display_image(od_cup_path, basic_ax):
     display_image(np.array(Image.open(od_cup_path)), basic_ax)
 
 
-def test_display_bboxes(od_cup_anno_bboxes, od_cup_path):
-    """ Test that `display_bboxes` works. """
-    display_bboxes(bboxes=od_cup_anno_bboxes, im_path=od_cup_path)
-
-
 def test_display_bbox_mask(
     od_cup_anno_bboxes,
     od_cup_path,
@@ -104,24 +98,25 @@ def test_display_bbox_mask(
     )
 
 
-def test_plot_grid(od_cup_anno_bboxes, od_cup_path):
+def test_plot_grid(od_cup_anno_bboxes, od_cup_path, od_cup_mask_path):
     """ Test that `plot_grid` works. """
 
     # test callable args
     def callable_args():
-        return od_cup_anno_bboxes, od_cup_path
+        return od_cup_anno_bboxes, od_cup_path, od_cup_mask_path
 
-    plot_grid(display_bboxes, callable_args, rows=1)
+    plot_grid(display_bbox_mask, callable_args, rows=1)
 
     # test iterable args
     od_cup_paths = [od_cup_path, od_cup_path, od_cup_path]
     od_cup_annos = [od_cup_anno_bboxes, od_cup_anno_bboxes, od_cup_anno_bboxes]
+    od_cup_mask_paths = [od_cup_mask_path, None, od_cup_mask_path]
 
     def iterator_args():
-        for path, bboxes in zip(od_cup_paths, od_cup_annos):
-            yield bboxes, path
+        for path, bboxes, mask_path in zip(od_cup_paths, od_cup_annos, od_cup_mask_paths):
+            yield bboxes, path, mask_path
 
-    plot_grid(display_bboxes, iterator_args(), rows=1)
+    plot_grid(display_bbox_mask, iterator_args(), rows=1)
 
 
 def test_plot_detection_vs_ground_truth(

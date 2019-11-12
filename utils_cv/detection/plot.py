@@ -150,49 +150,42 @@ def display_image(
         plt.show()
 
 
-def display_bboxes(
+def display_bbox_mask(
     bboxes: List[_Bbox],
     im_path: Union[Path, str],
+    mask_path: Union[Path, str],
     ax: Optional[plt.axes] = None,
     plot_settings: PlotSettings = PlotSettings(),
     **kwargs,
 ) -> None:
-    """ Draw image with bounding boxes.
+    """ Draw image with bounding boxes and mask.
 
     Args:
         bboxes: A list of _Bbox, could be DetectionBbox or AnnotationBbox
         im_path: the location of image path to draw
+        mask_path: the location of mask path to draw
         ax: an optional ax to specify where you wish the figure to be drawn on
         plot_settings: plotting parameters
 
-    Returns nothing, but plots the image with bounding boxes and labels.
+    Returns nothing, but plots the image with bounding boxes, labels and masks
+    if any.
     """
     # Read image
-    im = Image.open(str(im_path))
+    im = Image.open(im_path)
 
     # set an image title
     title = os.path.basename(im_path)
 
-    # plot boxes on im
-    im = plot_boxes(im, bboxes, title=title, plot_settings=plot_settings)
+    if mask_path is not None:
+        # plot masks on im
+        im = plot_mask(im_path, mask_path)
+
+    if bboxes is not None:
+        # plot boxes on im
+        im = plot_boxes(im, bboxes, title=title, plot_settings=plot_settings)
 
     # display the output image
-    display_image(im, ax=ax, **kwargs)
-
-
-def display_bbox_mask(
-    bboxes: List[AnnotationBbox],
-    im_path: Union[Path, str],
-    mask_path: Union[Path, str],
-    ax: Optional[plt.axes] = None,
-) -> None:
-    """ Draw image with bounding boxes and mask. """
-    im = Image.open(im_path)
-    if mask_path is not None:
-        im = plot_mask(im_path, mask_path)
-    if bboxes is not None:
-        im = plot_boxes(im, bboxes)
-    display_image(im, ax)
+    display_image(im, ax, **kwargs)
 
 
 def plot_grid(

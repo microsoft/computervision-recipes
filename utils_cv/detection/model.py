@@ -10,7 +10,6 @@ from typing import (
     Generator,
     Optional,
     Dict,
-    Type,
 )
 from pathlib import Path
 import json
@@ -32,8 +31,28 @@ import matplotlib.pyplot as plt
 
 from .references.engine import train_one_epoch, evaluate
 from .references.coco_eval import CocoEvaluator
-from .bbox import _Bbox, DetectionBbox
+from .bbox import DetectionBbox
 from ..common.gpu import torch_device
+
+
+def _apply_threshold(
+    pred: Dict,
+    threshold: Optional[float] = 0.5,
+    mask_threshold: Optional[float] = 0.5,
+) -> Dict:
+    """ Return prediction results that are above the threshold if any.
+
+
+    """
+    # detach prediction results to cpu
+    pred = {k: v.detach().cpu().numpy() for k, v in pred.items()}
+    # apply score threshold
+    if threshold:
+        selected = pred['scores'] > threshold
+        pred = {k: v[selected] for k, v in pred.items()}
+    if "masks" in pred and mask_threshold:
+        pred["masks"] = pred["masks"] > mask_threshold
+    return pred
 
 
 def _get_pretrained_rcnn(
@@ -66,7 +85,7 @@ def _get_pretrained_rcnn(
         rpn_nms_thresh: NMS threshold used for postprocessing the RPN proposals
 
     Returns
-        The model to fine-tine/inference with
+        The pre-trained model
     """
     model = model_func(
         pretrained=True,
@@ -95,20 +114,6 @@ def _tune_box_predictor(model: nn.Module, num_classes: int) -> nn.Module:
     return model
 
 
-def _tune_mask_predictor(model: nn.Module, num_classes: int) -> nn.Module:
-    """ Tune mask predictor in the model. """
-    # get the number of input features of mask predictor from the pretrained
-    # model
-    in_features = model.roi_heads.mask_predictor.conv5_mask.in_channels
-    # replace the mask predictor with a new one
-    model.roi_heads.mask_predictor = MaskRCNNPredictor(
-        in_features,
-        256,
-        num_classes
-    )
-    return model
-
-
 def get_pretrained_fasterrcnn(
     num_classes: int = None,
     **kwargs,
@@ -116,7 +121,8 @@ def get_pretrained_fasterrcnn(
     """ Gets a pretrained FasterRCNN model
 
     Args:
-        num_classes: number of output classes of the model (including the background).
+        num_classes: number of output classes of the model (including the
+            background).  If None, 91 as COCO datasets.
 
     Returns
         The model to fine-tine/inference with
@@ -133,6 +139,8 @@ def get_pretrained_fasterrcnn(
         **kwargs,
     )
 
+    # if num_classes is specified, then create new final bounding box
+    # prediction layers, otherwise use pre-trained layers
     if num_classes:
         model = _tune_box_predictor(model, num_classes)
 
@@ -147,7 +155,7 @@ def get_pretrained_maskrcnn(
 
     Args:
         num_classes: number of output classes of the model (including the
-            background)
+            background).  If None, 91 as COCO datasets.
 
     Returns
         The model to fine-tine/inference with
@@ -162,9 +170,21 @@ def get_pretrained_maskrcnn(
         **kwargs,
     )
 
+    # if num_classes is specified, then create new final bounding box
+    # and mask prediction layers, otherwise use pre-trained layers
     if num_classes:
         model = _tune_box_predictor(model, num_classes)
-        model = _tune_mask_predictor(model, num_classes)
+
+        # tune mask predictor in the model.
+        # get the number of input features of mask predictor from the pretrained
+        # model
+        in_features = model.roi_heads.mask_predictor.conv5_mask.in_channels
+        # replace the mask predictor with a new one
+        model.roi_heads.mask_predictor = MaskRCNNPredictor(
+            in_features,
+            256,
+            num_classes
+        )
 
     return model
 
@@ -283,7 +303,7 @@ class DetectionLearner:
         """ The main training loop. """
 
         if not self.dataset:
-            return
+            raise Exception("No dataset provided")
 
         # reduce learning rate every step_size epochs by a factor of gamma (by default) 0.1.
         if step_size is None:
@@ -366,36 +386,6 @@ class DetectionLearner:
         self.results = evaluate(self.model, dl, device=self.device)
         return self.results
 
-    def _transform(
-        self,
-        im: Union[str, Path, Image.Image, np.ndarray],
-    ) -> torch.Tensor:
-        """ Convert the image to the format required by the model. """
-        transform = transforms.Compose([transforms.ToTensor()])
-        im = transform(im)
-        if self.device:
-            im = im.to(self.device)
-        return im
-
-    @classmethod
-    def _apply_threshold(
-        cls,
-        pred: Dict,
-        threshold: Optional[int] = 0.5,
-        mask_threshold: Optional[int] = 0.5,
-        **kwargs,
-    ) -> Dict:
-        """ Return prediction results that are above the threshold if any. """
-        # detach prediction results to cpu
-        pred = {k: v.detach().cpu().numpy() for k, v in pred.items()}
-        # apply score threshold
-        if threshold:
-            selected = pred['scores'] > threshold
-            pred = {k: v[selected] for k, v in pred.items()}
-        if "masks" in pred and mask_threshold:
-            pred["masks"] = pred["masks"] > mask_threshold
-        return pred
-
     def _get_det_bboxes_and_mask(
         self,
         pred: Dict,
@@ -429,27 +419,34 @@ class DetectionLearner:
 
         Args:
             im_or_path: the image array which you can get from
-                `Image.open(path)` OR a image path
+                `Image.open(path)` or a image path
             threshold: the threshold to use to calculate whether the object was
             detected. Note: can be set to None to return all detection bounding
             boxes.
 
         Return a list of DetectionBbox
         """
-        im, im_path = (
-            (Image.open(im_or_path), im_or_path)
-            if isinstance(im_or_path, (str, Path))
-            else (im_or_path, None)
-        )
-        im = self._transform(im)
+        if isinstance(im_or_path, (str, Path)):
+            im = Image.open(im_or_path)
+            im_path = im_or_path
+        else:
+            im = im_or_path
+            im_path = None
+
+        # convert the image to the format required by the model
+        transform = transforms.Compose([transforms.ToTensor()])
+        im = transform(im)
+        if self.device:
+            im = im.to(self.device)
+
         model = self.model.eval()  # eval mode
         with torch.no_grad():
             pred = model([im])
 
-        pred = [
-            self._apply_threshold(p, threshold, **kwargs) for p in pred
-        ]
-        return self._get_det_bboxes_and_mask(pred[0], im_path)
+        return self._get_det_bboxes_and_mask(
+            _apply_threshold(pred[0], threshold, **kwargs),
+            im_path
+        )
 
     def predict_dl(
         self, dl: DataLoader, threshold: Optional[float] = 0.5
@@ -464,8 +461,7 @@ class DetectionLearner:
         Returns a list of results
         """
         pred_generator = self.predict_batch(dl, threshold=threshold)
-        res = [pred for preds in pred_generator for pred in preds]
-        return res
+        return [pred for preds in pred_generator for pred in preds]
 
     def predict_batch(
         self, dl: DataLoader, threshold: Optional[float] = 0.5, **kwargs,
@@ -489,17 +485,16 @@ class DetectionLearner:
             with torch.no_grad():
                 raw_dets = model(ims)
 
-            raw_dets = [
-                self._apply_threshold(p, threshold, **kwargs)
-                for p in raw_dets
-            ]
-            preds = [
-                self._get_det_bboxes_and_mask(
-                    p,
-                    dl.dataset.dataset.im_paths[int(t["image_id"].item())]
-                ) for p, t in zip(raw_dets, infos)
-            ]
-            yield [{"idx": t["image_id"], **p} for p, t in zip(preds, infos)]
+            results = []
+            for det, info in zip(raw_dets, infos):
+                im_id = int(info["image_id"].item())
+                bboxes_masks = self._get_det_bboxes_and_mask(
+                    _apply_threshold(det, threshold, **kwargs),
+                    dl.dataset.dataset.im_paths[im_id]
+                )
+                results.append({"idx": im_id, **bboxes_masks})
+
+            yield results
 
     def save(
         self, name: str, path: str = None, overwrite: bool = True
