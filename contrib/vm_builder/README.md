@@ -3,6 +3,8 @@
 This mini project will help you set up a Virtual Machine with the Computer
 Vision repo installed on it. 
 
+> Note: this tool only works on Linux or Mac
+
 You can use this project simply by running:
 ```bash
 python vm_builder.py
