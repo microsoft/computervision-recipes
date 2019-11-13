@@ -23,9 +23,39 @@ def test_01_notebook_run(detection_notebooks):
     )
 
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-    assert len(nb_output.scraps["training_losses"].data) == epochs
-    assert nb_output.scraps["training_losses"].data[-1] < 0.5
-    assert nb_output.scraps["training_average_precision"].data[-1] > 0.5
+    training_losses = nb_output.scraps["training_losses"].data
+    assert len(training_losses) == epochs
+    assert training_losses[-1] < 0.5
+    training_aps = nb_output.scraps["training_average_precision"].data
+    assert len(training_aps) == epochs
+    for d in training_aps[-1].values():
+        assert d > 0.5
+
+
+@pytest.mark.notebooks
+@pytest.mark.linuxgpu
+def test_02_notebook_run(detection_notebooks):
+    epochs = 5
+    notebook_path = detection_notebooks["02"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            EPOCHS=epochs,
+        ),
+        kernel_name=KERNEL_NAME,
+    )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    training_losses = nb_output.scraps["training_losses"].data
+    assert len(training_losses) == epochs
+    assert training_losses[-1] < 0.85
+    training_aps = nb_output.scraps["training_average_precision"].data
+    assert len(training_aps) == epochs
+    for d in training_aps[-1].values():
+        assert d > 0.15
+
 
 @pytest.mark.notebooks
 @pytest.mark.linuxgpu

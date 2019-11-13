@@ -25,14 +25,14 @@ class _Bbox:
         self.standardize()
 
     @classmethod
-    def from_array(cls, arr: List[int]) -> "Bbox":
+    def from_array(cls, arr: List[int]) -> "_Bbox":
         """ Create a Bbox object from an array [left, top, right, bottom] """
         return _Bbox(arr[0], arr[1], arr[2], arr[3])
 
     @classmethod
-    def from_array_xywh(cls, arr: List[int]) -> "Bbox":
-        """ create a Bbox object from an array [left, top, width, height] """
-        return _Bbox(arr[0], arr[1], arr[0] + arr[2], arr[1] + arr[3])
+    def from_array_xywh(cls, arr: List[int]) -> "_Bbox":
+        """ Create a Bbox object from an array [left, top, width, height] """
+        return _Bbox(arr[0], arr[1], arr[0] + arr[2] - 1, arr[1] + arr[3] - 1)
 
     def __str__(self):
         return f"""\
@@ -65,7 +65,7 @@ bottom={self.bottom}]\
     def surface_area(self) -> float:
         return self.width() * self.height()
 
-    def get_overlap_bbox(self, bbox: "Bbox") -> Union[None, "Bbox"]:
+    def get_overlap_bbox(self, bbox: "_Bbox") -> Union[None, "_Bbox"]:
         left1, top1, right1, bottom1 = self.rect()
         left2, top2, right2, bottom2 = bbox.rect()
         overlap_left = max(left1, left2)
@@ -92,7 +92,7 @@ bottom={self.bottom}]\
         self.right = right_new
         self.bottom = bottom_new
 
-    def crop(self, max_width: int, max_height: int) -> "Bbox":
+    def crop(self, max_width: int, max_height: int) -> "_Bbox":
         if max_height > self.height():
             raise Exception("crop height cannot be bigger than bbox height.")
         if max_width > self.width():
@@ -181,12 +181,12 @@ class DetectionBbox(AnnotationBbox):
         self.score = score
 
     @classmethod
-    def from_array(
-        cls, arr: List[int], score: float, **kwargs
-    ) -> "DetectionBbox":
+    def from_array(cls, arr: List[int], **kwargs) -> "DetectionBbox":
         """ Create a Bbox object from an array [left, top, right, bottom]
-        This funciton must take in a score.
+        This function must take in a score.
         """
+        score = kwargs['score']
+        del kwargs['score']
         bbox = super().from_array(arr, **kwargs)
         bbox.__class__ = DetectionBbox
         bbox.score = score
