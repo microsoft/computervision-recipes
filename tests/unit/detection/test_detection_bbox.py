@@ -2,11 +2,12 @@
 # Licensed under the MIT License.
 
 import pytest
+from typing import List, Optional
 
 from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox, _Bbox, bboxes_iou
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def basic_bbox() -> "_Bbox":
     return _Bbox(left=0, top=10, right=100, bottom=1000)
 
@@ -23,11 +24,27 @@ def det_bbox() -> "DetectionBbox":
     )
 
 
-def validate_bbox(bbox: _Bbox) -> bool:
-    assert bbox.left == 0
-    assert bbox.top == 10
-    assert bbox.right == 100
-    assert bbox.bottom == 1000
+def validate_bbox(
+    bbox: _Bbox,
+    rect: Optional[List[int]] = None
+) -> None:
+    if rect is None:
+        rect = [0, 10, 100, 1000]
+    assert [bbox.left, bbox.top, bbox.right, bbox.bottom] == rect
+
+
+def validate_anno_bbox(
+    bbox: AnnotationBbox,
+    label_idx: int,
+    rect: Optional[List[int]] = None,
+    im_path: Optional[str] = None,
+    label_name: Optional[str] = None
+):
+    validate_bbox(bbox, rect)
+    assert type(bbox) == AnnotationBbox
+    assert bbox.label_idx == label_idx
+    assert bbox.im_path == im_path
+    assert bbox.label_name == label_name
 
 
 def text__bbox_init(basic_bbox):
@@ -35,12 +52,12 @@ def text__bbox_init(basic_bbox):
     validate_bbox(basic_bbox)
 
 
-def test__bbox_from_array(basic_bbox):
+def test__bbox_from_array():
     # test `from_array()` bbox initialization method
     bbox_from_array = _Bbox.from_array([0, 10, 100, 1000])
     validate_bbox(bbox_from_array)
-    # test `from_array_xymh()` bbox initialization method
-    bbox_from_array_xywh = _Bbox.from_array_xywh([0, 10, 100, 990])
+    # test `from_array_xywh()` bbox initialization method
+    bbox_from_array_xywh = _Bbox.from_array_xywh([0, 10, 101, 991])
     validate_bbox(bbox_from_array_xywh)
 
 
@@ -91,16 +108,14 @@ def test__bbox_is_valid(basic_bbox):
 
 
 def test_annotation_bbox_init(anno_bbox):
-    validate_bbox(anno_bbox)
-    assert type(anno_bbox) == AnnotationBbox
+    validate_anno_bbox(anno_bbox, label_idx=0)
 
 
-def test_annotation_bbox_from_array(anno_bbox):
+def test_annotation_bbox_from_array():
     bbox_from_array = AnnotationBbox.from_array(
         [0, 10, 100, 1000], label_idx=0
     )
-    validate_bbox(bbox_from_array)
-    assert type(bbox_from_array) == AnnotationBbox
+    validate_anno_bbox(bbox_from_array, label_idx=0)
 
 
 def test_detection_bbox_init(det_bbox):
