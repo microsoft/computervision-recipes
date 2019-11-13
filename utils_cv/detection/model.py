@@ -410,6 +410,7 @@ class DetectionLearner:
         model: nn.Module = None,
         im_size: int = None,
         device: torch.device = None,
+        labels: List[str] = None,
     ):
         """ Initialize leaner object.
 
@@ -440,8 +441,13 @@ class DetectionLearner:
         self.dataset = dataset
         self.im_size = im_size
 
+        # make sure '__background__' is not included in labels
         if dataset and "labels" in dataset.__dict__:
             self.labels = dataset.labels
+        elif labels is not None:
+            self.labels = labels
+        else:
+            raise ValueError("No labels provided in dataset.labels or labels")
 
         # setup model, default to fasterrcnn
         if self.model is None:
@@ -461,12 +467,6 @@ class DetectionLearner:
                 type(self).__name__, attr
             )
         )
-
-    def add_labels(self, labels: List[str]):
-        """ Add labels to this detector. This class does not expect a label
-        '__background__' in first element of the label list. Make sure it is
-        omitted before adding it. """
-        self.labels = labels
 
     def fit(
         self,
