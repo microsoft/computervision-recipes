@@ -16,6 +16,7 @@ from utils_cv.detection.model import (
     DetectionLearner,
     _apply_threshold,
     _calculate_ap,
+    ims_eval_detections,
 )
 
 
@@ -52,6 +53,33 @@ def test__calculate_ap(od_detection_eval):
     assert type(ret) == dict
     for v in ret.values():
         assert type(v) == np.float64
+
+
+@pytest.mark.gpu
+def test_ims_eval_detections(od_detection_dataset, od_detections):
+    """ Test `ims_eval_detections`. """
+    (
+        score_thresholds,
+        im_error_counts,
+        im_wrong_det_counts,
+        im_missed_gt_counts,
+        obj_wrong_det_counts,
+        obj_missed_gt_counts,
+        im_neg_det_counts,
+        obj_neg_det_counts,
+    ) = ims_eval_detections(od_detections, od_detection_dataset.test_ds, od_detections)
+    assert len(score_thresholds) == 51
+    assert max(im_error_counts) == len(od_detection_dataset.test_ds)
+    assert max(im_wrong_det_counts) <= len(od_detection_dataset.test_ds)
+    assert max(im_missed_gt_counts) <= len(od_detection_dataset.test_ds)
+    assert max(im_neg_det_counts) <= len(od_detection_dataset.test_ds)
+    for i in range(len(score_thresholds)-1):
+        assert im_wrong_det_counts[i] >= im_wrong_det_counts[i+1]
+        assert im_missed_gt_counts[i] <= im_missed_gt_counts[i+1]
+        assert obj_wrong_det_counts[i] >= obj_wrong_det_counts[i+1]
+        assert obj_missed_gt_counts[i] <= obj_missed_gt_counts[i+1]
+        assert im_neg_det_counts[i] >= im_neg_det_counts[i+1]
+        assert obj_neg_det_counts[i] >= obj_neg_det_counts[i+1]
 
 
 def test_detection_learner_init(od_detection_dataset):
