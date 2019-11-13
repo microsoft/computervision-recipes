@@ -1,5 +1,7 @@
 # VM Builder
 
+> Note: this tool only works on Linux or Mac
+
 This mini project will help you set up a Virtual Machine with the Computer
 Vision repo installed on it. 
 
