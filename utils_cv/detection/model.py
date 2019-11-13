@@ -14,7 +14,6 @@ from typing import (
     Dict,
 )
 
-import numpy as np
 from pathlib import Path
 import shutil
 
