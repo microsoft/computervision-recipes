@@ -155,11 +155,6 @@ def test_detection_dataset_show_im_transformations(
     od_detection_mask_dataset.show_im_transformations()
 
 
-def test_detection_dataset_show_im_transformations(basic_detection_dataset):
-    # simply test that this is error free for now
-    basic_detection_dataset.show_im_transformations()
-
-
 def test_detection_dataset_init_anno_im_dirs(
     func_tiny_od_data_path, od_data_path_labels
 ):
