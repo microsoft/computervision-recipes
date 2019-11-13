@@ -49,6 +49,8 @@ __Virtual Machine Builder__
 
 One easy way to create your DSVM is to use the [VM Builder](contrib/vm_builder) tool located inside of the 'contrib' folder in the root directory of the repo. Simply run `python contrib/vm_builder/vm_builder.py` at the root level of the repo and this tool will preconfigure your virtual machine with the appropriate settings for working with this repository.
 
+> NOTE: the VM builder only works on Linux and Mac.
+
 ## System Requirement
 
 __Requirements__
