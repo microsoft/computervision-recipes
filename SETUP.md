@@ -28,6 +28,10 @@ good choice that can be found in most Azure regions.
 
 The easiest way to get started is to use the [Azure Data Science Virtual Machine (DSVM)](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/). This VM will come installed with all the system requirements that are needed to run the notebooks in this repository. If you choose this option, you can skip the [System Requirements](#system-requirements) step in this guide as those requirements come pre-installed on the DSVM.
 
+Before creating your Azure DSVM, you need to decide what kind of VM Size you want. Some VMs have GPUs, some have multiple GPUs, and some don't have any GPUs at all. For this repo, we recommend selecting an Ubuntu VM of the size [Standard_NC6_v3](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu#ncv3-series). The Standard_NC6_v3 uses the Nvidia Tesla V100 which will help us train our computer vision models and iterate quickly. We also recommend using Linux (Ubuntu) over Windows as some of the dependencies in this repository run better on Linux. 
+
+For users new to Azure, your subscription may not come with a quota for GPUs. You may need to go into the Azure portal to increase your quota for GPU vms. Learn more about how to do this here: https://docs.microsoft.com/en-us/azure/azure-subscription-service-limits.
+
 Here are some ways you can create the DSVM:
 
 __Provision a Data Science VM with the Azure Portal or CLI__
