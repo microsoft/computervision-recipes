@@ -77,7 +77,6 @@ def _get_det_bboxes_and_mask(
 def _apply_threshold(
     pred: Dict[str, np.ndarray],
     threshold: Optional[float] = 0.5,
-    mask_threshold: Optional[float] = 0.5,
 ) -> Dict:
     """ Return prediction results that are above the threshold if any.
 
@@ -86,16 +85,14 @@ def _apply_threshold(
             or MaskRCNN model, detached in the form of numpy array
         threshold: iou threshold for a positive detection. Note: set
             threshold to None to omit a threshold
-        mask_threshold: threshold for indicating whether a pixel belongs to
-            the object or not to make the mask a boolean array if any
     """
     # apply score threshold
     if threshold:
         selected = pred['scores'] > threshold
         pred = {k: v[selected] for k, v in pred.items()}
     # apply mask threshold
-    if "masks" in pred and mask_threshold:
-        pred["masks"] = pred["masks"] > mask_threshold
+    if "masks" in pred:
+        pred["masks"] = pred["masks"] > 0.5
     return pred
 
 
@@ -434,7 +431,6 @@ class DetectionLearner:
         self,
         im_or_path: Union[np.ndarray, Union[str, Path]],
         threshold: Optional[int] = 0.5,
-        mask_threshold: Optional[float] = 0.5,
     ) -> Dict:
         """ Performs inferencing on an image path or image.
 
@@ -444,8 +440,6 @@ class DetectionLearner:
             threshold: the threshold to use to calculate whether the object was
                 detected. Note: can be set to None to return all detection
                 bounding boxes.
-            mask_threshold: threshold for indicating whether a pixel belongs to
-                the object or not to make the mask a boolean array if any
 
         Return a list of DetectionBbox
         """
@@ -469,11 +463,7 @@ class DetectionLearner:
         # detach prediction results to cpu
         pred = {k: v.detach().cpu().numpy() for k, v in pred.items()}
         return _get_det_bboxes_and_mask(
-            _apply_threshold(
-                pred,
-                threshold=threshold,
-                mask_threshold=mask_threshold,
-            ),
+            _apply_threshold(pred, threshold=threshold),
             self.labels,
             im_path
         )
@@ -482,7 +472,6 @@ class DetectionLearner:
         self,
         dl: DataLoader,
         threshold: Optional[float] = 0.5,
-        mask_threshold: Optional[float] = 0.5,
     ) -> List[DetectionBbox]:
         """ Predict all images in a dataloader object.
 
@@ -490,23 +479,16 @@ class DetectionLearner:
             dl: the dataloader to predict on
             threshold: iou threshold for a positive detection. Note: set
                 threshold to None to omit a threshold
-            mask_threshold: threshold for indicating whether a pixel belongs to
-                the object or not to make the mask a boolean array if any
 
         Returns a list of results
         """
-        pred_generator = self.predict_batch(
-            dl,
-            threshold=threshold,
-            mask_threshold=mask_threshold,
-        )
+        pred_generator = self.predict_batch(dl, threshold=threshold)
         return [pred for preds in pred_generator for pred in preds]
 
     def predict_batch(
         self,
         dl: DataLoader,
         threshold: Optional[float] = 0.5,
-        mask_threshold: Optional[float] = 0.5,
     ) -> Generator[List[DetectionBbox], None, None]:
         """ Batch predict
 
@@ -514,8 +496,6 @@ class DetectionLearner:
             dl: A DataLoader to load batches of images from
             threshold: iou threshold for a positive detection. Note: set
                 threshold to None to omit a threshold
-            mask_threshold: threshold for indicating whether a pixel belongs to
-                the object or not to make the mask a boolean array if any
 
         Returns an iterator that yields a batch of detection bboxes for each
         image that is scored.
@@ -535,11 +515,7 @@ class DetectionLearner:
                 # detach prediction results to cpu
                 pred = {k: v.detach().cpu().numpy() for k, v in det.items()}
                 bboxes_masks = _get_det_bboxes_and_mask(
-                    _apply_threshold(
-                        pred,
-                        threshold=threshold,
-                        mask_threshold=mask_threshold,
-                    ),
+                    _apply_threshold(pred, threshold=threshold),
                     self.labels,
                     dl.dataset.dataset.im_paths[im_id]
                 )

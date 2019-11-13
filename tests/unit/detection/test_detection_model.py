@@ -21,18 +21,14 @@ from utils_cv.detection.model import (
 
 def test__apply_threshold(od_sample_output):
     """ Test `_apply_threshold` and verify it works at different thresholds. """
-    # test cases: [(threshold, mask_threshold, num, mask_pixels)]
+    # test cases: [(threshold, num, mask_pixels)]
     test_cases = [
-        (0.5, 0.5, 3, (21146, 28098, 28458)),
-        (0.01, 0.01, 5, (21243, 28224, 28560, 28458, 21412)),
-        (0.995, 0.995, 2, (0, 0)),
+        (0.5, 3, (21146, 28098, 28458)),
+        (0.01, 5, (21146, 28098, 28458, 28356, 21311)),
+        (0.995, 2, (21146, 28098)),
     ]
-    for threshold, mask_threshold, num, mask_pixels in test_cases:
-        pred = _apply_threshold(
-            od_sample_output,
-            threshold=threshold,
-            mask_threshold=mask_threshold,
-        )
+    for threshold, num, mask_pixels in test_cases:
+        pred = _apply_threshold(od_sample_output, threshold=threshold)
         for v in pred.values():
             assert len(v) == num
         for mask, num_pixels in zip(pred["masks"], mask_pixels):
@@ -172,11 +168,7 @@ def test_detection_mask_learner_predict_threshold(
     """ Simply test that `predict` works for mask learner with a threshold by
     setting a really high threshold.
     """
-    pred = od_detection_mask_learner.predict(
-        od_cup_path,
-        threshold=0.9999,
-        mask_threshold=0.9999
-    )
+    pred = od_detection_mask_learner.predict(od_cup_path, threshold=0.9999)
     bboxes = pred["det_bboxes"]
     masks = pred["masks"]
     assert type(bboxes) == list
@@ -234,7 +226,6 @@ def test_detection_mask_learner_predict_batch_threshold(
     generator = od_detection_mask_learner.predict_batch(
         od_detection_mask_dataset.test_dl,
         threshold=0.9999,
-        mask_threshold=0.9999
     )
     assert isinstance(generator, Iterable)
 
