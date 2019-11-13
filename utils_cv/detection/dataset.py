@@ -4,9 +4,10 @@
 import os
 import copy
 import math
+import numpy as np
 from pathlib import Path
-from random import randrange
-from typing import List, Tuple, Union
+import random
+from typing import Callable, List, Tuple, Union
 
 import torch
 from torch.utils.data import Dataset, Subset, DataLoader
@@ -14,11 +15,14 @@ from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import display_bboxes, plot_grid
+from .plot import display_bboxes_mask, plot_grid
 from .bbox import AnnotationBbox
+from .mask import binarise_mask
 from .references.utils import collate_fn
 from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
-from utils_cv.common.gpu import db_num_workers
+from ..common.gpu import db_num_workers
+
+Trans = Callable[[object, dict], Tuple[object, dict]]
 
 
 class ColorJitterTransform(object):
@@ -41,7 +45,7 @@ class ColorJitterTransform(object):
         return im, target
 
 
-def get_transform(train: bool) -> List[object]:
+def get_transform(train: bool) -> Trans:
     """ Gets basic the transformations to apply to images.
 
     Source:
@@ -127,7 +131,7 @@ def parse_pascal_voc_anno(
         assert anno_bbox.is_valid()
         anno_bboxes.append(anno_bbox)
 
-    return (anno_bboxes, im_path)
+    return anno_bboxes, im_path
 
 
 class DetectionDataset:
@@ -141,12 +145,14 @@ class DetectionDataset:
         self,
         root: Union[str, Path],
         batch_size: int = 2,
-        train_transforms: object = get_transform(train=True),
-        test_transforms: object = get_transform(train=False),
+        train_transforms: Trans = get_transform(train=True),
+        test_transforms: Trans = get_transform(train=False),
         train_pct: float = 0.5,
         anno_dir: str = "annotations",
         im_dir: str = "images",
-        allow_negatives: bool = False,
+        mask_dir: str = None,
+        seed: int = None,
+        allow_negatives: bool = False
     ):
         """ initialize dataset
 
@@ -162,9 +168,11 @@ class DetectionDataset:
             train_transforms: the transformations to apply to the train set
             test_transforms: the transformations to apply to the test set
             train_pct: the ratio of training to testing data
-            annotation_dir: the name of the annotation subfolder under the root directory
+            anno_dir: the name of the annotation subfolder under the root directory
             im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
             allow_negatives: is false (default) then will throw an error if no anntation .xml file can be found for a given image. Otherwise use image as negative, ie assume that the image does not contain any of the objects of interest.
+            mask_dir: the name of the mask subfolder under the root directory if the dataset is used for instance segmentation
+            seed: random seed for splitting dataset to training and testing data
         """
 
         self.root = Path(root)
@@ -172,9 +180,11 @@ class DetectionDataset:
         self.test_transforms = test_transforms
         self.im_dir = im_dir
         self.anno_dir = anno_dir
+        self.mask_dir = mask_dir
         self.batch_size = batch_size
         self.train_pct = train_pct
         self.allow_negatives = allow_negatives
+        self.seed = seed
 
         # read annotations
         self._read_annos()
@@ -187,7 +197,7 @@ class DetectionDataset:
         # create training and validation data loaders
         self.init_data_loaders()
 
-    def _read_annos(self) -> List[str]:
+    def _read_annos(self) -> None:
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible labels. """
 
@@ -211,6 +221,7 @@ class DetectionDataset:
         self.im_paths = []
         self.anno_paths = []
         self.anno_bboxes = []
+        self.mask_paths = []
         for anno_idx, anno_filename in enumerate(anno_filenames):
             anno_path = self.root / self.anno_dir / str(anno_filename)
 
@@ -239,6 +250,23 @@ class DetectionDataset:
                 self.im_paths.append(im_path)
             else:
                 self.im_paths.append(im_paths[anno_idx])
+
+            if self.mask_dir:
+                # Assume mask image name matches image name but has .png
+                # extension
+                mask_name = os.path.basename(self.im_paths[-1])
+                mask_name = mask_name[:mask_name.rindex('.')] + ".png"
+                mask_path = self.root / self.mask_dir / mask_name
+                # For mask prediction, if no mask provided and negatives not
+                # allowed (), ignore the image
+                if not mask_path.exists():
+                    if not self.allow_negatives:
+                        raise FileNotFoundError(mask_path)
+                    else:
+                        self.mask_paths.append(None)
+                else:
+                    self.mask_paths.append(mask_path)
+
             self.anno_paths.append(anno_path)
             self.anno_bboxes.append(anno_bboxes)
         assert len(self.im_paths) == len(self.anno_paths)
@@ -276,6 +304,8 @@ class DetectionDataset:
             A training and testing dataset in that order
         """
         test_num = math.floor(len(self) * (1 - train_pct))
+        if self.seed:
+            torch.manual_seed(self.seed)
         indices = torch.randperm(len(self)).tolist()
 
         train = copy.deepcopy(Subset(self, indices[test_num:]))
@@ -309,6 +339,7 @@ class DetectionDataset:
         im_paths: List[str],
         anno_bboxes: List[AnnotationBbox],
         target: str = "train",
+        mask_paths: List[str] = None,
     ):
         """ Add new images to either the training or test set.
 
@@ -316,21 +347,28 @@ class DetectionDataset:
             im_paths: path to the images.
             anno_bboxes: ground truth boxes for each image.
             target: specify if images are to be added to the training or test set. Valid options: "train" or "test".
+            mask_paths: path to the masks.
 
         Raises:
             Exception if `target` variable is neither 'train' nor 'test'
         """
         assert len(im_paths) == len(anno_bboxes)
-        for im_path, anno_bbox in zip(im_paths, anno_bboxes):
+        for i, (im_path, anno_bbox) in enumerate(zip(im_paths, anno_bboxes)):
             self.im_paths.append(im_path)
             self.anno_bboxes.append(anno_bbox)
+            if mask_paths is not None:
+                self.mask_paths.append(mask_paths[i])
             if target.lower() == "train":
                 self.train_ds.dataset.im_paths.append(im_path)
                 self.train_ds.dataset.anno_bboxes.append(anno_bbox)
+                if mask_paths is not None:
+                    self.train_ds.dataset.mask_paths.append(mask_paths[i])
                 self.train_ds.indices.append(len(self.im_paths) - 1)
             elif target.lower() == "test":
                 self.test_ds.dataset.im_paths.append(im_path)
                 self.test_ds.dataset.anno_bboxes.append(anno_bbox)
+                if mask_paths is not None:
+                    self.test_ds.dataset.mask_paths.append(mask_paths[i])
                 self.test_ds.indices.append(len(self.im_paths) - 1)
             else:
                 raise Exception(f"Target {target} unknown.")
@@ -338,26 +376,30 @@ class DetectionDataset:
         # Re-initialize the data loaders
         self.init_data_loaders()
 
-    def show_ims(self, rows: int = 1, cols: int = 3) -> None:
+    def show_ims(self, rows: int = 1, cols: int = 3, seed: int = None) -> None:
         """ Show a set of images.
 
         Args:
             rows: the number of rows images to display
             cols: cols to display, NOTE: use 3 for best looking grid
+            seed: random seed for selecting images
 
         Returns None but displays a grid of annotated images.
         """
-        plot_grid(display_bboxes, self._get_random_anno, rows=rows, cols=cols)
+        if seed or self.seed:
+            random.seed(seed or self.seed)
+
+        plot_grid(display_bboxes_mask, self._get_random_anno, rows=rows, cols=cols)
 
     def show_im_transformations(
         self, idx: int = None, rows: int = 1, cols: int = 3
     ) -> None:
-        """ Show a set of images after transfomrations have been applied.
+        """ Show a set of images after transformations have been applied.
 
         Args:
             idx: the index to of the image to show the transformations for.
             rows: number of rows to display
-            cols: number of cols to dipslay, NOTE: use 3 for best looing grid
+            cols: number of cols to display, NOTE: use 3 for best looking grid
 
         Returns None but displays a grid of randomly applied transformations.
         """
@@ -371,7 +413,7 @@ class DetectionDataset:
             )
         else:
             if idx is None:
-                idx = randrange(len(self.anno_paths))
+                idx = random.randrange(len(self.anno_paths))
 
             def plotter(im, ax):
                 ax.set_xticks([])
@@ -386,15 +428,30 @@ class DetectionDataset:
             print(f"Transformations applied on {self.im_paths[idx]}:")
             [print(transform) for transform in self.transforms.transforms]
 
-    def _get_random_anno(
-        self
-    ) -> Tuple[List[AnnotationBbox], Union[str, Path]]:
+    def _get_binary_mask(self, idx: int) -> Union[np.ndarray, None]:
+        """ Return binary masks for objects in the mask image. """
+        binary_masks = None
+        if self.mask_paths:
+            if self.mask_paths[idx] is not None:
+                binary_masks = binarise_mask(Image.open(self.mask_paths[idx]))
+            else:
+                # for the tiny bounding box in _read_annos(), make the mask to
+                # be the whole box
+                mask = np.zeros(
+                    Image.open(self.im_paths[idx]).size[::-1],
+                    dtype=np.uint8
+                )
+                binary_masks = binarise_mask(mask)
+
+        return binary_masks
+
+    def _get_random_anno(self) -> Tuple:
         """ Get random annotation and corresponding image
 
         Returns a list of annotations and the image path
         """
-        idx = randrange(len(self.anno_paths))
-        return self.anno_bboxes[idx], self.im_paths[idx]
+        idx = random.randrange(len(self.im_paths))
+        return self.anno_bboxes[idx], self.im_paths[idx], self._get_binary_mask(idx)
 
     def __getitem__(self, idx):
         """ Make iterable. """
@@ -430,6 +487,11 @@ class DetectionDataset:
             "iscrowd": iscrowd,
         }
 
+        # get masks
+        binary_masks = self._get_binary_mask(idx)
+        if binary_masks is not None:
+            target["masks"] = torch.as_tensor(binary_masks, dtype=torch.uint8)
+
         # get image
         im = Image.open(im_path).convert("RGB")
 
@@ -437,7 +499,7 @@ class DetectionDataset:
         if self.transforms is not None:
             im, target = self.transforms(im, target)
 
-        return (im, target)
+        return im, target
 
     def __len__(self):
-        return len(self.anno_paths)
+        return len(self.im_paths)

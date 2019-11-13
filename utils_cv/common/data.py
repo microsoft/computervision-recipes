@@ -40,7 +40,7 @@ def get_files_in_directory(
         filenames = [
             s for s in filenames if s.lower().endswith(tuple(suffixes))
         ]
-    return filenames
+    return sorted(filenames)
 
 
 def _get_file_name(url: str) -> str:
