@@ -143,7 +143,12 @@ def detection_notebooks():
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters_on_azureml.ipynb"
         ),
-        "12": os.path.join(folder_notebooks, "12_hard_negative_sampling.ipynb"),
+        "12": os.path.join(
+            folder_notebooks, "12_hard_negative_sampling.ipynb"
+        ),
+        "20": os.path.join(
+            folder_notebooks, "20_deployment_on_kubernetes.ipynb"
+        ),
     }
     return paths
 
