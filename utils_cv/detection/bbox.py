@@ -1,12 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from pathlib import Path
 from typing import List, Union
-import numpy as np
-import torch
-
-from .mask import binarise_mask
 
 
 class _Bbox:
@@ -38,58 +33,6 @@ class _Bbox:
     def from_array_xywh(cls, arr: List[int]) -> "_Bbox":
         """ Create a Bbox object from an array [left, top, width, height] """
         return _Bbox(arr[0], arr[1], arr[0] + arr[2] - 1, arr[1] + arr[3] - 1)
-
-    @classmethod
-    def get_rect_from_binary_mask(cls, binary_mask: np.ndarray) -> List[int]:
-        """ Get the bounding box rectangle from a binary numpy mask.
-
-        Args:
-            binary_mask: boolean numpy array.  True indicates the pixel belongs
-                to the object in the mask, otherwise, False.
-        """
-        pos = np.where(binary_mask)
-        left = np.min(pos[1])
-        right = np.max(pos[1])
-        top = np.min(pos[0])
-        bottom = np.max(pos[0])
-        return [left, top, right, bottom]
-
-    @classmethod
-    def from_binary_mask(cls, binary_mask: np.ndarray) -> "_Bbox":
-        """ Create a Bbox object from a binary numpy mask """
-        return cls.from_array(cls.get_rect_from_binary_mask(binary_mask))
-
-    @classmethod
-    def from_mask(cls, mask: Union[np.ndarray, str, Path]) -> "List[_Bbox]":
-        """ Create a list of Bbox objects from a numpy mask
-
-        Assume the mask is grayscale with different values representing
-        different objects, 0 as background.
-        """
-        return [cls.from_binary_mask(bmask) for bmask in binarise_mask(mask)]
-
-    @classmethod
-    def hflip_rects(
-        cls,
-        rects: Union[torch.Tensor, np.ndarray, List[List[int]]],
-        width: int,
-    ) -> Union[torch.Tensor, np.ndarray, List[List[int]]]:
-        """ Flip rectangles horizontally.
-
-        Args:
-            rects: list of rectangles in the form of [left, top, right, bottom]
-            width: width of the image which the rectangles are from
-        """
-        islist = False
-        if isinstance(rects, list):
-            # convert list to np.ndarray
-            islist = True
-            rects = np.asarray(rects)
-        rects[:, [0, 2]] = (width - 1) - rects[:, [2, 0]]
-        if islist:
-            # convert np.ndarray back if rects was list
-            rects = rects.tolist()
-        return rects
 
     def __str__(self):
         return f"""\
@@ -169,20 +112,6 @@ bottom={self.bottom}]\
             return False
         return True
 
-    def hflip(self, width) -> "_Bbox":
-        """ Flip the bounding box horizontally. """
-        self.left, self.right = (
-            width - 1 - x for x in [self.right, self.left]
-        )
-        return self
-
-    def vflip(self, height) -> "_Bbox":
-        """ Flip the bounding box vertically. """
-        self.top, self.bottom = (
-            height - 1 - x for x in [self.bottom, self.top]
-        )
-        return self
-
 
 class AnnotationBbox(_Bbox):
     """ Inherits from Bbox """
@@ -215,64 +144,6 @@ class AnnotationBbox(_Bbox):
         bbox.__class__ = AnnotationBbox
         bbox.set_meta(**kwargs)
         return bbox
-
-    @classmethod
-    def from_array_xywh(cls, arr: List[int], **kwargs) -> "AnnotationBbox":
-        bbox = super().from_array_xywh(arr)
-        bbox.__class__ = AnnotationBbox
-        bbox.set_meta(**kwargs)
-        return bbox
-
-    @classmethod
-    def from_arrays(
-        cls,
-        arrs: List[List[int]],
-        **kwargs
-    ) -> List["AnnotationBbox"]:
-        """ Create a list of AnnotationBbox objects from a list of
-        [left, top, right, bottom].
-
-        Each key word parameter in kwargs is the same as __init__, but a list
-        of its counterpart.  In other words, label_idx should be a List[int] or
-        int for all element in arrs.
-        """
-        # duplicate single value key words
-        kwargs = {
-            k: v if isinstance(v, list) else [v] * len(arrs) for k, v in
-            kwargs.items()
-        }
-        # split dict of lists into list of dicts
-        kwargs = [dict(zip(kwargs, kw)) for kw in zip(*kwargs.values())]
-        bboxes = [cls.from_array(a, **kw) for a, kw in zip(arrs, kwargs)]
-        return bboxes
-
-    @classmethod
-    def from_binary_mask(
-        cls,
-        binary_mask: np.ndarray,
-        **kwargs
-    ) -> "AnnotationBbox":
-        """ Create a AnnotationBbox object from a mask of boolean numpy
-        array.
-        """
-        arr = _Bbox.get_rect_from_binary_mask(binary_mask)
-        return cls.from_array(arr, **kwargs)
-
-    @classmethod
-    def from_mask(
-            cls,
-            mask: Union[np.ndarray, str, Path],
-            **kwargs,
-    ) -> List["AnnotationBbox"]:
-        """ Create a list of AnnotationBbox objects from a numpy mask
-
-        Assume the mask is grayscale with different values representing
-        different objects, 0 as background.
-        """
-        arrs = [
-            _Bbox.get_rect_from_binary_mask(b) for b in binarise_mask(mask)
-        ]
-        return cls.from_arrays(arrs, **kwargs)
 
     def __repr__(self):
         name = (

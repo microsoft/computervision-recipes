@@ -10,7 +10,6 @@ import shutil
 from pathlib import Path
 from typing import Tuple
 
-from utils_cv.detection.bbox import DetectionBbox
 from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
     get_pretrained_maskrcnn,

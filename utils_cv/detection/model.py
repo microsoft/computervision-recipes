@@ -36,30 +36,38 @@ from ..common.gpu import torch_device
 
 
 def _get_det_bboxes_and_mask(
-    pred: Dict, labels: List[str], im_path: Union[str, Path] = None
+    pred: Dict[str, np.ndarray],
+    labels: List[str],
+    im_path: Union[str, Path] = None,
 ) -> Dict:
     """ Gets the bounding boxes and masks from the prediction object.
 
     Args:
         pred: the output of passing in an image to torchvision's FasterRCNN
-            or MaskRCNN model
+            or MaskRCNN model, detached in the form of numpy array
         labels: list of labels without "__background__".
         im_path: the image path of the preds
+
     Return:
         a dict of DetectionBboxes and masks
     """
+    pred_labels = pred['labels'].tolist()
+    pred_boxes = pred['boxes'].tolist()
+    pred_scores = pred['scores'].tolist()
 
-    label_names = np.array(labels)[pred['labels'] - 1]
-    res = {
-        "det_bboxes":
-            DetectionBbox.from_arrays(
-                pred['boxes'].tolist(),
-                score=pred['scores'].tolist(),
-                label_idx=pred['labels'].tolist(),
-                label_name=label_names.tolist(),
-                im_path=im_path,
-            )
-    }
+    det_bboxes = []
+    for label, box, score in zip(pred_labels, pred_boxes, pred_scores):
+        label_name = labels[label - 1]
+        det_bbox = DetectionBbox.from_array(
+            box,
+            score=score,
+            label_idx=label,
+            label_name=label_name,
+            im_path=im_path,
+        )
+        det_bboxes.append(det_bbox)
+
+    res = {"det_bboxes": det_bboxes}
 
     if "masks" in pred:
         res["masks"] = pred["masks"].squeeze(1)
@@ -67,20 +75,25 @@ def _get_det_bboxes_and_mask(
 
 
 def _apply_threshold(
-    pred: Dict,
+    pred: Dict[str, np.ndarray],
     threshold: Optional[float] = 0.5,
     mask_threshold: Optional[float] = 0.5,
 ) -> Dict:
     """ Return prediction results that are above the threshold if any.
 
-
+    Args:
+        pred: the output of passing in an image to torchvision's FasterRCNN
+            or MaskRCNN model, detached in the form of numpy array
+        threshold: iou threshold for a positive detection. Note: set
+            threshold to None to omit a threshold
+        mask_threshold: threshold for indicating whether a pixel belongs to
+            the object or not to make the mask a boolean array if any
     """
-    # detach prediction results to cpu
-    pred = {k: v.detach().cpu().numpy() for k, v in pred.items()}
     # apply score threshold
     if threshold:
         selected = pred['scores'] > threshold
         pred = {k: v[selected] for k, v in pred.items()}
+    # apply mask threshold
     if "masks" in pred and mask_threshold:
         pred["masks"] = pred["masks"] > mask_threshold
     return pred
@@ -421,7 +434,7 @@ class DetectionLearner:
         self,
         im_or_path: Union[np.ndarray, Union[str, Path]],
         threshold: Optional[int] = 0.5,
-        **kwargs,
+        mask_threshold: Optional[float] = 0.5,
     ) -> Dict:
         """ Performs inferencing on an image path or image.
 
@@ -429,8 +442,10 @@ class DetectionLearner:
             im_or_path: the image array which you can get from
                 `Image.open(path)` or a image path
             threshold: the threshold to use to calculate whether the object was
-            detected. Note: can be set to None to return all detection bounding
-            boxes.
+                detected. Note: can be set to None to return all detection
+                bounding boxes.
+            mask_threshold: threshold for indicating whether a pixel belongs to
+                the object or not to make the mask a boolean array if any
 
         Return a list of DetectionBbox
         """
@@ -449,38 +464,58 @@ class DetectionLearner:
 
         model = self.model.eval()  # eval mode
         with torch.no_grad():
-            pred = model([im])
+            pred = model([im])[0]
 
+        # detach prediction results to cpu
+        pred = {k: v.detach().cpu().numpy() for k, v in pred.items()}
         return _get_det_bboxes_and_mask(
-            _apply_threshold(pred[0], threshold, **kwargs),
+            _apply_threshold(
+                pred,
+                threshold=threshold,
+                mask_threshold=mask_threshold,
+            ),
             self.labels,
             im_path
         )
 
     def predict_dl(
-        self, dl: DataLoader, threshold: Optional[float] = 0.5
+        self,
+        dl: DataLoader,
+        threshold: Optional[float] = 0.5,
+        mask_threshold: Optional[float] = 0.5,
     ) -> List[DetectionBbox]:
         """ Predict all images in a dataloader object.
 
         Args:
             dl: the dataloader to predict on
             threshold: iou threshold for a positive detection. Note: set
-            threshold to None to omit a threshold
+                threshold to None to omit a threshold
+            mask_threshold: threshold for indicating whether a pixel belongs to
+                the object or not to make the mask a boolean array if any
 
         Returns a list of results
         """
-        pred_generator = self.predict_batch(dl, threshold=threshold)
+        pred_generator = self.predict_batch(
+            dl,
+            threshold=threshold,
+            mask_threshold=mask_threshold,
+        )
         return [pred for preds in pred_generator for pred in preds]
 
     def predict_batch(
-        self, dl: DataLoader, threshold: Optional[float] = 0.5, **kwargs,
+        self,
+        dl: DataLoader,
+        threshold: Optional[float] = 0.5,
+        mask_threshold: Optional[float] = 0.5,
     ) -> Generator[List[DetectionBbox], None, None]:
         """ Batch predict
 
         Args
             dl: A DataLoader to load batches of images from
             threshold: iou threshold for a positive detection. Note: set
-            threshold to None to omit a threshold
+                threshold to None to omit a threshold
+            mask_threshold: threshold for indicating whether a pixel belongs to
+                the object or not to make the mask a boolean array if any
 
         Returns an iterator that yields a batch of detection bboxes for each
         image that is scored.
@@ -497,8 +532,14 @@ class DetectionLearner:
             results = []
             for det, info in zip(raw_dets, infos):
                 im_id = int(info["image_id"].item())
+                # detach prediction results to cpu
+                pred = {k: v.detach().cpu().numpy() for k, v in det.items()}
                 bboxes_masks = _get_det_bboxes_and_mask(
-                    _apply_threshold(det, threshold, **kwargs),
+                    _apply_threshold(
+                        pred,
+                        threshold=threshold,
+                        mask_threshold=mask_threshold,
+                    ),
                     self.labels,
                     dl.dataset.dataset.im_paths[im_id]
                 )

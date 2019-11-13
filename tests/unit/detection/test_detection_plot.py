@@ -17,8 +17,7 @@ from utils_cv.detection.plot import (
     _plot_pr_curve_iou_mean,
     plot_pr_curves,
     plot_mask,
-    display_image,
-    display_bbox_mask,
+    display_bboxes_mask,
 )
 
 
@@ -73,24 +72,14 @@ def test_plot_mask(od_mask_rects):
         assert background_uniques[0] == ch_uniques[0]
 
 
-def test_display_image(od_cup_path, basic_ax):
-    """ Test that `display_image` works. """
-    # test image path
-    display_image(od_cup_path, basic_ax)
-    # test PIL.Image
-    display_image(Image.open(od_cup_path), basic_ax)
-    # test numpy array
-    display_image(np.array(Image.open(od_cup_path)), basic_ax)
-
-
-def test_display_bbox_mask(
+def test_display_bboxes_mask(
     od_cup_anno_bboxes,
     od_cup_path,
     od_cup_mask_path,
     basic_ax
 ):
-    """ Test that `display_bbox_mask` works. """
-    display_bbox_mask(
+    """ Test that `display_bboxes_mask` works. """
+    display_bboxes_mask(
         bboxes=od_cup_anno_bboxes,
         im_path=od_cup_path,
         mask_path=od_cup_mask_path,
@@ -105,7 +94,7 @@ def test_plot_grid(od_cup_anno_bboxes, od_cup_path, od_cup_mask_path):
     def callable_args():
         return od_cup_anno_bboxes, od_cup_path, od_cup_mask_path
 
-    plot_grid(display_bbox_mask, callable_args, rows=1)
+    plot_grid(display_bboxes_mask, callable_args, rows=1)
 
     # test iterable args
     od_cup_paths = [od_cup_path, od_cup_path, od_cup_path]
@@ -116,7 +105,7 @@ def test_plot_grid(od_cup_anno_bboxes, od_cup_path, od_cup_mask_path):
         for path, bboxes, mask_path in zip(od_cup_paths, od_cup_annos, od_cup_mask_paths):
             yield bboxes, path, mask_path
 
-    plot_grid(display_bbox_mask, iterator_args(), rows=1)
+    plot_grid(display_bboxes_mask, iterator_args(), rows=1)
 
 
 def test_plot_detection_vs_ground_truth(

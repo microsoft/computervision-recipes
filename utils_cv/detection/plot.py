@@ -121,42 +121,13 @@ def plot_mask(
     return im
 
 
-def display_image(
-    im: Union[str, Path, PIL.Image.Image, np.ndarray],
-    ax: Optional[plt.axes] = None,
-    figsize: Tuple[int, int] = (12, 12),
-) -> None:
-    """ Show an image.
-
-    Args:
-        im: Image or path
-        ax: an optional ax to specify where you wish the figure to be drawn on
-        figsize: figure size
-    """
-    # Read image
-    if isinstance(im, (str, Path)):
-        im = Image.open(im)
-
-    # display the image
-    if ax is not None:
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.imshow(im)
-    else:
-        plt.figure(figsize=figsize)
-        plt.imshow(im)
-        plt.xticks([])
-        plt.yticks([])
-        plt.show()
-
-
-def display_bbox_mask(
+def display_bboxes_mask(
     bboxes: List[_Bbox],
     im_path: Union[Path, str],
     mask_path: Union[Path, str] = None,
     ax: Optional[plt.axes] = None,
     plot_settings: PlotSettings = PlotSettings(),
-    **kwargs,
+    figsize: Tuple[int, int] = (12, 12),
 ) -> None:
     """ Draw image with bounding boxes and mask.
 
@@ -166,6 +137,7 @@ def display_bbox_mask(
         mask_path: the location of mask path to draw
         ax: an optional ax to specify where you wish the figure to be drawn on
         plot_settings: plotting parameters
+        figsize: figure size
 
     Returns nothing, but plots the image with bounding boxes, labels and masks
     if any.
@@ -184,8 +156,17 @@ def display_bbox_mask(
         # plot boxes on im
         im = plot_boxes(im, bboxes, title=title, plot_settings=plot_settings)
 
-    # display the output image
-    display_image(im, ax, **kwargs)
+    # display the image
+    if ax is not None:
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.imshow(im)
+    else:
+        plt.figure(figsize=figsize)
+        plt.imshow(im)
+        plt.xticks([])
+        plt.yticks([])
+        plt.show()
 
 
 def plot_grid(

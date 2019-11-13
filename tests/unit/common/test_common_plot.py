@@ -2,9 +2,7 @@
 # Licensed under the MIT License.
 
 from pathlib import Path
-from PIL import Image
 import matplotlib.pyplot as plt
-import numpy as np
 from utils_cv.common.plot import line_graph, show_ims
 
 

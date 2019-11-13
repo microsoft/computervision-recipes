@@ -37,8 +37,8 @@ def binarise_mask(mask: Union[np.ndarray, str, Path]) -> np.ndarray:
 
 
 def colorise_binary_mask(
-        binary_mask: np.ndarray,
-        color: Tuple[int, int, int] = (2, 166, 101),
+    binary_mask: np.ndarray,
+    color: Tuple[int, int, int] = (2, 166, 101),
 ) -> np.ndarray:
     """ Set the color for the instance in the mask. """
     # create empty RGB channels
@@ -53,8 +53,8 @@ def colorise_binary_mask(
 
 
 def transparentise_mask(
-        colored_mask: np.ndarray,
-        alpha: float = 0.5,
+    colored_mask: np.ndarray,
+    alpha: float = 0.5,
 ) -> np.ndarray:
     """ Return a mask with fully transparent background and alpha-transparent
     instances.

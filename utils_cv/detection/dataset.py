@@ -15,7 +15,7 @@ from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import display_bbox_mask, plot_grid
+from .plot import display_bboxes_mask, plot_grid
 from .bbox import AnnotationBbox
 from .mask import binarise_mask
 from .references.utils import collate_fn
@@ -389,7 +389,7 @@ class DetectionDataset:
         if seed or self.seed:
             random.seed(seed or self.seed)
 
-        plot_grid(display_bbox_mask, self._get_random_anno, rows=rows, cols=cols)
+        plot_grid(display_bboxes_mask, self._get_random_anno, rows=rows, cols=cols)
 
     def show_im_transformations(
         self, idx: int = None, rows: int = 1, cols: int = 3
@@ -441,7 +441,6 @@ class DetectionDataset:
                     Image.open(self.im_paths[idx]).size[::-1],
                     dtype=np.uint8
                 )
-                mask[1:6, 1:6] = 1
                 binary_masks = binarise_mask(mask)
 
         return binary_masks
@@ -452,11 +451,7 @@ class DetectionDataset:
         Returns a list of annotations and the image path
         """
         idx = random.randrange(len(self.im_paths))
-
-        # get mask if any
-        mask = self._get_binary_mask(idx)
-
-        return self.anno_bboxes[idx], self.im_paths[idx], mask
+        return self.anno_bboxes[idx], self.im_paths[idx], self._get_binary_mask(idx)
 
     def __getitem__(self, idx):
         """ Make iterable. """
