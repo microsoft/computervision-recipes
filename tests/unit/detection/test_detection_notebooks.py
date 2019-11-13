@@ -64,7 +64,6 @@ def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
         parameters=dict(
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_od_mask_data_path,
-            DEVICE='cuda',
             EPOCHS=1,
         ),
         kernel_name=KERNEL_NAME,

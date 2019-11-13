@@ -43,7 +43,6 @@ def test_02_notebook_run(detection_notebooks):
         parameters=dict(
             PM_VERSION=pm.__version__,
             EPOCHS=epochs,
-            DEVICE='cuda'
         ),
         kernel_name=KERNEL_NAME,
     )
