@@ -28,8 +28,9 @@ def test__apply_threshold(od_sample_output):
         (0.01, 5, (21146, 28098, 28458, 28356, 21311)),
         (0.995, 2, (21146, 28098)),
     ]
+    res = {k: v.detach().cpu().numpy() for k, v in od_sample_output.items()}
     for threshold, num, mask_pixels in test_cases:
-        pred = _apply_threshold(od_sample_output, threshold=threshold)
+        pred = _apply_threshold(res, threshold=threshold)
         for v in pred.values():
             assert len(v) == num
         for mask, num_pixels in zip(pred["masks"], mask_pixels):
