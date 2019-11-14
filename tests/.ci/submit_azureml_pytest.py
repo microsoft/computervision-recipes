@@ -264,7 +264,7 @@ def create_arg_parser():
     parser.add_argument(
         "--test",
         action="store",
-        default=".ci/run_pytest.py",
+        default="tests/.ci/run_pytest.py",
         help="location of script to run pytest",
     )
     # test folder
