@@ -18,6 +18,11 @@ Specifically, we use the model pre-trained on 65 million social media videos (IG
 In this repository, we use PyTorch-converted weights from [https://github.com/moabitcoin/ig65m-pytorch](https://github.com/moabitcoin/ig65m-pytorch).*
 
 
+## Prerequisite
+* Linux machine - We strongly recommend to use GPU machine to run the scripts and notebooks in this project smoothly (preferably [Azure NCsV3 series VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/sizes-gpu#ncv3-series)).
+* To use GPUs, **CUDA toolkit v10.1** is required. Details about the CUDA installation can be found [here](https://developer.nvidia.com/cuda-downloads). Once the installation is completed, you may need to reboot the VM.
+
+
 ## Installation
 1. Setup conda environment
 `conda env create -f environment.yml`
