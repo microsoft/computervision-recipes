@@ -1,0 +1,30 @@
+name: r2p1d
+channels:
+- defaults
+- conda-forge
+- pytorch
+dependencies:
+- cudatoolkit>=10.1
+- pandas
+- numpy==1.17.2
+- python==3.6.8
+- pytorch>=1.2.0
+- torchvision>=0.4.0
+- ipykernel>=4.6.1
+- jupyter>=1.0.0
+- jupyter_contrib_nbextensions
+- jupyter_nbextensions_configurator
+- pytest>=3.6.4
+- scikit-learn>=0.19.1
+- pip>=19.0.3
+- pip:
+  - azureml-sdk[notebooks]
+  - azureml-dataprep[pandas]
+  - decord
+  - ipywebrtc
+  - matplotlib
+  - einops==0.1.0
+  - pillow==6.2.0
+  - six==1.12.0
+  - tqdm==4.36.1
+
