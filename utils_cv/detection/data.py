@@ -21,13 +21,17 @@ class Urls:
         base, "odFridgeObjectsWatermarkTiny.zip"
     )
 
+    # mask datasets
+    fridge_objects_mask_path = urljoin(base, "odFridgeObjectsMask.zip")
+    fridge_objects_mask_tiny_path = urljoin(base, "odFridgeObjectsMaskTiny.zip")
+
     @classmethod
     def all(cls) -> List[str]:
         return [v for k, v in cls.__dict__.items() if k.endswith("_path")]
 
 
 def coco_labels() -> List[str]:
-    """ List of Coco labels with the original idexing.
+    """ List of Coco labels with the original indexing.
 
     Reference: https://github.com/pytorch/vision/blob/master/docs/source/models.rst
 
