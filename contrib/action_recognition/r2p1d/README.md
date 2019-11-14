@@ -8,14 +8,14 @@ This project provides utility scripts to fine-tune the model and examples notebo
 
 | Notebook | Description |
 | --- | --- |
-| [r2p1d_hmdb51_finetuning](r2p1d_hmdb51_finetuning.ipynb) | An example of fine-tuning on the HMDB-51 dataset |
-| [r2p1d_webcam](r2p1d_webcam.ipynb) | A real-time inferencing example on Webcam stream |
-| [video_transformation](video_transformation.ipynb) | Examples of video transformations | 
+| [00_webcam](00_webcam.ipynb) | A real-time inference example on Webcam stream |
+| [01_training_introduction](01_training_introduction.ipynb) | An example of training R(2+1)D model on HMDB-51 dataset |
+| [02_video_transformation](02_video_transformation.ipynb) | Examples of video transformations | 
 
 Specifically, we use the model pre-trained on 65 million social media videos (IG) presented in "[Large-scale weakly-supervised pre-training for video action recognition (2019)](https://arxiv.org/abs/1905.00561)" paper.
 
-The official model weights from [Facebook AI](https://github.com/facebookresearch/vmz) are for caffe2,
-and we use PyTorch-converted weights from [here](https://github.com/moabitcoin/ig65m-pytorch).
+*Note: The official pretrained model weights can be found from [https://github.com/facebookresearch/vmz](https://github.com/facebookresearch/vmz) which are based on caffe2.
+In this repository, we use PyTorch-converted weights from [https://github.com/moabitcoin/ig65m-pytorch](https://github.com/moabitcoin/ig65m-pytorch).*
 
 
 ## Installation
