@@ -167,18 +167,18 @@ class R2Plus1D(object):
 
         if cuda.is_available():
             device = torch.device("cuda")
-            num_gpus = cuda.device_count()
+            num_devices = cuda.device_count()
             # Look for the optimal set of algorithms to use in cudnn. Use this only with fixed-size inputs.
             torch.backends.cudnn.benchmark = True
         else:
             device = torch.device("cpu")
-            num_gpus = 0
+            num_devices = 1
 
         data_loaders = {}
         if self.train_ds is not None:
             data_loaders['train'] = DataLoader(
                 self.train_ds,
-                batch_size=train_cfgs.get('batch_size', 8) * num_gpus,
+                batch_size=train_cfgs.get('batch_size', 8) * num_devices,
                 shuffle=True,
                 num_workers=0,  # Torch 1.2 has a bug when num-workers > 0 (0 means run a main-processor worker)
                 pin_memory=True,
@@ -186,7 +186,7 @@ class R2Plus1D(object):
         if self.valid_ds is not None:
             data_loaders['valid'] = DataLoader(
                 self.valid_ds,
-                batch_size=train_cfgs.get('batch_size', 8) * num_gpus,
+                batch_size=train_cfgs.get('batch_size', 8) * num_devices,
                 shuffle=False,
                 num_workers=0,
                 pin_memory=True,
@@ -254,7 +254,7 @@ class R2Plus1D(object):
             )
 
         # DataParallel after amp.initialize
-        if num_gpus > 1:
+        if num_devices > 1:
             model = nn.DataParallel(self.model)
         else:
             model = self.model
