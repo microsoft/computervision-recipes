@@ -180,7 +180,7 @@ def test_od_20_notebook_run(
     workspace_name,
     workspace_region,
 ):
-    notebook_path = classification_notebooks["20_deployment_on_kubernetes"]
+    notebook_path = detection_notebooks["20_deployment_on_kubernetes"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
