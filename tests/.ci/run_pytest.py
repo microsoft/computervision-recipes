@@ -69,6 +69,7 @@ if __name__ == "__main__":
     logger.debug("junit= --junitxml={}".format(args.xmlname))
     pytest_cmd = [
         "pytest",
+        "--ignore=contrib",
         args.testfolder,
         "-m",
         args.testmarkers,
