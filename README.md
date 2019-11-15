@@ -32,7 +32,7 @@ The following is a summary of commonly used Computer Vision scenarios that are c
 | [Similarity](scenarios/similarity)  | Base | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
 | [Detection](scenarios/detection) | Base | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
 | [Action recognition](contrib/action_recognition) | Contrib | Action recognition to identify in video/webcam footage what actions are performed (e.g. "running", "opening a bottle") and at what respective start/end times.|
-| [Crowd counting](contrib/crowd_counting) | Contrib | COMING SOON. Counting the number of people in low-crowd-density (e.g. less than 10 people) and high-crowd-density (e.g. thousands of people) scenarios.|
+| [Crowd counting](contrib/crowd_counting) | Contrib | Counting the number of people in low-crowd-density (e.g. less than 10 people) and high-crowd-density (e.g. thousands of people) scenarios.|
 
 We separate the supported CV scenarios into two locations: (i) **base**: code and notebooks within the "utils_cs" and "scenarios" folders which follow strict coding guidelines, are well tested and maintained; (ii) **contrib**: code and other assets within the "contrib" folder, mainly covering less common CV scenarios using bleeding edge state-of-the-art approaches. Code in "contrib" is not regularly tested or maintained.
 
