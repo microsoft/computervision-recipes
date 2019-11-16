@@ -117,6 +117,7 @@ output.ipynb
 classification/data/*
 data/
 !contrib/action_recognition/r2p1d/**
+!contrib/crowd_counting/crowdcounting/data/
 
 # don't save .swp files
 *.swp
@@ -137,3 +138,5 @@ data/
 classification/FAQ.html
 classification/.DS_Store
 .DS_Store
+
+*.h5
