@@ -1,0 +1,49 @@
+# 
+# To create the conda environment:
+# $ conda env create -f environment.yml
+# 
+# To update the conda environment:
+# $ conda env update -f environment.yml
+# 
+# To register the conda environment in Jupyter:
+# $ conda activate cv
+# $ python -m ipykernel install --user --name cv
+# 
+name: devops
+channels:
+- defaults
+- conda-forge
+- pytorch
+dependencies:
+- python==3.7.5
+- pip
+- numpy
+- pytorch==1.2.0
+- torchvision==0.4.0  
+- pip:
+  - tensorflow-gpu==1.13.1
+  - pytest
+  - pytest-cov  
+  - h5py==2.8.0
+  - flask==1.0.2
+  - scikit-image
+  - bokeh
+  - opencv-python==3.4.2.17
+  - pillow
+  - Cython
+  - contextlib2
+  - argparse
+  - dill==0.2.7.1
+  - fire
+  - matplotlib
+  - psutil
+  - requests
+  - scikit-image
+  - scipy
+  - slidingwindow
+  - tqdm
+  - structuredlogging
+  - git+https://github.com/ppwwyyxx/tensorpack.git
+  - git+https://github.com/lixzhang/crowdcount-mcnn.git
+  - git+https://github.com/lixzhang/tf-pose-estimation.git
+  - -e ../../../.  

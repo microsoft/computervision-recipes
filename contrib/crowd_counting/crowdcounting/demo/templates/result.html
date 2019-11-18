@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+
+<head>
+    <meta id="Viewport" name="viewport" content="initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>E2E Crowd Counting</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+        crossorigin="anonymous">
+    <style>
+        @import url(http://fonts.googleapis.com/css?family=Amatic+SC:700);
+
+        body {
+            text-align: center;
+        }
+
+        form {
+            text-align: center;
+        }
+
+        input {
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Amatic SC', cursive;
+            font-weight: normal;
+            color: #8ac640;
+            font-size: 2.5em;
+        }
+
+        .img_border {
+            border: 2px solid red;
+        }
+
+        #image_container {
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            font-weight: bold;
+            font-size: 150%;
+            text-transform: uppercase;
+        }
+
+        .btn-success {
+            font-weight: bold;
+            font-size: 150%;
+            text-transform: uppercase;
+        }
+
+        input {
+            font-family: 'Helvetica', Arial, Lucida Grande, sans-serif;
+            font-size: 20px;
+        }
+
+        .btn-home {
+            font-weight: bold;
+            font-size: 150%;
+            text-transform: uppercase;
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="home_button" class="container">
+        <a href="/" class="btn btn-home">Home</a>
+    </div>
+
+    <div class="container">
+        <div>
+            {% if scored_image %}
+            <br></br>
+            <img src="data:image/png;base64,{{scored_image}}">
+            <h3>{{txt}}</h3>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
