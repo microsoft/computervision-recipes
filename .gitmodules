@@ -1,6 +1,0 @@
-[submodule "contrib/crowd_counting/crowdcounting/third_party/tf-pose-estimation"]
-	path = contrib/crowd_counting/crowdcounting/third_party/tf-pose-estimation
-	url = git@github.com:lixzhang/tf-pose-estimation.git
-[submodule "contrib/crowd_counting/crowdcounting/third_party/mcnn"]
-	path = contrib/crowd_counting/crowdcounting/third_party/mcnn
-	url = git@github.com:lixzhang/crowdcount-mcnn.git
