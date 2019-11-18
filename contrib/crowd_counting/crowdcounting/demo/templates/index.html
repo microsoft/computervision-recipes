@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+
+<head>
+    <meta id="Viewport" name="viewport" content="initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+    <title>E2E Crowd Counting</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
+        crossorigin="anonymous" />
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#image_container img').click(function () {
+                //remove border on any images that might be selected
+                $('#image_container img').removeClass("img_border")
+                // set the img-source as value of image_from_list
+                // $('#image_from_list').val($(this).attr("src"));
+                $('#data_value').val($(this).attr("id"));
+                // $('#data_value').val( $(this).data("options").color );
+
+                //add border to a clicked image
+                $(this).addClass("img_border")
+            });
+        })
+    </script>
+
+    <style type="text/css">
+        @import url(http://fonts.googleapis.com/css?family=Archivo+Narrow);
+
+        body {
+            text-align: center;
+        }
+
+        form {
+            text-align: center;
+        }
+
+        input {
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Amatic SC', cursive;
+            font-weight: normal;
+            color: #8ac640;
+            font-size: 2.5em;
+        }
+
+        .img_border {
+            border: 2px solid red;
+        }
+
+        #image_container {
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            font-weight: bold;
+            font-size: 150%;
+            text-transform: uppercase;
+        }
+
+        .btn-success {
+            font-weight: bold;
+            font-size: 150%;
+            text-transform: uppercase;
+        }
+
+        input {
+            font-family: 'Helvetica', Arial, Lucida Grande, sans-serif;
+            font-size: 20px;
+        }
+
+        .btn-home {
+            font-weight: bold;
+            font-size: 150%;
+            text-transform: uppercase;
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div id="home_button" class="container">
+        <a href="/" class="btn btn-home">Home</a>
+    </div>
+
+    <div class="container">
+        <div class="row clearfix">
+            <h1>Upload or select an image for scoring: </h1>
+
+            <div class="col-md-4 col-md-offset-4 column">
+                <form action="/uploadfile" method="POST" enctype="multipart/form-data">
+                    <div class="col-md-4 col-md-offset-2 text-center">
+                        <input type="file" name="file">
+                        <button type="submit" class="btn btn-primary" value="Submit my photo">Submit my photo</button>
+                    </div>
+                </form>
+            </div>
+            {% if scored_image %}
+            <img src="data:image/png;base64,{{scored_image}}">
+            <h3>{{txt}}</h3>
+            {% endif %}
+        </div>
+    </div>
+
+    <hr>
+    <form action="/sitefile" method="POST">
+        <input id="data_value" type="hidden" name="fileindex" />
+        <button type="submit" class="btn btn-success" value="Use this photo">Use this photo</button>
+    </form>
+
+    <div id="image_container" class="container">
+        <div class="row">
+            {% for image_name in image_names %}
+            <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                <img class="img-responsive" src="{{url_for('send_image', filename=image_name)}}" id={{image_name}}>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="row">
+            {% for actual_count in actual_counts %}
+            <div class="col-lg-4 col-md-4 col-xs-4 thumb">
+                <p>{{actual_count}}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
