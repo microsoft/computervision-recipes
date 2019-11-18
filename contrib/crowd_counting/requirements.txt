@@ -1,0 +1,23 @@
+h5py==2.8.0
+flask==1.0.2
+scikit-image
+bokeh
+opencv-python==3.4.2.17
+pillow
+Cython
+contextlib2
+argparse
+dill==0.2.7.1
+fire
+matplotlib
+psutil
+requests
+scikit-image
+scipy
+slidingwindow
+tqdm
+structuredlogging
+git+https://github.com/ppwwyyxx/tensorpack.git
+crowdcounting/third_party/mcnn/
+crowdcounting/third_party/tf-pose-estimation/
+-e .
