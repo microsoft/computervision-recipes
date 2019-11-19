@@ -1,0 +1,72 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+jobs:
+- job:
+  displayName: From environment.yml
+  pool:
+    name: Default
+
+  steps:
+  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: Add conda to PATH
+
+  # - task: Bash@3
+  #   inputs:
+  #     filePath: './crowdcounting/data/models/download.sh'
+  #     workingDirectory: './crowdcounting/data/models'
+  - task: Bash@3
+    inputs:
+      targetType: 'inline'
+      script: |
+        # Write your commands here
+        
+        download_url="https://www.dropbox.com/s/8bxwvr4cj4bh5d8/mcnn_shtechA_660.h5?dl=0"
+        wget -c --tries=2 $download_url -O crowdcounting/data/models/mcnn_shtechA_660.h5
+
+  - script: |
+      sudo apt install httping
+    displayName: 'Install httping'
+
+  - script: |
+      echo "CURRENT_DIR: $PWD"
+      conda env create --quiet --file crowdcounting/test/ci/environment.yml
+    displayName: Create Anaconda environment
+
+  - bash: |
+      source activate devops
+      pip install pytest pytest-cov pytest-azurepipelines
+      python -m pytest crowdcounting/test/unit/test_count.py --cov-report=xml --cov-report html --cov crowdcounting.api.model_crowdcount
+    displayName: 'Run pytest'
+
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFiles: '**/test-*.xml'
+      testRunTitle: 'Publish test results for Python $(python.version)'
+
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+      reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+
+  - script: |
+      source activate devops
+      pip list
+      set -e
+      echo "CURRENT_DIR: $PWD"
+      python crowdcounting/demo/app-start.py -p crowdcounting/data/models/mcnn_shtechA_660.h5 & PID=$!
+      # wait for app to warm up
+      while ! httping -qc1 http://localhost:5000 ; do sleep 1 ; done
+      # test the code
+      curl -H "Content-type: application/octet-stream" -X POST http://0.0.0.0:5000/score --data-binary @./crowdcounting/data/images/1.jpg
+      kill -15 $PID
+      cd crowdcounting 
+    displayName: 'Run demo app'
+        
+  - bash: |
+      source deactivate
+      conda remove -n devops --all -y

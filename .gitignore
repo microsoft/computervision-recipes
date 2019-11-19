@@ -116,15 +116,14 @@ output.ipynb
 # don't save any data
 classification/data/*
 data/
+!contrib/action_recognition/r2p1d/**
+!contrib/crowd_counting/crowdcounting/data/
 
 # don't save .swp files
 *.swp
 
 # don't save .csv files
 *.csv
-
-# don't save data dir
-data
 
 # don't save pickles
 *.pkl
@@ -139,3 +138,5 @@ data
 classification/FAQ.html
 classification/.DS_Store
 .DS_Store
+
+*.h5

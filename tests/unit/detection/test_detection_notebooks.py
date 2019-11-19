@@ -47,9 +47,36 @@ def test_01_notebook_run(detection_notebooks, tiny_od_data_path):
 
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     assert len(nb_output.scraps["training_losses"].data) > 0
-    assert len(nb_output.scraps["training_average_precision"].data) > 0
+    training_aps = nb_output.scraps["training_average_precision"].data
+    assert len(training_aps) > 0
+    for d in training_aps:
+        assert isinstance(d, dict)
+    assert len(set([len(d) for d in training_aps])) == 1
 
-    
+
+@pytest.mark.gpu
+@pytest.mark.notebooks
+def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
+    notebook_path = detection_notebooks["02"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            DATA_PATH=tiny_od_mask_data_path,
+            EPOCHS=1,
+        ),
+        kernel_name=KERNEL_NAME,
+    )
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert len(nb_output.scraps["training_losses"].data) > 0
+    training_aps = nb_output.scraps["training_average_precision"].data
+    assert len(training_aps) > 0
+    for d in training_aps:
+        assert isinstance(d, dict)
+    assert len(set([len(d) for d in training_aps])) == 1
+
+
 @pytest.mark.gpu
 @pytest.mark.notebooks
 def test_12_notebook_run(detection_notebooks, tiny_od_data_path):
@@ -69,4 +96,3 @@ def test_12_notebook_run(detection_notebooks, tiny_od_data_path):
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     assert len(nb_output.scraps["valid_accs"].data) == 1
     assert len(nb_output.scraps["hard_im_scores"].data) == 10
-    

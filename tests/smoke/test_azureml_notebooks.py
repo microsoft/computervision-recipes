@@ -170,3 +170,26 @@ def test_od_11_notebook_run(
 
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     assert nb_output.scraps["best_accuracy"].data > 0.70
+
+
+@pytest.mark.azuremlnotebooks
+def test_od_20_notebook_run(
+    detection_notebooks,
+    subscription_id,
+    resource_group,
+    workspace_name,
+    workspace_region,
+):
+    notebook_path = detection_notebooks["20_deployment_on_kubernetes"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            subscription_id=subscription_id,
+            resource_group=resource_group,
+            workspace_name=workspace_name,
+            workspace_region=workspace_region,
+        ),
+        kernel_name=KERNEL_NAME,
+    )
