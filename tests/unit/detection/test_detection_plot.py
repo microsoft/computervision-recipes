@@ -18,7 +18,7 @@ from utils_cv.detection.plot import (
     plot_pr_curves,
     plot_counts_curves,
     plot_mask,
-    display_bboxes_mask,
+    display_annotations,
 )
 
 
@@ -73,14 +73,14 @@ def test_plot_mask(od_mask_rects):
         assert background_uniques[0] == ch_uniques[0]
 
 
-def test_display_bboxes_mask(
+def test_display_annotations(
     od_cup_anno_bboxes,
     od_cup_path,
     od_cup_mask_path,
     basic_ax
 ):
-    """ Test that `display_bboxes_mask` works. """
-    display_bboxes_mask(
+    """ Test that `display_annotations` works. """
+    display_annotations(
         bboxes=od_cup_anno_bboxes,
         im_path=od_cup_path,
         mask_path=od_cup_mask_path,
@@ -95,7 +95,7 @@ def test_plot_grid(od_cup_anno_bboxes, od_cup_path, od_cup_mask_path):
     def callable_args():
         return od_cup_anno_bboxes, od_cup_path, od_cup_mask_path
 
-    plot_grid(display_bboxes_mask, callable_args, rows=1)
+    plot_grid(display_annotations, callable_args, rows=1)
 
     # test iterable args
     od_cup_paths = [od_cup_path, od_cup_path, od_cup_path]
@@ -106,7 +106,7 @@ def test_plot_grid(od_cup_anno_bboxes, od_cup_path, od_cup_mask_path):
         for path, bboxes, mask_path in zip(od_cup_paths, od_cup_annos, od_cup_mask_paths):
             yield bboxes, path, mask_path
 
-    plot_grid(display_bboxes_mask, iterator_args(), rows=1)
+    plot_grid(display_annotations, iterator_args(), rows=1)
 
 
 def test_plot_detection_vs_ground_truth(

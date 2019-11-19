@@ -15,7 +15,7 @@ from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import display_bboxes_mask, plot_grid
+from .plot import display_annotations, plot_grid
 from .bbox import AnnotationBbox
 from .mask import binarise_mask
 from .references.utils import collate_fn
@@ -389,7 +389,7 @@ class DetectionDataset:
         if seed or self.seed:
             random.seed(seed or self.seed)
 
-        plot_grid(display_bboxes_mask, self._get_random_anno, rows=rows, cols=cols)
+        plot_grid(display_annotations, self._get_random_anno, rows=rows, cols=cols)
 
     def show_im_transformations(
         self, idx: int = None, rows: int = 1, cols: int = 3

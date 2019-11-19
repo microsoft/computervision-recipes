@@ -5,7 +5,6 @@
 Helper module for visualizations
 """
 import os
-from pathlib import Path
 from typing import List, Union, Tuple, Callable, Any, Iterator, Optional
 from pathlib import Path
 
@@ -19,6 +18,7 @@ from .bbox import _Bbox, AnnotationBbox, DetectionBbox
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
+from .keypoint import COCOPersonKeypoints
 from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 
 
@@ -33,6 +33,8 @@ class PlotSettings:
         text_color: Tuple[int, int, int] = (255, 255, 255),
         mask_color: Tuple[int, int, int] = (2, 166, 101),
         mask_alpha: float = 0.5,
+        keypoint_th: int = 3,
+        keypoint_color: Tuple[int, int, int] = (0, 0, 255),
     ):
         self.rect_th = rect_th
         self.rect_color = rect_color
@@ -40,6 +42,8 @@ class PlotSettings:
         self.text_color = text_color
         self.mask_color = mask_color
         self.mask_alpha = mask_alpha
+        self.keypoint_th = keypoint_th
+        self.keypoint_color = keypoint_color
 
 
 def plot_boxes(
@@ -123,10 +127,33 @@ def plot_mask(
     return im
 
 
-def display_bboxes_mask(
+def plot_keypoints(
+    im: Union[str, Path, PIL.Image.Image],
+    keypoints: np.ndarray,
+    plot_settings: PlotSettings = PlotSettings(),
+) -> PIL.Image.Image:
+    """ Plot connected keypoints on Image and return the Image. """
+    if isinstance(im, (str, Path)):
+        im = Image.open(im)
+
+    if len(keypoints) > 0:
+        keypoints = COCOPersonKeypoints(keypoints)
+        draw = ImageDraw.Draw(im)
+        for line in keypoints.get_lines():
+            draw.line(
+                line,
+                fill=plot_settings.keypoint_color,
+                width=plot_settings.keypoint_th
+            )
+
+    return im
+
+
+def display_annotations(
     bboxes: List[_Bbox],
     im_path: Union[Path, str],
     mask_path: Union[Path, str] = None,
+    keypoints: np.ndarray = None,
     ax: Optional[plt.axes] = None,
     plot_settings: PlotSettings = PlotSettings(),
     figsize: Tuple[int, int] = (12, 12),
@@ -137,6 +164,7 @@ def display_bboxes_mask(
         bboxes: A list of _Bbox, could be DetectionBbox or AnnotationBbox
         im_path: the location of image path to draw
         mask_path: the location of mask path to draw
+        keypoints: the keypoints of objects to draw
         ax: an optional ax to specify where you wish the figure to be drawn on
         plot_settings: plotting parameters
         figsize: figure size
@@ -153,6 +181,10 @@ def display_bboxes_mask(
     if mask_path is not None:
         # plot masks on im
         im = plot_mask(im_path, mask_path)
+
+    if keypoints is not None:
+        # plot keypoints on im
+        im = plot_keypoints(im, keypoints)
 
     if bboxes is not None:
         # plot boxes on im
@@ -399,8 +431,6 @@ def plot_pr_curves(
         )
 
     plt.show()
-
-
 
 
 # ===== Correct/missing detection counts curve =====
