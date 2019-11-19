@@ -42,18 +42,18 @@ Note that for certain computer vision problems, you may not need to build your o
 
 The following Microsoft services offer simple solutions to address common computer vision tasks:
 
-- [Vision Services](https://azure.microsoft.com/en-us/services/cognitive-services/directory/vision/)
+- [Vision Services](https://docs.microsoft.com/azure/cognitive-services/computer-vision/?WT.mc_id=computervision-github-azureai)
 are a set of pre-trained REST APIs which can be called for image tagging, face recognition, OCR, video analytics, and more. These APIs work out of the box and require minimal expertise in machine learning, but have limited customization capabilities. See the various demos available to get a feel for the functionality (e.g. [Computer Vision](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/#analyze)).
 
-- [Custom Vision](https://azure.microsoft.com/en-us/services/cognitive-services/custom-vision-service/)
+- [Custom Vision](https://docs.microsoft.com/azure/cognitive-services/custom-vision-service/?WT.mc_id=computervision-github-azureai)
 is a SaaS service to train and deploy a model as a REST API given a user-provided training set. All steps including image upload, annotation, and model deployment can be performed using either the UI or a Python SDK. Training image classification or object detection models can be achieved with minimal machine learning expertise. The Custom Vision offers more flexibility than using the pre-trained cognitive services APIs, but requires the user to bring and annotate their own data.
 
 If you need to train your own model, the following services and links provide additional information that is likely useful.
 
-- [Azure Machine Learning service (AzureML)](https://azure.microsoft.com/en-us/services/machine-learning-service/)
+- [Azure Machine Learning service (AzureML)](https://docs.microsoft.com/azure/machine-learning/?WT.mc_id=computervision-github-azureai)
 is a service that helps users accelerate the training and deploying of machine learning models. While not specific for computer vision workloads, the AzureML Python SDK can be used for scalable and reliable training and deployment of machine learning solutions to the cloud. We leverage Azure Machine Learning in several of the notebooks within this repository (e.g. [deployment to Azure Kubernetes Service](classification/notebooks/22_deployment_on_azure_kubernetes_service.ipynb))
 
-- [Azure AI Reference architectures](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/ai/training-python-models)
+- [Azure AI Reference architectures](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/ai/training-python-models/?WT.mc_id=computervision-github-azureai)
 provide a set of examples (backed by code) of how to build common AI-oriented workloads that leverage multiple cloud components. While not computer vision specific, these reference architectures cover several machine learning workloads such as model deployment or batch scoring.
 
 ## Build Status
