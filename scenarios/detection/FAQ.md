@@ -16,6 +16,10 @@ This document tries to answer frequent questions related to object detection. Fo
   * [Intersection-over-Union overlap metric](#intersection-over-union-overlap-metric)
   * [Non-maxima suppression](#non-maxima-suppression)
   * [Mean Average Precision](#mean-average-precision)
+  
+* Training
+  * [How to improve accuracy?](#how-to-improve-accuracy)
+  
 
 ## General
 
@@ -85,3 +89,14 @@ Detection results with confidence scores before (left) and after non-maxima Supp
 
 ### Mean Average Precision
 Once trained, the quality of the model can be measured using different criteria, such as precision, recall, accuracy, area-under-curve, etc. A common metric which is used for the Pascal VOC object recognition challenge is to measure the Average Precision (AP) for each class. Average Precision takes confidence in the detections into account and hence assigns a smaller penalty to false detections with low confidence. For a description of Average Precision see [Everingham et. al](http://homepages.inf.ed.ac.uk/ckiw/postscript/ijcv_voc09.pdf). The mean Average Precision (mAP) is then computed by taking the average over all APs.
+
+
+## Training
+
+### How to improve accuracy?
+One way to improve accuracy is by optimizing the model architecture or the training procedure. The following parameters tend to have the highest influence on accuracy:
+- Image resolution: increase to e.g. 1200 pixels input resolution by setting `IM_SIZE = 1200`.
+- Number of proposals: increase to e.g. these values: `rpn_pre_nms_top_n_train = rpn_post_nms_top_n_train = 10000` and `rpn_pre_nms_top_n_test = rpn_post_nms_top_n_test = 5000`.
+- Learning rate and number of epochs: the respective default values specified e.g. in the 01 notebook should work well in most cases. However, one could try somewhat higher/smaller values for learning rate and epochs.
+
+See also the [image classification FAQ](../classification/FAQ.md) for more suggestions to improve model accuracy or to increase inference/training speed.
