@@ -180,11 +180,11 @@ def display_annotations(
 
     if mask_path is not None:
         # plot masks on im
-        im = plot_mask(im_path, mask_path)
+        im = plot_mask(im_path, mask_path, plot_settings=plot_settings)
 
     if keypoints is not None:
         # plot keypoints on im
-        im = plot_keypoints(im, keypoints)
+        im = plot_keypoints(im, keypoints, plot_settings=plot_settings)
 
     if bboxes is not None:
         # plot boxes on im
