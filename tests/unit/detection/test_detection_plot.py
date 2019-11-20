@@ -93,7 +93,7 @@ def test_plot_grid(od_cup_anno_bboxes, od_cup_path, od_cup_mask_path):
 
     # test callable args
     def callable_args():
-        return od_cup_anno_bboxes, od_cup_path, od_cup_mask_path
+        return od_cup_anno_bboxes, od_cup_path, od_cup_mask_path, None
 
     plot_grid(display_annotations, callable_args, rows=1)
 
@@ -104,7 +104,7 @@ def test_plot_grid(od_cup_anno_bboxes, od_cup_path, od_cup_mask_path):
 
     def iterator_args():
         for path, bboxes, mask_path in zip(od_cup_paths, od_cup_annos, od_cup_mask_paths):
-            yield bboxes, path, mask_path
+            yield bboxes, path, mask_path, None
 
     plot_grid(display_annotations, iterator_args(), rows=1)
 
