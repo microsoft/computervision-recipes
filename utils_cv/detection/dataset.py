@@ -451,7 +451,7 @@ class DetectionDataset:
         Returns a list of annotations and the image path
         """
         idx = random.randrange(len(self.im_paths))
-        return self.anno_bboxes[idx], self.im_paths[idx], self._get_binary_mask(idx)
+        return self.anno_bboxes[idx], self.im_paths[idx], self._get_binary_mask(idx), None
 
     def __getitem__(self, idx):
         """ Make iterable. """
