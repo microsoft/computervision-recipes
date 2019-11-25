@@ -262,7 +262,6 @@ def get_pretrained_keypointrcnn(
 
     if num_classes:
         model = _tune_box_predictor(model, num_classes)
-        model = _tune_mask_predictor(model, num_classes)
 
     # tune keypoints predictor in the model
     if num_keypoints:
@@ -566,10 +565,13 @@ class DetectionLearner:
             # update the learning rate
             self.lr_scheduler.step()
 
-            # evaluate
-            e = self.evaluate(dl=self.dataset.test_dl)
-            self.ap.append(_calculate_ap(e))
-            self.ap_iou_point_5.append(_calculate_ap(e, iou_threshold_idx=0))
+            # for now, we do not evaluate on keypoint results, since we
+            # haven't calculate OKS sigmas yet.
+            if self.dataset.keypoint_meta is None:
+                # evaluate
+                e = self.evaluate(dl=self.dataset.test_dl)
+                self.ap.append(_calculate_ap(e))
+                self.ap_iou_point_5.append(_calculate_ap(e, iou_threshold_idx=0))
 
     def plot_precision_loss_curves(
         self, figsize: Tuple[int, int] = (10, 5)

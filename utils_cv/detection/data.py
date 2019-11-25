@@ -25,6 +25,9 @@ class Urls:
     fridge_objects_mask_path = urljoin(base, "odFridgeObjectsMask.zip")
     fridge_objects_mask_tiny_path = urljoin(base, "odFridgeObjectsMaskTiny.zip")
 
+    # keypoint datasets
+    fridge_objects_keypoint_path = "https://github.com/simonzhaoms/testdata/raw/master/odFridgeObjectsKeypoint.zip"
+
     @classmethod
     def all(cls) -> List[str]:
         return [v for k, v in cls.__dict__.items() if k.endswith("_path")]

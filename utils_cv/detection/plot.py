@@ -18,7 +18,7 @@ from .bbox import _Bbox, AnnotationBbox, DetectionBbox
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
-from .keypoint import COCOPersonKeypoints
+from .keypoint import COCOKeypoints
 from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 
 
@@ -129,15 +129,14 @@ def plot_mask(
 
 def plot_keypoints(
     im: Union[str, Path, PIL.Image.Image],
-    keypoints: np.ndarray,
+    keypoints: COCOKeypoints,
     plot_settings: PlotSettings = PlotSettings(),
 ) -> PIL.Image.Image:
     """ Plot connected keypoints on Image and return the Image. """
     if isinstance(im, (str, Path)):
         im = Image.open(im)
 
-    if len(keypoints) > 0:
-        keypoints = COCOPersonKeypoints(keypoints)
+    if keypoints is not None:
         draw = ImageDraw.Draw(im)
         for line in keypoints.get_lines():
             draw.line(
@@ -153,7 +152,7 @@ def display_annotations(
     bboxes: List[_Bbox],
     im_path: Union[Path, str],
     mask_path: Union[Path, str] = None,
-    keypoints: np.ndarray = None,
+    keypoints: COCOKeypoints = None,
     ax: Optional[plt.axes] = None,
     plot_settings: PlotSettings = PlotSettings(),
     figsize: Tuple[int, int] = (12, 12),

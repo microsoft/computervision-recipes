@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import List, Union
+from typing import List
 import numpy as np
 import torch
 
@@ -13,11 +13,33 @@ class COCOKeypoints:
     The only difference is the labels, skeleton (connection order) for various
     categories.
     """
+
     def __init__(
         self,
-        keypoints: Union[List[float], List[List[float]], List[List[List[float]]], np.ndarray]
+        keypoints: np.ndarray,
+        category: str = None,
+        labels: List[str] = None,
+        skeleton: List[List[int]] = None,
+        hflip_inds: List[int] = None,
     ):
-        self.keypoints = np.asarray(keypoints, dtype=np.float)
+        if category:
+            self._category = category
+
+        if labels:
+            self._labels = labels
+
+        if skeleton:
+            self._skeleton = skeleton
+
+        if hflip_inds:
+            self._hflip_inds = hflip_inds
+
+        self.keypoints = keypoints
+        if self.keypoints is not None:
+            self._init_keypoints()
+
+    def _init_keypoints(self):
+        self.keypoints = np.asarray(self.keypoints, dtype=np.float)
         if self.keypoints.ndim != 3:
             self.keypoints = self.keypoints.reshape((-1, len(self.labels), 3))
         assert self.is_valid()
@@ -42,6 +64,15 @@ class COCOKeypoints:
         self._labels = value
 
     @property
+    def category(self):
+        """ The category which the keypoints belong to. """
+        return self._category
+
+    @category.setter
+    def category(self, category):
+        self._category = category
+
+    @property
     def hflip_inds(self):
         """ Define the order of keypoints when flipped horizontally. """
         return self._hflip_inds
@@ -50,13 +81,15 @@ class COCOKeypoints:
     def hflip_inds(self, value):
         self._hflip_inds = value
 
-    def __eq__(self, other):
-        return (self.keypoints == other.keypoints).all()
-
     def is_valid(self) -> bool:
-        """ Make sure shape is valid. """
         # shape must be (N, len(self.labels), 3)
         if self.keypoints.shape[1:] != (len(self.labels), 3):
+            return False
+        # hflip_inds should the same length as labels
+        if len(self.labels) != len(self.hflip_inds):
+            return False
+        # indexes in skeleton should be valid
+        if np.max(np.array(self.skeleton)) >= len(self.labels):
             return False
         return True
 
@@ -67,17 +100,22 @@ class COCOKeypoints:
     def as_tensor(self):
         return torch.as_tensor(self.keypoints, dtype=torch.float32)
 
-    def hflip(self, width) -> None:
-        """ Flip keypoints horizontally. """
-        self.keypoints = self.keypoints[:, self.hflip_inds]
-        self.keypoints[..., 0] = width - self.keypoints[..., 0]
-
     def get_lines(self) -> List[List[float]]:
+        """ Return connected lines represented by list of [x1, y1, x2, y2]. """
         joints = self.keypoints[:, self.skeleton]
         visibles = (joints[..., 2] != 0).all(axis=2)
         bones = joints[visibles][..., :2]
         lines = bones.reshape((-1, 4)).tolist()
         return lines
+
+    @classmethod
+    def to_dict(cls):
+        return {
+            "category": cls.category,
+            "labels": cls.labels,
+            "skeleton": cls.skeleton,
+            "hflip_inds": cls.hflip_inds,
+        }
 
 
 class COCOPersonKeypoints(COCOKeypoints):
@@ -109,6 +147,7 @@ class COCOPersonKeypoints(COCOKeypoints):
     pprint(keypoints['categories'])
     ```
     """
+    category = "person"
     skeleton = [
         [15, 13],
         [13, 11],
@@ -149,4 +188,129 @@ class COCOPersonKeypoints(COCOKeypoints):
         'left_ankle',
         'right_ankle',
     ]
+    # left becomes right when flipped horizontally
     hflip_inds = [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15]
+
+
+class CartonKeypoints(COCOKeypoints):
+    """ Custom keypoints of carton in the odFridgeObjects dataset. """
+    category = "carton"
+    skeleton = [
+        [1, 2],
+        [1, 3],
+        [2, 4],
+        [3, 5],
+        [3, 7],
+        [4, 6],
+        [4, 8],
+        [5, 6],
+        [7, 8],
+        [5, 7],
+        [6, 8],
+        [5, 9],
+        [6, 10],
+        [7, 11],
+        [8, 12],
+        [9, 10],
+        [11, 12],
+        [9, 11],
+        [10, 12],
+    ]
+    labels = [
+        'lid',
+        'left_top',
+        'right_top',
+        'left_collar',
+        'right_collar',
+        'left_front_shoulder',
+        'right_front_shoulder',
+        'left_back_shoulder',
+        'right_back_shoulder',
+        'left_front_bottom',
+        'right_front_bottom',
+        'left_back_bottom',
+        'right_back_bottom',
+    ]
+    # left becomes right when flipped horizontally
+    hflip_inds = [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11]
+
+
+class CanKeypoints(COCOKeypoints):
+    """ Custom keypoints of can in the odFridgeObjects dataset. """
+    category = "can"
+    skeleton = [
+        [0, 1],
+        [0, 2],
+        [0, 3],
+        [2, 4],
+        [3, 5],
+        [4, 6],
+        [5, 7],
+        [4, 5],
+        [6, 7],
+    ]
+    labels = [
+        'top_center',
+        'ring_pull',
+        'left_collar',
+        'right_collar',
+        'left_shoulder',
+        'right_shoulder',
+        'left_bottom',
+        'right_bottom',
+    ]
+    # left becomes right when flipped horizontally
+    hflip_inds = [0, 1, 3, 2, 5, 4, 7, 6]
+
+
+class WaterBottleKeypoints(COCOKeypoints):
+    """ Custom keypoints of water bottle in the odFridgeObjects dataset. """
+    category = "water_bottle"
+    skeleton = [
+        [0, 1],
+        [0, 2],
+        [1, 3],
+        [2, 3],
+        [2, 4],
+        [3, 5],
+        [4, 5],
+        [4, 6],
+        [5, 7],
+        [6, 7],
+    ]
+    labels = [
+        'lid_left_top',
+        'lid_right_top',
+        'lid_left_bottom',
+        'lid_right_bottom',
+        'wrapper_left_top',
+        'wrapper_right_top',
+        'wrapper_left_bottom',
+        'wrapper_right_bottom',
+    ]
+    # left becomes right when flipped horizontally
+    hflip_inds = [1, 0, 3, 2, 5, 4, 7, 6]
+
+
+class MilkBottleKeypoints(COCOKeypoints):
+    """ Custom keypoints of milk bottle in the odFridgeObjects dataset. """
+    category = "milk_bottle"
+    skeleton = [
+        [0, 1],
+        [0, 2],
+        [1, 3],
+        [2, 3],
+        [2, 4],
+        [3, 5],
+        [4, 5],
+    ]
+    labels = [
+        'lid_left_top',
+        'lid_right_top',
+        'lid_left_bottom',
+        'lid_right_bottom',
+        'left_bottom',
+        'right_bottom',
+    ]
+    # left becomes right when flipped horizontally
+    hflip_inds = [1, 0, 3, 2, 5, 4]
