@@ -3,6 +3,7 @@
 
 import os
 import copy
+from functools import partial
 import math
 import numpy as np
 from pathlib import Path
@@ -23,6 +24,7 @@ from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 from ..common.gpu import db_num_workers
 
 Trans = Callable[[object, dict], Tuple[object, dict]]
+
 
 
 class ColorJitterTransform(object):
@@ -397,7 +399,7 @@ class DetectionDataset:
             detection["det_bboxes"] = []
             return detection, self, None
 
-        plot_grid(plot_detections, helper(self.im_paths), rows=2)
+        plot_grid(plot_detections, partial(helper, self.im_paths), rows=2)
 
     def show_im_transformations(
         self, idx: int = None, rows: int = 1, cols: int = 3

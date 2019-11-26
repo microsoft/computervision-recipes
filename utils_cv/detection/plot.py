@@ -101,7 +101,6 @@ def plot_masks(
     representing different objects, 0 as background.
     """
     if isinstance(im, (str, Path)):
-        SEE_IF_I_CAN_REMOVE_THIS_IF_CLAUSE
         im = Image.open(im)
 
     # convert to RGBA for transparentising
