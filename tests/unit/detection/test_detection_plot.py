@@ -56,11 +56,13 @@ def test_plot_boxes(od_cup_path, od_cup_anno_bboxes, basic_plot_settings):
 
 def test_plot_masks(od_mask_rects):
     """ Test that `plot_mask` works. """
-    plot_setting = PlotSettings()
+    plot_setting = PlotSettings(mask_color = (10, 20, 128))
     _, mask, rects, im = od_mask_rects
+
     # plot mask
     im = plot_masks(im, mask, plot_settings=plot_setting).convert('RGB')
     im = np.transpose(np.array(im), (2, 0, 1))
+    
     # validate each channel matches the mask
     for ch in im:
         ch_uniques = np.unique(ch)

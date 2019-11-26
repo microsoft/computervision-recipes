@@ -512,9 +512,7 @@ def od_sample_output():
 
 @pytest.fixture(scope="session")
 def od_sample_detection(od_sample_raw_preds, od_detection_mask_dataset):
-    det_bboxes = []
     labels = ["one", "two", "three","four"]
-    #pred = {k: v.detach().cpu().numpy() for k, v in od_sample_raw_preds.items()}
     detections = _get_det_bboxes_and_mask(od_sample_raw_preds[0], labels, od_detection_mask_dataset.im_paths[0])
     detections["idx"] = 0
     return detections
