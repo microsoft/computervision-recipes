@@ -5,7 +5,7 @@
 Helper module for visualizations
 """
 from pathlib import Path
-from typing import List, Union, Tuple, Callable, Any, Iterator, Optional
+from typing import Dict, List, Union, Tuple, Callable, Any, Iterator, Optional
 
 import numpy as np
 import PIL
@@ -121,7 +121,20 @@ def plot_masks(
     return im
 
 
-def plot_detections(detection, data=None, idx=None, ax: plt.axes = None):
+def plot_detections(
+    detection: Dict, 
+    data = None, 
+    idx: int = None, 
+    ax: plt.axes = None
+) -> PIL.Image.Image:
+    """ Put mask onto image.
+
+    Args:
+        detection: output running model prediction.
+        data: dataset with ground truth information.
+        idx: index into the data object to find the ground truth which corresponds to the detection.  
+        ax: an optional ax to specify where you wish the figure to be drawn on
+    """
     # Open image
     assert detection["im_path"], 'Detection["im_path"] should not be None.'
     im = Image.open(detection["im_path"])
@@ -442,9 +455,9 @@ def _plot_counts_curves_obj(
 
 
 def plot_counts_curves(
-    detections: List[List[DetectionBbox]],
+    detections: List[Dict],
     data_ds: Subset,
-    detections_neg: List[List[DetectionBbox]] = None,
+    detections_neg: List[Dict] = None,
     figsize: Tuple[int, int] = (16, 8),
 ) -> None:
     """ Plot object-level and image-level correct/incorrect counts vs score thresholds
