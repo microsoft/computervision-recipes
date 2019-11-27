@@ -247,6 +247,15 @@ def multilabel_ic_data_path(tmp_session) -> str:
         exist_ok=True,
     )
 
+@pytest.fixture(scope="session")
+def tiny_ic_negatives_path(tmp_session) -> str:
+    """ Returns the path to the tiny negatives dataset. """
+    return unzip_url(
+        ic_urls.fridge_objects_negatives_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
 
 @pytest.fixture(scope="session")
 def tiny_ic_databunch(tmp_session):
