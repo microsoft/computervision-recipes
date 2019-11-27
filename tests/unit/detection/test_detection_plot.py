@@ -10,15 +10,14 @@ from utils_cv.detection.plot import (
     PlotSettings,
     plot_boxes,
     plot_grid,
-    plot_detection_vs_ground_truth,
+    plot_detections,
     _setup_pr_axes,
     _get_precision_recall_settings,
     _plot_pr_curve_iou_range,
     _plot_pr_curve_iou_mean,
     plot_pr_curves,
     plot_counts_curves,
-    plot_mask,
-    display_bboxes_mask,
+    plot_masks,
 )
 
 
@@ -55,13 +54,15 @@ def test_plot_boxes(od_cup_path, od_cup_anno_bboxes, basic_plot_settings):
     )
 
 
-def test_plot_mask(od_mask_rects):
+def test_plot_masks(od_mask_rects):
     """ Test that `plot_mask` works. """
-    plot_setting = PlotSettings()
+    plot_setting = PlotSettings(mask_color = (10, 20, 128))
     _, mask, rects, im = od_mask_rects
+
     # plot mask
-    im = plot_mask(im, mask, plot_settings=plot_setting).convert('RGB')
+    im = plot_masks(im, mask, plot_settings=plot_setting).convert('RGB')
     im = np.transpose(np.array(im), (2, 0, 1))
+    
     # validate each channel matches the mask
     for ch in im:
         ch_uniques = np.unique(ch)
@@ -73,49 +74,34 @@ def test_plot_mask(od_mask_rects):
         assert background_uniques[0] == ch_uniques[0]
 
 
-def test_display_bboxes_mask(
-    od_cup_anno_bboxes,
-    od_cup_path,
-    od_cup_mask_path,
-    basic_ax
-):
-    """ Test that `display_bboxes_mask` works. """
-    display_bboxes_mask(
-        bboxes=od_cup_anno_bboxes,
-        im_path=od_cup_path,
-        mask_path=od_cup_mask_path,
-        ax=basic_ax
-    )
+def test_plot_detections(od_sample_detection, od_detection_mask_dataset):
+    plot_detections(od_sample_detection)
+    plot_detections(od_sample_detection, od_detection_mask_dataset)
+    plot_detections(od_sample_detection, od_detection_mask_dataset, 0)
 
 
-def test_plot_grid(od_cup_anno_bboxes, od_cup_path, od_cup_mask_path):
+def test_plot_grid(od_sample_detection, od_detection_mask_dataset):
     """ Test that `plot_grid` works. """
 
     # test callable args
     def callable_args():
-        return od_cup_anno_bboxes, od_cup_path, od_cup_mask_path
+        return od_sample_detection, None, None
+    plot_grid(plot_detections, callable_args, rows=1) #
 
-    plot_grid(display_bboxes_mask, callable_args, rows=1)
+    def callable_args():
+        return od_sample_detection, od_detection_mask_dataset, None
+    plot_grid(plot_detections, callable_args, rows=1) #
 
     # test iterable args
-    od_cup_paths = [od_cup_path, od_cup_path, od_cup_path]
-    od_cup_annos = [od_cup_anno_bboxes, od_cup_anno_bboxes, od_cup_anno_bboxes]
-    od_cup_mask_paths = [od_cup_mask_path, None, od_cup_mask_path]
+    def iterator_args():
+        for detection in [od_sample_detection, od_sample_detection]:
+            yield detection, None, None
+    plot_grid(plot_detections, iterator_args(), rows=1, cols=2)
 
     def iterator_args():
-        for path, bboxes, mask_path in zip(od_cup_paths, od_cup_annos, od_cup_mask_paths):
-            yield bboxes, path, mask_path
-
-    plot_grid(display_bboxes_mask, iterator_args(), rows=1)
-
-
-def test_plot_detection_vs_ground_truth(
-    od_cup_path, od_cup_det_bboxes, od_cup_anno_bboxes, basic_ax
-):
-    """ Test that `plot_detection_vs_ground_truth` works. """
-    plot_detection_vs_ground_truth(
-        od_cup_path, od_cup_det_bboxes, od_cup_anno_bboxes, ax=basic_ax
-    )
+        for detection in [od_sample_detection, od_sample_detection]:
+            yield detection, od_detection_mask_dataset, None
+    plot_grid(plot_detections, iterator_args(), rows=1, cols=2)
 
 
 def test__setup_pr_axes(basic_ax):
