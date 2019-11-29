@@ -3,6 +3,7 @@
 
 import os
 import copy
+from functools import partial
 import math
 import numpy as np
 from pathlib import Path
@@ -15,7 +16,7 @@ from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import display_annotations, plot_grid
+from .plot import plot_detections, plot_grid
 from .bbox import AnnotationBbox
 from .keypoint import COCOKeypoints
 from .mask import binarise_mask
@@ -24,6 +25,7 @@ from .references.transforms import Compose, ToTensor
 from ..common.gpu import db_num_workers
 
 Trans = Callable[[object, dict], Tuple[object, dict]]
+
 
 
 class ColorJitterTransform(object):
@@ -230,7 +232,7 @@ class DetectionDataset:
         mask_dir: str = None,
         keypoint_meta: Dict = None,
         seed: int = None,
-        allow_negatives: bool = False
+        allow_negatives: bool = False,
     ):
         """ initialize dataset
 
@@ -347,7 +349,7 @@ class DetectionDataset:
                 # Assume mask image name matches image name but has .png
                 # extension
                 mask_name = os.path.basename(self.im_paths[-1])
-                mask_name = mask_name[:mask_name.rindex('.')] + ".png"
+                mask_name = mask_name[: mask_name.rindex(".")] + ".png"
                 mask_path = self.root / self.mask_dir / mask_name
                 # For mask prediction, if no mask provided and negatives not
                 # allowed (), raise exception
@@ -497,7 +499,15 @@ class DetectionDataset:
         if seed or self.seed:
             random.seed(seed or self.seed)
 
-        plot_grid(display_annotations, self._get_random_anno, rows=rows, cols=cols)
+        def helper(im_paths):
+            idx = random.randrange(len(im_paths))
+            detection = {}
+            detection["idx"] = idx
+            detection["im_path"] = im_paths[idx]
+            detection["det_bboxes"] = []
+            return detection, self, None
+
+        plot_grid(plot_detections, partial(helper, self.im_paths), rows=2)
 
     def show_im_transformations(
         self, idx: int = None, rows: int = 1, cols: int = 3
@@ -546,36 +556,11 @@ class DetectionDataset:
                 # for the tiny bounding box in _read_annos(), make the mask to
                 # be the whole box
                 mask = np.zeros(
-                    Image.open(self.im_paths[idx]).size[::-1],
-                    dtype=np.uint8
+                    Image.open(self.im_paths[idx]).size[::-1], dtype=np.uint8
                 )
                 binary_masks = binarise_mask(mask)
 
         return binary_masks
-
-    def _get_random_anno(self) -> Tuple:
-        """ Get random annotation and corresponding image
-
-        Returns a list of annotations and the image path
-        """
-        idx = random.randrange(len(self.im_paths))
-
-        keypoints = None
-        if self.keypoints and self.keypoint_meta:
-            keypoints = COCOKeypoints(
-                self.keypoints[idx],
-                self.keypoint_meta["category"],
-                self.keypoint_meta["labels"],
-                self.keypoint_meta["skeleton"],
-                self.keypoint_meta["hflip_inds"]
-            )
-
-        return (
-            self.anno_bboxes[idx],
-            self.im_paths[idx],
-            self._get_binary_mask(idx),
-            keypoints,
-        )
 
     def __getitem__(self, idx):
         """ Make iterable. """

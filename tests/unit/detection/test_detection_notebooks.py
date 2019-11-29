@@ -65,6 +65,7 @@ def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_od_mask_data_path,
             EPOCHS=1,
+            IM_SIZE=100,
         ),
         kernel_name=KERNEL_NAME,
     )
@@ -79,7 +80,7 @@ def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
 
 @pytest.mark.gpu
 @pytest.mark.notebooks
-def test_12_notebook_run(detection_notebooks, tiny_od_data_path):
+def test_12_notebook_run(detection_notebooks, tiny_od_data_path, tiny_ic_negatives_path):
     notebook_path = detection_notebooks["12"]
     pm.execute_notebook(
         notebook_path,
@@ -87,6 +88,7 @@ def test_12_notebook_run(detection_notebooks, tiny_od_data_path):
         parameters=dict(
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_od_data_path,
+            NEG_DATA_PATH=tiny_ic_negatives_path, 
             EPOCHS=1,
             IM_SIZE=100,
         ),
@@ -95,4 +97,4 @@ def test_12_notebook_run(detection_notebooks, tiny_od_data_path):
 
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     assert len(nb_output.scraps["valid_accs"].data) == 1
-    assert len(nb_output.scraps["hard_im_scores"].data) == 10
+    assert 5 <= len(nb_output.scraps["hard_im_scores"].data) <= 10

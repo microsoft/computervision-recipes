@@ -4,9 +4,8 @@
 """
 Helper module for visualizations
 """
-import os
-from typing import List, Union, Tuple, Callable, Any, Iterator, Optional
 from pathlib import Path
+from typing import Dict, List, Union, Tuple, Callable, Any, Iterator, Optional
 
 import numpy as np
 import PIL
@@ -14,7 +13,7 @@ from PIL import Image, ImageDraw
 from torch.utils.data import Subset
 import matplotlib.pyplot as plt
 
-from .bbox import _Bbox, AnnotationBbox, DetectionBbox
+from .bbox import _Bbox, DetectionBbox
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
@@ -28,11 +27,11 @@ class PlotSettings:
     def __init__(
         self,
         rect_th: int = 4,
-        rect_color: Tuple[int, int, int] = (255, 0, 0),
+        rect_color: Tuple[int, int, int] = (0, 0, 255),
         text_size: int = 25,
-        text_color: Tuple[int, int, int] = (255, 255, 255),
-        mask_color: Tuple[int, int, int] = (2, 166, 101),
-        mask_alpha: float = 0.5,
+        text_color: Tuple[int, int, int] = (0, 0, 255),
+        mask_color: Tuple[int, int, int] = (0, 0, 128),
+        mask_alpha: float = 0.8,
         keypoint_th: int = 3,
         keypoint_color: Tuple[int, int, int] = (0, 0, 255),
     ):
@@ -69,7 +68,7 @@ def plot_boxes(
 
         for bbox in bboxes:
             # do not draw background bounding boxes
-            if bbox.label_idx == 0:
+            if hasattr(bbox, "label_idx") and bbox.label_idx == 0:
                 continue
 
             box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
@@ -95,7 +94,7 @@ def plot_boxes(
     return im
 
 
-def plot_mask(
+def plot_masks(
     im: Union[str, Path, PIL.Image.Image],
     mask: Union[str, Path, np.ndarray],
     plot_settings: PlotSettings = PlotSettings(),
@@ -110,12 +109,12 @@ def plot_mask(
         im = Image.open(im)
 
     # convert to RGBA for transparentising
-    im = im.convert('RGBA')
+    im = im.convert("RGBA")
     # colorise masks
     binary_masks = binarise_mask(mask)
     colored_masks = [
-        colorise_binary_mask(bmask, plot_settings.mask_color) for bmask in
-        binary_masks
+        colorise_binary_mask(bmask, plot_settings.mask_color)
+        for bmask in binary_masks
     ]
     # merge masks into img one by one
     for cmask in colored_masks:
@@ -148,58 +147,73 @@ def plot_keypoints(
     return im
 
 
-def display_annotations(
-    bboxes: List[_Bbox],
-    im_path: Union[Path, str],
-    mask_path: Union[Path, str] = None,
-    keypoints: COCOKeypoints = None,
-    ax: Optional[plt.axes] = None,
-    plot_settings: PlotSettings = PlotSettings(),
-    figsize: Tuple[int, int] = (12, 12),
-) -> None:
-    """ Draw image with bounding boxes and mask.
+def plot_detections(
+    detection: Dict, 
+    data = None, 
+    idx: int = None, 
+    ax: plt.axes = None
+) -> PIL.Image.Image:
+    """ Put mask onto image.
 
     Args:
-        bboxes: A list of _Bbox, could be DetectionBbox or AnnotationBbox
-        im_path: the location of image path to draw
-        mask_path: the location of mask path to draw
-        keypoints: the keypoints of objects to draw
+        detection: output running model prediction.
+        data: dataset with ground truth information.
+        idx: index into the data object to find the ground truth which corresponds to the detection.  
         ax: an optional ax to specify where you wish the figure to be drawn on
-        plot_settings: plotting parameters
-        figsize: figure size
-
-    Returns nothing, but plots the image with bounding boxes, labels and masks
-    if any.
     """
-    # Read image
-    im = Image.open(im_path)
+    # Open image
+    assert detection["im_path"], 'Detection["im_path"] should not be None.'
+    im = Image.open(detection["im_path"])
 
-    # set an image title
-    title = os.path.basename(im_path)
+    # Get id of ground truth image/annotation
+    if data and not idx:
+        idx = detection["idx"]
 
-    if mask_path is not None:
-        # plot masks on im
-        im = plot_mask(im_path, mask_path, plot_settings=plot_settings)
+    # Loop over all images
+    det_bboxes = detection["det_bboxes"]
 
-    if keypoints is not None:
-        # plot keypoints on im
-        im = plot_keypoints(im, keypoints, plot_settings=plot_settings)
+    # Plot ground truth mask
+    if data and data.mask_paths:
+        mask_path = data.mask_paths[idx]
+        if mask_path:
+            im = plot_masks(
+                im,
+                mask_path,
+                plot_settings=PlotSettings(mask_color=(0, 128, 0)),
+            )
 
-    if bboxes is not None:
-        # plot boxes on im
-        im = plot_boxes(im, bboxes, title=title, plot_settings=plot_settings)
+    # Plot predicted masks
+    if "masks" in detection:
+        mask = detection["masks"]
+        im = plot_masks(im, mask, PlotSettings(mask_color=(128, 165, 0)))
 
-    # display the image
-    if ax is not None:
+    # Plot the detections
+    plot_boxes(
+        im,
+        det_bboxes,
+        plot_settings=PlotSettings(
+            rect_color=(255, 165, 0), text_color=(255, 165, 0), rect_th=2
+        ),
+    )
+
+    # Plot the ground truth annotations
+    if data:
+        anno_bboxes = data.anno_bboxes[idx]
+        plot_boxes(
+            im,
+            anno_bboxes,
+            plot_settings=PlotSettings(
+                rect_color=(0, 255, 0), text_color=(0, 255, 0)
+            ),
+        )
+
+    # show image
+    if ax:
         ax.set_xticks([])
         ax.set_yticks([])
         ax.imshow(im)
     else:
-        plt.figure(figsize=figsize)
-        plt.imshow(im)
-        plt.xticks([])
-        plt.yticks([])
-        plt.show()
+        return im
 
 
 def plot_grid(
@@ -247,48 +261,6 @@ def plot_grid(
                 plot_func(*arguments, ax)
 
     plt.subplots_adjust(top=0.8, bottom=0.2, hspace=0.1, wspace=0.2)
-
-
-def plot_detection_vs_ground_truth(
-    im_path: str,
-    det_bboxes: List[DetectionBbox],
-    anno_bboxes: List[AnnotationBbox],
-    ax: plt.axes,
-) -> None:
-    """ Plots bounding boxes of ground_truths and detections.
-
-    Args:
-        im_path: the image to plot
-        det_bboxes: a list of detected annotations
-        anno_bboxes: a list of ground_truth detections
-        ax: the axis to plot on
-
-    Returns nothing, but displays a graph
-    """
-    im = Image.open(im_path).convert("RGB")
-
-    # plot detections
-    det_params = PlotSettings(rect_color=(255, 0, 0), text_size=1)
-    im = plot_boxes(
-        im,
-        det_bboxes,
-        title=os.path.basename(im_path),
-        plot_settings=det_params,
-    )
-
-    # plot ground truth boxes
-    anno_params = PlotSettings(rect_color=(0, 255, 0), text_size=1)
-    im = plot_boxes(
-        im,
-        anno_bboxes,
-        title=os.path.basename(im_path),
-        plot_settings=anno_params,
-    )
-
-    # show image
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.imshow(im)
 
 
 # ===== Precision - Recall curve =====
@@ -342,9 +314,7 @@ def _get_precision_recall_settings(
 
 
 def _plot_pr_curve_iou_range(
-    ax: plt.axes,
-    coco_eval: CocoEvaluator,
-    iou_type: Optional[str] = None,
+    ax: plt.axes, coco_eval: CocoEvaluator, iou_type: Optional[str] = None
 ) -> None:
     """ Plots the PR curve over varying iou thresholds averaging over [K]
     categories. """
@@ -370,9 +340,7 @@ def _plot_pr_curve_iou_range(
 
 
 def _plot_pr_curve_iou_mean(
-    ax: plt.axes,
-    coco_eval: CocoEvaluator,
-    iou_type: Optional[str] = None,
+    ax: plt.axes, coco_eval: CocoEvaluator, iou_type: Optional[str] = None
 ) -> None:
     """ Plots the PR curve, averaging over iou thresholds and [K] labels. """
     x = np.arange(0.0, 1.01, 0.01)
@@ -505,7 +473,6 @@ def _plot_counts_curves_obj(
         label="Total number of missed ground truths",
     )
 
-
     ax.legend()
     ax.set_xlabel("Score threshold")
     ax.set_ylabel("Frequency")
@@ -514,9 +481,9 @@ def _plot_counts_curves_obj(
 
 
 def plot_counts_curves(
-    detections: List[List[DetectionBbox]],
+    detections: List[Dict],
     data_ds: Subset,
-    detections_neg: List[List[DetectionBbox]] = None,
+    detections_neg: List[Dict] = None,
     figsize: Tuple[int, int] = (16, 8),
 ) -> None:
     """ Plot object-level and image-level correct/incorrect counts vs score thresholds
