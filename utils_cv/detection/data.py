@@ -26,7 +26,8 @@ class Urls:
     fridge_objects_mask_tiny_path = urljoin(base, "odFridgeObjectsMaskTiny.zip")
 
     # keypoint datasets
-    fridge_objects_keypoint_path = "https://github.com/simonzhaoms/testdata/raw/master/odFridgeObjectsKeypoint.zip"
+    fridge_objects_keypoint_path = urljoin(base, "odFridgeObjectsKeypoint.zip")
+    fridge_objects_keypoint_tiny_path = urljoin(base, "odFridgeObjectsKeypointTiny.zip")
 
     @classmethod
     def all(cls) -> List[str]:
