@@ -14,6 +14,7 @@ from torch.utils.data import Subset
 import matplotlib.pyplot as plt
 
 from .bbox import _Bbox, DetectionBbox
+from .dataset import DetectionDataset
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
@@ -148,9 +149,10 @@ def plot_keypoints(
 
 
 def plot_detections(
-    detection: Dict, 
-    data = None, 
-    idx: int = None, 
+    detection: Dict,
+    data: DetectionDataset = None,
+    idx: int = None,
+    keypoint_meta: Dict = None,
     ax: plt.axes = None
 ) -> PIL.Image.Image:
     """ Put mask onto image.
@@ -158,7 +160,10 @@ def plot_detections(
     Args:
         detection: output running model prediction.
         data: dataset with ground truth information.
-        idx: index into the data object to find the ground truth which corresponds to the detection.  
+        idx: index into the data object to find the ground truth which
+            corresponds to the detection.
+        keypoint_meta: meta data of keypoints which should include "category",
+            "labels", "skeleton" and "hflip_inds".
         ax: an optional ax to specify where you wish the figure to be drawn on
     """
     # Open image
@@ -186,6 +191,22 @@ def plot_detections(
     if "masks" in detection:
         mask = detection["masks"]
         im = plot_masks(im, mask, PlotSettings(mask_color=(128, 165, 0)))
+
+    # Plot ground truth keypoints
+    if data and data.keypoints and data.keypoint_meta:
+        im = plot_keypoints(
+            im,
+            COCOKeypoints(data.keypoints[idx], data.keypoint_meta),
+            PlotSettings(keypoint_color=(0, 192, 0)),
+        )
+
+    # Plot predicted keypoints
+    if "keypoints" in detection:
+        im = plot_keypoints(
+            im,
+            COCOKeypoints(detection["keypoints"], keypoint_meta),
+            PlotSettings(keypoint_color=(192, 165, 0)),
+        )
 
     # Plot the detections
     plot_boxes(
@@ -227,14 +248,15 @@ def plot_grid(
 
     Args:
         plot_func: callback to call on each subplot. It should take an 'ax' as
-        the last param.
+            the last param.
         args: args can be passed in in many forms. It can be an iterator, a
-        callable, or simply some static parameters. If it is an iterator, this
-        function will call `next` on it each time. If it is a callable, this
-        function will call the function and use the returned values each time.
+            callable, or simply some static parameters. If it is an iterator,
+            this function will call `next` on it each time. If it is a
+            callable, this function will call the function and use the returned
+            values each time.
         rows: rows to plot
         cols: cols to plot, default is 3. NOTE: use cols=3 for best looking
-        grid
+            grid
         figsize: figure size (will be dynamically modified in the code
 
     Returns nothing but plots graph
@@ -324,8 +346,9 @@ def _plot_pr_curve_iou_range(
         0.5, 0.95, np.round((0.95 - 0.5) / 0.05) + 1, endpoint=True
     )
 
-    # get_cmap() - a function that maps each index in 0, 1, ..., n-1 to a distinct
-    # RGB color; the keyword argument name must be a standard mpl colormap name.
+    # get_cmap() - a function that maps each index in 0, 1, ..., n-1 to a
+    # distinct RGB color; the keyword argument name must be a standard mpl
+    # colormap name.
     cmap = plt.cm.get_cmap("hsv", len(iou_thrs))
 
     ax = _setup_pr_axes(
@@ -481,12 +504,13 @@ def _plot_counts_curves_obj(
 
 
 def plot_counts_curves(
-    detections: List[Dict],
+    detections: List[List[DetectionBbox]],
     data_ds: Subset,
-    detections_neg: List[Dict] = None,
+    detections_neg: List[List[DetectionBbox]] = None,
     figsize: Tuple[int, int] = (16, 8),
 ) -> None:
-    """ Plot object-level and image-level correct/incorrect counts vs score thresholds
+    """ Plot object-level and image-level correct/incorrect counts vs score
+    thresholds
 
     Args:
         detections: Detector prediction output for all test images

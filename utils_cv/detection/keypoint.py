@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import List
+from typing import Dict, List
 import numpy as np
 import torch
 
@@ -17,22 +17,19 @@ class COCOKeypoints:
     def __init__(
         self,
         keypoints: np.ndarray,
-        category: str = None,
-        labels: List[str] = None,
-        skeleton: List[List[int]] = None,
-        hflip_inds: List[int] = None,
+        keypoint_meta: Dict[str, List],
     ):
-        if category:
-            self._category = category
+        if "category" in keypoint_meta:
+            self._category = keypoint_meta["category"]
 
-        if labels:
-            self._labels = labels
+        if "labels" in keypoint_meta:
+            self._labels = keypoint_meta["labels"]
 
-        if skeleton:
-            self._skeleton = skeleton
+        if "skeleton" in keypoint_meta:
+            self._skeleton = keypoint_meta["skeleton"]
 
-        if hflip_inds:
-            self._hflip_inds = hflip_inds
+        if "hflip_inds" in keypoint_meta:
+            self._hflip_inds = keypoint_meta["hflip_inds"]
 
         self.keypoints = keypoints
         if self.keypoints is not None:

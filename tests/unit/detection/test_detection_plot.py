@@ -62,7 +62,7 @@ def test_plot_masks(od_mask_rects):
     # plot mask
     im = plot_masks(im, mask, plot_settings=plot_setting).convert('RGB')
     im = np.transpose(np.array(im), (2, 0, 1))
-    
+
     # validate each channel matches the mask
     for ch in im:
         ch_uniques = np.unique(ch)
@@ -85,22 +85,22 @@ def test_plot_grid(od_sample_detection, od_detection_mask_dataset):
 
     # test callable args
     def callable_args():
-        return od_sample_detection, None, None
-    plot_grid(plot_detections, callable_args, rows=1) #
+        return od_sample_detection, None, None, None
+    plot_grid(plot_detections, callable_args, rows=1)
 
     def callable_args():
-        return od_sample_detection, od_detection_mask_dataset, None
-    plot_grid(plot_detections, callable_args, rows=1) #
+        return od_sample_detection, od_detection_mask_dataset, None, None
+    plot_grid(plot_detections, callable_args, rows=1)
 
     # test iterable args
     def iterator_args():
         for detection in [od_sample_detection, od_sample_detection]:
-            yield detection, None, None
+            yield detection, None, None, None
     plot_grid(plot_detections, iterator_args(), rows=1, cols=2)
 
     def iterator_args():
         for detection in [od_sample_detection, od_sample_detection]:
-            yield detection, od_detection_mask_dataset, None
+            yield detection, od_detection_mask_dataset, None, None
     plot_grid(plot_detections, iterator_args(), rows=1, cols=2)
 
 
