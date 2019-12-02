@@ -29,7 +29,7 @@ def test_00_notebook_run(detection_notebooks):
     assert len(nb_output.scraps["detection_bounding_box"].data) > 0
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 @pytest.mark.notebooks
 def test_01_notebook_run(detection_notebooks, tiny_od_data_path):
     notebook_path = detection_notebooks["01"]
@@ -54,7 +54,7 @@ def test_01_notebook_run(detection_notebooks, tiny_od_data_path):
     assert len(set([len(d) for d in training_aps])) == 1
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 @pytest.mark.notebooks
 def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
     notebook_path = detection_notebooks["02"]
@@ -78,7 +78,7 @@ def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
     assert len(set([len(d) for d in training_aps])) == 1
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 @pytest.mark.notebooks
 def test_12_notebook_run(detection_notebooks, tiny_od_data_path, tiny_ic_negatives_path):
     notebook_path = detection_notebooks["12"]
@@ -88,7 +88,7 @@ def test_12_notebook_run(detection_notebooks, tiny_od_data_path, tiny_ic_negativ
         parameters=dict(
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_od_data_path,
-            NEG_DATA_PATH=tiny_ic_negatives_path, 
+            NEG_DATA_PATH=tiny_ic_negatives_path,
             EPOCHS=1,
             IM_SIZE=100,
         ),

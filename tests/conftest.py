@@ -614,7 +614,7 @@ def od_detection_keypoint_dataset(tiny_od_keypoint_data_path):
     )
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 @pytest.fixture(scope="session")
 def od_detection_learner(od_detection_dataset):
     """ returns a basic detection learner that has been trained for one epoch. """
@@ -632,7 +632,7 @@ def od_detection_learner(od_detection_dataset):
     return learner
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 @pytest.fixture(scope="session")
 def od_detection_mask_learner(od_detection_mask_dataset):
     """ returns a mask detection learner that has been trained for one epoch. """
@@ -650,7 +650,7 @@ def od_detection_mask_learner(od_detection_mask_dataset):
     return learner
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 @pytest.fixture(scope="session")
 def od_detection_keypoint_learner(od_detection_keypoint_dataset):
     """ returns a keypoint detection learner that has been trained for one epoch. """
@@ -669,21 +669,21 @@ def od_detection_keypoint_learner(od_detection_keypoint_dataset):
     return learner
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 @pytest.fixture(scope="session")
 def od_detection_eval(od_detection_learner):
     """ returns the eval results of a detection learner after one epoch of training. """
     return od_detection_learner.evaluate()
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 @pytest.fixture(scope="session")
 def od_detection_mask_eval(od_detection_mask_learner):
     """ returns the eval results of a detection learner after one epoch of training. """
     return od_detection_mask_learner.evaluate()
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 @pytest.fixture(scope="session")
 def od_detections(od_detection_dataset):
     """ returns output of the object detector for a given test set. """

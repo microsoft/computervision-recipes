@@ -69,7 +69,7 @@ def test_get_pretrained_keypointrcnn():
     assert type(get_pretrained_keypointrcnn(2, 6)) == KeypointRCNN
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test__calculate_ap(od_detection_eval):
     """ Test `_calculate_ap`. """
     ret = _calculate_ap(od_detection_eval)
@@ -78,7 +78,7 @@ def test__calculate_ap(od_detection_eval):
         assert type(v) == np.float64
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_ims_eval_detections(od_detection_dataset, od_detections):
     """ Test `ims_eval_detections`. """
     (
@@ -123,7 +123,7 @@ def test_detection_learner_init_model(od_detection_dataset):
     assert learner.model != get_pretrained_fasterrcnn(classes)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_learner_train_one_epoch(
     od_detection_learner,
 ):
@@ -131,7 +131,7 @@ def test_detection_learner_train_one_epoch(
     od_detection_learner.fit(epochs=1)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_mask_learner_train_one_epoch(
     od_detection_mask_learner,
 ):
@@ -139,7 +139,7 @@ def test_detection_mask_learner_train_one_epoch(
     od_detection_mask_learner.fit(epochs=1)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_keypoint_learner_train_one_epoch(
     od_detection_keypoint_learner,
 ):
@@ -147,7 +147,7 @@ def test_detection_keypoint_learner_train_one_epoch(
     od_detection_keypoint_learner.fit(epochs=1, skip_evaluation=True)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_learner_plot_precision_loss_curves(
     od_detection_learner,
 ):
@@ -155,7 +155,7 @@ def test_detection_learner_plot_precision_loss_curves(
     od_detection_learner.plot_precision_loss_curves()
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_mask_learner_plot_precision_loss_curves(
     od_detection_mask_learner,
 ):
@@ -163,7 +163,7 @@ def test_detection_mask_learner_plot_precision_loss_curves(
     od_detection_mask_learner.plot_precision_loss_curves()
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_keypoint_learner_plot_precision_loss_curves(
     od_detection_keypoint_learner,
 ):
@@ -172,7 +172,7 @@ def test_detection_keypoint_learner_plot_precision_loss_curves(
     od_detection_keypoint_learner.plot_precision_loss_curves()
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_learner_evaluate(
     od_detection_learner,
 ):
@@ -180,7 +180,7 @@ def test_detection_learner_evaluate(
     od_detection_learner.evaluate()
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_mask_learner_evaluate(
     od_detection_mask_learner,
 ):
@@ -188,7 +188,7 @@ def test_detection_mask_learner_evaluate(
     od_detection_mask_learner.evaluate()
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_learner_predict(
     od_detection_learner,
     od_cup_path,
@@ -198,7 +198,7 @@ def test_detection_learner_predict(
     assert type(bboxes) == list
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_mask_learner_predict(
     od_detection_mask_learner,
     od_cup_path,
@@ -214,7 +214,7 @@ def test_detection_mask_learner_predict(
     assert len(bboxes) == len(masks)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_keypoint_learner_predict(
     od_detection_keypoint_learner,
     od_cup_path,
@@ -230,7 +230,7 @@ def test_detection_keypoint_learner_predict(
     assert len(bboxes) == len(keypoints)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_learner_predict_threshold(
     od_detection_learner,
     od_cup_path,
@@ -243,7 +243,7 @@ def test_detection_learner_predict_threshold(
     assert len(bboxes) == 0
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_mask_learner_predict_threshold(
     od_detection_mask_learner,
     od_cup_path,
@@ -260,7 +260,7 @@ def test_detection_mask_learner_predict_threshold(
     assert len(bboxes) == 0
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_keypoint_learner_predict_threshold(
     od_detection_keypoint_learner,
     od_cup_path,
@@ -277,7 +277,7 @@ def test_detection_keypoint_learner_predict_threshold(
     assert len(bboxes) == 0
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_learner_predict_batch(
     od_detection_learner,
     od_detection_dataset,
@@ -289,7 +289,7 @@ def test_detection_learner_predict_batch(
     assert isinstance(generator, Iterable)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_mask_learner_predict_batch(
     od_detection_mask_learner,
     od_detection_mask_dataset,
@@ -301,7 +301,7 @@ def test_detection_mask_learner_predict_batch(
     assert isinstance(generator, Iterable)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_keypoint_learner_predict_batch(
     od_detection_keypoint_learner,
     od_detection_keypoint_dataset,
@@ -313,7 +313,7 @@ def test_detection_keypoint_learner_predict_batch(
     assert isinstance(generator, Iterable)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_learner_predict_batch_threshold(
     od_detection_learner,
     od_detection_dataset,
@@ -327,7 +327,7 @@ def test_detection_learner_predict_batch_threshold(
     assert isinstance(generator, Iterable)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_mask_learner_predict_batch_threshold(
     od_detection_mask_learner,
     od_detection_mask_dataset,
@@ -342,7 +342,7 @@ def test_detection_mask_learner_predict_batch_threshold(
     assert isinstance(generator, Iterable)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_keypoint_learner_predict_batch_threshold(
     od_detection_keypoint_learner,
     od_detection_keypoint_dataset,
@@ -357,7 +357,7 @@ def test_detection_keypoint_learner_predict_batch_threshold(
     assert isinstance(generator, Iterable)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_dataset_predict_dl(
     od_detection_learner,
     od_detection_dataset,
@@ -366,7 +366,7 @@ def test_detection_dataset_predict_dl(
     od_detection_learner.predict_dl(od_detection_dataset.test_dl)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_mask_dataset_predict_dl(
     od_detection_mask_learner,
     od_detection_mask_dataset,
@@ -375,7 +375,7 @@ def test_detection_mask_dataset_predict_dl(
     od_detection_mask_learner.predict_dl(od_detection_mask_dataset.test_dl)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_keypoint_dataset_predict_dl(
     od_detection_keypoint_learner,
     od_detection_keypoint_dataset,
@@ -392,7 +392,7 @@ def validate_saved_model(name: str, path: str) -> None:
     assert (Path(path) / name / "model.pt").exists()
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_save_model(od_detection_learner, tiny_od_data_path):
     """ Test that save function works. """
 
@@ -412,7 +412,7 @@ def test_detection_save_model(od_detection_learner, tiny_od_data_path):
         od_detection_learner.save(model_name, overwrite=False)
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 @pytest.fixture(scope="session")
 def saved_model(od_detection_learner, tiny_od_data_path) -> Tuple[str, Path]:
     """ A saved model so that loading functions can reuse. """
@@ -422,7 +422,7 @@ def saved_model(od_detection_learner, tiny_od_data_path) -> Tuple[str, Path]:
     return model_name, Path(tiny_od_data_path) / "models"
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_load_model(
     od_detection_learner, tiny_od_data_path, saved_model
 ):
@@ -451,7 +451,7 @@ def test_detection_load_model(
     od_detection_learner.load()
 
 
-@pytest.mark.gpu
+# @pytest.mark.gpu
 def test_detection_init_from_saved_model(saved_model):
     """ Test that we can create an detection learner from a saved model. """
     name, path = saved_model
