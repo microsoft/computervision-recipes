@@ -113,7 +113,7 @@ def test_parse_pascal_voc(
 
 def validate_detection_dataset(data: DetectionDataset, labels: List[str]):
     data_length = 39
-    if data.mask_paths is not None:
+    if len(data.mask_paths) > 0:
         data_length = 31
     elif len(data.keypoints) > 0:
         data_length = 20   # only 20 of 30 the tiny keypoints images contain carton
