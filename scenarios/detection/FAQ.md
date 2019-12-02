@@ -47,6 +47,10 @@ not provide export options for COCO or PASCAL VOC.  Annotations at
 Labelbox still needs to be converted into the format used in our
 notebooks, which is explained in our [Labelbox Annotation
 Conversion](misc/labelbox_annotation_conversion/README.md).
+<p align="center">
+<img src="media/labelbox_mask_annotation.png" width="250"/>
+<img src="media/labelbox_keypoint_annotation.png" width="250"/>
+</p>
 
 Selection and annotating images is complex and consistency is key. For example:
 * All objects in an image need to be annotated, even if the image contains many of them. Consider removing the image if this would take too much time.
