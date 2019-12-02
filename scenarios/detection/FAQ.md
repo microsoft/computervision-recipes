@@ -39,18 +39,24 @@ Annotated object locations are required to train and evaluate an object detector
 When creating a new project in VOTT, note that the "source connection" can simply point to a local folder which contains the images to be annotated, and respectively the "target connection" to a folder where to write the output. Pascal VOC style annotations can be exported by selecting "Pascal VOC" in the "Export Settings" tab and then using the "Export Project" button in the "Tags Editor" tab.
 
 For mask (segmentation) annotation, an easy-to-use online tool is
-[Labelbox](https://labelbox.com/).  A good demo can be found at
-[Introducing Image Segmentation at
-Labelbox](https://labelbox.com/blog/introducing-image-segmentation/).
-Labelbox can also be used for keypoint annotation.  However, it does
-not provide export options for COCO or PASCAL VOC.  Annotations at
-Labelbox still needs to be converted into the format used in our
-notebooks, which is explained in our [Labelbox Annotation
-Conversion](misc/labelbox_annotation_conversion/README.md).
+[Labelbox](https://labelbox.com/).
+
 <p align="center">
-<img src="media/labelbox_mask_annotation.png" width="250"/>
-<img src="media/labelbox_keypoint_annotation.png" width="250"/>
+<img src="media/labelbox_mask_annotation.png" width="600"/>
 </p>
+
+A good demo can be found at [Introducing Image Segmentation at
+Labelbox](https://labelbox.com/blog/introducing-image-segmentation/).
+Labelbox can also be used for keypoint annotation.
+
+<p align="center">
+<img src="media/labelbox_keypoint_annotation.png" width="600"/>
+</p>
+
+However, it does not provide export options for COCO or PASCAL VOC.
+Annotations at Labelbox still needs to be converted into the format
+used in our notebooks, which is explained in our [Labelbox Annotation
+Conversion](misc/labelbox_annotation_conversion/README.md).
 
 Selection and annotating images is complex and consistency is key. For example:
 * All objects in an image need to be annotated, even if the image contains many of them. Consider removing the image if this would take too much time.
