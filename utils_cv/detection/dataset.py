@@ -47,7 +47,7 @@ class ColorJitterTransform(object):
 
 
 def _flip_keypoints(kps, width, hflip_inds):
-    """ Variation of torchvision's _flip_coco_person_keypoints with additional
+    """ Variation of references' _flip_coco_person_keypoints with additional
     hflip_inds. """
     flipped_data = kps[:, hflip_inds]
     flipped_data[..., 0] = width - flipped_data[..., 0]
@@ -58,7 +58,7 @@ def _flip_keypoints(kps, width, hflip_inds):
 
 
 class RandomHorizontalFlip(object):
-    """ Variation of torchvision's RandomHorizontalFlip to make sure flipping
+    """ Variation of references' RandomHorizontalFlip to make sure flipping
     works on custom keypoints. """
     def __init__(self, prob):
         self.prob = prob

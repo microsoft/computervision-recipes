@@ -18,6 +18,7 @@ from utils_cv.detection.plot import (
     plot_pr_curves,
     plot_counts_curves,
     plot_masks,
+    plot_keypoints,
 )
 
 
@@ -39,6 +40,8 @@ def test_plot_setting_init(basic_plot_settings):
     assert basic_plot_settings.text_color is not None
     assert basic_plot_settings.mask_color is not None
     assert basic_plot_settings.mask_alpha is not None
+    assert basic_plot_settings.keypoint_th is not None
+    assert basic_plot_settings.keypoint_color is not None
 
 
 def test_plot_boxes(od_cup_path, od_cup_anno_bboxes, basic_plot_settings):
@@ -56,7 +59,7 @@ def test_plot_boxes(od_cup_path, od_cup_anno_bboxes, basic_plot_settings):
 
 def test_plot_masks(od_mask_rects):
     """ Test that `plot_mask` works. """
-    plot_setting = PlotSettings(mask_color = (10, 20, 128))
+    plot_setting = PlotSettings(mask_color=(10, 20, 128))
     _, mask, rects, im = od_mask_rects
 
     # plot mask
@@ -74,13 +77,48 @@ def test_plot_masks(od_mask_rects):
         assert background_uniques[0] == ch_uniques[0]
 
 
-def test_plot_detections(od_sample_detection, od_detection_mask_dataset):
+def test_plot_keypoints(od_keypoints_for_plot, basic_plot_settings):
+    im, keypoints, _ = od_keypoints_for_plot
+
+    # basic case
+    plot_keypoints(im, keypoints)
+
+    # with update plot_settings
+    plot_keypoints(im, keypoints, plot_settings=basic_plot_settings)
+
+
+def test_plot_detections(
+    od_sample_detection,
+    od_detection_mask_dataset,
+    od_sample_keypoint_detection,
+    od_detection_keypoint_dataset,
+):
     plot_detections(od_sample_detection)
     plot_detections(od_sample_detection, od_detection_mask_dataset)
     plot_detections(od_sample_detection, od_detection_mask_dataset, 0)
+    plot_detections(
+        od_sample_keypoint_detection,
+        keypoint_meta=od_detection_keypoint_dataset.keypoint_meta,
+    )
+    plot_detections(
+        od_sample_keypoint_detection,
+        od_detection_keypoint_dataset,
+        keypoint_meta=od_detection_keypoint_dataset.keypoint_meta,
+    )
+    plot_detections(
+        od_sample_keypoint_detection,
+        od_detection_keypoint_dataset,
+        0,
+        keypoint_meta=od_detection_keypoint_dataset.keypoint_meta,
+    )
 
 
-def test_plot_grid(od_sample_detection, od_detection_mask_dataset):
+def test_plot_grid(
+    od_sample_detection,
+    od_detection_mask_dataset,
+    od_sample_keypoint_detection,
+    od_detection_keypoint_dataset,
+):
     """ Test that `plot_grid` works. """
 
     # test callable args
@@ -92,6 +130,15 @@ def test_plot_grid(od_sample_detection, od_detection_mask_dataset):
         return od_sample_detection, od_detection_mask_dataset, None, None
     plot_grid(plot_detections, callable_args, rows=1)
 
+    def callable_args():
+        return (
+            od_sample_keypoint_detection,
+            od_detection_keypoint_dataset,
+            None,
+            od_detection_keypoint_dataset.keypoint_meta,
+        )
+    plot_grid(plot_detections, callable_args, rows=1)
+
     # test iterable args
     def iterator_args():
         for detection in [od_sample_detection, od_sample_detection]:
@@ -101,6 +148,19 @@ def test_plot_grid(od_sample_detection, od_detection_mask_dataset):
     def iterator_args():
         for detection in [od_sample_detection, od_sample_detection]:
             yield detection, od_detection_mask_dataset, None, None
+    plot_grid(plot_detections, iterator_args(), rows=1, cols=2)
+
+    def iterator_args():
+        for detection in [
+            od_sample_keypoint_detection,
+            od_sample_keypoint_detection,
+        ]:
+            yield (
+                detection,
+                od_detection_keypoint_dataset,
+                None,
+                od_detection_keypoint_dataset.keypoint_meta,
+            )
     plot_grid(plot_detections, iterator_args(), rows=1, cols=2)
 
 

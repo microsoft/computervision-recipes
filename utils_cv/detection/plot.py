@@ -14,7 +14,6 @@ from torch.utils.data import Subset
 import matplotlib.pyplot as plt
 
 from .bbox import _Bbox, DetectionBbox
-from .dataset import DetectionDataset
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
@@ -150,7 +149,7 @@ def plot_keypoints(
 
 def plot_detections(
     detection: Dict,
-    data: DetectionDataset = None,
+    data: "DetectionDataset" = None,
     idx: int = None,
     keypoint_meta: Dict = None,
     ax: plt.axes = None

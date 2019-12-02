@@ -25,11 +25,14 @@ from utils_cv.classification.data import Urls as ic_urls
 from utils_cv.detection.data import Urls as od_urls
 from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox
 from utils_cv.detection.dataset import DetectionDataset
+from utils_cv.detection.keypoint import CartonKeypoints, COCOKeypoints
 from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
+    get_pretrained_keypointrcnn,
     get_pretrained_maskrcnn,
     DetectionLearner,
-    _get_det_bboxes_and_mask,
+    _extract_od_results,
+    _apply_threshold,
 )
 
 
@@ -247,6 +250,7 @@ def multilabel_ic_data_path(tmp_session) -> str:
         exist_ok=True,
     )
 
+
 @pytest.fixture(scope="session")
 def tiny_ic_negatives_path(tmp_session) -> str:
     """ Returns the path to the tiny negatives dataset. """
@@ -256,6 +260,7 @@ def tiny_ic_negatives_path(tmp_session) -> str:
         dest=tmp_session,
         exist_ok=True,
     )
+
 
 @pytest.fixture(scope="session")
 def tiny_ic_databunch(tmp_session):
@@ -426,6 +431,31 @@ def od_mask_rects() -> Tuple:
 
 
 @pytest.fixture(scope="session")
+def od_keypoints_for_plot() -> Tuple:
+    # a completely black image
+    im = Image.fromarray(np.zeros((500, 600, 3), dtype=np.uint8))
+
+    # dummy keypoints and meta
+    keypoint_meta = {
+        "category": "dummy",
+        "labels": ["left", "right"],
+        "skeleton": [[0, 1], ],
+        "hflip_inds": [1, 0],
+    }
+
+    keypoints = COCOKeypoints(
+        np.array([
+            [
+                [100, 200, 2],
+                [200, 200, 2],
+            ]
+        ]),
+        keypoint_meta,
+    )
+    return im, keypoints, keypoint_meta
+
+
+@pytest.fixture(scope="session")
 def tiny_od_data_path(tmp_session) -> str:
     """ Returns the path to the fridge object detection dataset. """
     return unzip_url(
@@ -448,12 +478,34 @@ def tiny_od_mask_data_path(tmp_session) -> str:
 
 
 @pytest.fixture(scope="session")
+def tiny_od_keypoint_data_path(tmp_session) -> str:
+    """ Returns the path to the fridge object detection keypoint dataset. """
+    return unzip_url(
+        od_urls.fridge_objects_keypoint_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
+
+
+@pytest.fixture(scope="session")
 def od_sample_im_anno(tiny_od_data_path) -> Tuple[Path, ...]:
     """ Returns an annotation and image path from the tiny_od_data_path fixture.
     Specifically, using the paths for 1.xml and 1.jpg
     """
     anno_path = Path(tiny_od_data_path) / "annotations" / "1.xml"
     im_path = Path(tiny_od_data_path) / "images" / "1.jpg"
+    return anno_path, im_path
+
+
+@pytest.fixture(scope="session")
+def od_sample_im_anno_keypoint(tiny_od_keypoint_data_path) -> Tuple[Path, ...]:
+    """ Returns an annotation and image path from the
+    tiny_od_keypoint_data_path fixture.  Specifically, using the paths for
+    1.xml and 1.jpg
+    """
+    anno_path = Path(tiny_od_keypoint_data_path) / "annotations" / "1.xml"
+    im_path = Path(tiny_od_keypoint_data_path) / "images" / "1.jpg"
     return anno_path, im_path
 
 
@@ -469,30 +521,7 @@ def od_sample_raw_preds():
         if torch.cuda.is_available()
         else torch.device("cpu")
     )
-    return [
-        {
-            "boxes": tensor(
-                [
-                    [109.0, 190.0, 205.0, 408.0],
-                    [340.0, 326.0, 465.0, 549.0],
-                    [214.0, 181.0, 315.0, 460.0],
-                    [215.0, 193.0, 316.0, 471.0],
-                    [109.0, 209.0, 209.0, 420.0],
-                ],
-                device=device,
-            ),
-            "labels": tensor([3, 2, 1, 2, 1], device=device),
-            "scores": tensor(
-                [0.9985, 0.9979, 0.9945, 0.1470, 0.0903], device=device
-            ),
-        }
-    ]
 
-
-@pytest.fixture(scope="session")
-def od_sample_output():
-    width = 500
-    height = 600
     boxes = [
         [109.0, 190.0, 205.0, 408.0],
         [340.0, 326.0, 465.0, 549.0],
@@ -500,30 +529,67 @@ def od_sample_output():
         [215.0, 193.0, 316.0, 471.0],
         [109.0, 209.0, 209.0, 420.0],
     ]
-    labels = [3, 2, 1, 2, 1]
-    scores = [0.9985, 0.9979, 0.9945, 0.1470, 0.0903]
+
     # construct masks
-    masks = np.zeros((len(boxes), 1, height, width), dtype=np.float)
+    masks = np.zeros((len(boxes), 1, 666, 499), dtype=np.float)
     for rect, mask in zip(boxes, masks):
         left, top, right, bottom = [int(x) for x in rect]
         # first line of the bounding box
-        mask[:, top, left:(right+1)] = 0.05
+        mask[:, top, left:(right + 1)] = 0.05
         # other lines of the bounding box
-        mask[:, (top+1):(bottom+1), left:(right+1)] = 0.7
+        mask[:, (top + 1):(bottom + 1), left:(right + 1)] = 0.7
 
-    return {
-        "boxes": tensor(boxes, dtype=torch.float),
-        "labels": tensor(labels, dtype=torch.int64),
-        "scores": tensor(scores, dtype=torch.float),
-        "masks": tensor(masks),
-    }
+    # construct keypoints
+    start_points = [
+        [120, 200],
+        [350, 350],
+        [220, 300],
+        [250, 400],
+        [100, 350],
+    ]
+    keypoints = []
+    for x, y in start_points:
+        points = []
+        for i in range(len(CartonKeypoints.labels)):
+            points.append([x + i, y + i, 2])
+        keypoints.append(points)
+
+    return [
+        {
+            "boxes": tensor(boxes, device=device),
+            "labels": tensor([3, 3, 3, 2, 1], device=device),
+            "scores": tensor(
+                [0.9985, 0.9979, 0.9945, 0.1470, 0.0903], device=device
+            ),
+            "masks": tensor(masks, device=device),
+            "keypoints": tensor(
+                keypoints, device=device, dtype=torch.float32
+            ),
+        }
+    ]
 
 
 @pytest.fixture(scope="session")
 def od_sample_detection(od_sample_raw_preds, od_detection_mask_dataset):
-    labels = ["one", "two", "three","four"]
-    detections = _get_det_bboxes_and_mask(od_sample_raw_preds[0], labels, od_detection_mask_dataset.im_paths[0])
+    labels = ["one", "two", "three", "four"]
+    detections = _extract_od_results(
+        od_sample_raw_preds[0], labels, od_detection_mask_dataset.im_paths[0]
+    )
     detections["idx"] = 0
+    del detections["keypoints"]
+    return detections
+
+
+@pytest.fixture(scope="session")
+def od_sample_keypoint_detection(od_sample_raw_preds, od_detection_keypoint_dataset):
+    labels = ["one", "two", "three", "four"]
+    detections = _extract_od_results(
+        _apply_threshold(od_sample_raw_preds[0], threshold=0.9),
+        labels,
+        od_detection_keypoint_dataset.im_paths[0],
+    )
+    detections["idx"] = 0
+    del detections["masks"]
     return detections
 
 
@@ -537,6 +603,15 @@ def od_detection_dataset(tiny_od_data_path):
 def od_detection_mask_dataset(tiny_od_mask_data_path):
     """ returns a basic detection mask dataset. """
     return DetectionDataset(tiny_od_mask_data_path, mask_dir="segmentation-masks")
+
+
+@pytest.fixture(scope="session")
+def od_detection_keypoint_dataset(tiny_od_keypoint_data_path):
+    """ returns a basic detection keypoint dataset. """
+    return DetectionDataset(
+        tiny_od_keypoint_data_path,
+        keypoint_meta=CartonKeypoints.to_dict(),
+    )
 
 
 @pytest.mark.gpu
@@ -560,7 +635,7 @@ def od_detection_learner(od_detection_dataset):
 @pytest.mark.gpu
 @pytest.fixture(scope="session")
 def od_detection_mask_learner(od_detection_mask_dataset):
-    """ returns a basic detection learner that has been trained for one epoch. """
+    """ returns a mask detection learner that has been trained for one epoch. """
     model = get_pretrained_maskrcnn(
         num_classes=len(od_detection_mask_dataset.labels) + 1,
         min_size=100,
@@ -572,6 +647,25 @@ def od_detection_mask_learner(od_detection_mask_dataset):
     )
     learner = DetectionLearner(od_detection_mask_dataset, model=model)
     learner.fit(1)
+    return learner
+
+
+@pytest.mark.gpu
+@pytest.fixture(scope="session")
+def od_detection_keypoint_learner(od_detection_keypoint_dataset):
+    """ returns a keypoint detection learner that has been trained for one epoch. """
+    model = get_pretrained_keypointrcnn(
+        num_classes=len(od_detection_keypoint_dataset.labels) + 1,
+        num_keypoints=len(od_detection_keypoint_dataset.keypoint_meta["labels"]),
+        min_size=100,
+        max_size=200,
+        rpn_pre_nms_top_n_train=500,
+        rpn_pre_nms_top_n_test=250,
+        rpn_post_nms_top_n_train=500,
+        rpn_post_nms_top_n_test=250,
+    )
+    learner = DetectionLearner(od_detection_keypoint_dataset, model=model)
+    learner.fit(1, skip_evaluation=True)
     return learner
 
 
