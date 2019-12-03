@@ -118,6 +118,7 @@ classification/data/*
 data/
 !contrib/action_recognition/r2p1d/**
 !contrib/crowd_counting/crowdcounting/data/
+!scenarios/action_recognition/data
 
 # don't save .swp files
 *.swp
