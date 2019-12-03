@@ -573,7 +573,9 @@ def od_sample_raw_preds():
 def od_sample_detection(od_sample_raw_preds, od_detection_mask_dataset):
     labels = ["one", "two", "three", "four"]
     detections = _extract_od_results(
-        od_sample_raw_preds[0], labels, od_detection_mask_dataset.im_paths[0]
+        _apply_threshold(od_sample_raw_preds[0], threshold=0.001),
+        labels,
+        od_detection_mask_dataset.im_paths[0],
     )
     detections["idx"] = 0
     del detections["keypoints"]

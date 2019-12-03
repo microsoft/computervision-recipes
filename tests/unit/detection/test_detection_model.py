@@ -33,7 +33,7 @@ def test__extract_od_results(od_sample_raw_preds, od_data_path_labels):
     bboxes = res["det_bboxes"]
     assert type(bboxes[0]) == DetectionBbox
     assert len(bboxes) == 5
-    assert res["masks"].shape == (5, 600, 500)
+    assert res["masks"].shape == (5, 666, 499)
     assert res["keypoints"].shape == (5, 2, 3)
 
 
@@ -164,15 +164,6 @@ def test_detection_mask_learner_plot_precision_loss_curves(
 
 
 # @pytest.mark.gpu
-def test_detection_keypoint_learner_plot_precision_loss_curves(
-    od_detection_keypoint_learner,
-):
-    """ Simply test that `plot_precision_loss_curves` works for keypoint
-    learner. """
-    od_detection_keypoint_learner.plot_precision_loss_curves()
-
-
-# @pytest.mark.gpu
 def test_detection_learner_evaluate(
     od_detection_learner,
 ):
@@ -270,7 +261,7 @@ def test_detection_keypoint_learner_predict_threshold(
     """
     pred = od_detection_keypoint_learner.predict(od_cup_path, threshold=0.9999)
     bboxes = pred["det_bboxes"]
-    keypoints = pred["keypoint"]
+    keypoints = pred["keypoints"]
     assert type(bboxes) == list
     assert type(keypoints) == np.ndarray
     assert len(bboxes) == len(keypoints)

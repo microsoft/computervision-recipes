@@ -57,4 +57,6 @@ def test_cocokeypoints(od_sample_keypoint_with_meta):
     assert k.get_lines() == lines
 
     # test to_dict
-    assert k.to_dict() == keypoint_meta
+    k_dict = k.to_dict()
+    for k in k_dict.keys():
+        assert k_dict[k] == keypoint_meta[k]
