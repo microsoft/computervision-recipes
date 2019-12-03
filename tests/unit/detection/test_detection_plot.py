@@ -78,7 +78,7 @@ def test_plot_masks(od_mask_rects):
 
 
 def test_plot_keypoints(od_keypoints_for_plot, basic_plot_settings):
-    im, keypoints, _ = od_keypoints_for_plot
+    im, keypoints = od_keypoints_for_plot
 
     # basic case
     plot_keypoints(im, keypoints)

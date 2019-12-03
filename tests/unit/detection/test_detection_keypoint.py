@@ -48,15 +48,7 @@ def test_cocokeypoints(od_sample_keypoint_with_meta):
     # test init
     k = COCOKeypoints(keypoints, keypoint_meta)
     assert np.all(k.keypoints == keypoints)
-    assert k.category == keypoint_meta["category"]
-    assert k.labels == keypoint_meta["labels"]
-    assert k.skeleton == keypoint_meta["skeleton"]
-    assert k.hflip_inds == keypoint_meta["hflip_inds"]
+    assert k.meta == keypoint_meta
 
     # test get_lints
     assert k.get_lines() == lines
-
-    # test to_dict
-    k_dict = k.to_dict()
-    for k in k_dict.keys():
-        assert k_dict[k] == keypoint_meta[k]

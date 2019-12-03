@@ -435,14 +435,7 @@ def od_keypoints_for_plot() -> Tuple:
     # a completely black image
     im = Image.fromarray(np.zeros((500, 600, 3), dtype=np.uint8))
 
-    # dummy keypoints and meta
-    keypoint_meta = {
-        "category": "dummy",
-        "labels": ["left", "right"],
-        "skeleton": [[0, 1], ],
-        "hflip_inds": [1, 0],
-    }
-
+    # dummy keypoints
     keypoints = COCOKeypoints(
         np.array([
             [
@@ -450,9 +443,14 @@ def od_keypoints_for_plot() -> Tuple:
                 [200, 200, 2],
             ]
         ]),
-        keypoint_meta,
+        {
+            "category": "dummy",
+            "labels": ["left", "right"],
+            "skeleton": [[0, 1], ],
+            "hflip_inds": [1, 0],
+        },
     )
-    return im, keypoints, keypoint_meta
+    return im, keypoints
 
 
 @pytest.fixture(scope="session")

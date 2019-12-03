@@ -34,7 +34,7 @@ def test__extract_od_results(od_sample_raw_preds, od_data_path_labels):
     assert type(bboxes[0]) == DetectionBbox
     assert len(bboxes) == 5
     assert res["masks"].shape == (5, 666, 499)
-    assert res["keypoints"].shape == (5, 2, 3)
+    assert res["keypoints"].shape == (5, 13, 3)
 
 
 def test__apply_threshold(od_sample_raw_preds):

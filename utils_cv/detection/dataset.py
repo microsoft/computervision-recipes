@@ -324,7 +324,7 @@ class DetectionDataset(Dataset):
                     anno_path,
                     keypoint_meta=self.keypoint_meta,
                 )
-                # When keypoint_meta provided, we assume this is keypoint
+                # When meta provided, we assume this is keypoint
                 # detection, and skip the image if no keypoints found.
                 if self.keypoint_meta is not None:
                     if len(keypoints) != 0:
