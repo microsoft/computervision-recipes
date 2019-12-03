@@ -192,10 +192,10 @@ def plot_detections(
         im = plot_masks(im, mask, PlotSettings(mask_color=(128, 165, 0)))
 
     # Plot ground truth keypoints
-    if data and data.keypoints and data.meta:
+    if data and data.keypoints and data.keypoint_meta:
         im = plot_keypoints(
             im,
-            COCOKeypoints(data.keypoints[idx], data.meta),
+            COCOKeypoints(data.keypoints[idx], data.keypoint_meta),
             PlotSettings(keypoint_color=(0, 192, 0)),
         )
 

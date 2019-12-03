@@ -51,7 +51,7 @@ class COCOKeypoints:
         self._meta = value
 
     def is_valid(self) -> bool:
-        # shape must be (N, len(self.labels), 3)
+        # shape must be (N, len(self.meta["labels"]), 3)
         if self.keypoints.shape[1:] != (len(self.meta["labels"]), 3):
             return False
         # hflip_inds should the same length as labels
