@@ -213,11 +213,10 @@ def parse_pascal_voc_anno(
     return anno_bboxes, im_path, np.array(keypoints)
 
 
-class DetectionDataset(Dataset):
+class DetectionDataset:
     """ An object detection dataset.
 
-    The implementation of the dunder methods __init__, __getitem__, and
-    __len__ were inspired from code found here:
+    The implementation of the dunder methods __init__, __getitem__, and __len__ were inspired from code found here:
     https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html#writing-a-custom-dataset-for-pennfudan
     """
 
@@ -249,21 +248,13 @@ class DetectionDataset(Dataset):
             train_transforms: the transformations to apply to the train set
             test_transforms: the transformations to apply to the test set
             train_pct: the ratio of training to testing data
-            anno_dir: the name of the annotation subfolder under the root
-                directory
-            im_dir: the name of the image subfolder under the root directory.
-                If set to 'None' then infers image location from annotation
-                .xml files
-            allow_negatives: is false (default) then will throw an error if no
-                annotation .xml file can be found for a given image. Otherwise
-                use image as negative, ie assume that the image does not
-                contain any of the objects of interest.
-            mask_dir: the name of the mask subfolder under the root directory
-                if the dataset is used for instance segmentation
+            anno_dir: the name of the annotation subfolder under the root directory
+            im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
+            allow_negatives: is false (default) then will throw an error if no annotation .xml file can be found for a given image. Otherwise use image as negative, ie assume that the image does not contain any of the objects of interest.
+            mask_dir: the name of the mask subfolder under the root directory if the dataset is used for instance segmentation
             keypoint_meta: meta data of keypoints which should include
                 "category", "labels", "skeleton" and "hflip_inds".
-            seed: random seed for splitting dataset to training and testing
-                data
+            seed: random seed for splitting dataset to training and testing data
         """
 
         self.root = Path(root)
@@ -337,9 +328,8 @@ class DetectionDataset(Dataset):
                 anno_bboxes = []
                 im_path = im_paths[anno_idx]
 
-            # Torchvision needs at least one ground truth bounding box per
-            # image. Hence for images without a single annotated object,
-            # adding a tiny bounding box with "background" label 0.
+            # Torchvision needs at least one ground truth bounding box per image. Hence for images without a single
+            # annotated object, adding a tiny bounding box with "background" label 0.
             if len(anno_bboxes) == 0:
                 anno_bboxes = [
                     AnnotationBbox.from_array(
@@ -383,8 +373,7 @@ class DetectionDataset(Dataset):
                     labels.append(anno_bbox.label_name)
         self.labels = list(set(labels))
 
-        # Set for each bounding box label name also what its integer
-        # representation is
+        # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
             for anno_bbox in anno_bboxes:
                 if (
@@ -403,7 +392,7 @@ class DetectionDataset(Dataset):
 
         Args:
             train_pct: the ratio of images to use for training vs
-                testing
+            testing
 
         Return
             A training and testing dataset in that order
@@ -452,8 +441,7 @@ class DetectionDataset(Dataset):
         Args:
             im_paths: path to the images.
             anno_bboxes: ground truth boxes for each image.
-            target: specify if images are to be added to the training or test
-                set. Valid options: "train" or "test".
+            target: specify if images are to be added to the training or test set. Valid options: "train" or "test".
             mask_paths: path to the masks.
             keypoints: list of numpy array of shape (N, K, 3), where N is the
                 number of objects of the category that defined the keypoints,

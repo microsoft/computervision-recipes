@@ -548,7 +548,7 @@ def od_sample_raw_preds():
     keypoints = []
     for x, y in start_points:
         points = []
-        for i in range(len(CartonKeypoints.labels)):
+        for i in range(len(CartonKeypoints.meta["labels"])):
             points.append([x + i, y + i, 2])
         keypoints.append(points)
 

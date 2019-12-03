@@ -36,8 +36,7 @@ def _extract_od_results(
     labels: List[str],
     im_path: Union[str, Path] = None,
 ) -> Dict:
-    """ Gets the bounding boxes, masks and keypoints from the prediction
-    object.
+    """ Gets the bounding boxes, masks and keypoints from the prediction object.
 
     Args:
         pred: the output of passing in an image to torchvision's FasterRCNN
@@ -117,20 +116,13 @@ def _get_pretrained_rcnn(
     Args:
         model_func: pretrained R-CNN model generating functions, such as
             fasterrcnn_resnet50_fpn(), get_pretrained_fasterrcnn(), etc.
-        min_size: minimum size of the image to be rescaled before feeding it
-            to the backbone
-        max_size: maximum size of the image to be rescaled before feeding it
-            to the backbone
-        rpn_pre_nms_top_n_train: number of proposals to keep before applying
-            NMS during training
-        rpn_pre_nms_top_n_test: number of proposals to keep before applying
-            NMS during testing
-        rpn_post_nms_top_n_train: number of proposals to keep after applying
-            NMS during training
-        rpn_post_nms_top_n_test: number of proposals to keep after applying
-            NMS during testing
-        rpn_nms_thresh: NMS threshold used for postprocessing the RPN
-            proposals
+        min_size: minimum size of the image to be rescaled before feeding it to the backbone
+        max_size: maximum size of the image to be rescaled before feeding it to the backbone
+        rpn_pre_nms_top_n_train: number of proposals to keep before applying NMS during training
+        rpn_pre_nms_top_n_test: number of proposals to keep before applying NMS during testing
+        rpn_post_nms_top_n_train: number of proposals to keep after applying NMS during training
+        rpn_post_nms_top_n_test: number of proposals to keep after applying NMS during testing
+        rpn_nms_thresh: NMS threshold used for postprocessing the RPN proposals
 
     Returns
         The pre-trained model
@@ -164,8 +156,7 @@ def _tune_box_predictor(model: nn.Module, num_classes: int) -> nn.Module:
 
 def _tune_mask_predictor(model: nn.Module, num_classes: int) -> nn.Module:
     """ Tune mask predictor in the model. """
-    # get the number of input features of mask predictor from the pretrained
-    # model
+    # get the number of input features of mask predictor from the pretrained model
     in_features = model.roi_heads.mask_predictor.conv5_mask.in_channels
     # replace the mask predictor with a new one
     model.roi_heads.mask_predictor = MaskRCNNPredictor(
@@ -237,8 +228,7 @@ def get_pretrained_keypointrcnn(
     """ Gets a pretrained Keypoint R-CNN model
 
     Args:
-        num_classes: number of output classes of the model (including the
-            background)
+        num_classes: number of output classes of the model (including the background)
         num_keypoints: number of keypoints for the specific category
     Returns
         The model to fine-tine/inference with
@@ -258,8 +248,7 @@ def get_pretrained_keypointrcnn(
 
     # tune keypoints predictor in the model
     if num_keypoints:
-        # get the number of input features of keypoint predictor from the
-        # pretrained model
+        # get the number of input features of keypoint predictor from the pretrained model
         in_features = \
             model.roi_heads.keypoint_predictor.kps_score_lowres.in_channels
         # replace the keypoint predictor with a new one
@@ -311,8 +300,7 @@ def _im_eval_detections(
     gt_bboxes: List[DetectionBbox],
     det_bboxes: List[DetectionBbox],
 ):
-    """ Count number of wrong detections and number of missed objects for a
-    single image """
+    """ Count number of wrong detections and number of missed objects for a single image """
     # Remove all detections with confidence score below a certain threshold
     if score_threshold is not None:
         det_bboxes = [
@@ -320,14 +308,12 @@ def _im_eval_detections(
         ]
 
     # Image level statistics.
-    # Store (i) if image has at least one missing ground truth; (ii) if image
-    # has at least one incorrect detection.
+    # Store (i) if image has at least one missing ground truth; (ii) if image has at least one incorrect detection.
     im_missed_gt = False
     im_wrong_det = False
 
     # Object level statistics.
-    # Store (i) if ground truth objects were found; (ii) if detections are
-    # correct.
+    # Store (i) if ground truth objects were found; (ii) if detections are correct.
     found_gts = [False] * len(gt_bboxes)
     correct_dets = [False] * len(det_bboxes)
 
@@ -351,8 +337,7 @@ def _im_eval_detections(
                     found_gts[gt_index] = True
                     correct_dets[det_index] = True
 
-        # Check if image has at least one wrong detection, or at least one
-        # missing ground truth
+        # Check if image has at least one wrong detection, or at least one missing ground truth
         im_wrong_det = min(correct_dets) == 0
         if len(gt_bboxes) > 0 and min(found_gts) == 0:
             im_missed_gt = True
@@ -370,10 +355,8 @@ def ims_eval_detections(
     iou_threshold: float = 0.5,
     score_thresholds: List[float] = np.linspace(0, 1, 51),
 ):
-    """ Count number of wrong detections and number of missed objects for
-    multiple image """
-    # get detection bounding boxes and corresponding ground truth for all
-    # images
+    """ Count number of wrong detections and number of missed objects for multiple image """
+    # get detection bounding boxes and corresponding ground truth for all images
     det_bboxes_list = [d["det_bboxes"] for d in detections]
     gt_bboxes_list = [
         data_ds.dataset.anno_bboxes[d["idx"]] for d in detections
@@ -398,8 +381,7 @@ def ims_eval_detections(
     obj_wrong_det_counts = np.sum(out[:, :, 2], 1)
     obj_missed_gt_counts = np.sum(out[:, :, 3], 1)
 
-    # Count how many images have either a wrong detection or a missed ground
-    # truth
+    # Count how many images have either a wrong detection or a missed ground truth
     im_error_counts = np.sum(np.max(out[:, :, 0:2], 2), 1)
 
     # Get counts for negative images
@@ -463,8 +445,7 @@ class DetectionLearner:
         You can only specify an image size `im_size` if `model` is not given.
 
         Args:
-            dataset: the dataset. This class will infer labels if dataset is
-                present.
+            dataset: the dataset. This class will infer labels if dataset is present.
             model: the nn.Module you wish to use
             im_size: image size for your model
         """
@@ -531,8 +512,7 @@ class DetectionLearner:
         if not self.dataset:
             raise Exception("No dataset provided")
 
-        # reduce learning rate every step_size epochs by a factor of gamma (by
-        # default) 0.1.
+        # reduce learning rate every step_size epochs by a factor of gamma (by default) 0.1.
         if step_size is None:
             step_size = int(np.round(epochs / 1.5))
 
