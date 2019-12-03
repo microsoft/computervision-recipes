@@ -15,7 +15,6 @@ from utils_cv.detection.dataset import (
     DetectionDataset,
 )
 from utils_cv.detection.bbox import AnnotationBbox, _Bbox
-from utils_cv.detection.keypoint import CartonKeypoints
 
 
 @pytest.fixture(scope="session")
@@ -48,27 +47,6 @@ def od_sample_bboxes() -> List[_Bbox]:
 
 
 @pytest.fixture(scope="session")
-def od_sample_carton_keypoints() -> np.array:
-    """ Returns the true keypoints from the `od_sample_im_anno_keypoint`
-    fixture. """
-    return np.array([[
-        [175, 204, 2],
-        [114, 176, 2],
-        [210, 179, 2],
-        [111, 203, 2],
-        [215, 205, 2],
-        [121, 245, 2],
-        [233, 241, 2],
-        [103, 228, 2],
-        [0, 0, 0],
-        [138, 519, 2],
-        [230, 496, 2],
-        [117, 468, 2],
-        [0, 0, 0],
-    ]])
-
-
-@pytest.fixture(scope="session")
 def basic_detection_dataset(tiny_od_data_path) -> DetectionDataset:
     return DetectionDataset(tiny_od_data_path)
 
@@ -90,53 +68,32 @@ def test_get_transform(basic_im):
     assert type(tfms_im) == Tensor
 
 
-def test_parse_pascal_voc(
-    od_sample_im_anno,
-    od_sample_bboxes,
-    od_sample_im_anno_keypoint,
-    od_sample_carton_keypoints,
-):
-    """ test that 'parse_pascal_voc' can parse the 'od_sample_im_anno' and
-    'od_sample_im_anno_keypoint' correctly. """
+def test_parse_pascal_voc(od_sample_im_anno, od_sample_bboxes):
+    """ test that 'parse_pascal_voc' can parse the 'od_sample_im_anno' correctly. """
     anno_path, im_path = od_sample_im_anno
-    anno_bboxes, im_path, _ = parse_pascal_voc_anno(anno_path)
+    anno_bboxes, im_path = parse_pascal_voc_anno(anno_path)
     assert type(anno_bboxes[0]) == AnnotationBbox
     assert anno_bboxes[0].left == od_sample_bboxes[0].left
     assert anno_bboxes[0].right == od_sample_bboxes[0].right
     assert anno_bboxes[0].top == od_sample_bboxes[0].top
     assert anno_bboxes[0].bottom == od_sample_bboxes[0].bottom
 
-    anno_path, _ = od_sample_im_anno_keypoint
-    _, _, keypoints = parse_pascal_voc_anno(anno_path)
-    np.all(keypoints == od_sample_carton_keypoints)
-
 
 def validate_detection_dataset(data: DetectionDataset, labels: List[str]):
-    data_length = 39
-    if len(data.mask_paths) > 0:
-        data_length = 31
-    elif len(data.keypoints) > 0:
-        data_length = 20   # only 20 of 30 the tiny keypoints images contain carton
-    assert len(data) == data_length
-
+    assert len(data) == 39 if data.mask_paths is None else 31
     assert type(data) == DetectionDataset
-
-    assert len(data.labels) == 4 if len(data.keypoints) == 0 else 1
+    assert len(data.labels) == 4
     for label in data.labels:
         assert label in labels
 
     if data.mask_paths:
         assert len(data.mask_paths) == len(data.im_paths)
 
-    if len(data.keypoints) > 0:
-        assert len(data.keypoints) == len(data.im_paths)
-
 
 def test_detection_dataset_init_basic(
     tiny_od_data_path,
     od_data_path_labels,
-    tiny_od_mask_data_path,
-    tiny_od_keypoint_data_path,
+    tiny_od_mask_data_path
 ):
     """ Tests that initialization of the Detection Dataset works. """
     data = DetectionDataset(tiny_od_data_path)
@@ -159,21 +116,9 @@ def test_detection_dataset_init_basic(
     assert len(data.test_ds) == 15
     assert len(data.train_ds) == 16
 
-    # test keypoint data
-    data = DetectionDataset(
-        tiny_od_keypoint_data_path,
-        keypoint_meta=CartonKeypoints.to_dict(),
-    )
-    validate_detection_dataset(data, od_data_path_labels)
-    assert len(data.test_ds) == 10
-    assert len(data.train_ds) == 10
-
 
 def test_detection_dataset_init_train_pct(
-    tiny_od_data_path,
-    od_data_path_labels,
-    tiny_od_mask_data_path,
-    tiny_od_keypoint_data_path,
+    tiny_od_data_path, od_data_path_labels, tiny_od_mask_data_path
 ):
     """ Tests that initialization with train_pct."""
     data = DetectionDataset(tiny_od_data_path, train_pct=0.75)
@@ -191,37 +136,23 @@ def test_detection_dataset_init_train_pct(
     assert len(data.test_ds) == 7
     assert len(data.train_ds) == 24
 
-    # test keypoint data
-    data = DetectionDataset(
-        tiny_od_keypoint_data_path,
-        train_pct=0.75,
-        keypoint_meta=CartonKeypoints.to_dict(),
-    )
-    validate_detection_dataset(data, od_data_path_labels)
-    assert len(data.test_ds) == 5
-    assert len(data.train_ds) == 15
-
 
 def test_detection_dataset_show_ims(
     basic_detection_dataset,
-    od_detection_mask_dataset,
-    od_detection_keypoint_dataset,
+    od_detection_mask_dataset
 ):
     # simply test that this is error free for now
     basic_detection_dataset.show_ims()
     od_detection_mask_dataset.show_ims()
-    od_detection_keypoint_dataset.show_ims()
 
 
 def test_detection_dataset_show_im_transformations(
     basic_detection_dataset,
-    od_detection_mask_dataset,
-    od_detection_keypoint_dataset,
+    od_detection_mask_dataset
 ):
     # simply test that this is error free for now
     basic_detection_dataset.show_im_transformations()
     od_detection_mask_dataset.show_im_transformations()
-    od_detection_keypoint_dataset.show_im_transformations()
 
 
 def test_detection_dataset_init_anno_im_dirs(
