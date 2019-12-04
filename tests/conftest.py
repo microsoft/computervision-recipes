@@ -25,7 +25,7 @@ from utils_cv.classification.data import Urls as ic_urls
 from utils_cv.detection.data import Urls as od_urls
 from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox
 from utils_cv.detection.dataset import DetectionDataset
-from utils_cv.detection.keypoint import CartonKeypoints, COCOKeypoints
+from utils_cv.detection.keypoint import COCOKeypoints
 from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
     get_pretrained_maskrcnn,
@@ -524,7 +524,7 @@ def od_sample_raw_preds():
     keypoints = []
     for x, y in start_points:
         points = []
-        for i in range(len(CartonKeypoints.meta["labels"])):
+        for i in range(13):
             points.append([x + i, y + i, 2])
         keypoints.append(points)
 
