@@ -3,6 +3,7 @@
 
 from torchvision.models.detection.faster_rcnn import FasterRCNN
 from torchvision.models.detection.mask_rcnn import MaskRCNN
+from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
 from collections.abc import Iterable
 import numpy as np
 import pytest
@@ -10,17 +11,33 @@ import shutil
 from pathlib import Path
 from typing import Tuple
 
+from utils_cv.detection.bbox import DetectionBbox
 from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
+    get_pretrained_keypointrcnn,
     get_pretrained_maskrcnn,
     DetectionLearner,
     _apply_threshold,
     _calculate_ap,
+    _extract_od_results,
     ims_eval_detections,
 )
 
 
-def test__apply_threshold(od_sample_output):
+def test__extract_od_results(od_sample_raw_preds, od_data_path_labels):
+    """ test that `_extract_od_results` can convert raw preds. """
+    pred = {k: v.detach().cpu().numpy() for k, v in od_sample_raw_preds[0].items()}
+    res = _extract_od_results(
+        pred, labels=od_data_path_labels, im_path=None
+    )
+    bboxes = res["det_bboxes"]
+    assert type(bboxes[0]) == DetectionBbox
+    assert len(bboxes) == 5
+    assert res["masks"].shape == (5, 666, 499)
+    assert res["keypoints"].shape == (5, 13, 3)
+
+
+def test__apply_threshold(od_sample_raw_preds):
     """ Test `_apply_threshold` and verify it works at different thresholds. """
     # test cases: [(threshold, num, mask_pixels)]
     test_cases = [
@@ -28,7 +45,7 @@ def test__apply_threshold(od_sample_output):
         (0.01, 5, (21146, 28098, 28458, 28356, 21311)),
         (0.995, 2, (21146, 28098)),
     ]
-    res = {k: v.detach().cpu().numpy() for k, v in od_sample_output.items()}
+    res = {k: v.detach().cpu().numpy() for k, v in od_sample_raw_preds[0].items()}
     for threshold, num, mask_pixels in test_cases:
         pred = _apply_threshold(res, threshold=threshold)
         for v in pred.values():
@@ -45,6 +62,11 @@ def test_get_pretrained_fasterrcnn():
 def test_get_pretrained_maskrcnn():
     """ Simply test that `get_pretrained_maskrcnn` returns the correct type for now. """
     assert type(get_pretrained_maskrcnn(4)) == MaskRCNN
+
+
+def test_get_pretrained_keypointrcnn():
+    """ Simply test that `get_pretrained_keypointrcnn` returns the correct type for now. """
+    assert type(get_pretrained_keypointrcnn(2, 6)) == KeypointRCNN
 
 
 @pytest.mark.gpu
@@ -130,7 +152,6 @@ def test_detection_mask_learner_plot_precision_loss_curves(
     od_detection_mask_learner,
 ):
     """ Simply test that `plot_precision_loss_curves` works for mask learner. """
-    # test mask learner
     od_detection_mask_learner.plot_precision_loss_curves()
 
 

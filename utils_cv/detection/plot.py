@@ -17,6 +17,7 @@ from .bbox import _Bbox, DetectionBbox
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
+from .keypoint import COCOKeypoints
 from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 
 
@@ -31,6 +32,8 @@ class PlotSettings:
         text_color: Tuple[int, int, int] = (0, 0, 255),
         mask_color: Tuple[int, int, int] = (0, 0, 128),
         mask_alpha: float = 0.8,
+        keypoint_th: int = 3,
+        keypoint_color: Tuple[int, int, int] = (0, 0, 255),
     ):
         self.rect_th = rect_th
         self.rect_color = rect_color
@@ -38,6 +41,8 @@ class PlotSettings:
         self.text_color = text_color
         self.mask_color = mask_color
         self.mask_alpha = mask_alpha
+        self.keypoint_th = keypoint_th
+        self.keypoint_color = keypoint_color
 
 
 def plot_boxes(
@@ -121,10 +126,32 @@ def plot_masks(
     return im
 
 
+def plot_keypoints(
+    im: Union[str, Path, PIL.Image.Image],
+    keypoints: COCOKeypoints,
+    plot_settings: PlotSettings = PlotSettings(),
+) -> PIL.Image.Image:
+    """ Plot connected keypoints on Image and return the Image. """
+    if isinstance(im, (str, Path)):
+        im = Image.open(im)
+
+    if keypoints is not None:
+        draw = ImageDraw.Draw(im)
+        for line in keypoints.get_lines():
+            draw.line(
+                line,
+                fill=plot_settings.keypoint_color,
+                width=plot_settings.keypoint_th
+            )
+
+    return im
+
+
 def plot_detections(
-    detection: Dict, 
-    data = None, 
-    idx: int = None, 
+    detection: Dict,
+    data: "DetectionDataset" = None,
+    idx: int = None,
+    keypoint_meta: Dict = None,
     ax: plt.axes = None
 ) -> PIL.Image.Image:
     """ Put mask onto image.
@@ -132,7 +159,9 @@ def plot_detections(
     Args:
         detection: output running model prediction.
         data: dataset with ground truth information.
-        idx: index into the data object to find the ground truth which corresponds to the detection.  
+        idx: index into the data object to find the ground truth which corresponds to the detection.
+        keypoint_meta: meta data of keypoints which should include "category",
+            "labels" and "skeleton".
         ax: an optional ax to specify where you wish the figure to be drawn on
     """
     # Open image
@@ -160,6 +189,14 @@ def plot_detections(
     if "masks" in detection:
         mask = detection["masks"]
         im = plot_masks(im, mask, PlotSettings(mask_color=(128, 165, 0)))
+
+    # Plot predicted keypoints
+    if "keypoints" in detection:
+        im = plot_keypoints(
+            im,
+            COCOKeypoints(detection["keypoints"], keypoint_meta),
+            PlotSettings(keypoint_color=(192, 165, 0)),
+        )
 
     # Plot the detections
     plot_boxes(
