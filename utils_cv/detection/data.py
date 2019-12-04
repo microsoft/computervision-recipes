@@ -221,12 +221,12 @@ def extract_masks_from_labelbox_json(
              'segmentation-masks' will be PNG files.
     """
 
-    src_im_dir = data_dir / 'images'  # image folder
-    src_anno_dir = data_dir / 'annotations'  # annotation folder
+    src_im_dir = Path(data_dir) / 'images'  # image folder
+    src_anno_dir = Path(data_dir) / 'annotations'  # annotation folder
 
-    dst_im_dir = mask_data_dir / 'images'
-    dst_anno_dir = mask_data_dir / 'annotations'
-    dst_mask_dir = mask_data_dir / 'segmentation-masks'  # mask folder
+    dst_im_dir = Path(mask_data_dir) / 'images'
+    dst_anno_dir = Path(mask_data_dir) / 'annotations'
+    dst_mask_dir = Path(mask_data_dir) / 'segmentation-masks'  # mask folder
 
     # create directories for annotated dataset
     dst_im_dir.mkdir(parents=True, exist_ok=True)
@@ -387,14 +387,14 @@ def extract_keypoints_from_labelbox_json(
     """
 
     # original image folder
-    src_im_dir = data_dir / 'images'
+    src_im_dir = Path(data_dir) / 'images'
     # original annotation folder
-    src_anno_dir = data_dir / 'annotations'
+    src_anno_dir = Path(data_dir) / 'annotations'
 
     # keypoint image folder
-    dst_im_dir = keypoint_data_dir / 'images'
+    dst_im_dir = Path(keypoint_data_dir) / 'images'
     # keypoint annotation folder
-    dst_anno_dir = keypoint_data_dir / 'annotations'
+    dst_anno_dir = Path(keypoint_data_dir) / 'annotations'
 
     # create directories for annotated dataset
     dst_im_dir.mkdir(parents=True, exist_ok=True)
