@@ -144,67 +144,21 @@ def coco_labels() -> List[str]:
 
 def extract_masks_from_labelbox_json(
     labelbox_json: Union[str, Path],
-    old_dir: Union[str, Path],
-    new_dir: Union[str, Path] = None,
+    data_dir: Union[str, Path],
+    mask_data_dir: Union[str, Path] = None,
 ) -> None:
     """ Extract masks from Labelbox annotation JSON file.
 
+    It reads in an annotation JSON file created by the Labelbox annotation UI
+    (https://labelbox.com/), downloads the binary segmentation masks for all
+    objects, merges them in the order of the bounding boxes described in the
+    corresponding PASCAL VOC annotation file, and then writes the resultant
+    mask into a directory called 'segmentation-masks'.
+
     The annotation files in
     [odFridgeObjects](https://cvbp.blob.core.windows.net/public/datasets/object_detection/odFridgeObjects.zip)
-    are in the format of PASCAL VOC:
-
-    ```
-    <annotation>
-        <folder>images</folder>
-        <filename>42.jpg</filename>
-        <path>../images/42.jpg</path>
-        <source>
-            <database>Unknown</database>
-        </source>
-        <size>
-            <width>499</width>
-            <height>666</height>
-            <depth>3</depth>
-        </size>
-        <segmented>0</segmented>
-        <object>
-            <name>milk_bottle</name>
-            <pose>Unspecified</pose>
-            <truncated>0</truncated>
-            <difficult>0</difficult>
-            <bndbox>
-                <xmin>65</xmin>
-                <ymin>264</ymin>
-                <xmax>184</xmax>
-                <ymax>545</ymax>
-            </bndbox>
-        </object>
-        <object>
-            <name>carton</name>
-            <pose>Unspecified</pose>
-            <truncated>0</truncated>
-            <difficult>0</difficult>
-            <bndbox>
-                <xmin>144</xmin>
-                <ymin>308</ymin>
-                <xmax>408</xmax>
-                <ymax>508</ymax>
-            </bndbox>
-        </object>
-        <object>
-            <name>water_bottle</name>
-            <pose>Unspecified</pose>
-            <truncated>0</truncated>
-            <difficult>0</difficult>
-            <bndbox>
-                <xmin>337</xmin>
-                <ymin>175</ymin>
-                <xmax>428</xmax>
-                <ymax>404</ymax>
-            </bndbox>
-        </object>
-    </annotation>
-    ```
+    are in the format of PASCAL VOC shown in our
+    [01 notebook](../../scenarios/detection/01_training_introduction.ipynb).
 
     The data structure of the export JSON file from Labelbox looks like:
 
@@ -257,26 +211,27 @@ def extract_masks_from_labelbox_json(
 
     Args:
         labelbox_json: mask annotation JSON file from Labelbox
-        old_dir: path to dataset.  The path should contain the 'images' and
+        data_dir: path to dataset.  The path should contain the 'images' and
             'annotations' subdirectories which store the original images and
             PASCAL VOC annotation XML files.
-        new_dir: path to the result.  It will contain a 'segmentation-masks'
-            subdirectory as well as 'images' and 'annotations'.  Only images
-            with masks described in labelbox_json will be stored in new_dir.
-            Mask images extracted into 'segmentation-masks' will be PNG files.
+        mask_data_dir: path to the result.  It will contain a
+            'segmentation-masks' subdirectory as well as 'images' and
+            'annotations'.  Only images with masks described in labelbox_json
+             will be stored in mask_data_dir.  Mask images extracted into
+             'segmentation-masks' will be PNG files.
     """
 
-    old_img_dir = old_dir / 'images'  # image folder
-    old_anno_dir = old_dir / 'annotations'  # annotation folder
+    src_im_dir = data_dir / 'images'  # image folder
+    src_anno_dir = data_dir / 'annotations'  # annotation folder
 
-    new_img_dir = new_dir / 'images'
-    new_anno_dir = new_dir / 'annotations'
-    new_mask_dir = new_dir / 'segmentation-masks'  # mask folder
+    dst_im_dir = mask_data_dir / 'images'
+    dst_anno_dir = mask_data_dir / 'annotations'
+    dst_mask_dir = mask_data_dir / 'segmentation-masks'  # mask folder
 
     # create directories for annotated dataset
-    new_img_dir.mkdir(parents=True, exist_ok=True)
-    new_anno_dir.mkdir(parents=True, exist_ok=True)
-    new_mask_dir.mkdir(parents=True, exist_ok=True)
+    dst_im_dir.mkdir(parents=True, exist_ok=True)
+    dst_anno_dir.mkdir(parents=True, exist_ok=True)
+    dst_mask_dir.mkdir(parents=True, exist_ok=True)
 
     # read exported LabelBox annotation JSON file
     with open(labelbox_json) as f:
@@ -291,16 +246,16 @@ def extract_masks_from_labelbox_json(
 
         print("Processing image: {}".format(im_name))
 
-        old_img = old_img_dir / im_name
-        old_anno = old_anno_dir / anno_name
+        src_im_path = src_im_dir / im_name
+        src_anno_path = src_anno_dir / anno_name
 
-        new_img = new_img_dir / im_name
-        new_anno = new_anno_dir / anno_name
-        new_mask = new_mask_dir / mask_name
+        dst_im_path = dst_im_dir / im_name
+        dst_anno_path = dst_anno_dir / anno_name
+        dst_mask_path = dst_mask_dir / mask_name
 
         # copy original image and annotation file
-        shutil.copy(old_img, new_img)
-        shutil.copy(old_anno, new_anno)
+        shutil.copy(src_im_path, dst_im_path)
+        shutil.copy(src_anno_path, dst_anno_path)
 
         # read mask images
         mask_urls = [obj['instanceURI'] for obj in anno['Label']['objects']]
@@ -311,7 +266,7 @@ def extract_masks_from_labelbox_json(
         ])
 
         # rearrange masks with regard to annotation
-        tree = ET.parse(new_anno)
+        tree = ET.parse(dst_anno_path)
         root = tree.getroot()
         rects = []
         for obj in root.findall('object'):
@@ -351,15 +306,19 @@ def extract_masks_from_labelbox_json(
         mask = np.max(labeled_masks, axis=0).astype(np.uint8)
 
         # save mask image
-        Image.fromarray(mask, mode='L').save(new_mask)
+        Image.fromarray(mask, mode='L').save(dst_mask_path)
 
 
 def extract_keypoints_from_labelbox_json(
     labelbox_json: Union[str, Path],
-    old_dir: Union[str, Path],
-    new_dir: Union[str, Path] = None,
+    data_dir: Union[str, Path],
+    keypoint_data_dir: Union[str, Path] = None,
 ) -> None:
     """ Extract keypoints from Labelbox annotation JSON file.
+
+    It reads in an annotation JSON file created by the Labelbox annotation UI
+    (https://labelbox.com/), extracts the annotated keypoints for all objects,
+    and then writes them into the corresponding PASCAL VOC annotation file.
 
     The data structure of the export JSON file from Labelbox looks like:
 
@@ -417,25 +376,29 @@ def extract_keypoints_from_labelbox_json(
 
     Args:
         labelbox_json: keypoint annotation JSON file from Labelbox
-        old_dir: path to dataset.  The path should contain the 'images' and
+        data_dir: path to dataset.  The path should contain the 'images' and
             'annotations' subdirectories which store the original images and
             PASCAL VOC annotation XML files.
-        new_dir: path to the result.  It will contain the 'images' and
-            'annotations' subdirectories.  Only images with keypoints described
-             in labelbox_json will be stored in new_dir.  The XML files in the
-             'annotations' directory will also include the keypoint annotations
-             extracted from Labelbox's JSON file.
+        keypoint_data_dir: path to the result.  It will contain the 'images'
+            and 'annotations' subdirectories.  Only images with keypoints
+            described in labelbox_json will be stored in keypoint_data_dir.
+            The XML files in the 'annotations' directory will also include the
+            keypoint annotations extracted from Labelbox's JSON file.
     """
 
-    old_img_dir = old_dir / 'images'        # original image folder
-    old_anno_dir = old_dir / 'annotations'  # original annotation folder
+    # original image folder
+    src_im_dir = data_dir / 'images'
+    # original annotation folder
+    src_anno_dir = data_dir / 'annotations'
 
-    new_img_dir = new_dir / 'images'        # keypoint image folder
-    new_anno_dir = new_dir / 'annotations'  # keypoint annotation folder
+    # keypoint image folder
+    dst_im_dir = keypoint_data_dir / 'images'
+    # keypoint annotation folder
+    dst_anno_dir = keypoint_data_dir / 'annotations'
 
     # create directories for annotated dataset
-    new_img_dir.mkdir(parents=True, exist_ok=True)
-    new_anno_dir.mkdir(parents=True, exist_ok=True)
+    dst_im_dir.mkdir(parents=True, exist_ok=True)
+    dst_anno_dir.mkdir(parents=True, exist_ok=True)
 
     # read exported LabelBox annotation JSON file
     with open(labelbox_json) as f:
@@ -449,25 +412,27 @@ def extract_keypoints_from_labelbox_json(
 
         print('Processing image: {}'.format(im_name))
 
-        old_img = old_img_dir / im_name
-        old_anno = old_anno_dir / anno_name
+        src_im_path = src_im_dir / im_name
+        src_anno_path = src_anno_dir / anno_name
 
-        new_img = new_img_dir / im_name
-        new_anno = new_anno_dir / anno_name
+        dst_im_path = dst_im_dir / im_name
+        dst_anno_path = dst_anno_dir / anno_name
 
         # copy original image
-        shutil.copy(old_img, new_img)
+        shutil.copy(src_im_path, dst_im_path)
 
         # add keypoints annotation into PASCAL VOC XML file
         kps_annos = anno['Label']
-        tree = ET.parse(old_anno)
+        tree = ET.parse(src_anno_path)
         root = tree.getroot()
         for obj in root.findall('object'):
             prefix = obj.find('name').text + '_'
-            kps = ET.SubElement(obj, 'keypoints')  # add 'keypoints' node for current object
+            # add 'keypoints' node for current object
+            kps = ET.SubElement(obj, 'keypoints')
             for k in kps_annos.keys():
                 if k.startswith(prefix):
-                    pt = ET.SubElement(kps, k[len(prefix):])  # add keypoint into 'keypoints' node
+                    # add keypoint into 'keypoints' node
+                    pt = ET.SubElement(kps, k[len(prefix):])
                     x = ET.SubElement(pt, 'x')  # add x coordinate
                     y = ET.SubElement(pt, 'y')  # add y coordinate
                     geo = kps_annos[k][0]['geometry']
@@ -475,4 +440,4 @@ def extract_keypoints_from_labelbox_json(
                     y.text = str(geo['y'])
 
         # write modified annotation file
-        tree.write(new_anno)
+        tree.write(dst_anno_path)
