@@ -143,7 +143,7 @@ def coco_labels() -> List[str]:
 
 
 def extract_masks_from_labelbox_json(
-    labelbox_json: Union[str, Path],
+    labelbox_json_path: Union[str, Path],
     data_dir: Union[str, Path],
     mask_data_dir: Union[str, Path] = None,
 ) -> None:
@@ -153,7 +153,7 @@ def extract_masks_from_labelbox_json(
     (https://labelbox.com/), downloads the binary segmentation masks for all
     objects, merges them in the order of the bounding boxes described in the
     corresponding PASCAL VOC annotation file, and then writes the resultant
-    mask into a directory called 'segmentation-masks'.
+    mask into a directory called "segmentation-masks".
 
     The annotation files in
     [odFridgeObjects](https://cvbp.blob.core.windows.net/public/datasets/object_detection/odFridgeObjects.zip)
@@ -163,35 +163,35 @@ def extract_masks_from_labelbox_json(
     The data structure of the export JSON file from Labelbox looks like:
 
     ```
-    {'Dataset Name': 'odFridgeObjects',
-     'External ID': '117.jpg',
-     'Label': {'objects': [{'color': '#00D4FF',
-                            'featureId': 'ck1iu6m3suwmo0944zoufayto',
-                            'instanceURI': 'https://api.labelbox.com/masks/ck1iphg4xsqhe0944bbbiwrak',
-                            'schemaId': 'ck1ipz4v5s5rd0701j2mfc4ii',
-                            'title': 'water_bottle',
-                            'value': 'water_bottle'},
-                           {'color': '#00FFFF',
-                            'featureId': 'ck1iuonmvryt608388vlq6t9z',
-                            'instanceURI': 'https://api.labelbox.com/masks/ck1iphg4xsqhe0944bbbiwrak',
-                            'schemaId': 'ck1ipz4v5s5re0701sojrveb3',
-                            'title': 'milk_bottle',
-                            'value': 'milk_bottle'}]},
-     'Labeled Data': 'https://storage.labelbox.com/58d748d4418a-117.jpg',
-     'View Label': 'https://editor.labelbox.com?project=ck1iphg4xsqhe&label=ck1iq31v1qqht086'}
+    {"Dataset Name": "odFridgeObjects",
+     "External ID": "117.jpg",
+     "Label": {"objects": [{"color": "#00D4FF",
+                            "featureId": "ck1iu6m3suwmo0944zoufayto",
+                            "instanceURI": "https://api.labelbox.com/masks/ck1iphg4xsqhe0944bbbiwrak",
+                            "schemaId": "ck1ipz4v5s5rd0701j2mfc4ii",
+                            "title": "water_bottle",
+                            "value": "water_bottle"},
+                           {"color": "#00FFFF",
+                            "featureId": "ck1iuonmvryt608388vlq6t9z",
+                            "instanceURI": "https://api.labelbox.com/masks/ck1iphg4xsqhe0944bbbiwrak",
+                            "schemaId": "ck1ipz4v5s5re0701sojrveb3",
+                            "title": "milk_bottle",
+                            "value": "milk_bottle"}]},
+     "Labeled Data": "https://storage.labelbox.com/58d748d4418a-117.jpg",
+     "View Label": "https://editor.labelbox.com?project=ck1iphg4xsqhe&label=ck1iq31v1qqht086"}
     ```
 
     It is a list of `Dict` where each `Dict` is the meta data for an
     image.  Key fields include:
-    * **`annos[n]['External ID']`**: Original image file name
-    * `annos[n]['Labeled Data']`: URL of the original image
-    * `annos[n]['View Label']`: URL of the image with labels or masks
-    * `annos[n]['Label']`: Dict.  Meta data of all annotations of the
+    * **`annos[n]["External ID"]`**: Original image file name
+    * `annos[n]["Labeled Data"]`: URL of the original image
+    * `annos[n]["View Label"]`: URL of the image with labels or masks
+    * `annos[n]["Label"]`: Dict.  Meta data of all annotations of the
       image
-    * `annos[n]['Label']['objects']`: List.  Meta data of all objects of
+    * `annos[n]["Label"]["objects"]`: List.  Meta data of all objects of
       the image.
-    * `annos[n]['Label']['objects'][0]['value']`: Object name (category)
-    * **`annos[n]['Label']['objects'][0]['instanceURI']`**: URL of the
+    * `annos[n]["Label"]["objects"][0]["value"]`: Object name (category)
+    * **`annos[n]["Label"]["objects"][0]["instanceURI"]`**: URL of the
       binary mask of the object, with 0 as background, 255 as the object.
 
     Take the
@@ -204,29 +204,29 @@ def extract_masks_from_labelbox_json(
 
     Because the missing parts are the masks annotated in LabelBox, the
     only thing we need to do is to combine all binary masks
-    (`[obj['instanceURI'] for obj in annos[0]['Label']['objects']]`) of
-    individual objects from an image (`annos[0]['External ID']`) into a
-    single mask image (`annos[0]['External ID'][:-4] + '.png'`) in a
+    (`[obj["instanceURI"] for obj in annos[0]["Label"]["objects"]]`) of
+    individual objects from an image (`annos[0]["External ID"]`) into a
+    single mask image (`annos[0]["External ID"][:-4] + ".png"`) in a
     directory called `segmentation-masks`.
 
     Args:
-        labelbox_json: mask annotation JSON file from Labelbox
-        data_dir: path to dataset.  The path should contain the 'images' and
-            'annotations' subdirectories which store the original images and
+        labelbox_json_path: mask annotation JSON file from Labelbox
+        data_dir: path to dataset.  The path should contain the "images" and
+            "annotations" subdirectories which store the original images and
             PASCAL VOC annotation XML files.
         mask_data_dir: path to the result.  It will contain a
-            'segmentation-masks' subdirectory as well as 'images' and
-            'annotations'.  Only images with masks described in labelbox_json
+            "segmentation-masks" subdirectory as well as "images" and
+            "annotations".  Only images with masks described in labelbox_json_path
              will be stored in mask_data_dir.  Mask images extracted into
-             'segmentation-masks' will be PNG files.
+             "segmentation-masks" will be PNG files.
     """
 
-    src_im_dir = Path(data_dir) / 'images'  # image folder
-    src_anno_dir = Path(data_dir) / 'annotations'  # annotation folder
+    src_im_dir = Path(data_dir) / "images"  # image folder
+    src_anno_dir = Path(data_dir) / "annotations"  # annotation folder
 
-    dst_im_dir = Path(mask_data_dir) / 'images'
-    dst_anno_dir = Path(mask_data_dir) / 'annotations'
-    dst_mask_dir = Path(mask_data_dir) / 'segmentation-masks'  # mask folder
+    dst_im_dir = Path(mask_data_dir) / "images"
+    dst_anno_dir = Path(mask_data_dir) / "annotations"
+    dst_mask_dir = Path(mask_data_dir) / "segmentation-masks"  # mask folder
 
     # create directories for annotated dataset
     dst_im_dir.mkdir(parents=True, exist_ok=True)
@@ -234,15 +234,15 @@ def extract_masks_from_labelbox_json(
     dst_mask_dir.mkdir(parents=True, exist_ok=True)
 
     # read exported LabelBox annotation JSON file
-    with open(labelbox_json) as f:
+    with open(labelbox_json_path) as f:
         annos = json.load(f)
 
     # process one image per iteration
     for anno in annos:
         # get related file paths
-        im_name = anno['External ID']  # image file name
-        anno_name = im_name[:-4] + '.xml'  # annotation file name
-        mask_name = im_name[:-4] + '.png'  # mask file name
+        im_name = anno["External ID"]  # image file name
+        anno_name = im_name[:-4] + ".xml"  # annotation file name
+        mask_name = im_name[:-4] + ".png"  # mask file name
 
         print("Processing image: {}".format(im_name))
 
@@ -258,8 +258,8 @@ def extract_masks_from_labelbox_json(
         shutil.copy(src_anno_path, dst_anno_path)
 
         # read mask images
-        mask_urls = [obj['instanceURI'] for obj in anno['Label']['objects']]
-        labels = [obj['value'] for obj in anno['Label']['objects']]
+        mask_urls = [obj["instanceURI"] for obj in anno["Label"]["objects"]]
+        labels = [obj["value"] for obj in anno["Label"]["objects"]]
         binary_masks = np.array([
             np.array(Image.open(urllib.request.urlopen(url)))[..., 0] == 255
             for url in mask_urls
@@ -269,13 +269,13 @@ def extract_masks_from_labelbox_json(
         tree = ET.parse(dst_anno_path)
         root = tree.getroot()
         rects = []
-        for obj in root.findall('object'):
+        for obj in root.findall("object"):
             label = obj.find("name").text
             bnd_box = obj.find("bndbox")
-            left = int(bnd_box.find('xmin').text)
-            top = int(bnd_box.find('ymin').text)
-            right = int(bnd_box.find('xmax').text)
-            bottom = int(bnd_box.find('ymax').text)
+            left = int(bnd_box.find("xmin").text)
+            top = int(bnd_box.find("ymin").text)
+            right = int(bnd_box.find("xmax").text)
+            bottom = int(bnd_box.find("ymax").text)
             rects.append((label, left, top, right, bottom))
 
         assert len(rects) == len(binary_masks)
@@ -306,11 +306,11 @@ def extract_masks_from_labelbox_json(
         mask = np.max(labeled_masks, axis=0).astype(np.uint8)
 
         # save mask image
-        Image.fromarray(mask, mode='L').save(dst_mask_path)
+        Image.fromarray(mask, mode="L").save(dst_mask_path)
 
 
 def extract_keypoints_from_labelbox_json(
-    labelbox_json: Union[str, Path],
+    labelbox_json_path: Union[str, Path],
     data_dir: Union[str, Path],
     keypoint_data_dir: Union[str, Path] = None,
 ) -> None:
@@ -323,47 +323,47 @@ def extract_keypoints_from_labelbox_json(
     The data structure of the export JSON file from Labelbox looks like:
 
     ```
-    {'Dataset Name': 'odFridgeObjects',
-     'External ID': '21.jpg',
-     'Label': {'carton_left_back_bottom': [{'geometry': {'x': 217, 'y': 277}}],
-               'carton_left_back_shoulder': [{'geometry': {'x': 410, 'y': 340}}],
-               'carton_left_collar': [{'geometry': {'x': 416, 'y': 367}}],
-               'carton_left_front_bottom': [{'geometry': {'x': 161, 'y': 299}}],
-               'carton_left_front_shoulder': [{'geometry': {'x': 359, 'y': 375}}],
-               'carton_left_top': [{'geometry': {'x': 438, 'y': 379}}],
-               'carton_lid': [{'geometry': {'x': 392, 'y': 427}}],
-               'carton_right_collar': [{'geometry': {'x': 398, 'y': 450}}],
-               'carton_right_front_bottom': [{'geometry': {'x': 166, 'y': 371}}],
-               'carton_right_front_shoulder': [{'geometry': {'x': 350, 'y': 462}}],
-               'carton_right_top': [{'geometry': {'x': 424, 'y': 455}}],
-               'water_bottle_lid_left_bottom': [{'geometry': {'x': 243, 'y': 444}}],
-               'water_bottle_lid_left_top': [{'geometry': {'x': 266, 'y': 456}}],
-               'water_bottle_lid_right_bottom': [{'geometry': {'x': 220,
-                                                               'y': 499}}],
-               'water_bottle_lid_right_top': [{'geometry': {'x': 243, 'y': 511}}],
-               'water_bottle_wrapper_left_bottom': [{'geometry': {'x': 77,
-                                                                  'y': 344}}],
-               'water_bottle_wrapper_left_top': [{'geometry': {'x': 161,
-                                                               'y': 379}}],
-               'water_bottle_wrapper_right_bottom': [{'geometry': {'x': 30,
-                                                                   'y': 424}}],
-               'water_bottle_wrapper_right_top': [{'geometry': {'x': 120,
-                                                                'y': 477}}]},
-     'Labeled Data': 'https://storage.labelbox.com/ck1ipbufauu4f072105748106f5ce6-21.jpg',
-     'View Label': 'https://image-segmentation-v4.labelbox.com?project=ck36v24&label=ck36xdrzryw'}
+    {"Dataset Name": "odFridgeObjects",
+     "External ID": "21.jpg",
+     "Label": {"carton_left_back_bottom": [{"geometry": {"x": 217, "y": 277}}],
+               "carton_left_back_shoulder": [{"geometry": {"x": 410, "y": 340}}],
+               "carton_left_collar": [{"geometry": {"x": 416, "y": 367}}],
+               "carton_left_front_bottom": [{"geometry": {"x": 161, "y": 299}}],
+               "carton_left_front_shoulder": [{"geometry": {"x": 359, "y": 375}}],
+               "carton_left_top": [{"geometry": {"x": 438, "y": 379}}],
+               "carton_lid": [{"geometry": {"x": 392, "y": 427}}],
+               "carton_right_collar": [{"geometry": {"x": 398, "y": 450}}],
+               "carton_right_front_bottom": [{"geometry": {"x": 166, "y": 371}}],
+               "carton_right_front_shoulder": [{"geometry": {"x": 350, "y": 462}}],
+               "carton_right_top": [{"geometry": {"x": 424, "y": 455}}],
+               "water_bottle_lid_left_bottom": [{"geometry": {"x": 243, "y": 444}}],
+               "water_bottle_lid_left_top": [{"geometry": {"x": 266, "y": 456}}],
+               "water_bottle_lid_right_bottom": [{"geometry": {"x": 220,
+                                                               "y": 499}}],
+               "water_bottle_lid_right_top": [{"geometry": {"x": 243, "y": 511}}],
+               "water_bottle_wrapper_left_bottom": [{"geometry": {"x": 77,
+                                                                  "y": 344}}],
+               "water_bottle_wrapper_left_top": [{"geometry": {"x": 161,
+                                                               "y": 379}}],
+               "water_bottle_wrapper_right_bottom": [{"geometry": {"x": 30,
+                                                                   "y": 424}}],
+               "water_bottle_wrapper_right_top": [{"geometry": {"x": 120,
+                                                                "y": 477}}]},
+     "Labeled Data": "https://storage.labelbox.com/ck1ipbufauu4f072105748106f5ce6-21.jpg",
+     "View Label": "https://image-segmentation-v4.labelbox.com?project=ck36v24&label=ck36xdrzryw"}
     ```
 
     It is a list of `Dict` where each `Dict` is the meta data for an
     image.  Key fields include:
-    * **`annos[n]['External ID']`**: Original image file name
-    * `annos[n]['Labeled Data']`: URL of the original image
-    * `annos[n]['View Label']`: URL of the image with labels or masks
-    * `annos[n]['Label']`: Dict.  Meta data of all annotations of the
+    * **`annos[n]["External ID"]`**: Original image file name
+    * `annos[n]["Labeled Data"]`: URL of the original image
+    * `annos[n]["View Label"]`: URL of the image with labels or masks
+    * `annos[n]["Label"]`: Dict.  Meta data of all annotations of the
       image.  Its keys are the labels of keypoints, and its values are the
       coordinates.
-    * **`annos[n]['Label']['xxx'][0]['geometry']['x']`**: The x coordinate
+    * **`annos[n]["Label"]["xxx"][0]["geometry"]["x"]`**: The x coordinate
       of the label `xxx`.
-    * **`annos[n]['Label']['xxx'][0]['geometry']['y']`**: The y coordinate
+    * **`annos[n]["Label"]["xxx"][0]["geometry"]["y"]`**: The y coordinate
       of the label `xxx`.
 
     **NOTE** that things become tricky when there are multiple instances
@@ -375,42 +375,42 @@ def extract_keypoints_from_labelbox_json(
     `carton_left_back_bottom` is a point that belongs to a carton.
 
     Args:
-        labelbox_json: keypoint annotation JSON file from Labelbox
-        data_dir: path to dataset.  The path should contain the 'images' and
-            'annotations' subdirectories which store the original images and
+        labelbox_json_path: keypoint annotation JSON file from Labelbox
+        data_dir: path to dataset.  The path should contain the "images" and
+            "annotations" subdirectories which store the original images and
             PASCAL VOC annotation XML files.
-        keypoint_data_dir: path to the result.  It will contain the 'images'
-            and 'annotations' subdirectories.  Only images with keypoints
-            described in labelbox_json will be stored in keypoint_data_dir.
-            The XML files in the 'annotations' directory will also include the
-            keypoint annotations extracted from Labelbox's JSON file.
+        keypoint_data_dir: path to the result.  It will contain the "images"
+            and "annotations" subdirectories.  Only images with keypoints
+            described in labelbox_json_path will be stored in keypoint_data_dir.
+            The XML files in the "annotations" directory will also include the
+            keypoint annotations extracted from Labelbox"s JSON file.
     """
 
     # original image folder
-    src_im_dir = Path(data_dir) / 'images'
+    src_im_dir = Path(data_dir) / "images"
     # original annotation folder
-    src_anno_dir = Path(data_dir) / 'annotations'
+    src_anno_dir = Path(data_dir) / "annotations"
 
     # keypoint image folder
-    dst_im_dir = Path(keypoint_data_dir) / 'images'
+    dst_im_dir = Path(keypoint_data_dir) / "images"
     # keypoint annotation folder
-    dst_anno_dir = Path(keypoint_data_dir) / 'annotations'
+    dst_anno_dir = Path(keypoint_data_dir) / "annotations"
 
     # create directories for annotated dataset
     dst_im_dir.mkdir(parents=True, exist_ok=True)
     dst_anno_dir.mkdir(parents=True, exist_ok=True)
 
     # read exported LabelBox annotation JSON file
-    with open(labelbox_json) as f:
+    with open(labelbox_json_path) as f:
         annos = json.load(f)
 
     # process one image keypoints annotation per iteration
     for anno in annos:
         # get related file paths
-        im_name = anno['External ID']      # image file name
-        anno_name = im_name[:-4] + '.xml'  # annotation file name
+        im_name = anno["External ID"]      # image file name
+        anno_name = im_name[:-4] + ".xml"  # annotation file name
 
-        print('Processing image: {}'.format(im_name))
+        print("Processing image: {}".format(im_name))
 
         src_im_path = src_im_dir / im_name
         src_anno_path = src_anno_dir / anno_name
@@ -422,22 +422,22 @@ def extract_keypoints_from_labelbox_json(
         shutil.copy(src_im_path, dst_im_path)
 
         # add keypoints annotation into PASCAL VOC XML file
-        kps_annos = anno['Label']
+        kps_annos = anno["Label"]
         tree = ET.parse(src_anno_path)
         root = tree.getroot()
-        for obj in root.findall('object'):
-            prefix = obj.find('name').text + '_'
-            # add 'keypoints' node for current object
-            kps = ET.SubElement(obj, 'keypoints')
+        for obj in root.findall("object"):
+            prefix = obj.find("name").text + "_"
+            # add "keypoints" node for current object
+            kps = ET.SubElement(obj, "keypoints")
             for k in kps_annos.keys():
                 if k.startswith(prefix):
-                    # add keypoint into 'keypoints' node
+                    # add keypoint into "keypoints" node
                     pt = ET.SubElement(kps, k[len(prefix):])
-                    x = ET.SubElement(pt, 'x')  # add x coordinate
-                    y = ET.SubElement(pt, 'y')  # add y coordinate
-                    geo = kps_annos[k][0]['geometry']
-                    x.text = str(geo['x'])
-                    y.text = str(geo['y'])
+                    x = ET.SubElement(pt, "x")  # add x coordinate
+                    y = ET.SubElement(pt, "y")  # add y coordinate
+                    geo = kps_annos[k][0]["geometry"]
+                    x.text = str(geo["x"])
+                    y.text = str(geo["y"])
 
         # write modified annotation file
         tree.write(dst_anno_path)
