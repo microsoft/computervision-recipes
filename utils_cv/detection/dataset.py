@@ -3,6 +3,7 @@
 
 import os
 import copy
+from functools import partial
 import math
 import numpy as np
 from pathlib import Path
@@ -15,7 +16,7 @@ from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import display_bboxes_mask, plot_grid
+from .plot import plot_detections, plot_grid
 from .bbox import AnnotationBbox
 from .mask import binarise_mask
 from .references.utils import collate_fn
@@ -23,6 +24,7 @@ from .references.transforms import RandomHorizontalFlip, Compose, ToTensor
 from ..common.gpu import db_num_workers
 
 Trans = Callable[[object, dict], Tuple[object, dict]]
+
 
 
 class ColorJitterTransform(object):
@@ -152,7 +154,7 @@ class DetectionDataset:
         im_dir: str = "images",
         mask_dir: str = None,
         seed: int = None,
-        allow_negatives: bool = False
+        allow_negatives: bool = False,
     ):
         """ initialize dataset
 
@@ -255,7 +257,7 @@ class DetectionDataset:
                 # Assume mask image name matches image name but has .png
                 # extension
                 mask_name = os.path.basename(self.im_paths[-1])
-                mask_name = mask_name[:mask_name.rindex('.')] + ".png"
+                mask_name = mask_name[: mask_name.rindex(".")] + ".png"
                 mask_path = self.root / self.mask_dir / mask_name
                 # For mask prediction, if no mask provided and negatives not
                 # allowed (), ignore the image
@@ -389,7 +391,15 @@ class DetectionDataset:
         if seed or self.seed:
             random.seed(seed or self.seed)
 
-        plot_grid(display_bboxes_mask, self._get_random_anno, rows=rows, cols=cols)
+        def helper(im_paths):
+            idx = random.randrange(len(im_paths))
+            detection = {}
+            detection["idx"] = idx
+            detection["im_path"] = im_paths[idx]
+            detection["det_bboxes"] = []
+            return detection, self, None
+
+        plot_grid(plot_detections, partial(helper, self.im_paths), rows=2)
 
     def show_im_transformations(
         self, idx: int = None, rows: int = 1, cols: int = 3
@@ -438,20 +448,11 @@ class DetectionDataset:
                 # for the tiny bounding box in _read_annos(), make the mask to
                 # be the whole box
                 mask = np.zeros(
-                    Image.open(self.im_paths[idx]).size[::-1],
-                    dtype=np.uint8
+                    Image.open(self.im_paths[idx]).size[::-1], dtype=np.uint8
                 )
                 binary_masks = binarise_mask(mask)
 
         return binary_masks
-
-    def _get_random_anno(self) -> Tuple:
-        """ Get random annotation and corresponding image
-
-        Returns a list of annotations and the image path
-        """
-        idx = random.randrange(len(self.im_paths))
-        return self.anno_bboxes[idx], self.im_paths[idx], self._get_binary_mask(idx)
 
     def __getitem__(self, idx):
         """ Make iterable. """
