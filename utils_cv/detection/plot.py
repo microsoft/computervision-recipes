@@ -13,11 +13,11 @@ from PIL import Image, ImageDraw
 from torch.utils.data import Subset
 import matplotlib.pyplot as plt
 
-from .bbox import _Bbox, DetectionBbox
+from .bbox import _Bbox
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
-from .keypoint import COCOKeypoints
+from .keypoint import Keypoints
 from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 
 
@@ -128,7 +128,7 @@ def plot_masks(
 
 def plot_keypoints(
     im: Union[str, Path, PIL.Image.Image],
-    keypoints: COCOKeypoints,
+    keypoints: Keypoints,
     plot_settings: PlotSettings = PlotSettings(),
 ) -> PIL.Image.Image:
     """ Plot connected keypoints on Image and return the Image. """
@@ -160,8 +160,8 @@ def plot_detections(
         detection: output running model prediction.
         data: dataset with ground truth information.
         idx: index into the data object to find the ground truth which corresponds to the detection.
-        keypoint_meta: meta data of keypoints which should include "category",
-            "labels" and "skeleton".
+        keypoint_meta: meta data of keypoints which should include "point_num",
+            and "skeleton".
         ax: an optional ax to specify where you wish the figure to be drawn on
     """
     # Open image
@@ -194,7 +194,7 @@ def plot_detections(
     if "keypoints" in detection:
         im = plot_keypoints(
             im,
-            COCOKeypoints(detection["keypoints"], keypoint_meta),
+            Keypoints(detection["keypoints"], keypoint_meta),
             PlotSettings(keypoint_color=(192, 165, 0)),
         )
 

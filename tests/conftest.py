@@ -25,7 +25,7 @@ from utils_cv.classification.data import Urls as ic_urls
 from utils_cv.detection.data import Urls as od_urls
 from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox
 from utils_cv.detection.dataset import DetectionDataset
-from utils_cv.detection.keypoint import COCOKeypoints
+from utils_cv.detection.keypoint import Keypoints
 from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
     get_pretrained_maskrcnn,
@@ -436,7 +436,7 @@ def od_keypoints_for_plot() -> Tuple:
     im = Image.fromarray(np.zeros((500, 600, 3), dtype=np.uint8))
 
     # dummy keypoints
-    keypoints = COCOKeypoints(
+    keypoints = Keypoints(
         np.array([
             [
                 [100, 200, 2],
@@ -444,8 +444,7 @@ def od_keypoints_for_plot() -> Tuple:
             ]
         ]),
         {
-            "category": "dummy",
-            "labels": ["left", "right"],
+            "point_num": 2,
             "skeleton": [[0, 1], ],
         },
     )

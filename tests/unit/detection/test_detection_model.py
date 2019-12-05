@@ -27,14 +27,14 @@ from utils_cv.detection.model import (
 def test__extract_od_results(od_sample_raw_preds, od_data_path_labels):
     """ test that `_extract_od_results` can convert raw preds. """
     pred = {k: v.detach().cpu().numpy() for k, v in od_sample_raw_preds[0].items()}
-    res = _extract_od_results(
+    out = _extract_od_results(
         pred, labels=od_data_path_labels, im_path=None
     )
-    bboxes = res["det_bboxes"]
+    bboxes = out["det_bboxes"]
     assert type(bboxes[0]) == DetectionBbox
     assert len(bboxes) == 5
-    assert res["masks"].shape == (5, 666, 499)
-    assert res["keypoints"].shape == (5, 13, 3)
+    assert out["masks"].shape == (5, 666, 499)
+    assert out["keypoints"].shape == (5, 13, 3)
 
 
 def test__apply_threshold(od_sample_raw_preds):
@@ -45,9 +45,9 @@ def test__apply_threshold(od_sample_raw_preds):
         (0.01, 5, (21146, 28098, 28458, 28356, 21311)),
         (0.995, 2, (21146, 28098)),
     ]
-    res = {k: v.detach().cpu().numpy() for k, v in od_sample_raw_preds[0].items()}
+    out = {k: v.detach().cpu().numpy() for k, v in od_sample_raw_preds[0].items()}
     for threshold, num, mask_pixels in test_cases:
-        pred = _apply_threshold(res, threshold=threshold)
+        pred = _apply_threshold(out, threshold=threshold)
         for v in pred.values():
             assert len(v) == num
         for mask, num_pixels in zip(pred["masks"], mask_pixels):

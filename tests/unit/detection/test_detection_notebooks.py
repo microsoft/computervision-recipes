@@ -85,7 +85,7 @@ def test_03_notebook_run(detection_notebooks):
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__),
+        parameters=dict(PM_VERSION=pm.__version__, IM_SIZE=100),
         kernel_name=KERNEL_NAME,
     )
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)

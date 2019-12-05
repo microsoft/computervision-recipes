@@ -16,8 +16,8 @@ import torch.nn as nn
 from torchvision import transforms
 from torchvision.models.detection import (
     fasterrcnn_resnet50_fpn,
-    maskrcnn_resnet50_fpn,
     keypointrcnn_resnet50_fpn,
+    maskrcnn_resnet50_fpn,
 )
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.keypoint_rcnn import KeypointRCNNPredictor
@@ -63,15 +63,15 @@ def _extract_od_results(
         )
         det_bboxes.append(det_bbox)
 
-    res = {"det_bboxes": det_bboxes, "im_path": im_path}
+    out = {"det_bboxes": det_bboxes, "im_path": im_path}
 
     if "masks" in pred:
-        res["masks"] = pred["masks"].squeeze(1)
+        out["masks"] = pred["masks"].squeeze(1)
 
     if "keypoints" in pred:
-        res["keypoints"] = pred["keypoints"]
+        out["keypoints"] = pred["keypoints"]
 
-    return res
+    return out
 
 
 def _apply_threshold(
@@ -228,10 +228,12 @@ def get_pretrained_keypointrcnn(
     """ Gets a pretrained Keypoint R-CNN model
 
     Args:
-        num_classes: number of output classes of the model (including the background)
-        num_keypoints: number of keypoints for the specific category
+        num_classes: number of output classes of the model (including the
+            background).  If none of num_classes and num_keypoints below are
+            not specified, the pretrained model will be returned.
+        num_keypoints: number of keypoints
     Returns
-        The model to fine-tine/inference with
+        The model to fine-tune/inference with
 
     For a list of all parameters see:
         https://github.com/pytorch/vision/blob/master/torchvision/models/detection/keypoint_rcnn.py

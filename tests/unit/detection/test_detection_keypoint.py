@@ -4,7 +4,7 @@
 import numpy as np
 import pytest
 
-from utils_cv.detection.keypoint import COCOKeypoints
+from utils_cv.detection.keypoint import Keypoints
 
 
 @pytest.fixture(scope="session")
@@ -28,8 +28,7 @@ def od_sample_keypoint_with_meta():
         ],
     ])
     keypoint_meta = {
-        "category": "dummy",
-        "labels": ["left", "right"],
+        "point_num": 2,
         "skeleton": [[0, 1], ],
     }
     lines = [
@@ -45,7 +44,7 @@ def test_cocokeypoints(od_sample_keypoint_with_meta):
     keypoints, keypoint_meta, lines = od_sample_keypoint_with_meta
 
     # test init
-    k = COCOKeypoints(keypoints, keypoint_meta)
+    k = Keypoints(keypoints, keypoint_meta)
     assert np.all(k.keypoints == keypoints)
     assert k.meta == keypoint_meta
 
