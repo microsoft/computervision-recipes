@@ -26,7 +26,6 @@ from ..common.gpu import db_num_workers
 Trans = Callable[[object, dict], Tuple[object, dict]]
 
 
-
 class ColorJitterTransform(object):
     """ Wrapper for torchvision's ColorJitter to make sure 'target
     object is passed along """
@@ -172,7 +171,7 @@ class DetectionDataset:
             train_pct: the ratio of training to testing data
             anno_dir: the name of the annotation subfolder under the root directory
             im_dir: the name of the image subfolder under the root directory. If set to 'None' then infers image location from annotation .xml files
-            allow_negatives: is false (default) then will throw an error if no anntation .xml file can be found for a given image. Otherwise use image as negative, ie assume that the image does not contain any of the objects of interest.
+            allow_negatives: is false (default) then will throw an error if no annotation .xml file can be found for a given image. Otherwise use image as negative, ie assume that the image does not contain any of the objects of interest.
             mask_dir: the name of the mask subfolder under the root directory if the dataset is used for instance segmentation
             seed: random seed for splitting dataset to training and testing data
         """
@@ -260,7 +259,7 @@ class DetectionDataset:
                 mask_name = mask_name[: mask_name.rindex(".")] + ".png"
                 mask_path = self.root / self.mask_dir / mask_name
                 # For mask prediction, if no mask provided and negatives not
-                # allowed (), ignore the image
+                # allowed (), raise exception
                 if not mask_path.exists():
                     if not self.allow_negatives:
                         raise FileNotFoundError(mask_path)
@@ -358,19 +357,25 @@ class DetectionDataset:
         for i, (im_path, anno_bbox) in enumerate(zip(im_paths, anno_bboxes)):
             self.im_paths.append(im_path)
             self.anno_bboxes.append(anno_bbox)
+
             if mask_paths is not None:
                 self.mask_paths.append(mask_paths[i])
+
             if target.lower() == "train":
                 self.train_ds.dataset.im_paths.append(im_path)
                 self.train_ds.dataset.anno_bboxes.append(anno_bbox)
+
                 if mask_paths is not None:
                     self.train_ds.dataset.mask_paths.append(mask_paths[i])
+
                 self.train_ds.indices.append(len(self.im_paths) - 1)
             elif target.lower() == "test":
                 self.test_ds.dataset.im_paths.append(im_path)
                 self.test_ds.dataset.anno_bboxes.append(anno_bbox)
+
                 if mask_paths is not None:
                     self.test_ds.dataset.mask_paths.append(mask_paths[i])
+
                 self.test_ds.indices.append(len(self.im_paths) - 1)
             else:
                 raise Exception(f"Target {target} unknown.")
@@ -393,13 +398,19 @@ class DetectionDataset:
 
         def helper(im_paths):
             idx = random.randrange(len(im_paths))
-            detection = {}
-            detection["idx"] = idx
-            detection["im_path"] = im_paths[idx]
-            detection["det_bboxes"] = []
-            return detection, self, None
+            detection = {
+                "idx": idx,
+                "im_path": im_paths[idx],
+                "det_bboxes": [],
+            }
+            return detection, self, None, None
 
-        plot_grid(plot_detections, partial(helper, self.im_paths), rows=2)
+        plot_grid(
+            plot_detections,
+            partial(helper, self.im_paths),
+            rows=rows,
+            cols=cols,
+        )
 
     def show_im_transformations(
         self, idx: int = None, rows: int = 1, cols: int = 3
