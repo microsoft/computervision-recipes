@@ -24,12 +24,10 @@ jobs:
 
   - script: |
      call conda env remove -n cv -y
-     rmdir /s /q C:\Anaconda\envs\cv
+     if exist C:\Anaconda\envs\cv rmdir /s /q C:\Anaconda\envs\cv
 
     workingDirectory: tests
     displayName: 'Conda remove'
-    continueOnError: true
-    condition: succeededOrFailed()
     timeoutInMinutes: 10
 
   - script: |
