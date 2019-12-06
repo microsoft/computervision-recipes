@@ -89,13 +89,16 @@ def test_03_notebook_run(detection_notebooks):
         kernel_name=KERNEL_NAME,
     )
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-    assert len(nb_output.scraps["keypoints"].data) == \
-           len(nb_output.scraps["bboxes"].data)
+    assert len(nb_output.scraps["keypoints"].data) == len(
+        nb_output.scraps["bboxes"].data
+    )
 
 
 @pytest.mark.gpu
 @pytest.mark.notebooks
-def test_12_notebook_run(detection_notebooks, tiny_od_data_path, tiny_ic_negatives_path):
+def test_12_notebook_run(
+    detection_notebooks, tiny_od_data_path, tiny_ic_negatives_path
+):
     notebook_path = detection_notebooks["12"]
     pm.execute_notebook(
         notebook_path,

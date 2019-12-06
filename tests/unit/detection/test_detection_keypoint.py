@@ -9,28 +9,15 @@ from utils_cv.detection.keypoint import Keypoints
 
 @pytest.fixture(scope="session")
 def od_sample_keypoint_with_meta():
-    keypoints = np.array([
+    keypoints = np.array(
         [
-            [10.0, 20.0, 2],
-            [20.0, 20.0, 2],
-        ],
-        [
-            [20.0, 10.0, 2],
-            [0, 0, 0],
-        ],
-        [
-            [30.0, 30.0, 2],
-            [40.0, 40.0, 2],
-        ],
-        [
-            [40.0, 10.0, 2],
-            [50.0, 50.0, 2],
-        ],
-    ])
-    keypoint_meta = {
-        "point_num": 2,
-        "skeleton": [[0, 1], ],
-    }
+            [[10.0, 20.0, 2], [20.0, 20.0, 2]],
+            [[20.0, 10.0, 2], [0, 0, 0]],
+            [[30.0, 30.0, 2], [40.0, 40.0, 2]],
+            [[40.0, 10.0, 2], [50.0, 50.0, 2]],
+        ]
+    )
+    keypoint_meta = {"num_keypoints": 2, "skeleton": [[0, 1]]}
     lines = [
         [10.0, 20.0, 20.0, 20.0],
         [30.0, 30.0, 40.0, 40.0],

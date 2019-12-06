@@ -160,9 +160,7 @@ def _tune_mask_predictor(model: nn.Module, num_classes: int) -> nn.Module:
     in_features = model.roi_heads.mask_predictor.conv5_mask.in_channels
     # replace the mask predictor with a new one
     model.roi_heads.mask_predictor = MaskRCNNPredictor(
-        in_features,
-        256,
-        num_classes,
+        in_features, 256, num_classes
     )
     return model
 
@@ -221,9 +219,7 @@ def get_pretrained_maskrcnn(num_classes: int = None, **kwargs) -> nn.Module:
 
 
 def get_pretrained_keypointrcnn(
-    num_classes: int = None,
-    num_keypoints: int = None,
-    **kwargs,
+    num_classes: int = None, num_keypoints: int = None, **kwargs
 ) -> nn.Module:
     """ Gets a pretrained Keypoint R-CNN model
 
@@ -240,10 +236,7 @@ def get_pretrained_keypointrcnn(
 
     """
     # load a model pre-trained on COCO
-    model = _get_pretrained_rcnn(
-        keypointrcnn_resnet50_fpn,
-        **kwargs,
-    )
+    model = _get_pretrained_rcnn(keypointrcnn_resnet50_fpn, **kwargs)
 
     if num_classes:
         model = _tune_box_predictor(model, num_classes)
@@ -251,12 +244,12 @@ def get_pretrained_keypointrcnn(
     # tune keypoints predictor in the model
     if num_keypoints:
         # get the number of input features of keypoint predictor from the pretrained model
-        in_features = \
+        in_features = (
             model.roi_heads.keypoint_predictor.kps_score_lowres.in_channels
+        )
         # replace the keypoint predictor with a new one
         model.roi_heads.keypoint_predictor = KeypointRCNNPredictor(
-            in_features,
-            num_keypoints,
+            in_features, num_keypoints
         )
 
     return model

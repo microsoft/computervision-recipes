@@ -372,7 +372,9 @@ def od_cup_path(tmp_session) -> str:
 @pytest.fixture(scope="session")
 def od_cup_mask_path(tmp_session) -> str:
     """ Returns the path to the downloaded cup image. """
-    im_url = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup_mask.png"
+    im_url = (
+        "https://cvbp.blob.core.windows.net/public/images/cvbp_cup_mask.png"
+    )
     im_path = os.path.join(tmp_session, "example_mask.png")
     urllib.request.urlretrieve(im_url, im_path)
     return im_path
@@ -437,16 +439,8 @@ def od_keypoints_for_plot() -> Tuple:
 
     # dummy keypoints
     keypoints = Keypoints(
-        np.array([
-            [
-                [100, 200, 2],
-                [200, 200, 2],
-            ]
-        ]),
-        {
-            "point_num": 2,
-            "skeleton": [[0, 1], ],
-        },
+        np.array([[[100, 200, 2], [200, 200, 2]]]),
+        {"num_keypoints": 2, "skeleton": [[0, 1]]},
     )
     return im, keypoints
 
@@ -509,18 +503,12 @@ def od_sample_raw_preds():
     for rect, mask in zip(boxes, masks):
         left, top, right, bottom = [int(x) for x in rect]
         # first line of the bounding box
-        mask[:, top, left:(right + 1)] = 0.05
+        mask[:, top, left : (right + 1)] = 0.05
         # other lines of the bounding box
-        mask[:, (top + 1):(bottom + 1), left:(right + 1)] = 0.7
+        mask[:, (top + 1) : (bottom + 1), left : (right + 1)] = 0.7
 
     # construct keypoints
-    start_points = [
-        [120, 200],
-        [350, 350],
-        [220, 300],
-        [250, 400],
-        [100, 350],
-    ]
+    start_points = [[120, 200], [350, 350], [220, 300], [250, 400], [100, 350]]
     keypoints = []
     for x, y in start_points:
         points = []
@@ -532,19 +520,15 @@ def od_sample_raw_preds():
         {
             "boxes": tensor(boxes, device=device, dtype=torch.float),
             "labels": tensor(
-                [3, 3, 3, 2, 1],
-                device=device,
-                dtype=torch.int64
+                [3, 3, 3, 2, 1], device=device, dtype=torch.int64
             ),
             "scores": tensor(
                 [0.9985, 0.9979, 0.9945, 0.1470, 0.0903],
                 device=device,
-                dtype=torch.float
+                dtype=torch.float,
             ),
             "masks": tensor(masks, device=device, dtype=torch.float),
-            "keypoints": tensor(
-                keypoints, device=device, dtype=torch.float32
-            ),
+            "keypoints": tensor(keypoints, device=device, dtype=torch.float32),
         }
     ]
 
@@ -571,7 +555,9 @@ def od_detection_dataset(tiny_od_data_path):
 @pytest.fixture(scope="session")
 def od_detection_mask_dataset(tiny_od_mask_data_path):
     """ returns a basic detection mask dataset. """
-    return DetectionDataset(tiny_od_mask_data_path, mask_dir="segmentation-masks")
+    return DetectionDataset(
+        tiny_od_mask_data_path, mask_dir="segmentation-masks"
+    )
 
 
 @pytest.mark.gpu

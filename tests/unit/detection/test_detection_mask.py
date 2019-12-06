@@ -22,8 +22,7 @@ def test_colorise_binary_mask(od_mask_rects):
     foreground = 9
     background = 0
     colored_mask = colorise_binary_mask(
-        binary_mask,
-        color=(foreground, foreground, foreground)
+        binary_mask, color=(foreground, foreground, foreground)
     )
     for ch in colored_mask.transpose((2, 0, 1)):
         assert np.all(ch[binary_mask] == foreground)
@@ -36,8 +35,7 @@ def test_transparentise_mask(od_mask_rects):
     foreground = 9
     background = 0
     colored_mask = colorise_binary_mask(
-        binary_mask,
-        color=(foreground, foreground, foreground)
+        binary_mask, color=(foreground, foreground, foreground)
     )
     transparent_mask = transparentise_mask(colored_mask, alpha=0.7)
     assert np.all(transparent_mask[binary_mask] != background)

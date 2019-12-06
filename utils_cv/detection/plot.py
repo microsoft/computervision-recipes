@@ -141,7 +141,7 @@ def plot_keypoints(
             draw.line(
                 line,
                 fill=plot_settings.keypoint_color,
-                width=plot_settings.keypoint_th
+                width=plot_settings.keypoint_th,
             )
 
     return im
@@ -152,7 +152,7 @@ def plot_detections(
     data: "DetectionDataset" = None,
     idx: int = None,
     keypoint_meta: Dict = None,
-    ax: plt.axes = None
+    ax: plt.axes = None,
 ) -> PIL.Image.Image:
     """ Put mask onto image.
 
@@ -160,8 +160,8 @@ def plot_detections(
         detection: output running model prediction.
         data: dataset with ground truth information.
         idx: index into the data object to find the ground truth which corresponds to the detection.
-        keypoint_meta: meta data of keypoints which should include "point_num",
-            and "skeleton".
+        keypoint_meta: meta data of keypoints which should include
+            "num_keypoints" and "skeleton".
         ax: an optional ax to specify where you wish the figure to be drawn on
     """
     # Open image

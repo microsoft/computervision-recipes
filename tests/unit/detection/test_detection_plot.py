@@ -63,7 +63,7 @@ def test_plot_masks(od_mask_rects):
     _, mask, rects, im = od_mask_rects
 
     # plot mask
-    im = plot_masks(im, mask, plot_settings=plot_setting).convert('RGB')
+    im = plot_masks(im, mask, plot_settings=plot_setting).convert("RGB")
     im = np.transpose(np.array(im), (2, 0, 1))
 
     # validate each channel matches the mask
@@ -99,21 +99,25 @@ def test_plot_grid(od_sample_detection, od_detection_mask_dataset):
     # test callable args
     def callable_args():
         return od_sample_detection, None, None, None
+
     plot_grid(plot_detections, callable_args, rows=1)
 
     def callable_args():
         return od_sample_detection, od_detection_mask_dataset, None, None
+
     plot_grid(plot_detections, callable_args, rows=1)
 
     # test iterable args
     def iterator_args():
         for detection in [od_sample_detection, od_sample_detection]:
             yield detection, None, None, None
+
     plot_grid(plot_detections, iterator_args(), rows=1, cols=2)
 
     def iterator_args():
         for detection in [od_sample_detection, od_sample_detection]:
             yield detection, od_detection_mask_dataset, None, None
+
     plot_grid(plot_detections, iterator_args(), rows=1, cols=2)
 
 
@@ -152,4 +156,6 @@ def test_plot_pr_curves(od_detection_eval, od_detection_mask_eval):
 @pytest.mark.gpu
 def test_plot_counts_curves(od_detection_dataset, od_detections):
     """ Test that `plot_counts_curves` works. """
-    plot_counts_curves(od_detections, od_detection_dataset.test_ds, od_detections)
+    plot_counts_curves(
+        od_detections, od_detection_dataset.test_ds, od_detections
+    )
