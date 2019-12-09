@@ -31,7 +31,15 @@ class Urls:
 
     # mask datasets
     fridge_objects_mask_path = urljoin(base, "odFridgeObjectsMask.zip")
-    fridge_objects_mask_tiny_path = urljoin(base, "odFridgeObjectsMaskTiny.zip")
+    fridge_objects_mask_tiny_path = urljoin(
+        base, "odFridgeObjectsMaskTiny.zip"
+    )
+
+    # keypoint datasets
+    fridge_objects_keypoint_path = urljoin(base, "odFridgeObjectsKeypoint.zip")
+    fridge_objects_keypoint_tiny_path = urljoin(
+        base, "odFridgeObjectsKeypointTiny.zip"
+    )
 
     @classmethod
     def all(cls) -> List[str]:
@@ -260,10 +268,13 @@ def extract_masks_from_labelbox_json(
         # read mask images
         mask_urls = [obj["instanceURI"] for obj in anno["Label"]["objects"]]
         labels = [obj["value"] for obj in anno["Label"]["objects"]]
-        binary_masks = np.array([
-            np.array(Image.open(urllib.request.urlopen(url)))[..., 0] == 255
-            for url in mask_urls
-        ])
+        binary_masks = np.array(
+            [
+                np.array(Image.open(urllib.request.urlopen(url)))[..., 0]
+                == 255
+                for url in mask_urls
+            ]
+        )
 
         # rearrange masks with regard to annotation
         tree = ET.parse(dst_anno_path)
@@ -286,17 +297,19 @@ def extract_masks_from_labelbox_json(
             min_overlap = binary_masks.shape[1] * binary_masks.shape[2]
             for i, bmask in enumerate(binary_masks):
                 bmask_out = bmask.copy()
-                bmask_out[top:(bottom + 1), left:(right + 1)] = False
+                bmask_out[top : (bottom + 1), left : (right + 1)] = False
                 non_overlap = np.sum(bmask_out)
                 if non_overlap < min_overlap:
                     match = i
                     min_overlap = non_overlap
-            assert label == labels[match], \
-                "{}: {}".format(label, labels[match])
+            assert label == labels[match], "{}: {}".format(
+                label, labels[match]
+            )
             matches.append(match)
 
-        assert len(set(matches)) == len(matches), \
-            "{}: {}".format(len(set(matches)), len(matches))
+        assert len(set(matches)) == len(matches), "{}: {}".format(
+            len(set(matches)), len(matches)
+        )
 
         binary_masks = binary_masks[matches]
 
@@ -407,7 +420,7 @@ def extract_keypoints_from_labelbox_json(
     # process one image keypoints annotation per iteration
     for anno in annos:
         # get related file paths
-        im_name = anno["External ID"]      # image file name
+        im_name = anno["External ID"]  # image file name
         anno_name = im_name[:-4] + ".xml"  # annotation file name
 
         print("Processing image: {}".format(im_name))
@@ -432,7 +445,7 @@ def extract_keypoints_from_labelbox_json(
             for k in kps_annos.keys():
                 if k.startswith(prefix):
                     # add keypoint into "keypoints" node
-                    pt = ET.SubElement(kps, k[len(prefix):])
+                    pt = ET.SubElement(kps, k[len(prefix) :])
                     x = ET.SubElement(pt, "x")  # add x coordinate
                     y = ET.SubElement(pt, "y")  # add y coordinate
                     geo = kps_annos[k][0]["geometry"]

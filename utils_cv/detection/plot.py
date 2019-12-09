@@ -17,7 +17,6 @@ from .bbox import _Bbox
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
-from .keypoint import Keypoints
 from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 
 
@@ -101,9 +100,12 @@ def plot_masks(
 ) -> PIL.Image.Image:
     """ Put mask onto image.
 
-    Assume the mask is already binary masks of [N, Height, Width], or
-    grayscale mask of [Height, Width] with different values
-    representing different objects, 0 as background.
+    Args:
+        im: the image to plot masks on
+        mask: it should be binary masks of [N, Height, Width], or grayscale
+            mask of [Height, Width] with different values representing
+            different objects, 0 as background
+        plot_settings: the parameter to plot the masks
     """
     if isinstance(im, (str, Path)):
         im = Image.open(im)
@@ -128,16 +130,41 @@ def plot_masks(
 
 def plot_keypoints(
     im: Union[str, Path, PIL.Image.Image],
-    keypoints: Keypoints,
+    keypoints: np.ndarray,
+    keypoint_meta: Dict,
     plot_settings: PlotSettings = PlotSettings(),
 ) -> PIL.Image.Image:
-    """ Plot connected keypoints on Image and return the Image. """
+    """ Plot connected keypoints on Image and return the Image.
+
+    Args:
+        im: the image to plot keypoints on
+        keypoints: the keypoints to plot, of shape (N, num_keypoints, 3),
+            where N is the number of objects.  3 means x, y and visibility.
+            0 for visibility means invisible
+        keypoint_meta: meta data of keypoints which should include at least
+            "skeleton"
+        plot_settings: the parameter to plot the keypoints
+    """
     if isinstance(im, (str, Path)):
         im = Image.open(im)
 
     if keypoints is not None:
+        assert (
+            keypoints.ndim == 3 and keypoints.shape[2] == 3
+        ), "Malformed keypoints array"
+        assert (
+            np.max(np.array(keypoint_meta["skeleton"])) < keypoints.shape[1]
+        ), "Skeleton index out of range"
+
         draw = ImageDraw.Draw(im)
-        for line in keypoints.get_lines():
+
+        # get connected skeleton lines of the keypoints
+        joints = keypoints[:, keypoint_meta["skeleton"]]
+        visibles = (joints[..., 2] != 0).all(axis=2)
+        bones = joints[visibles][..., :2]
+
+        # draw skeleton lines
+        for line in bones.reshape((-1, 4)).tolist():
             draw.line(
                 line,
                 fill=plot_settings.keypoint_color,
@@ -160,8 +187,8 @@ def plot_detections(
         detection: output running model prediction.
         data: dataset with ground truth information.
         idx: index into the data object to find the ground truth which corresponds to the detection.
-        keypoint_meta: meta data of keypoints which should include
-            "num_keypoints" and "skeleton".
+        keypoint_meta: meta data of keypoints which should include at least
+            "skeleton".
         ax: an optional ax to specify where you wish the figure to be drawn on
     """
     # Open image
@@ -190,11 +217,21 @@ def plot_detections(
         mask = detection["masks"]
         im = plot_masks(im, mask, PlotSettings(mask_color=(128, 165, 0)))
 
+    # Plot ground truth keypoints
+    if data and data.keypoints and data.keypoint_meta:
+        im = plot_keypoints(
+            im,
+            data.keypoints[idx],
+            data.keypoint_meta,
+            PlotSettings(keypoint_color=(0, 192, 0)),
+        )
+
     # Plot predicted keypoints
     if "keypoints" in detection:
         im = plot_keypoints(
             im,
-            Keypoints(detection["keypoints"], keypoint_meta),
+            detection["keypoints"],
+            keypoint_meta,
             PlotSettings(keypoint_color=(192, 165, 0)),
         )
 
