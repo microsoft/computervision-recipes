@@ -38,6 +38,30 @@ Annotated object locations are required to train and evaluate an object detector
 
 When creating a new project in VOTT, note that the "source connection" can simply point to a local folder which contains the images to be annotated, and respectively the "target connection" to a folder where to write the output. Pascal VOC style annotations can be exported by selecting "Pascal VOC" in the "Export Settings" tab and then using the "Export Project" button in the "Tags Editor" tab.
 
+For mask (segmentation) annotation, an easy-to-use online tool is
+[Labelbox](https://labelbox.com/).  Other alternatives include
+[CVAT](https://github.com/opencv/cvat) and
+[RectLabel](https://rectlabel.com/) (Mac only).
+
+<p align="center"> <img src="media/labelbox_mask_annotation.png"
+width="600"/> </p>
+
+A good demo can be found at [Introducing Image Segmentation at
+Labelbox](https://labelbox.com/blog/introducing-image-segmentation/).
+Besides for annotating mask, Labelbox can also be used to annotate
+bounding box, polyline and keypoint.
+
+<p align="center">
+<img src="media/labelbox_keypoint_annotation.png" width="600"/>
+</p>
+
+However, it has limitation to the number of labeled images per year
+for free account.  And it does not provide export options for COCO or
+PASCAL VOC.  Annotations at Labelbox still needs to be converted into
+the format used in our notebooks, which is explained in our [Mask R-CNN
+notebook](02_mask_rcnn.ipynb).
+
+
 Selection and annotating images is complex and consistency is key. For example:
 * All objects in an image need to be annotated, even if the image contains many of them. Consider removing the image if this would take too much time.
 * Ambiguous images should be removed, for example if it is unclear to a human if an object is lemon or a tennis ball, or if the image is blurry, etc.
@@ -61,7 +85,7 @@ Similar to most object detection methods, R-CNN use a deep Neural Network which 
   1. Given an input image
   2. A large number region proposals, aka Regions-of-Interests (ROIs), are generated.
   3. These ROIs are then independently sent through the network which outputs a vector of e.g. 4096 floating point values for each ROI.
-  4. Finally, a classifier is learned which takes the 4096 floats ROI representation as input and outputs a label and confidence to each ROI.  
+  4. Finally, a classifier is learned which takes the 4096 floats ROI representation as input and outputs a label and confidence to each ROI.
 <p align="center">
 <img src="media/rcnn_pipeline.jpg" width="600" align="center"/>
 </p>
@@ -72,7 +96,7 @@ While this approach works well in terms of accuracy, it is very costly to comput
 ### Intersection-over-Union overlap metric
 It is often necessary to measure by how much two given rectangles overlap. For example, one rectangle might correspond to the ground-truth location of an object, while the second rectangle corresponds to the estimated location, and the goal is to measure how precise the object was detected.
 
-For this, a metric called Intersection-over-Union (IoU) is typically used. In the example below, the IoU is given by dividing the yellow area by the combined yellow and blue areas. An IoU of 1.0 corresponds to a perfect match, while an IoU of 0 indicates that the two rectangles do not overlap. Typically an IoU of 0.5 is considered a good localization. See also this [page](https://www.pyimagesearch.com/2016/11/07/intersection-over-union-iou-for-object-detection/) for a more in-depth discussion.     
+For this, a metric called Intersection-over-Union (IoU) is typically used. In the example below, the IoU is given by dividing the yellow area by the combined yellow and blue areas. An IoU of 1.0 corresponds to a perfect match, while an IoU of 0 indicates that the two rectangles do not overlap. Typically an IoU of 0.5 is considered a good localization. See also this [page](https://www.pyimagesearch.com/2016/11/07/intersection-over-union-iou-for-object-detection/) for a more in-depth discussion.
 <p align="center">
 <img src="media/iou_example.jpg" width="400" align="center"/>
 </p>
