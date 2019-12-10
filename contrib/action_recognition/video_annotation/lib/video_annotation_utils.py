@@ -3,6 +3,7 @@
 
 import ast
 import os
+import subprocess
 import numpy as np
 import pandas as pd
 
@@ -40,6 +41,12 @@ def video_format_conversion(video_path, output_path, h264_format=False):
         )
 
 
+def parse_video_file_name(row):
+
+    video_file = ast.literal_eval(row.file_list)[0]
+    return os.path.basename(video_file).replace("%20", " ")
+    
+
 def create_clip_file_name(row, clip_file_format="mp4"):
     """
     Create the output clip file name.
@@ -52,7 +59,8 @@ def create_clip_file_name(row, clip_file_format="mp4"):
     :return: str.
         The output clip file name.
     """
-    video_file = ast.literal_eval(row.file_list)[0]
+    #video_file = ast.literal_eval(row.file_list)[0]
+    video_file = os.path.splitext(row["file_list"])[0]
     clip_id = row["# CSV_HEADER = metadata_id"]
     clip_file = "{}_{}.{}".format(video_file, clip_id, clip_file_format)
     return clip_file
@@ -151,10 +159,15 @@ def extract_clip(row, video_dir, clip_dir, ffmpeg_path=None):
         os.makedirs(clip_sub_dir)
 
     duration = end_time - start_time
-    video_file = ast.literal_eval(row.file_list)[0]
+    video_file = row.file_list
     video_path = os.path.join(video_dir, video_file)
     clip_file = row.clip_file_name
     clip_path = os.path.join(clip_sub_dir, clip_file)
+
+    # skip if video already extracted
+    if os.path.exists(clip_path):
+        print("Extracted clip already exists. Skipping extraction.")
+        return
 
     if not os.path.exists(video_path):
         raise ValueError(

@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from urllib.request import urlretrieve
 import warnings
+import csv
 
 import decord
 from einops.layers.torch import Rearrange
@@ -123,9 +124,14 @@ class VideoDataset(Dataset):
         assert num_segments > 0
 
         self.video_dir = video_dir
-        self.video_records = [
-            VideoRecord(x.strip().split(" ")) for x in open(split_file)
-        ]
+        self.video_records = []
+        with open(split_file) as f:
+            freader = csv.reader(f, delimiter=" ", skipinitialspace=True)
+            for row in freader:
+                self.video_records.append(VideoRecord(row))
+        # self.video_records = [
+        #     VideoRecord(x.strip().split(" ")) for x in open(split_file)
+        # ]
 
         self.num_segments = num_segments
         self.sample_length = sample_length

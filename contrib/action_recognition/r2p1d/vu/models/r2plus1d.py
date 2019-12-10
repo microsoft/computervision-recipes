@@ -334,7 +334,7 @@ class R2Plus1D(object):
             batch_time = AverageMeter()
             losses = AverageMeter()
             top1 = AverageMeter()
-            top5 = AverageMeter()
+            # top5 = AverageMeter()
 
             end = time.time()
             for step, (inputs, target) in enumerate(dl, start=1):
@@ -347,11 +347,11 @@ class R2Plus1D(object):
                     loss = criterion(outputs, target)
 
                     # measure accuracy and record loss
-                    prec1, prec5 = accuracy(outputs, target, topk=(1, 5))
+                    prec1 = accuracy(outputs, target)
 
                     losses.update(loss.item(), inputs.size(0))
                     top1.update(prec1[0], inputs.size(0))
-                    top5.update(prec5[0], inputs.size(0))
+                    # top5.update(prec5[0], inputs.size(0))
 
                     if phase == "train":
                         # make the accumulated gradient to be the same scale as without the accumulation
@@ -372,14 +372,14 @@ class R2Plus1D(object):
                     end = time.time()
 
             print(
-                "{} took {:.2f} sec: loss = {:.4f}, top1_acc = {:.4f}, top5_acc = {:.4f}".format(
-                    phase, batch_time.sum, losses.avg, top1.avg, top5.avg
+                "{} took {:.2f} sec: loss = {:.4f}, top1_acc = {:.4f}".format(
+                    phase, batch_time.sum, losses.avg, top1.avg.item()
                 )
             )
             result["{}/time".format(phase)] = batch_time.sum
             result["{}/loss".format(phase)] = losses.avg
             result["{}/top1".format(phase)] = top1.avg
-            result["{}/top5".format(phase)] = top5.avg
+            # result["{}/top5".format(phase)] = top5.avg
 
         return result
 
