@@ -26,15 +26,15 @@ from ..common.gpu import db_num_workers
 Trans = Callable[[object, dict], Tuple[object, dict]]
 
 
-def _flip_keypoints(kps, width, hflip_inds):
+def _flip_keypoints(keypoints, width, hflip_inds):
     """ Variation of `references.transforms._flip_coco_person_keypoints` with additional
     hflip_inds. """
-    flipped_data = kps[:, hflip_inds]
-    flipped_data[..., 0] = width - flipped_data[..., 0]
+    flipped_keypoints = keypoints[:, hflip_inds]
+    flipped_keypoints[..., 0] = width - flipped_keypoints[..., 0]
     # Maintain COCO convention that if visibility == 0, then x, y = 0
-    inds = flipped_data[..., 2] == 0
-    flipped_data[inds] = 0
-    return flipped_data
+    inds = flipped_keypoints[..., 2] == 0
+    flipped_keypoints[inds] = 0
+    return flipped_keypoints
 
 
 class RandomHorizontalFlip(object):
@@ -44,10 +44,10 @@ class RandomHorizontalFlip(object):
     def __init__(self, prob):
         self.prob = prob
 
-    def __call__(self, image, target):
+    def __call__(self, im, target):
         if random.random() < self.prob:
-            height, width = image.shape[-2:]
-            image = image.flip(-1)
+            height, width = im.shape[-2:]
+            im = im.flip(-1)
             bbox = target["boxes"]
             bbox[:, [0, 2]] = width - bbox[:, [2, 0]]
             target["boxes"] = bbox
@@ -59,7 +59,7 @@ class RandomHorizontalFlip(object):
                     keypoints, width, target["hflip_inds"]
                 )
                 target["keypoints"] = keypoints
-        return image, target
+        return im, target
 
 
 class ColorJitterTransform(object):
@@ -124,7 +124,7 @@ def parse_pascal_voc_anno(
         anno_path: the path to the annotation xml file
         labels: list of all possible labels, used to compute label index for each label name
         keypoint_meta: meta data of keypoints which should include at least
-            "category" and "labels".
+            "labels".
 
     Return
         A tuple of annotations, the image path and keypoints.  Keypoints is a
@@ -154,16 +154,13 @@ def parse_pascal_voc_anno(
     objs = root.findall("object")
     for obj in objs:
         label = obj.find("name").text
-        # Get keypoints if any
+        # Get keypoints if any.
+        # For keypoint detection, currently only one category (except
+        # background) is allowed.  We assume all annotated objects are of that
+        # category.
         if keypoint_meta is not None:
             kps = []
-            kps_category = keypoint_meta["category"]
             kps_labels = keypoint_meta["labels"]
-
-            # It seems Keypoint R-CNN model doesn't accept varied number of
-            # keypoints, so we only allow one category currently.
-            if label != kps_category:
-                continue
 
             # Assume keypoints are available
             kps_annos = obj.find("keypoints")
@@ -252,7 +249,7 @@ class DetectionDataset:
             allow_negatives: is false (default) then will throw an error if no annotation .xml file can be found for a given image. Otherwise use image as negative, ie assume that the image does not contain any of the objects of interest.
             mask_dir: the name of the mask subfolder under the root directory if the dataset is used for instance segmentation
             keypoint_meta: meta data of keypoints which should include
-                "category", "labels", "skeleton" and "hflip_inds".
+                "labels", "skeleton" and "hflip_inds".
             seed: random seed for splitting dataset to training and testing data
         """
 
@@ -314,12 +311,9 @@ class DetectionDataset:
                     anno_path, keypoint_meta=self.keypoint_meta
                 )
                 # When meta provided, we assume this is keypoint
-                # detection, and skip the image if no keypoints found.
+                # detection.
                 if self.keypoint_meta is not None:
-                    if len(keypoints) != 0:
-                        self.keypoints.append(keypoints)
-                    else:
-                        continue
+                    self.keypoints.append(keypoints)
             else:
                 if not self.allow_negatives:
                     raise FileNotFoundError(anno_path)

@@ -15,6 +15,7 @@ from utils_cv.detection.dataset import (
     DetectionDataset,
 )
 from utils_cv.detection.bbox import AnnotationBbox, _Bbox
+from utils_cv.detection.keypoint import carton_keypoint_meta
 
 
 @pytest.fixture(scope="session")
@@ -69,9 +70,7 @@ def test_get_transform(basic_im):
 
 
 def test_parse_pascal_voc(
-    od_sample_im_anno,
-    od_sample_bboxes,
-    tiny_od_keypoint_data_path,
+    od_sample_im_anno, od_sample_bboxes, tiny_od_keypoint_data_path
 ):
     """ test that 'parse_pascal_voc' can parse the 'od_sample_im_anno' correctly. """
     anno_path, im_path = od_sample_im_anno
@@ -130,7 +129,6 @@ def test_detection_dataset_init_basic(
     od_data_path_labels,
     tiny_od_mask_data_path,
     tiny_od_keypoint_data_path,
-    carton_keypoint_meta,
 ):
     """ Tests that initialization of the Detection Dataset works. """
     data = DetectionDataset(tiny_od_data_path)
@@ -166,7 +164,6 @@ def test_detection_dataset_init_train_pct(
     od_data_path_labels,
     tiny_od_mask_data_path,
     tiny_od_keypoint_data_path,
-    carton_keypoint_meta,
 ):
     """ Tests that initialization with train_pct."""
     data = DetectionDataset(tiny_od_data_path, train_pct=0.75)

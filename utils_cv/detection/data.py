@@ -36,9 +36,11 @@ class Urls:
     )
 
     # keypoint datasets
-    fridge_objects_keypoint_path = urljoin(base, "odFridgeObjectsKeypoint.zip")
-    fridge_objects_keypoint_tiny_path = urljoin(
-        base, "odFridgeObjectsKeypointTiny.zip"
+    fridge_objects_keypoint_milk_bottle_path = urljoin(
+        base, "odFridgeObjectsMilkbottleKeypoint.zip"
+    )
+    fridge_objects_keypoint_milk_bottle_tiny_path = urljoin(
+        base, "odFridgeObjectsMilkbottleKeypointTiny.zip"
     )
 
     @classmethod
@@ -435,20 +437,20 @@ def extract_keypoints_from_labelbox_json(
         shutil.copy(src_im_path, dst_im_path)
 
         # add keypoints annotation into PASCAL VOC XML file
-        kps_annos = anno["Label"]
+        keypoints_annos = anno["Label"]
         tree = ET.parse(src_anno_path)
         root = tree.getroot()
         for obj in root.findall("object"):
             prefix = obj.find("name").text + "_"
             # add "keypoints" node for current object
-            kps = ET.SubElement(obj, "keypoints")
-            for k in kps_annos.keys():
+            keypoints = ET.SubElement(obj, "keypoints")
+            for k in keypoints_annos.keys():
                 if k.startswith(prefix):
                     # add keypoint into "keypoints" node
-                    pt = ET.SubElement(kps, k[len(prefix) :])
+                    pt = ET.SubElement(keypoints, k[len(prefix) :])
                     x = ET.SubElement(pt, "x")  # add x coordinate
                     y = ET.SubElement(pt, "y")  # add y coordinate
-                    geo = kps_annos[k][0]["geometry"]
+                    geo = keypoints_annos[k][0]["geometry"]
                     x.text = str(geo["x"])
                     y.text = str(geo["y"])
 

@@ -25,6 +25,7 @@ from utils_cv.classification.data import Urls as ic_urls
 from utils_cv.detection.data import Urls as od_urls
 from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox
 from utils_cv.detection.dataset import DetectionDataset
+from utils_cv.detection.keypoint import carton_keypoint_meta
 from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
     get_pretrained_maskrcnn,
@@ -458,7 +459,7 @@ def tiny_od_mask_data_path(tmp_session) -> str:
 def tiny_od_keypoint_data_path(tmp_session) -> str:
     """ Returns the path to the fridge object detection keypoint dataset. """
     return unzip_url(
-        od_urls.fridge_objects_keypoint_tiny_path,
+        od_urls.fridge_objects_keypoint_milk_bottle_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
@@ -574,59 +575,10 @@ def od_detection_mask_dataset(tiny_od_mask_data_path):
 
 
 @pytest.fixture(scope="session")
-def carton_keypoint_meta():
-    return {
-        "category": "carton",
-        "skeleton": [
-            [1, 2],
-            [1, 3],
-            [2, 4],
-            [3, 5],
-            [3, 7],
-            [4, 6],
-            [4, 8],
-            [5, 6],
-            [7, 8],
-            [5, 7],
-            [6, 8],
-            [5, 9],
-            [6, 10],
-            [7, 11],
-            [8, 12],
-            [9, 10],
-            [11, 12],
-            [9, 11],
-            [10, 12],
-        ],
-        "labels": [
-            "lid",
-            "left_top",
-            "right_top",
-            "left_collar",
-            "right_collar",
-            "left_front_shoulder",
-            "right_front_shoulder",
-            "left_back_shoulder",
-            "right_back_shoulder",
-            "left_front_bottom",
-            "right_front_bottom",
-            "left_back_bottom",
-            "right_back_bottom",
-        ],
-        # left becomes right when flipped horizontally
-        "hflip_inds": [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11],
-    }
-
-
-@pytest.fixture(scope="session")
-def tiny_od_detection_keypoint_dataset(
-    tiny_od_keypoint_data_path,
-    carton_keypoint_meta,
-):
+def tiny_od_detection_keypoint_dataset(tiny_od_keypoint_data_path):
     """ returns a basic detection keypoint dataset. """
     return DetectionDataset(
-        tiny_od_keypoint_data_path,
-        keypoint_meta=carton_keypoint_meta,
+        tiny_od_keypoint_data_path, keypoint_meta=carton_keypoint_meta
     )
 
 

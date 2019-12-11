@@ -1,0 +1,102 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+COCO_keypoint_meta = {
+    "labels": [
+        "nose",
+        "left_eye",
+        "right_eye",
+        "left_ear",
+        "right_ear",
+        "left_shoulder",
+        "right_shoulder",
+        "left_elbow",
+        "right_elbow",
+        "left_wrist",
+        "right_wrist",
+        "left_hip",
+        "right_hip",
+        "left_knee",
+        "right_knee",
+        "left_ankle",
+        "right_ankle",
+    ],
+    "skeleton": [
+        [15, 13],
+        [13, 11],
+        [16, 14],
+        [14, 12],
+        [11, 12],
+        [5, 11],
+        [6, 12],
+        [5, 6],
+        [5, 7],
+        [6, 8],
+        [7, 9],
+        [8, 10],
+        [1, 2],
+        [0, 1],
+        [0, 2],
+        [1, 3],
+        [2, 4],
+        [3, 5],
+        [4, 6],
+    ],
+    # left becomes right when flipped horizontally
+    "hflip_inds": [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15],
+}
+
+milkbottle_keypoint_meta = {
+    "labels": [
+        "lid_left_top",
+        "lid_right_top",
+        "lid_left_bottom",
+        "lid_right_bottom",
+        "left_bottom",
+        "right_bottom",
+    ],
+    "skeleton": [[0, 1], [0, 2], [1, 3], [2, 3], [2, 4], [3, 5], [4, 5]],
+    # left becomes right when flipped horizontally
+    "hflip_inds": [1, 0, 3, 2, 5, 4],
+}
+
+carton_keypoint_meta = {
+    "labels": [
+        "lid",
+        "left_top",
+        "right_top",
+        "left_collar",
+        "right_collar",
+        "left_front_shoulder",
+        "right_front_shoulder",
+        "left_back_shoulder",
+        "right_back_shoulder",
+        "left_front_bottom",
+        "right_front_bottom",
+        "left_back_bottom",
+        "right_back_bottom",
+    ],
+    "skeleton": [
+        [1, 2],
+        [1, 3],
+        [2, 4],
+        [3, 5],
+        [3, 7],
+        [4, 6],
+        [4, 8],
+        [5, 6],
+        [7, 8],
+        [5, 7],
+        [6, 8],
+        [5, 9],
+        [6, 10],
+        [7, 11],
+        [8, 12],
+        [9, 10],
+        [11, 12],
+        [9, 11],
+        [10, 12],
+    ],
+    # left becomes right when flipped horizontally
+    "hflip_inds": [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11],
+}
