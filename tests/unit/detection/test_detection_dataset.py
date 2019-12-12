@@ -148,8 +148,8 @@ def test_detection_dataset_init_basic(
         tiny_od_keypoint_data_path, keypoint_meta=carton_keypoint_meta
     )
     validate_milkbottle_keypoint_tiny_dataset(data)
-    assert len(data.test_ds) == 10
-    assert len(data.train_ds) == 10
+    assert len(data.test_ds) == 15
+    assert len(data.train_ds) == 16
 
 
 def test_detection_dataset_init_train_pct(
@@ -179,8 +179,8 @@ def test_detection_dataset_init_train_pct(
         keypoint_meta=carton_keypoint_meta,
     )
     validate_milkbottle_keypoint_tiny_dataset(data)
-    assert len(data.test_ds) == 5
-    assert len(data.train_ds) == 15
+    assert len(data.test_ds) == 7
+    assert len(data.train_ds) == 24
 
 
 def test_detection_dataset_show_ims(
