@@ -80,12 +80,18 @@ def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
 
 @pytest.mark.gpu
 @pytest.mark.notebooks
-def test_03_notebook_run(detection_notebooks):
+def test_03_notebook_run(detection_notebooks, tiny_od_keypoint_data_path):
     notebook_path = detection_notebooks["03"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__, IM_SIZE=100),
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            IM_SIZE=100,
+            EPOCHS=1,
+            DATA_PATH=tiny_od_keypoint_data_path,
+            THRESHOLD=0.01,
+        ),
         kernel_name=KERNEL_NAME,
     )
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
