@@ -82,23 +82,16 @@ def test_parse_pascal_voc(
     assert anno_bboxes[0].bottom == od_sample_bboxes[0].bottom
 
     # test keypoints
-    anno_path = Path(tiny_od_keypoint_data_path) / "annotations" / "1.xml"
+    anno_path = Path(tiny_od_keypoint_data_path) / "annotations" / "9.xml"
     keypoints_truth = np.array(
         [
             [
-                [175, 204, 2],
-                [114, 176, 2],
-                [210, 179, 2],
-                [111, 203, 2],
-                [215, 205, 2],
-                [121, 245, 2],
-                [233, 241, 2],
-                [103, 228, 2],
-                [0, 0, 0],
-                [138, 519, 2],
-                [230, 496, 2],
-                [117, 468, 2],
-                [0, 0, 0],
+                [328, 227, 2],
+                [382, 228, 2],
+                [326, 247, 2],
+                [382, 249, 2],
+                [302, 440, 2],
+                [379, 446, 2],
             ]
         ]
     )
@@ -117,8 +110,8 @@ def validate_detection_dataset(data: DetectionDataset, labels: List[str]):
         assert len(data.mask_paths) == len(data.im_paths)
 
 
-def validate_keypoint_dataset(data: DetectionDataset):
-    assert len(data) == 20
+def validate_milkbottle_keypoint_tiny_dataset(data: DetectionDataset):
+    assert len(data) == 31
     assert type(data) == DetectionDataset
     assert len(data.labels) == 1
     assert len(data.keypoints) == len(data.im_paths)
@@ -154,7 +147,7 @@ def test_detection_dataset_init_basic(
     data = DetectionDataset(
         tiny_od_keypoint_data_path, keypoint_meta=carton_keypoint_meta
     )
-    validate_keypoint_dataset(data)
+    validate_milkbottle_keypoint_tiny_dataset(data)
     assert len(data.test_ds) == 10
     assert len(data.train_ds) == 10
 
@@ -185,7 +178,7 @@ def test_detection_dataset_init_train_pct(
         train_pct=0.75,
         keypoint_meta=carton_keypoint_meta,
     )
-    validate_keypoint_dataset(data)
+    validate_milkbottle_keypoint_tiny_dataset(data)
     assert len(data.test_ds) == 5
     assert len(data.train_ds) == 15
 
