@@ -196,7 +196,7 @@ def plot_detections(
     im = Image.open(detection["im_path"])
 
     # Get id of ground truth image/annotation
-    if data and not idx:
+    if data and idx is not None:
         idx = detection["idx"]
 
     # Loop over all images
