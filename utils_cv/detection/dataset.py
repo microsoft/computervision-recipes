@@ -166,6 +166,9 @@ def parse_pascal_voc_anno(
             kps_annos = obj.find("keypoints")
             if kps_annos is None:
                 raise Exception(f"No keypoints found in {anno_path}")
+            assert set([kp.tag for kp in kps_annos]).issubset(
+                kps_labels
+            ), "Incompatible keypoint labels"
 
             # Read keypoint coordinates: [x, y, visibility]
             # Visibility 0 means invisible, non-zero means visible

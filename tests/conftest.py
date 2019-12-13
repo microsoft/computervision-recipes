@@ -25,7 +25,7 @@ from utils_cv.classification.data import Urls as ic_urls
 from utils_cv.detection.data import Urls as od_urls
 from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox
 from utils_cv.detection.dataset import DetectionDataset
-from utils_cv.detection.keypoint import carton_keypoint_meta
+from utils_cv.detection.keypoint import milkbottle_keypoint_meta
 from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
     get_pretrained_maskrcnn,
@@ -578,7 +578,7 @@ def od_detection_mask_dataset(tiny_od_mask_data_path):
 def tiny_od_detection_keypoint_dataset(tiny_od_keypoint_data_path):
     """ returns a basic detection keypoint dataset. """
     return DetectionDataset(
-        tiny_od_keypoint_data_path, keypoint_meta=carton_keypoint_meta
+        tiny_od_keypoint_data_path, keypoint_meta=milkbottle_keypoint_meta
     )
 
 
