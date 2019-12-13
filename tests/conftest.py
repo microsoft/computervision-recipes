@@ -587,6 +587,15 @@ def tiny_od_detection_keypoint_dataset(tiny_od_keypoint_data_path):
                 "left_bottom",
                 "right_bottom",
             ],
+            "skeleton": [
+                [0, 1],
+                [0, 2],
+                [1, 3],
+                [2, 3],
+                [2, 4],
+                [3, 5],
+                [4, 5],
+            ],
             "hflip_inds": [1, 0, 3, 2, 5, 4],
         },
     )
