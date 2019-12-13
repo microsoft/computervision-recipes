@@ -15,7 +15,6 @@ from utils_cv.detection.dataset import (
     DetectionDataset,
 )
 from utils_cv.detection.bbox import AnnotationBbox, _Bbox
-from utils_cv.detection.keypoint import milkbottle_keypoint_meta
 
 
 @pytest.fixture(scope="session")
@@ -145,7 +144,18 @@ def test_detection_dataset_init_basic(
 
     # test keypoint data
     data = DetectionDataset(
-        tiny_od_keypoint_data_path, keypoint_meta=milkbottle_keypoint_meta
+        tiny_od_keypoint_data_path,
+        keypoint_meta={
+            "labels": [
+                "lid_left_top",
+                "lid_right_top",
+                "lid_left_bottom",
+                "lid_right_bottom",
+                "left_bottom",
+                "right_bottom",
+            ],
+            "hflip_inds": [1, 0, 3, 2, 5, 4],
+        },
     )
     validate_milkbottle_keypoint_tiny_dataset(data)
     assert len(data.test_ds) == 15
@@ -176,7 +186,17 @@ def test_detection_dataset_init_train_pct(
     data = DetectionDataset(
         tiny_od_keypoint_data_path,
         train_pct=0.75,
-        keypoint_meta=milkbottle_keypoint_meta,
+        keypoint_meta={
+            "labels": [
+                "lid_left_top",
+                "lid_right_top",
+                "lid_left_bottom",
+                "lid_right_bottom",
+                "left_bottom",
+                "right_bottom",
+            ],
+            "hflip_inds": [1, 0, 3, 2, 5, 4],
+        },
     )
     validate_milkbottle_keypoint_tiny_dataset(data)
     assert len(data.test_ds) == 7
