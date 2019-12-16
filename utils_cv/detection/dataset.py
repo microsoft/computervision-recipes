@@ -54,6 +54,9 @@ class RandomHorizontalFlip(object):
             if "masks" in target:
                 target["masks"] = target["masks"].flip(-1)
             if "keypoints" in target:
+                assert (
+                    "hflip_inds" in target
+                ), "To use random horizontal flipping, 'hflip_inds' needs to be specified"
                 keypoints = target["keypoints"]
                 keypoints = _flip_keypoints(
                     keypoints, width, target["hflip_inds"]
@@ -610,9 +613,10 @@ class DetectionDataset:
             target["keypoints"] = torch.as_tensor(
                 self.keypoints[idx], dtype=torch.float32
             )
-            target["hflip_inds"] = torch.as_tensor(
-                self.keypoint_meta["hflip_inds"], dtype=torch.int64
-            )
+            if "hflip_inds" in self.keypoint_meta:
+                target["hflip_inds"] = torch.as_tensor(
+                    self.keypoint_meta["hflip_inds"], dtype=torch.int64
+                )
 
         # get image
         im = Image.open(im_path).convert("RGB")
