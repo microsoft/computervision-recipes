@@ -80,8 +80,16 @@ def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
 
 @pytest.mark.gpu
 @pytest.mark.notebooks
-def test_03_notebook_run(detection_notebooks, tiny_od_keypoint_data_path):
+def test_03_notebook_run(
+    detection_notebooks, tiny_od_keypoint_data_path, tmp_session
+):
     notebook_path = detection_notebooks["03"]
+    data_path2 = unzip_url(
+        od_urls.fridge_objects_keypoint_top_bottom_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -90,6 +98,7 @@ def test_03_notebook_run(detection_notebooks, tiny_od_keypoint_data_path):
             IM_SIZE=100,
             EPOCHS=1,
             DATA_PATH=tiny_od_keypoint_data_path,
+            DATA_PATH2=data_path2,
             THRESHOLD=0.01,
         ),
         kernel_name=KERNEL_NAME,
