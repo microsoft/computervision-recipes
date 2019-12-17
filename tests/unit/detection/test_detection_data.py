@@ -84,11 +84,7 @@ def labelbox_export_data(tmp_session):
     # Dict version of the combination of keypoint_json and anno_xml
     keypoint_truth_dict = {
         "folder": "images",
-        "size": {
-            "width": "500",
-            "height": "500",
-            "depth": "3",
-        },
+        "size": {"width": "500", "height": "500", "depth": "3"},
         "object": {
             "milk_bottle": {
                 "bndbox": {
@@ -176,16 +172,16 @@ def test_coco_labels():
     assert len(labels) == 91
 
 
-def test_extract_keypoints_from_labelbox_json(labelbox_export_data, tmp_session):
+def test_extract_keypoints_from_labelbox_json(
+    labelbox_export_data, tmp_session
+):
     data_dir, _, keypoint_json_path, keypoint_truth_dict = labelbox_export_data
     keypoint_data_dir = Path(tmp_session) / "labelbox_test_keypoint_data"
     keypoint_data_dir.mkdir(parents=True, exist_ok=True)
 
     # run extract_keypoints_from_labelbox_json()
     extract_keypoints_from_labelbox_json(
-        keypoint_json_path,
-        data_dir,
-        keypoint_data_dir,
+        keypoint_json_path, data_dir, keypoint_data_dir
     )
 
     # verify keypoint data directory structure
@@ -249,11 +245,7 @@ def test_extract_masks_from_labelbox_json(labelbox_export_data, tmp_session):
     mask_data_dir.mkdir(parents=True, exist_ok=True)
 
     # run masks_from_labelbox_json()
-    extract_masks_from_labelbox_json(
-        mask_json_path,
-        data_dir,
-        mask_data_dir,
-    )
+    extract_masks_from_labelbox_json(mask_json_path, data_dir, mask_data_dir)
 
     # verify mask data directory structure
     # only 1.jpg, 1.xml and 1.png are included

@@ -185,8 +185,8 @@ class DetectionBbox(AnnotationBbox):
         """ Create a Bbox object from an array [left, top, right, bottom]
         This function must take in a score.
         """
-        score = kwargs['score']
-        del kwargs['score']
+        score = kwargs["score"]
+        del kwargs["score"]
         bbox = super().from_array(arr, **kwargs)
         bbox.__class__ = DetectionBbox
         bbox.score = score
