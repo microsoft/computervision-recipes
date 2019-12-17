@@ -77,23 +77,57 @@ def test_plot_masks(od_mask_rects):
         assert background_uniques[0] == ch_uniques[0]
 
 
-def test_plot_keypoints(od_keypoints_for_plot, basic_plot_settings):
-    im, keypoints = od_keypoints_for_plot
+def test_plot_keypoints(basic_plot_settings):
+    # a completely black image
+    im = Image.fromarray(np.zeros((500, 600, 3), dtype=np.uint8))
+
+    # dummy keypoints
+    keypoints = np.array([[[100, 200, 2], [200, 200, 2]]])
+    keypoint_meta = {"skeleton": [[0, 1]]}
 
     # basic case
-    plot_keypoints(im, keypoints)
+    plot_keypoints(im, keypoints, keypoint_meta)
 
     # with update plot_settings
-    plot_keypoints(im, keypoints, plot_settings=basic_plot_settings)
+    plot_keypoints(
+        im, keypoints, keypoint_meta, plot_settings=basic_plot_settings
+    )
 
 
-def test_plot_detections(od_sample_detection, od_detection_mask_dataset):
+def test_plot_detections(
+    od_sample_detection,
+    od_detection_mask_dataset,
+    od_sample_keypoint_detection,
+    tiny_od_detection_keypoint_dataset,
+):
     plot_detections(od_sample_detection)
     plot_detections(od_sample_detection, od_detection_mask_dataset)
     plot_detections(od_sample_detection, od_detection_mask_dataset, 0)
 
+    # plot keypoints
+    plot_detections(
+        od_sample_keypoint_detection,
+        keypoint_meta=tiny_od_detection_keypoint_dataset.keypoint_meta,
+    )
+    plot_detections(
+        od_sample_keypoint_detection,
+        tiny_od_detection_keypoint_dataset,
+        keypoint_meta=tiny_od_detection_keypoint_dataset.keypoint_meta,
+    )
+    plot_detections(
+        od_sample_keypoint_detection,
+        tiny_od_detection_keypoint_dataset,
+        0,
+        keypoint_meta=tiny_od_detection_keypoint_dataset.keypoint_meta,
+    )
 
-def test_plot_grid(od_sample_detection, od_detection_mask_dataset):
+
+def test_plot_grid(
+    od_sample_detection,
+    od_detection_mask_dataset,
+    od_sample_keypoint_detection,
+    tiny_od_detection_keypoint_dataset,
+):
     """ Test that `plot_grid` works. """
 
     # test callable args
@@ -107,6 +141,16 @@ def test_plot_grid(od_sample_detection, od_detection_mask_dataset):
 
     plot_grid(plot_detections, callable_args, rows=1)
 
+    def callable_args():
+        return (
+            od_sample_keypoint_detection,
+            tiny_od_detection_keypoint_dataset,
+            None,
+            tiny_od_detection_keypoint_dataset.keypoint_meta,
+        )
+
+    plot_grid(plot_detections, callable_args, rows=1)
+
     # test iterable args
     def iterator_args():
         for detection in [od_sample_detection, od_sample_detection]:
@@ -117,6 +161,20 @@ def test_plot_grid(od_sample_detection, od_detection_mask_dataset):
     def iterator_args():
         for detection in [od_sample_detection, od_sample_detection]:
             yield detection, od_detection_mask_dataset, None, None
+
+    plot_grid(plot_detections, iterator_args(), rows=1, cols=2)
+
+    def iterator_args():
+        for detection in [
+            od_sample_keypoint_detection,
+            od_sample_keypoint_detection,
+        ]:
+            yield (
+                detection,
+                tiny_od_detection_keypoint_dataset,
+                None,
+                tiny_od_detection_keypoint_dataset.keypoint_meta,
+            )
 
     plot_grid(plot_detections, iterator_args(), rows=1, cols=2)
 
