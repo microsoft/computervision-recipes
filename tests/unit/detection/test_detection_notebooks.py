@@ -9,6 +9,7 @@ import pytest
 import scrapbook as sb
 
 from utils_cv.common.data import unzip_url
+from utils_cv.detection.data import Urls
 
 # Unless manually modified, python3 should be
 # the name of the current jupyter kernel
@@ -87,7 +88,7 @@ def test_03_notebook_run(
 ):
     notebook_path = detection_notebooks["03"]
     data_path2 = unzip_url(
-        od_urls.fridge_objects_keypoint_top_bottom_tiny_path,
+        Urls.fridge_objects_keypoint_top_bottom_tiny_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
