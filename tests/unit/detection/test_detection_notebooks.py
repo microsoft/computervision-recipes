@@ -8,6 +8,8 @@ import papermill as pm
 import pytest
 import scrapbook as sb
 
+from utils_cv.common.data import unzip_url
+
 # Unless manually modified, python3 should be
 # the name of the current jupyter kernel
 # that runs on the activated conda environment
