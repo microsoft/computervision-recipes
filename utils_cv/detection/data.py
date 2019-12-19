@@ -42,6 +42,12 @@ class Urls:
     fridge_objects_keypoint_milk_bottle_tiny_path = urljoin(
         base, "odFridgeObjectsMilkbottleKeypointTiny.zip"
     )
+    fridge_objects_keypoint_top_bottom_path = urljoin(
+        base, "odFridgeObjectsKeypointTopBottom.zip"
+    )
+    fridge_objects_keypoint_top_bottom_tiny_path = urljoin(
+        base, "odFridgeObjectsKeypointTopBottomTiny.zip"
+    )
 
     @classmethod
     def all(cls) -> List[str]:
