@@ -45,6 +45,15 @@ def parse_video_file_name(row):
 
     video_file = ast.literal_eval(row.file_list)[0]
     return os.path.basename(video_file).replace("%20", " ")
+
+
+def read_classes_file(classes_filepath):
+    classes = {}
+    with open(classes_filepath) as class_file:
+        for line in class_file:
+            class_name, class_id = line.split(' ')
+            classes[class_name] = class_id.rstrip()
+    return classes
     
 
 def create_clip_file_name(row, clip_file_format="mp4"):
@@ -206,6 +215,14 @@ def get_video_length(video_file_path):
         raise RuntimeError(result.stderr)
 
     return float(result.stdout)
+
+
+def check_interval_overlaps(clip_start, clip_end, interval_list):
+    overlapping = False
+    for interval in interval_list:
+        if (clip_start < interval[1]) and (clip_end > interval[0]):
+            overlapping = True
+    return overlapping
 
 
 def _merge_temporal_interval(temporal_interval_list):

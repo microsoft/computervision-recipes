@@ -19,18 +19,19 @@ import pandas as pd
 sys.path.append("lib")
 from video_annotation_utils import (
     parse_video_file_name,
+    read_classes_file,
     create_clip_file_name,
     get_clip_action_label,
     extract_clip,
     extract_negative_samples_per_file,
     get_video_length,
+    check_interval_overlaps,
     _extract_clip_ffmpeg,
 )
 
 
 def main(
     annotation_filepath,
-    has_header,
     classes_filepath,
     video_dir,
     clip_dir,
@@ -40,34 +41,14 @@ def main(
     clip_length,
     contiguous,
     num_negative_samples,
+    filter_positive_videos
 ):
     # set pandas display
     pd.set_option("display.max_columns", 500)
     pd.set_option("display.width", 1000)
 
-    if has_header:
-        skiprows = 1
-    else:
-        skiprows = 0
-
-    # read list of classes
-    classes = {}
-    with open(classes_filepath) as class_file:
-        for line in class_file:
-            class_name, class_id = line.split(' ')
-            classes[class_name] = class_id.rstrip()
-
-    # get list of original video files
-    # TODO: finish annotation for all files
-    video_files = os.listdir(video_dir)[:320]
-
-    # find video lengths
-    video_len = {}
-    for video in video_files:
-        video_len[video] = get_video_length(os.path.join(video_dir, video))
-
     # read in the start time and end time of the clips while removing the records with no label related
-    video_info_df = pd.read_csv(annotation_filepath, skiprows=skiprows)
+    video_info_df = pd.read_csv(annotation_filepath, skiprows=1)
     video_info_df = video_info_df.loc[video_info_df["metadata"] != "{}"]
 
 
@@ -76,6 +57,18 @@ def main(
         axis=1,
     )
 
+    # get list of original video files
+    # TODO: finish annotation for all files
+    video_files = os.listdir(video_dir)[:320]
+
+    if filter_positive_videos:
+        video_files = list(set(video_info_df["file_list"]) & set(video_files))
+
+    # find video lengths
+    video_len = {}
+    for video in video_files:
+        video_len[video] = get_video_length(os.path.join(video_dir, video))
+    
     # create clip file name and label
     video_info_df["clip_file_name"] = video_info_df.apply(
         lambda x: create_clip_file_name(x, clip_file_format=clip_format),
@@ -85,6 +78,10 @@ def main(
     video_info_df["clip_action_label"] = video_info_df.apply(
         lambda x: get_clip_action_label(x), axis=1
     )
+
+    # read list of classes
+    if classes_filepath is not None:
+        classes = read_classes_file(classes_filepath)
 
     # filter classes
     video_info_df = video_info_df[video_info_df["clip_action_label"].isin(classes.keys())]
@@ -100,26 +97,10 @@ def main(
         label_filepath, header=None, index=False, sep=' '
     )
 
-    # get temporal interval of positive samples
-    positive_intervals = defaultdict(list)
-    for index, row in video_info_df.iterrows():
-        clip_file = row.file_list
-        int_start = row.temporal_segment_start
-        int_end = row.temporal_segment_end
-        segment_int = (int_start, int_end)
-        positive_intervals[clip_file].append(segment_int)
 
     # Extract negative samples
-
-    def check_interval_overlaps(clip_start, clip_end, interval_list):
-        overlapping = False
-        for interval in clip_positive_intervals:
-            if (clip_start < interval[1]) and (clip_end > interval[0]):
-                overlaps = True
-        return overlapping
-
     if contiguous:
-        negative_clip_dir = os.path.join(clip_dir, "negative_samples")
+        negative_clip_dir = os.path.join(clip_dir, "NoAction")
         video_file_list = list(video_info_df["file_list"].unique())
         negative_sample_info_df = pd.DataFrame()
         for video_file in video_file_list:
@@ -135,12 +116,19 @@ def main(
             )
 
             negative_sample_info_df = negative_sample_info_df.append(res_df)
-
-        negative_sample_info_df.to_csv(
-            os.path.join(negative_clip_dir, "negative_clip_info.csv"), index=False
-        )
+        with open(label_filepath, 'a') as f:
+            for index, row in negative_sample_info_df.iterrows():
+                f.write("\""+row.negative_clip_file_list+"\""+" "+str(classes["NoAction"])+"\n")
     
     else:
+        # get temporal interval of positive samples
+        positive_intervals = defaultdict(list)
+        for index, row in video_info_df.iterrows():
+            clip_file = row.file_list
+            int_start = row.temporal_segment_start
+            int_end = row.temporal_segment_end
+            segment_int = (int_start, int_end)
+            positive_intervals[clip_file].append(segment_int)
         negative_sample_dir = os.path.join(clip_dir, "NoAction")
         if not os.path.exists(negative_sample_dir):
             os.makedirs(negative_sample_dir)
@@ -232,7 +220,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     main(
-        annotation_filepath="b2520Nov2019_14h07m47s_export.csv",
+        annotation_filepath="b2510Dec2019_11h52m31s_export.csv",
         classes_filepath="classes.txt",
         has_header=True,
         video_dir="videos_original",
@@ -242,7 +230,8 @@ if __name__ == "__main__":
         clip_margin=3.0,
         clip_length=2.0,
         contiguous=False,
-        num_negative_samples=150.0
+        num_negative_samples=500.0,
+        filter_positive_videos=True
     )
 
     # main(
