@@ -17,8 +17,8 @@ channels:
 - fastai
 dependencies:
 - python==3.6.8
-- pytorch>=1.2.0
-- torchvision>=0.3.0
+- pytorch==1.2.0
+- torchvision==0.4.0
 - fastai==1.0.57
 - ipykernel>=4.6.1
 - jupyter>=1.0.0
