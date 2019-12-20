@@ -174,12 +174,12 @@ def plot_keypoints(
         # draw keypoints
         visible_point_xys = keypoints[keypoints[..., 2] != 0][..., :2]
         offset = 2 * plot_settings.keypoint_th
-        point_bboxes = np.hstack([
+        rects = np.hstack([
             visible_point_xys - offset,  # left top
             visible_point_xys + offset,  # right bottom
         ])
-        for bbox in point_bboxes.tolist():
-            draw.ellipse(bbox, fill=plot_settings.keypoint_color)
+        for rect in rects.tolist():
+            draw.ellipse(rect, fill=plot_settings.keypoint_color)
 
     return im
 
