@@ -22,11 +22,9 @@ def binarise_mask(mask: Union[np.ndarray, str, Path]) -> np.ndarray:
     # convert to numpy array
     mask = np.asarray(mask)
 
-    # if all values are False or True, consider it's already binarised
+    # if it is a boolean array, consider it's already binarised
     if mask.ndim == 3:
-        assert all(
-            i in [False, True] for i in np.unique(mask).tolist()
-        ), "'mask' should be grayscale."
+        assert np.issubdtype(mask.dtype, np.bool), "'mask' should be binary."
         return mask
 
     assert mask.ndim == 2, "'mask' should have at least 2 channels."
