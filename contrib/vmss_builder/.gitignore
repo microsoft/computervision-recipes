@@ -1,0 +1,5 @@
+.idea
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+setup_vm.sh
