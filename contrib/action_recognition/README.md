@@ -6,11 +6,6 @@ of frames in videos.
 This directory contains example projects for building video-based action recognition systems.
 Our goal is to enable users to easily and quickly train high-accuracy action recognition models with fast inference speed.
 
-![](./media/action_recognition.gif "Example of action recognition")
-
-*Example of action recognition*
-
-
 Currently, we provide two state of the art model implementations, Two-Stream [Inflated 3D ConvNet, I3D](https://arxiv.org/pdf/1705.07750.pdf)
 and RGB [ResNets with (2+1)D convolutions, R(2+1)D](https://arxiv.org/abs/1711.11248)
 along with their example notebooks for fine-tuning on [HMDB-51 dataset](http://serre-lab.clps.brown.edu/resource/hmdb-a-large-human-motion-database/).

@@ -4,10 +4,8 @@
 """
 Helper module for visualizations
 """
-import os
 from pathlib import Path
-from typing import List, Union, Tuple, Callable, Any, Iterator, Optional
-from pathlib import Path
+from typing import Dict, List, Union, Tuple, Callable, Any, Iterator, Optional
 
 import numpy as np
 import PIL
@@ -15,7 +13,7 @@ from PIL import Image, ImageDraw
 from torch.utils.data import Subset
 import matplotlib.pyplot as plt
 
-from .bbox import _Bbox, AnnotationBbox, DetectionBbox
+from .bbox import _Bbox
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
@@ -28,11 +26,13 @@ class PlotSettings:
     def __init__(
         self,
         rect_th: int = 4,
-        rect_color: Tuple[int, int, int] = (255, 0, 0),
+        rect_color: Tuple[int, int, int] = (0, 0, 255),
         text_size: int = 25,
-        text_color: Tuple[int, int, int] = (255, 255, 255),
-        mask_color: Tuple[int, int, int] = (2, 166, 101),
-        mask_alpha: float = 0.5,
+        text_color: Tuple[int, int, int] = (0, 0, 255),
+        mask_color: Tuple[int, int, int] = (0, 0, 128),
+        mask_alpha: float = 0.8,
+        keypoint_th: int = 3,
+        keypoint_color: Tuple[int, int, int] = (0, 0, 255),
     ):
         self.rect_th = rect_th
         self.rect_color = rect_color
@@ -40,6 +40,8 @@ class PlotSettings:
         self.text_color = text_color
         self.mask_color = mask_color
         self.mask_alpha = mask_alpha
+        self.keypoint_th = keypoint_th
+        self.keypoint_color = keypoint_color
 
 
 def plot_boxes(
@@ -65,7 +67,7 @@ def plot_boxes(
 
         for bbox in bboxes:
             # do not draw background bounding boxes
-            if bbox.label_idx == 0:
+            if hasattr(bbox, "label_idx") and bbox.label_idx == 0:
                 continue
 
             box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
@@ -91,27 +93,30 @@ def plot_boxes(
     return im
 
 
-def plot_mask(
+def plot_masks(
     im: Union[str, Path, PIL.Image.Image],
     mask: Union[str, Path, np.ndarray],
     plot_settings: PlotSettings = PlotSettings(),
 ) -> PIL.Image.Image:
     """ Put mask onto image.
 
-    Assume the mask is already binary masks of [N, Height, Width], or
-    grayscale mask of [Height, Width] with different values
-    representing different objects, 0 as background.
+    Args:
+        im: the image to plot masks on
+        mask: it should be binary masks of [N, Height, Width], or grayscale
+            mask of [Height, Width] with different values representing
+            different objects, 0 as background
+        plot_settings: the parameter to plot the masks
     """
     if isinstance(im, (str, Path)):
         im = Image.open(im)
 
     # convert to RGBA for transparentising
-    im = im.convert('RGBA')
+    im = im.convert("RGBA")
     # colorise masks
     binary_masks = binarise_mask(mask)
     colored_masks = [
-        colorise_binary_mask(bmask, plot_settings.mask_color) for bmask in
-        binary_masks
+        colorise_binary_mask(bmask, plot_settings.mask_color)
+        for bmask in binary_masks
     ]
     # merge masks into img one by one
     for cmask in colored_masks:
@@ -123,52 +128,150 @@ def plot_mask(
     return im
 
 
-def display_bboxes_mask(
-    bboxes: List[_Bbox],
-    im_path: Union[Path, str],
-    mask_path: Union[Path, str] = None,
-    ax: Optional[plt.axes] = None,
+def plot_keypoints(
+    im: Union[str, Path, PIL.Image.Image],
+    keypoints: np.ndarray,
+    keypoint_meta: Dict,
     plot_settings: PlotSettings = PlotSettings(),
-    figsize: Tuple[int, int] = (12, 12),
-) -> None:
-    """ Draw image with bounding boxes and mask.
+) -> PIL.Image.Image:
+    """ Plot connected keypoints on Image and return the Image.
 
     Args:
-        bboxes: A list of _Bbox, could be DetectionBbox or AnnotationBbox
-        im_path: the location of image path to draw
-        mask_path: the location of mask path to draw
-        ax: an optional ax to specify where you wish the figure to be drawn on
-        plot_settings: plotting parameters
-        figsize: figure size
-
-    Returns nothing, but plots the image with bounding boxes, labels and masks
-    if any.
+        im: the image to plot keypoints on
+        keypoints: the keypoints to plot, of shape (N, num_keypoints, 3),
+            where N is the number of objects.  3 means x, y and visibility.
+            0 for visibility means invisible
+        keypoint_meta: meta data of keypoints which should include at least
+            "skeleton"
+        plot_settings: the parameter to plot the keypoints
     """
-    # Read image
-    im = Image.open(im_path)
+    if isinstance(im, (str, Path)):
+        im = Image.open(im)
 
-    # set an image title
-    title = os.path.basename(im_path)
+    if keypoints is not None:
+        assert (
+            keypoints.ndim == 3 and keypoints.shape[2] == 3
+        ), "Malformed keypoints array"
+        assert (
+            np.max(np.array(keypoint_meta["skeleton"])) < keypoints.shape[1]
+        ), "Skeleton index out of range"
 
-    if mask_path is not None:
-        # plot masks on im
-        im = plot_mask(im_path, mask_path)
+        draw = ImageDraw.Draw(im)
 
-    if bboxes is not None:
-        # plot boxes on im
-        im = plot_boxes(im, bboxes, title=title, plot_settings=plot_settings)
+        # get connected skeleton lines of the keypoints
+        joints = keypoints[:, keypoint_meta["skeleton"]]
+        visibles = (joints[..., 2] != 0).all(axis=2)
+        bones = joints[visibles][..., :2]
 
-    # display the image
-    if ax is not None:
+        # draw skeleton lines
+        for line in bones.reshape((-1, 4)).tolist():
+            draw.line(
+                line,
+                fill=plot_settings.keypoint_color,
+                width=plot_settings.keypoint_th,
+            )
+
+        # draw keypoints
+        visible_point_xys = keypoints[keypoints[..., 2] != 0][..., :2]
+        offset = 2 * plot_settings.keypoint_th
+        rects = np.hstack([
+            visible_point_xys - offset,  # left top
+            visible_point_xys + offset,  # right bottom
+        ])
+        for rect in rects.tolist():
+            draw.ellipse(rect, fill=plot_settings.keypoint_color)
+
+    return im
+
+
+def plot_detections(
+    detection: Dict,
+    data: "DetectionDataset" = None,
+    idx: int = None,
+    keypoint_meta: Dict = None,
+    ax: plt.axes = None,
+) -> PIL.Image.Image:
+    """ Put mask onto image.
+
+    Args:
+        detection: output running model prediction.
+        data: dataset with ground truth information.
+        idx: index into the data object to find the ground truth which corresponds to the detection.
+        keypoint_meta: meta data of keypoints which should include at least
+            "skeleton".
+        ax: an optional ax to specify where you wish the figure to be drawn on
+    """
+    # Open image
+    assert detection["im_path"], 'Detection["im_path"] should not be None.'
+    im = Image.open(detection["im_path"])
+
+    # Get id of ground truth image/annotation
+    if data and idx is None:
+        idx = detection["idx"]
+
+    # Loop over all images
+    det_bboxes = detection["det_bboxes"]
+
+    # Plot ground truth mask
+    if data and data.mask_paths:
+        mask_path = data.mask_paths[idx]
+        if mask_path:
+            im = plot_masks(
+                im,
+                mask_path,
+                plot_settings=PlotSettings(mask_color=(0, 128, 0)),
+            )
+
+    # Plot predicted masks
+    if "masks" in detection:
+        mask = detection["masks"]
+        im = plot_masks(im, mask, PlotSettings(mask_color=(128, 165, 0)))
+
+    # Plot ground truth keypoints
+    if data and data.keypoints and data.keypoint_meta:
+        im = plot_keypoints(
+            im,
+            data.keypoints[idx],
+            data.keypoint_meta,
+            PlotSettings(keypoint_color=(0, 192, 0)),
+        )
+
+    # Plot predicted keypoints
+    if "keypoints" in detection:
+        im = plot_keypoints(
+            im,
+            detection["keypoints"],
+            keypoint_meta,
+            PlotSettings(keypoint_color=(192, 165, 0)),
+        )
+
+    # Plot the detections
+    plot_boxes(
+        im,
+        det_bboxes,
+        plot_settings=PlotSettings(
+            rect_color=(255, 165, 0), text_color=(255, 165, 0), rect_th=2
+        ),
+    )
+
+    # Plot the ground truth annotations
+    if data:
+        anno_bboxes = data.anno_bboxes[idx]
+        plot_boxes(
+            im,
+            anno_bboxes,
+            plot_settings=PlotSettings(
+                rect_color=(0, 255, 0), text_color=(0, 255, 0)
+            ),
+        )
+
+    # show image
+    if ax:
         ax.set_xticks([])
         ax.set_yticks([])
         ax.imshow(im)
     else:
-        plt.figure(figsize=figsize)
-        plt.imshow(im)
-        plt.xticks([])
-        plt.yticks([])
-        plt.show()
+        return im
 
 
 def plot_grid(
@@ -216,48 +319,6 @@ def plot_grid(
                 plot_func(*arguments, ax)
 
     plt.subplots_adjust(top=0.8, bottom=0.2, hspace=0.1, wspace=0.2)
-
-
-def plot_detection_vs_ground_truth(
-    im_path: str,
-    det_bboxes: List[DetectionBbox],
-    anno_bboxes: List[AnnotationBbox],
-    ax: plt.axes,
-) -> None:
-    """ Plots bounding boxes of ground_truths and detections.
-
-    Args:
-        im_path: the image to plot
-        det_bboxes: a list of detected annotations
-        anno_bboxes: a list of ground_truth detections
-        ax: the axis to plot on
-
-    Returns nothing, but displays a graph
-    """
-    im = Image.open(im_path).convert("RGB")
-
-    # plot detections
-    det_params = PlotSettings(rect_color=(255, 0, 0), text_size=1)
-    im = plot_boxes(
-        im,
-        det_bboxes,
-        title=os.path.basename(im_path),
-        plot_settings=det_params,
-    )
-
-    # plot ground truth boxes
-    anno_params = PlotSettings(rect_color=(0, 255, 0), text_size=1)
-    im = plot_boxes(
-        im,
-        anno_bboxes,
-        title=os.path.basename(im_path),
-        plot_settings=anno_params,
-    )
-
-    # show image
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.imshow(im)
 
 
 # ===== Precision - Recall curve =====
@@ -311,9 +372,7 @@ def _get_precision_recall_settings(
 
 
 def _plot_pr_curve_iou_range(
-    ax: plt.axes,
-    coco_eval: CocoEvaluator,
-    iou_type: Optional[str] = None,
+    ax: plt.axes, coco_eval: CocoEvaluator, iou_type: Optional[str] = None
 ) -> None:
     """ Plots the PR curve over varying iou thresholds averaging over [K]
     categories. """
@@ -339,9 +398,7 @@ def _plot_pr_curve_iou_range(
 
 
 def _plot_pr_curve_iou_mean(
-    ax: plt.axes,
-    coco_eval: CocoEvaluator,
-    iou_type: Optional[str] = None,
+    ax: plt.axes, coco_eval: CocoEvaluator, iou_type: Optional[str] = None
 ) -> None:
     """ Plots the PR curve, averaging over iou thresholds and [K] labels. """
     x = np.arange(0.0, 1.01, 0.01)
@@ -399,8 +456,6 @@ def plot_pr_curves(
         )
 
     plt.show()
-
-
 
 
 # ===== Correct/missing detection counts curve =====
@@ -476,7 +531,6 @@ def _plot_counts_curves_obj(
         label="Total number of missed ground truths",
     )
 
-
     ax.legend()
     ax.set_xlabel("Score threshold")
     ax.set_ylabel("Frequency")
@@ -485,9 +539,9 @@ def _plot_counts_curves_obj(
 
 
 def plot_counts_curves(
-    detections: List[List[DetectionBbox]],
+    detections: List[Dict],
     data_ds: Subset,
-    detections_neg: List[List[DetectionBbox]] = None,
+    detections_neg: List[Dict] = None,
     figsize: Tuple[int, int] = (16, 8),
 ) -> None:
     """ Plot object-level and image-level correct/incorrect counts vs score thresholds
