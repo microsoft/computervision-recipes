@@ -1,0 +1,36 @@
+# Unit and integration test steps
+steps:
+
+- powershell: |
+    conda remove --name cv --all --force -y
+  displayName: 'Remove conda env in case it was not created correctly'
+
+- powershell: |
+    conda env create -f environment.yml
+    source activate cv
+    conda env list
+  displayName: 'Create and activate conda environment'
+
+- powershell: |
+    source activate cv
+    # python -m ipykernel install --user --name cv --display-name "cv"
+    pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"
+  displayName: 'Run unit and (only on Linux GPU) integration tests'
+
+- powershell: |
+      conda remove -n cv --all -q --force -y
+      conda env list
+  displayName: 'Clean up the new conda environment'
+  condition: always()
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFiles: '**/test-unitttest.xml'
+    testRunTitle: 'Test results for PyTest'
+
+- task: ComponentGovernanceComponentDetection@0
+  inputs:
+    scanType: 'Register'
+    verbosity: 'Verbose'
+    alertWarningLevel: 'High'
+

@@ -16,7 +16,7 @@ jobs:
     name: cvbp-win-bare
 
   steps:
-  - template: templates/unit-test-steps-not-linuxgpu.yml  # Template reference
+  - template: templates/unit-test-steps-windows.yml  # Template reference
   
   - script: |
      call conda env remove -n cv -y
