@@ -10,22 +10,21 @@ steps:
   displayName: 'Remove conda env in case it was not created correctly'
 
 - powershell: |
-    conda env create -f environment.yml
-    source activate cv
-    conda env list
+    conda env create -f environment.yml;
+    source activate cv;
+    conda env list;
   displayName: 'Create and activate conda environment'
 
 - powershell: |
-    source activate cv
-    # python -m ipykernel install --user --name cv --display-name "cv"
+    source activate cv;
     pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"
   displayName: 'Run unit and (only on Linux GPU) integration tests'
 
 - powershell: |
-      echo Remove Conda Environment
-      conda remove -n cv --all -q --force -y
-      conda env list
-      echo Done Cleanup
+      echo Remove Conda Environment;
+      conda remove -n cv --all -q --force -y;
+      conda env list;
+      echo Done Cleanup;
   displayName: 'Cleanup Task'
   condition: always()
 
