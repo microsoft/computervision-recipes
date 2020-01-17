@@ -2,8 +2,8 @@
 steps:
 
 - powershell: |
-    conda init powershell
-  displayName: 'Initialize Conda for use with powershell'
+    Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+  displayName: Add conda to PATH
 
 - powershell: |
     conda remove --name cv --all --force -y
