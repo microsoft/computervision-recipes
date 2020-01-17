@@ -14,7 +14,7 @@ trigger:
 jobs:
 - job: WindowsCPU
   pool:
-    name: cvbpwinpool
+    name: cvbp-win-bare
 
   steps:
   - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
