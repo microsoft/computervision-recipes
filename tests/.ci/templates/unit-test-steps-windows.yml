@@ -2,6 +2,10 @@
 steps:
 
 - powershell: |
+    conda init powershell
+  displayName: 'Initialize Conda for use with powershell'
+
+- powershell: |
     conda remove --name cv --all --force -y
   displayName: 'Remove conda env in case it was not created correctly'
 
@@ -18,9 +22,11 @@ steps:
   displayName: 'Run unit and (only on Linux GPU) integration tests'
 
 - powershell: |
+      echo Remove Conda Environment
       conda remove -n cv --all -q --force -y
       conda env list
-  displayName: 'Clean up the new conda environment'
+      echo Done Cleanup
+  displayName: 'Cleanup Task'
   condition: always()
 
 - task: PublishTestResults@2
