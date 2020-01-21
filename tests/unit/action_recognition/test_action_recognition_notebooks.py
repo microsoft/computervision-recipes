@@ -30,3 +30,33 @@ def test_00_notebook_run(action_recognition_notebooks):
     # TODO add some asserts like below
     # assert nb_output.scraps["predicted_label"].data == "coffee_mug"
     # assert nb_output.scraps["predicted_confidence"].data > 0.5
+
+
+@pytest.mark.notebooks
+def test_01_notebook_run(action_recognition_notebooks):
+    notebook_path = classification_notebooks["01"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(PM_VERSION=pm.__version__),
+        kernel_name=KERNEL_NAME,
+    )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    # TODO add some asserts like below
+    # assert len(nb_output.scraps["training_accuracies"].data) == 1
+
+
+@pytest.mark.notebooks
+def test_02_notebook_run(classification_notebooks, multilabel_ic_data_path):
+    notebook_path = classification_notebooks["02"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(PM_VERSION=pm.__version__),
+        kernel_name=KERNEL_NAME,
+    )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    # TODO add some asserts like below
+    # assert len(nb_output.scraps["training_accuracies"].data) == 1
