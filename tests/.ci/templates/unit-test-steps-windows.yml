@@ -1,30 +1,35 @@
 # Unit and integration test steps
 steps:
 
-- powershell: |
-    Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+- powershell:
+  targetType: 'inline'
+  script: 'Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"'
   displayName: Add conda to PATH
 
-- powershell: |
-    conda remove --name cv --all --force -y
+- powershell:
+  targetType: 'inline'
+  script: 'conda remove --name cv --all --force -y'
   displayName: 'Remove conda env in case it was not created correctly'
 
-- powershell: |
-    conda env create -f environment.yml;
+- powershell:
+  targetType: 'inline'
+  script: 'conda env create -f environment.yml;
     source activate cv;
-    conda env list;
+    conda env list;'
   displayName: 'Create and activate conda environment'
 
-- powershell: |
-    source activate cv;
-    pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"
+- powershell:
+  targetType: 'inline'
+  script: 'source activate cv;
+    pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"'
   displayName: 'Run unit and (only on Linux GPU) integration tests'
 
-- powershell: |
-      echo Remove Conda Environment;
+- powershell:
+  targetType: 'inline'
+  script: 'echo Remove Conda Environment;
       conda remove -n cv --all -q --force -y;
       conda env list;
-      echo Done Cleanup;
+      echo Done Cleanup;'
   displayName: 'Cleanup Task'
   condition: always()
 
