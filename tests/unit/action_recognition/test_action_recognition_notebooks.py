@@ -30,5 +30,3 @@ def test_00_notebook_run(action_recognition_notebooks):
     # TODO add some asserts like below
     # assert nb_output.scraps["predicted_label"].data == "coffee_mug"
     # assert nb_output.scraps["predicted_confidence"].data > 0.5
-
-

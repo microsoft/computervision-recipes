@@ -40,10 +40,7 @@ def test_02_notebook_run(detection_notebooks):
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(
-            PM_VERSION=pm.__version__,
-            EPOCHS=epochs,
-        ),
+        parameters=dict(PM_VERSION=pm.__version__, EPOCHS=epochs),
         kernel_name=KERNEL_NAME,
     )
 
@@ -72,4 +69,3 @@ def test_12_notebook_run(detection_notebooks):
     assert nb_output.scraps["valid_accs"].data[-1] > 0.5
     assert len(nb_output.scraps["valid_accs"].data) == 1
     assert len(nb_output.scraps["hard_im_scores"].data) == 10
-

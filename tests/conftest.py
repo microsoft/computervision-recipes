@@ -73,8 +73,9 @@ def path_action_recognition_notebooks():
     return os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
-            os.path.pardir, "scenarios",
-            "action_recognition"
+            os.path.pardir,
+            "scenarios",
+            "action_recognition",
         )
     )
 
@@ -89,27 +90,21 @@ def classification_notebooks():
     # Path for the notebooks
     paths = {
         "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
-        "01": os.path.join(
-            folder_notebooks, "01_training_introduction.ipynb"
-        ),
+        "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
         "02": os.path.join(
             folder_notebooks, "02_multilabel_classification.ipynb"
         ),
         "03": os.path.join(
             folder_notebooks, "03_training_accuracy_vs_speed.ipynb"
         ),
-        "10": os.path.join(
-            folder_notebooks, "10_image_annotation.ipynb"
-        ),
+        "10": os.path.join(folder_notebooks, "10_image_annotation.ipynb"),
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
         "12": os.path.join(
             folder_notebooks, "12_hard_negative_sampling.ipynb"
         ),
-        "20": os.path.join(
-            folder_notebooks, "20_azure_workspace_setup.ipynb"
-        ),
+        "20": os.path.join(folder_notebooks, "20_azure_workspace_setup.ipynb"),
         "21": os.path.join(
             folder_notebooks,
             "21_deployment_on_azure_container_instances.ipynb",
@@ -703,6 +698,7 @@ def od_detections(od_detection_dataset):
     learner = DetectionLearner(od_detection_dataset)
     return learner.predict_dl(od_detection_dataset.test_dl, threshold=0)
 
+
 # ------|-- Action Recognition ------------------------------------------------
 
 
@@ -714,7 +710,6 @@ def od_detections(od_detection_dataset):
 #     im_path = os.path.join(tmp_session, "example.jpg")
 #     urllib.request.urlretrieve(IM_URL, im_path)
 #     return im_path
-
 
 
 # ----- AML Settings ----------------------------------------------------------
