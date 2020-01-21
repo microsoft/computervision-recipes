@@ -11,13 +11,13 @@ steps:
 
 - powershell: |
     Invoke-Expression -Command 'conda env create -f environment.yml;
-    source activate cv;
-    conda env list;'
+      source activate cv;
+      conda env list;'
   displayName: 'Create and activate conda environment'
 
 - powershell: |
     Invoke-Expression -Command 'source activate cv;
-    pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"'
+      pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"'
   displayName: 'Run unit and (only on Linux GPU) integration tests'
 
 - powershell: |
