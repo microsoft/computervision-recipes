@@ -24,7 +24,7 @@ While the field of Computer Vision is growing rapidly, the majority of vision ap
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_od_vis.jpg" height="150" alt="Object detect visualization"/>
 
-- **Keypoint Detection**: Given an input image, identify and locate keypoints such as body joints for human pose estimation. Conceptually this runs an object detector first, followed by detecting keypoints on the objects. In practice, a single model runs both steps (almost) at once.
+- **Keypoint Detection**: Given an input image, identify and locate keypoints. Conceptually this runs an object detector first, followed by detecting keypoints on the objects. In practice, a single model runs both steps (almost) at once. 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_kp_vis.jpg" height="150" alt="Keypoint detect visualization"/>
 
