@@ -13,6 +13,7 @@ Each project should live in its own subdirectory ```/contrib/<project>``` and co
 
 ## Tools
 | Directory | Project description | Build status (optional) |
+|---|---|---|
 | [vm_builder](vm_builder) | This script helps users easily create an Ubuntu Data Science Virtual Machine with a GPU with the Computer Vision repo installed and ready to be used. If you find the script to be out-dated or not working, you can create the VM using the Azure portal or the Azure CLI tool with a few more steps. | |
-| [vmss_builder](vmss_builder) | |This script helps you setup a cluster of virtual machines with the computer vision recipes repo pre-installed using VMSS. This setup can be used for hands-on / lab sessions when you need to prepare multiple VM environments.
+| [vmss_builder](vmss_builder) | This script helps you setup a cluster of virtual machines with the computer vision recipes repo pre-installed using VMSS. This setup can be used for hands-on / lab sessions when you need to prepare multiple VM environments.
  |
