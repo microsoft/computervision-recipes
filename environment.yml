@@ -39,3 +39,5 @@ dependencies:
   - nteract-scrapbook
   - azureml-sdk[notebooks,contrib]>=1.0.30
   - git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+  - decord==0.3.5
+  - einops==0.1.0

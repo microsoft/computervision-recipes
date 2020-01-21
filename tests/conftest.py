@@ -68,6 +68,17 @@ def path_detection_notebooks():
     )
 
 
+def path_action_recognition_notebooks():
+    """ Returns the path of the action recognition notebooks folder. """
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.path.pardir, "scenarios",
+            "action_recognition"
+        )
+    )
+
+
 # ----- Module fixtures ----------------------------------------------------------
 
 
@@ -77,39 +88,39 @@ def classification_notebooks():
 
     # Path for the notebooks
     paths = {
-        "00_webcam": os.path.join(folder_notebooks, "00_webcam.ipynb"),
-        "01_training_introduction": os.path.join(
+        "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
+        "01": os.path.join(
             folder_notebooks, "01_training_introduction.ipynb"
         ),
-        "02_multilabel_classification": os.path.join(
+        "02": os.path.join(
             folder_notebooks, "02_multilabel_classification.ipynb"
         ),
-        "03_training_accuracy_vs_speed": os.path.join(
+        "03": os.path.join(
             folder_notebooks, "03_training_accuracy_vs_speed.ipynb"
         ),
-        "10_image_annotation": os.path.join(
+        "10": os.path.join(
             folder_notebooks, "10_image_annotation.ipynb"
         ),
-        "11_exploring_hyperparameters": os.path.join(
+        "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
-        "12_hard_negative_sampling": os.path.join(
+        "12": os.path.join(
             folder_notebooks, "12_hard_negative_sampling.ipynb"
         ),
-        "20_azure_workspace_setup": os.path.join(
+        "20": os.path.join(
             folder_notebooks, "20_azure_workspace_setup.ipynb"
         ),
-        "21_deployment_on_azure_container_instances": os.path.join(
+        "21": os.path.join(
             folder_notebooks,
             "21_deployment_on_azure_container_instances.ipynb",
         ),
-        "22_deployment_on_azure_kubernetes_service": os.path.join(
+        "22": os.path.join(
             folder_notebooks, "22_deployment_on_azure_kubernetes_service.ipynb"
         ),
-        "23_aci_aks_web_service_testing": os.path.join(
+        "23": os.path.join(
             folder_notebooks, "23_aci_aks_web_service_testing.ipynb"
         ),
-        "24_exploring_hyperparameters_on_azureml": os.path.join(
+        "24": os.path.join(
             folder_notebooks, "24_exploring_hyperparameters_on_azureml.ipynb"
         ),
     }
@@ -153,6 +164,19 @@ def detection_notebooks():
         "20": os.path.join(
             folder_notebooks, "20_deployment_on_kubernetes.ipynb"
         ),
+    }
+    return paths
+
+
+@pytest.fixture(scope="module")
+def action_recognition_notebooks():
+    folder_notebooks = path_action_recognition_notebooks()
+
+    # Path for the notebooks
+    paths = {
+        "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
+        "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
+        "02": os.path.join(folder_notebooks, "02_video_transformation.ipynb"),
     }
     return paths
 
@@ -678,6 +702,19 @@ def od_detections(od_detection_dataset):
     """ returns output of the object detector for a given test set. """
     learner = DetectionLearner(od_detection_dataset)
     return learner.predict_dl(od_detection_dataset.test_dl, threshold=0)
+
+# ------|-- Action Recognition ------------------------------------------------
+
+
+# TODO
+# @pytest.fixture(scope="session")
+# def od_cup_path(tmp_session) -> str:
+#     """ Returns the path to the downloaded cup image. """
+#     IM_URL = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup.jpg"
+#     im_path = os.path.join(tmp_session, "example.jpg")
+#     urllib.request.urlretrieve(IM_URL, im_path)
+#     return im_path
+
 
 
 # ----- AML Settings ----------------------------------------------------------
