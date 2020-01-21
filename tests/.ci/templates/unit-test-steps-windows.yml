@@ -5,32 +5,32 @@ steps:
     Write-Host '##vso[task.prependpath]$env:CONDA\Scripts'
   displayName: Add conda to PATH
 
-- powershell: |
-    Invoke-Expression -Command 'conda remove --name cv --all --force -y'
+- script: |
+    conda remove --name cv --all --force -y
   displayName: 'Remove conda env in case it was not created correctly'
 
-- powershell: |
-    Invoke-Expression -Command 'conda env create -f environment.yml'
+- script: |
+    conda env create -f environment.yml
   displayName: 'Create and activate conda environment'
 
-- powershell: |
-    Invoke-Expression -Command 'conda env list'
+- script: |
+    conda env list
   displayName: 'List conda environments to ensure one was created'
 
-- powershell: |
-    Invoke-Expression -Command 'call activate cv'
-    Invoke-Expression -Command 'pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"'
+- script: |
+    call activate cv
+    pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"
   displayName: 'Run unit and (only on Linux GPU) integration tests'
 
-- powershell: |
-    Invoke-Expression -Command 'echo Remove Conda Environment'
-    Invoke-Expression -Command 'conda remove -n cv --all -q --force -y'
-    Invoke-Expression -Command 'echo Done Cleanup'
+- script: |
+    echo Remove Conda Environment
+    conda remove -n cv --all -q --force -y
+    echo Done Cleanup
   displayName: 'Clean up the newly created environment'
   condition: always()
 
-- powershell: |
-    Invoke-Expression -Command 'conda env list'
+- script: |
+    conda env list
   displayName: 'List conda environments to verify cleanup of the new environment'
 
 - task: PublishTestResults@2
