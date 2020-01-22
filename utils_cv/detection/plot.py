@@ -379,7 +379,7 @@ def _plot_pr_curve_iou_range(
     x = np.arange(0.0, 1.01, 0.01)
     iou_thrs_idx = range(0, 10)
     iou_thrs = np.linspace(
-        0.5, 0.95, np.round((0.95 - 0.5) / 0.05) + 1, endpoint=True
+        0.5, 0.95, int(np.round((0.95 - 0.5) / 0.05)) + 1, endpoint=True
     )
 
     # get_cmap() - a function that maps each index in 0, 1, ..., n-1 to a distinct
