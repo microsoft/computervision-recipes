@@ -16,50 +16,40 @@ This document tries to answer frequent questions related to object detection. Fo
   * [Intersection-over-Union overlap metric](#intersection-over-union-overlap-metric)
   * [Non-maxima suppression](#non-maxima-suppression)
   * [Mean Average Precision](#mean-average-precision)
-  
+
 * Training
   * [How to improve accuracy?](#how-to-improve-accuracy)
-  
+
 
 ## General
 
 ### Why Torchvision?
 
-Torchvision has a large active user-base and hence its object detection implementation is easy to use, well tested, and uses state-of-the-art technology which has proven itself in the community. For these reasons we decided to use Torchvision as our object detection library. For advanced users who want to experiment with the latest cutting-edge technology, we recommend to start with our Torchvision notebooks and then also to look into more researchy implementations such as the [mmdetection](https://github.com/open-mmlab/mmdetection) repository. 
+Torchvision has a large active user-base and hence its object detection implementation is easy to use, well tested, and uses state-of-the-art technology which has proven itself in the community. For these reasons we decided to use Torchvision as our object detection library. For advanced users who want to experiment with the latest cutting-edge technology, we recommend to start with our Torchvision notebooks and then also to look into more researchy implementations such as the [mmdetection](https://github.com/open-mmlab/mmdetection) repository.
 
 ## Data
 
 ### How to annotate images?
 
-Annotated object locations are required to train and evaluate an object detector. One of the best open source UIs which runs on Windows and Linux is [VOTT](https://github.com/Microsoft/VoTT/releases). VOTT can be used to manually draw rectangles around one or more objects in an image. These annotations can then be exported in Pascal-VOC format (single xml-file per image) which the provided notebooks know how to read.
+Annotated object locations are required to train and evaluate an object detector. One of the best open source UIs which runs on Windows and Linux is [VOTT](https://github.com/Microsoft/VoTT/releases). Another good tool is [LabelImg](https://github.com/tzutalin/labelImg/releases).
+
+VOTT can be used to manually draw rectangles around one or more objects in an image. These annotations can then be exported in Pascal-VOC format (single xml-file per image) which the provided notebooks know how to read.
 <p align="center">
 <img src="media/vott_ui.jpg" width="600" align="center"/>
 </p>
 
 When creating a new project in VOTT, note that the "source connection" can simply point to a local folder which contains the images to be annotated, and respectively the "target connection" to a folder where to write the output. Pascal VOC style annotations can be exported by selecting "Pascal VOC" in the "Export Settings" tab and then using the "Export Project" button in the "Tags Editor" tab.
 
-For mask (segmentation) annotation, an easy-to-use online tool is
-[Labelbox](https://labelbox.com/).  Other alternatives include
-[CVAT](https://github.com/opencv/cvat) and
-[RectLabel](https://rectlabel.com/) (Mac only).
+For mask (segmentation) annotation, an easy-to-use online tool is [Labelbox](https://labelbox.com/), shown in the screenshot below. See the demo [Introducing Image Segmentation at Labelbox](https://labelbox.com/blog/introducing-image-segmentation/) on how to use the tool, and the [02_mask_rcnn notebook](02_mask_rcnn.ipynb) how to convert the Labelbox annotations to Pascal VOC format. Alternatives to Labelbox include [CVAT](https://github.com/opencv/cvat) or [RectLabel](https://rectlabel.com/) (Mac only).
 
 <p align="center"> <img src="media/labelbox_mask_annotation.png"
 width="600"/> </p>
 
-A good demo can be found at [Introducing Image Segmentation at
-Labelbox](https://labelbox.com/blog/introducing-image-segmentation/).
-Besides for annotating mask, Labelbox can also be used to annotate
-bounding box, polyline and keypoint.
+Besides drawing masks, Labelbox can also be used to annotate keypoints.
 
 <p align="center">
 <img src="media/labelbox_keypoint_annotation.png" width="600"/>
 </p>
-
-However, it has limitation to the number of labeled images per year
-for free account.  And it does not provide export options for COCO or
-PASCAL VOC.  Annotations at Labelbox still needs to be converted into
-the format used in our notebooks, which is explained in our [Mask R-CNN
-notebook](02_mask_rcnn.ipynb).
 
 
 Selection and annotating images is complex and consistency is key. For example:
