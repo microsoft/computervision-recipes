@@ -40,4 +40,4 @@ dependencies:
   - nvidia-ml-py3
   - nteract-scrapbook
   - azureml-sdk[notebooks,contrib]>=1.0.30
-  - git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+  - git+https://github.com/youngpark/cocoapi.git#subdirectory=PythonAPI
