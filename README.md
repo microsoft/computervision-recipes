@@ -11,7 +11,10 @@ We hope that these examples and utilities can significantly reduce the “time t
 
 These examples are provided as [Jupyter notebooks](scenarios) and common [utility functions](utils_cv). All examples use PyTorch as the underlying deep learning library.
 
-<img align="center" src="./scenarios/media/cv_overview.jpg" height="250" alt="Some supported CV scenarios"/>
+<p align="center">
+  <img src="./scenarios/media/cv_overview.jpg" height="350" alt="Some supported CV scenarios"/>
+</p>
+
 
 ## Target Audience
 
