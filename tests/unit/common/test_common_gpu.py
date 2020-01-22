@@ -7,6 +7,7 @@ from utils_cv.common.gpu import (
     is_linux,
     is_windows,
     which_processor,
+    system_info,
 )
 
 
@@ -34,3 +35,7 @@ def test_db_num_workers():
     else:
         assert db_num_workers() == 16
         assert db_num_workers(non_windows_num_workers=7) == 7
+
+
+def test_system_info():
+    system_info()

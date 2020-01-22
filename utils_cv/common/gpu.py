@@ -2,8 +2,10 @@
 # Licensed under the MIT License.
 
 import platform
-
+import sys
 import torch
+import torch.cuda as cuda
+import torchvision
 from torch.cuda import current_device, get_device_name, is_available
 
 
@@ -52,3 +54,15 @@ def db_num_workers(non_windows_num_workers: int = 16):
         return 0
     else:
         return non_windows_num_workers
+
+
+def system_info():
+    print(sys.version, "\n")
+    print("PyTorch {}".format(torch.__version__), "\n")
+    print("Torch-vision {}".format(torchvision.__version__), "\n")
+    print("Available devices:")
+    if cuda.is_available():
+        for i in range(cuda.device_count()):
+            print("{}: {}".format(i, cuda.get_device_name(i)))
+    else:
+        print("CPUs")

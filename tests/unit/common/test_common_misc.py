@@ -2,11 +2,12 @@
 # Licensed under the MIT License.
 
 import os
+import pytest
 from pathlib import Path
 from PIL import ImageFont
 
 from fastai.vision import ImageList
-from utils_cv.common.misc import copy_files, set_random_seed, get_font
+from utils_cv.common.misc import copy_files, set_random_seed, get_font, Config
 
 
 def test_set_random_seed(tiny_ic_data_path):
@@ -74,3 +75,21 @@ def test_get_font():
         type(font) == ImageFont.FreeTypeFont
         or type(font) == ImageFont.ImageFont
     )
+
+
+def test_Config():
+    # test dictionary wrapper to make sure keys can be accessed as attributes
+    cfg = Config({"lr": 0.01, "momentum": 0.95})
+    assert cfg.lr == 0.01 and cfg.momentum == 0.95
+    cfg = Config(lr=0.01, momentum=0.95)
+    assert cfg.lr == 0.01 and cfg.momentum == 0.95
+    cfg = Config({"lr": 0.01}, momentum=0.95)
+    assert cfg.lr == 0.01 and cfg.momentum == 0.95
+    cfg_wrapper = Config(cfg, epochs=3)
+    assert (
+        cfg_wrapper.lr == 0.01
+        and cfg_wrapper.momentum == 0.95
+        and cfg_wrapper.epochs == 3
+    )
+    with pytest.raises(ValueError):
+        Config(3)

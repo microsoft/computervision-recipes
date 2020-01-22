@@ -11,13 +11,14 @@ try:
     AMP_AVAILABLE = True
 except ModuleNotFoundError:
     AMP_AVAILABLE = False
+
 import torch
 import torch.cuda as cuda
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
-from . import Config
+from ..common.misc import Config
 from .data import (
     DEFAULT_MEAN,
     DEFAULT_STD,
