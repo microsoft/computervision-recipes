@@ -3,6 +3,7 @@
 
 from torchvision.models.detection.faster_rcnn import FasterRCNN
 from torchvision.models.detection.mask_rcnn import MaskRCNN
+from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
 from collections.abc import Iterable
 import numpy as np
 import pytest
@@ -10,17 +11,33 @@ import shutil
 from pathlib import Path
 from typing import Tuple
 
+from utils_cv.detection.bbox import DetectionBbox
 from utils_cv.detection.model import (
     get_pretrained_fasterrcnn,
+    get_pretrained_keypointrcnn,
     get_pretrained_maskrcnn,
     DetectionLearner,
     _apply_threshold,
     _calculate_ap,
+    _extract_od_results,
     ims_eval_detections,
 )
 
 
-def test__apply_threshold(od_sample_output):
+def test__extract_od_results(od_sample_raw_preds, od_data_path_labels):
+    """ test that `_extract_od_results` can convert raw preds. """
+    pred = {
+        k: v.detach().cpu().numpy() for k, v in od_sample_raw_preds[0].items()
+    }
+    out = _extract_od_results(pred, labels=od_data_path_labels, im_path=None)
+    bboxes = out["det_bboxes"]
+    assert type(bboxes[0]) == DetectionBbox
+    assert len(bboxes) == 5
+    assert out["masks"].shape == (5, 666, 499)
+    assert out["keypoints"].shape == (5, 13, 3)
+
+
+def test__apply_threshold(od_sample_raw_preds):
     """ Test `_apply_threshold` and verify it works at different thresholds. """
     # test cases: [(threshold, num, mask_pixels)]
     test_cases = [
@@ -28,9 +45,11 @@ def test__apply_threshold(od_sample_output):
         (0.01, 5, (21146, 28098, 28458, 28356, 21311)),
         (0.995, 2, (21146, 28098)),
     ]
-    res = {k: v.detach().cpu().numpy() for k, v in od_sample_output.items()}
+    out = {
+        k: v.detach().cpu().numpy() for k, v in od_sample_raw_preds[0].items()
+    }
     for threshold, num, mask_pixels in test_cases:
-        pred = _apply_threshold(res, threshold=threshold)
+        pred = _apply_threshold(out, threshold=threshold)
         for v in pred.values():
             assert len(v) == num
         for mask, num_pixels in zip(pred["masks"], mask_pixels):
@@ -45,6 +64,11 @@ def test_get_pretrained_fasterrcnn():
 def test_get_pretrained_maskrcnn():
     """ Simply test that `get_pretrained_maskrcnn` returns the correct type for now. """
     assert type(get_pretrained_maskrcnn(4)) == MaskRCNN
+
+
+def test_get_pretrained_keypointrcnn():
+    """ Simply test that `get_pretrained_keypointrcnn` returns the correct type for now. """
+    assert type(get_pretrained_keypointrcnn(2, 6)) == KeypointRCNN
 
 
 @pytest.mark.gpu
@@ -68,19 +92,21 @@ def test_ims_eval_detections(od_detection_dataset, od_detections):
         obj_missed_gt_counts,
         im_neg_det_counts,
         obj_neg_det_counts,
-    ) = ims_eval_detections(od_detections, od_detection_dataset.test_ds, od_detections)
+    ) = ims_eval_detections(
+        od_detections, od_detection_dataset.test_ds, od_detections
+    )
     assert len(score_thresholds) == 51
     assert max(im_error_counts) == len(od_detection_dataset.test_ds)
     assert max(im_wrong_det_counts) <= len(od_detection_dataset.test_ds)
     assert max(im_missed_gt_counts) <= len(od_detection_dataset.test_ds)
     assert max(im_neg_det_counts) <= len(od_detection_dataset.test_ds)
-    for i in range(len(score_thresholds)-1):
-        assert im_wrong_det_counts[i] >= im_wrong_det_counts[i+1]
-        assert im_missed_gt_counts[i] <= im_missed_gt_counts[i+1]
-        assert obj_wrong_det_counts[i] >= obj_wrong_det_counts[i+1]
-        assert obj_missed_gt_counts[i] <= obj_missed_gt_counts[i+1]
-        assert im_neg_det_counts[i] >= im_neg_det_counts[i+1]
-        assert obj_neg_det_counts[i] >= obj_neg_det_counts[i+1]
+    for i in range(len(score_thresholds) - 1):
+        assert im_wrong_det_counts[i] >= im_wrong_det_counts[i + 1]
+        assert im_missed_gt_counts[i] <= im_missed_gt_counts[i + 1]
+        assert obj_wrong_det_counts[i] >= obj_wrong_det_counts[i + 1]
+        assert obj_missed_gt_counts[i] <= obj_missed_gt_counts[i + 1]
+        assert im_neg_det_counts[i] >= im_neg_det_counts[i + 1]
+        assert obj_neg_det_counts[i] >= obj_neg_det_counts[i + 1]
 
 
 def test_detection_learner_init(od_detection_dataset):
@@ -102,25 +128,27 @@ def test_detection_learner_init_model(od_detection_dataset):
 
 
 @pytest.mark.gpu
-def test_detection_learner_train_one_epoch(
-    od_detection_learner,
-):
+def test_detection_learner_train_one_epoch(od_detection_learner,):
     """ Simply test that a small training loop works. """
     od_detection_learner.fit(epochs=1)
 
 
 @pytest.mark.gpu
-def test_detection_mask_learner_train_one_epoch(
-    od_detection_mask_learner,
-):
+def test_detection_mask_learner_train_one_epoch(od_detection_mask_learner,):
     """ Simply test that a small training loop works for mask learner. """
     od_detection_mask_learner.fit(epochs=1)
 
 
 @pytest.mark.gpu
-def test_detection_learner_plot_precision_loss_curves(
-    od_detection_learner,
+def test_detection_keypoint_learner_train_one_epoch(
+    od_detection_keypoint_learner,
 ):
+    """ Simply test that a small training loop works for keypoint learner. """
+    od_detection_keypoint_learner.fit(epochs=1, skip_evaluation=True)
+
+
+@pytest.mark.gpu
+def test_detection_learner_plot_precision_loss_curves(od_detection_learner,):
     """ Simply test that `plot_precision_loss_curves` works. """
     od_detection_learner.plot_precision_loss_curves()
 
@@ -130,31 +158,23 @@ def test_detection_mask_learner_plot_precision_loss_curves(
     od_detection_mask_learner,
 ):
     """ Simply test that `plot_precision_loss_curves` works for mask learner. """
-    # test mask learner
     od_detection_mask_learner.plot_precision_loss_curves()
 
 
 @pytest.mark.gpu
-def test_detection_learner_evaluate(
-    od_detection_learner,
-):
+def test_detection_learner_evaluate(od_detection_learner,):
     """ Simply test that `evaluate` works. """
     od_detection_learner.evaluate()
 
 
 @pytest.mark.gpu
-def test_detection_mask_learner_evaluate(
-    od_detection_mask_learner,
-):
+def test_detection_mask_learner_evaluate(od_detection_mask_learner,):
     """ Simply test that `evaluate` works for mask learner. """
     od_detection_mask_learner.evaluate()
 
 
 @pytest.mark.gpu
-def test_detection_learner_predict(
-    od_detection_learner,
-    od_cup_path,
-):
+def test_detection_learner_predict(od_detection_learner, od_cup_path):
     """ Simply test that `predict` works. """
     bboxes = od_detection_learner.predict(od_cup_path)["det_bboxes"]
     assert type(bboxes) == list
@@ -162,13 +182,10 @@ def test_detection_learner_predict(
 
 @pytest.mark.gpu
 def test_detection_mask_learner_predict(
-    od_detection_mask_learner,
-    od_cup_path,
+    od_detection_mask_learner, od_cup_path
 ):
     """ Simply test that `predict` works for mask learner. """
-    pred = od_detection_mask_learner.predict(
-        od_cup_path, threshold=0.1
-    )
+    pred = od_detection_mask_learner.predict(od_cup_path, threshold=0.1)
     bboxes = pred["det_bboxes"]
     masks = pred["masks"]
     assert type(bboxes) == list
@@ -177,22 +194,35 @@ def test_detection_mask_learner_predict(
 
 
 @pytest.mark.gpu
+def test_detection_keypoint_learner_predict(
+    od_detection_keypoint_learner, od_cup_path
+):
+    """ Simply test that `predict` works for keypoint learner. """
+    pred = od_detection_keypoint_learner.predict(od_cup_path, threshold=0.1)
+    bboxes = pred["det_bboxes"]
+    keypoints = pred["keypoints"]
+    assert type(bboxes) == list
+    assert type(keypoints) == np.ndarray
+    assert len(bboxes) == len(keypoints)
+
+
+@pytest.mark.gpu
 def test_detection_learner_predict_threshold(
-    od_detection_learner,
-    od_cup_path,
+    od_detection_learner, od_cup_path
 ):
     """ Simply test that `predict` works with a threshold by setting a really
     high threshold.
     """
-    bboxes = od_detection_learner.predict(od_cup_path, threshold=0.9999)["det_bboxes"]
+    bboxes = od_detection_learner.predict(od_cup_path, threshold=0.9999)[
+        "det_bboxes"
+    ]
     assert type(bboxes) == list
     assert len(bboxes) == 0
 
 
 @pytest.mark.gpu
 def test_detection_mask_learner_predict_threshold(
-    od_detection_mask_learner,
-    od_cup_path,
+    od_detection_mask_learner, od_cup_path
 ):
     """ Simply test that `predict` works for mask learner with a threshold by
     setting a really high threshold.
@@ -207,9 +237,24 @@ def test_detection_mask_learner_predict_threshold(
 
 
 @pytest.mark.gpu
+def test_detection_keypoint_learner_predict_threshold(
+    od_detection_keypoint_learner, od_cup_path
+):
+    """ Simply test that `predict` works for keypoint learner with a threshold by
+    setting a really high threshold.
+    """
+    pred = od_detection_keypoint_learner.predict(od_cup_path, threshold=0.9999)
+    bboxes = pred["det_bboxes"]
+    keypoints = pred["keypoints"]
+    assert type(bboxes) == list
+    assert type(keypoints) == np.ndarray
+    assert len(bboxes) == len(keypoints)
+    assert len(bboxes) == 0
+
+
+@pytest.mark.gpu
 def test_detection_learner_predict_batch(
-    od_detection_learner,
-    od_detection_dataset,
+    od_detection_learner, od_detection_dataset
 ):
     """ Simply test that `predict_batch` works. """
     generator = od_detection_learner.predict_batch(
@@ -220,8 +265,7 @@ def test_detection_learner_predict_batch(
 
 @pytest.mark.gpu
 def test_detection_mask_learner_predict_batch(
-    od_detection_mask_learner,
-    od_detection_mask_dataset,
+    od_detection_mask_learner, od_detection_mask_dataset
 ):
     """ Simply test that `predict_batch` works for mask learner. """
     generator = od_detection_mask_learner.predict_batch(
@@ -231,9 +275,19 @@ def test_detection_mask_learner_predict_batch(
 
 
 @pytest.mark.gpu
+def test_detection_keypoint_learner_predict_batch(
+    od_detection_keypoint_learner, tiny_od_detection_keypoint_dataset
+):
+    """ Simply test that `predict_batch` works for keypoint learner. """
+    generator = od_detection_keypoint_learner.predict_batch(
+        tiny_od_detection_keypoint_dataset.test_dl
+    )
+    assert isinstance(generator, Iterable)
+
+
+@pytest.mark.gpu
 def test_detection_learner_predict_batch_threshold(
-    od_detection_learner,
-    od_detection_dataset,
+    od_detection_learner, od_detection_dataset
 ):
     """ Simply test that `predict_batch` works with a threshold by setting it
     really high.
@@ -246,23 +300,33 @@ def test_detection_learner_predict_batch_threshold(
 
 @pytest.mark.gpu
 def test_detection_mask_learner_predict_batch_threshold(
-    od_detection_mask_learner,
-    od_detection_mask_dataset,
+    od_detection_mask_learner, od_detection_mask_dataset
 ):
     """ Simply test that `predict_batch` works for mask learner with a
     threshold by setting it really high.
     """
     generator = od_detection_mask_learner.predict_batch(
-        od_detection_mask_dataset.test_dl,
-        threshold=0.9999,
+        od_detection_mask_dataset.test_dl, threshold=0.9999
+    )
+    assert isinstance(generator, Iterable)
+
+
+@pytest.mark.gpu
+def test_detection_keypoint_learner_predict_batch_threshold(
+    od_detection_keypoint_learner, tiny_od_detection_keypoint_dataset
+):
+    """ Simply test that `predict_batch` works for keypoint learner with a
+    threshold by setting it really high.
+    """
+    generator = od_detection_keypoint_learner.predict_batch(
+        tiny_od_detection_keypoint_dataset.test_dl, threshold=0.9999
     )
     assert isinstance(generator, Iterable)
 
 
 @pytest.mark.gpu
 def test_detection_dataset_predict_dl(
-    od_detection_learner,
-    od_detection_dataset,
+    od_detection_learner, od_detection_dataset
 ):
     """ Simply test that `predict_dl` works. """
     od_detection_learner.predict_dl(od_detection_dataset.test_dl)
@@ -270,11 +334,20 @@ def test_detection_dataset_predict_dl(
 
 @pytest.mark.gpu
 def test_detection_mask_dataset_predict_dl(
-    od_detection_mask_learner,
-    od_detection_mask_dataset,
+    od_detection_mask_learner, od_detection_mask_dataset
 ):
     """ Simply test that `predict_dl` works for mask learner. """
     od_detection_mask_learner.predict_dl(od_detection_mask_dataset.test_dl)
+
+
+@pytest.mark.gpu
+def test_detection_keypoint_dataset_predict_dl(
+    od_detection_keypoint_learner, tiny_od_detection_keypoint_dataset
+):
+    """ Simply test that `predict_dl` works for mask learner. """
+    od_detection_keypoint_learner.predict_dl(
+        tiny_od_detection_keypoint_dataset.test_dl
+    )
 
 
 def validate_saved_model(name: str, path: str) -> None:

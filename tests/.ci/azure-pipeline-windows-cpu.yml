@@ -14,22 +14,20 @@ trigger:
 jobs:
 - job: WindowsCPU
   pool:
-    name: cvbpwinpool
+    name: cvbp-win-bare
 
   steps:
   - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
     displayName: Add conda to PATH
   
-  - template: templates/unit-test-steps-not-linuxgpu.yml  # Template reference
+  - template: templates/unit-test-steps-windows.yml  # Template reference
 
   - script: |
      call conda env remove -n cv -y
-     rmdir /s /q C:\Anaconda\envs\cv
+     if exist C:\Anaconda\envs\cv rmdir /s /q C:\Anaconda\envs\cv
 
     workingDirectory: tests
     displayName: 'Conda remove'
-    continueOnError: true
-    condition: succeededOrFailed()
     timeoutInMinutes: 10
 
   - script: |

@@ -4,15 +4,7 @@
 import os
 import itertools
 import json
-from typing import (
-    Callable,
-    List,
-    Tuple,
-    Union,
-    Generator,
-    Optional,
-    Dict,
-)
+from typing import Callable, List, Tuple, Union, Generator, Optional, Dict
 
 from pathlib import Path
 import shutil
@@ -24,9 +16,11 @@ import torch.nn as nn
 from torchvision import transforms
 from torchvision.models.detection import (
     fasterrcnn_resnet50_fpn,
+    keypointrcnn_resnet50_fpn,
     maskrcnn_resnet50_fpn,
 )
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+from torchvision.models.detection.keypoint_rcnn import KeypointRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 from torch.utils.data import Dataset, DataLoader, Subset
 import matplotlib.pyplot as plt
@@ -37,12 +31,12 @@ from .bbox import bboxes_iou, DetectionBbox
 from ..common.gpu import torch_device
 
 
-def _get_det_bboxes_and_mask(
+def _extract_od_results(
     pred: Dict[str, np.ndarray],
     labels: List[str],
     im_path: Union[str, Path] = None,
 ) -> Dict:
-    """ Gets the bounding boxes and masks from the prediction object.
+    """ Gets the bounding boxes, masks and keypoints from the prediction object.
 
     Args:
         pred: the output of passing in an image to torchvision's FasterRCNN
@@ -51,11 +45,11 @@ def _get_det_bboxes_and_mask(
         im_path: the image path of the preds
 
     Return:
-        a dict of DetectionBboxes and masks
+        a dict of DetectionBboxes, masks and keypoints
     """
-    pred_labels = pred['labels'].tolist()
-    pred_boxes = pred['boxes'].tolist()
-    pred_scores = pred['scores'].tolist()
+    pred_labels = pred["labels"].tolist()
+    pred_boxes = pred["boxes"].tolist()
+    pred_scores = pred["scores"].tolist()
 
     det_bboxes = []
     for label, box, score in zip(pred_labels, pred_boxes, pred_scores):
@@ -69,16 +63,19 @@ def _get_det_bboxes_and_mask(
         )
         det_bboxes.append(det_bbox)
 
-    res = {"det_bboxes": det_bboxes}
+    out = {"det_bboxes": det_bboxes, "im_path": im_path}
 
     if "masks" in pred:
-        res["masks"] = pred["masks"].squeeze(1)
-    return res
+        out["masks"] = pred["masks"].squeeze(1)
+
+    if "keypoints" in pred:
+        out["keypoints"] = pred["keypoints"]
+
+    return out
 
 
 def _apply_threshold(
-    pred: Dict[str, np.ndarray],
-    threshold: Optional[float] = 0.5,
+    pred: Dict[str, np.ndarray], threshold: Optional[float] = 0.5
 ) -> Dict:
     """ Return prediction results that are above the threshold if any.
 
@@ -90,7 +87,7 @@ def _apply_threshold(
     """
     # apply score threshold
     if threshold:
-        selected = pred['scores'] > threshold
+        selected = pred["scores"] > threshold
         pred = {k: v[selected] for k, v in pred.items()}
     # apply mask threshold
     if "masks" in pred:
@@ -157,10 +154,18 @@ def _tune_box_predictor(model: nn.Module, num_classes: int) -> nn.Module:
     return model
 
 
-def get_pretrained_fasterrcnn(
-    num_classes: int = None,
-    **kwargs,
-) -> nn.Module:
+def _tune_mask_predictor(model: nn.Module, num_classes: int) -> nn.Module:
+    """ Tune mask predictor in the model. """
+    # get the number of input features of mask predictor from the pretrained model
+    in_features = model.roi_heads.mask_predictor.conv5_mask.in_channels
+    # replace the mask predictor with a new one
+    model.roi_heads.mask_predictor = MaskRCNNPredictor(
+        in_features, 256, num_classes
+    )
+    return model
+
+
+def get_pretrained_fasterrcnn(num_classes: int = None, **kwargs) -> nn.Module:
     """ Gets a pretrained FasterRCNN model
 
     Args:
@@ -177,10 +182,7 @@ def get_pretrained_fasterrcnn(
     #     intuitive.
 
     # load a model pre-trained on COCO
-    model = _get_pretrained_rcnn(
-        fasterrcnn_resnet50_fpn,
-        **kwargs,
-    )
+    model = _get_pretrained_rcnn(fasterrcnn_resnet50_fpn, **kwargs)
 
     # if num_classes is specified, then create new final bounding box
     # prediction layers, otherwise use pre-trained layers
@@ -190,10 +192,7 @@ def get_pretrained_fasterrcnn(
     return model
 
 
-def get_pretrained_maskrcnn(
-    num_classes: int = None,
-    **kwargs,
-) -> nn.Module:
+def get_pretrained_maskrcnn(num_classes: int = None, **kwargs) -> nn.Module:
     """ Gets a pretrained Mask R-CNN model
 
     Args:
@@ -208,25 +207,49 @@ def get_pretrained_maskrcnn(
 
     """
     # load a model pre-trained on COCO
-    model = _get_pretrained_rcnn(
-        maskrcnn_resnet50_fpn,
-        **kwargs,
-    )
+    model = _get_pretrained_rcnn(maskrcnn_resnet50_fpn, **kwargs)
 
     # if num_classes is specified, then create new final bounding box
     # and mask prediction layers, otherwise use pre-trained layers
     if num_classes:
         model = _tune_box_predictor(model, num_classes)
+        model = _tune_mask_predictor(model, num_classes)
 
-        # tune mask predictor in the model.
-        # get the number of input features of mask predictor from the pretrained
-        # model
-        in_features = model.roi_heads.mask_predictor.conv5_mask.in_channels
-        # replace the mask predictor with a new one
-        model.roi_heads.mask_predictor = MaskRCNNPredictor(
-            in_features,
-            256,
-            num_classes
+    return model
+
+
+def get_pretrained_keypointrcnn(
+    num_classes: int = None, num_keypoints: int = None, **kwargs
+) -> nn.Module:
+    """ Gets a pretrained Keypoint R-CNN model
+
+    Args:
+        num_classes: number of output classes of the model (including the
+            background).  If none of num_classes and num_keypoints below are
+            not specified, the pretrained model will be returned.
+        num_keypoints: number of keypoints
+    Returns
+        The model to fine-tune/inference with
+
+    For a list of all parameters see:
+        https://github.com/pytorch/vision/blob/master/torchvision/models/detection/keypoint_rcnn.py
+
+    """
+    # load a model pre-trained on COCO
+    model = _get_pretrained_rcnn(keypointrcnn_resnet50_fpn, **kwargs)
+
+    if num_classes:
+        model = _tune_box_predictor(model, num_classes)
+
+    # tune keypoints predictor in the model
+    if num_keypoints:
+        # get the number of input features of keypoint predictor from the pretrained model
+        in_features = (
+            model.roi_heads.keypoint_predictor.kps_score_lowres.in_channels
+        )
+        # replace the keypoint predictor with a new one
+        model.roi_heads.keypoint_predictor = KeypointRCNNPredictor(
+            in_features, num_keypoints
         )
 
     return model
@@ -285,7 +308,7 @@ def _im_eval_detections(
     im_wrong_det = False
 
     # Object level statistics.
-    # Store (i) if grount truth objects were found; (ii) if detections are correct.
+    # Store (i) if ground truth objects were found; (ii) if detections are correct.
     found_gts = [False] * len(gt_bboxes)
     correct_dets = [False] * len(det_bboxes)
 
@@ -317,13 +340,13 @@ def _im_eval_detections(
     # Count
     obj_missed_gt = len(found_gts) - np.sum(found_gts)
     obj_wrong_det = len(correct_dets) - np.sum(correct_dets)
-    return (im_wrong_det, im_missed_gt, obj_wrong_det, obj_missed_gt)
+    return im_wrong_det, im_missed_gt, obj_wrong_det, obj_missed_gt
 
 
 def ims_eval_detections(
-    detections: List[List[DetectionBbox]],
+    detections: List[Dict],
     data_ds: Subset,
-    detections_neg: List[List[DetectionBbox]] = None,
+    detections_neg: List[Dict] = None,
     iou_threshold: float = 0.5,
     score_thresholds: List[float] = np.linspace(0, 1, 51),
 ):
@@ -477,6 +500,7 @@ class DetectionLearner:
         print_freq: int = 10,
         step_size: int = None,
         gamma: float = 0.1,
+        skip_evaluation: bool = False,
     ) -> None:
         """ The main training loop. """
 
@@ -522,9 +546,12 @@ class DetectionLearner:
             self.lr_scheduler.step()
 
             # evaluate
-            e = self.evaluate(dl=self.dataset.test_dl)
-            self.ap.append(_calculate_ap(e))
-            self.ap_iou_point_5.append(_calculate_ap(e, iou_threshold_idx=0))
+            if not skip_evaluation:
+                e = self.evaluate(dl=self.dataset.test_dl)
+                self.ap.append(_calculate_ap(e))
+                self.ap_iou_point_5.append(
+                    _calculate_ap(e, iou_threshold_idx=0)
+                )
 
     def plot_precision_loss_curves(
         self, figsize: Tuple[int, int] = (10, 5)
@@ -536,7 +563,7 @@ class DetectionLearner:
 
         for i, (k, v) in enumerate(ap.items()):
 
-            ax1 = fig.add_subplot(1, len(ap), i+1)
+            ax1 = fig.add_subplot(1, len(ap), i + 1)
 
             ax1.set_xlim([0, self.epochs - 1])
             ax1.set_xticks(range(0, self.epochs))
@@ -599,16 +626,12 @@ class DetectionLearner:
 
         # detach prediction results to cpu
         pred = {k: v.detach().cpu().numpy() for k, v in pred.items()}
-        return _get_det_bboxes_and_mask(
-            _apply_threshold(pred, threshold=threshold),
-            self.labels,
-            im_path
+        return _extract_od_results(
+            _apply_threshold(pred, threshold=threshold), self.labels, im_path
         )
 
     def predict_dl(
-        self,
-        dl: DataLoader,
-        threshold: Optional[float] = 0.5,
+        self, dl: DataLoader, threshold: Optional[float] = 0.5
     ) -> List[DetectionBbox]:
         """ Predict all images in a dataloader object.
 
@@ -623,9 +646,7 @@ class DetectionLearner:
         return [pred for preds in pred_generator for pred in preds]
 
     def predict_batch(
-        self,
-        dl: DataLoader,
-        threshold: Optional[float] = 0.5,
+        self, dl: DataLoader, threshold: Optional[float] = 0.5
     ) -> Generator[List[DetectionBbox], None, None]:
         """ Batch predict
 
@@ -651,12 +672,12 @@ class DetectionLearner:
                 im_id = int(info["image_id"].item())
                 # detach prediction results to cpu
                 pred = {k: v.detach().cpu().numpy() for k, v in det.items()}
-                bboxes_masks = _get_det_bboxes_and_mask(
+                extracted_res = _extract_od_results(
                     _apply_threshold(pred, threshold=threshold),
                     self.labels,
-                    dl.dataset.dataset.im_paths[im_id]
+                    dl.dataset.dataset.im_paths[im_id],
                 )
-                results.append({"idx": im_id, **bboxes_masks})
+                results.append({"idx": im_id, **extracted_res})
 
             yield results
 

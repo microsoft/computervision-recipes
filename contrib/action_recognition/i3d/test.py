@@ -76,10 +76,7 @@ def run(*options, cfg=None):
         torch.cuda.manual_seed_all(config.SEED)
     np.random.seed(seed=config.SEED)
 
-<<<<<<< HEAD
-=======
     # Setup Augmentation/Transformation pipeline
->>>>>>> f3bf37106de4839ab03af79636bdf83b4d7dfa52
     input_size = config.TRAIN.INPUT_SIZE
     resize_range_min = config.TRAIN.RESIZE_MIN
 

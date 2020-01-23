@@ -1,0 +1,46 @@
+# Unit and integration test steps
+steps:
+
+- powershell: |
+    Write-Host '##vso[task.prependpath]$env:CONDA\Scripts'
+  displayName: Add conda to PATH
+
+- script: |
+    conda remove --name cv --all --force -y
+  displayName: 'Remove conda env in case it was not created correctly'
+
+- script: |
+    conda env create -f environment.yml
+  displayName: 'Create and activate conda environment'
+
+- script: |
+    conda env list
+  displayName: 'List conda environments to ensure one was created'
+
+- script: |
+    call activate cv
+    pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"
+  displayName: 'Run unit and (only on Linux GPU) integration tests'
+
+- script: |
+    echo Remove Conda Environment
+    conda remove -n cv --all -q --force -y
+    echo Done Cleanup
+  displayName: 'Clean up the newly created environment'
+  condition: always()
+
+- script: |
+    conda env list
+  displayName: 'List conda environments to verify cleanup of the new environment'
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFiles: '**/test-unitttest.xml'
+    testRunTitle: 'Test results for PyTest'
+
+- task: ComponentGovernanceComponentDetection@0
+  inputs:
+    scanType: 'Register'
+    verbosity: 'Verbose'
+    alertWarningLevel: 'High'
+
