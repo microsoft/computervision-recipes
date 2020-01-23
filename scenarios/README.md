@@ -4,7 +4,8 @@
 | -------- | ----------- |
 | [Classification](classification) | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
 | [Similarity](similarity)  | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
-| [Detection](detection) | Object Detection is a supervised machine learning technique that allows you to detect the bounding box of an object within an image. |
+| [Detection](detection) | Object Detection is a technique that allows you to detect the bounding box of an object within an image. |
+| [Keypoints](scenarios/keypoints) | Keypoint detection can be used to detect specific points on an object. A pre-trained model is provided to detect body joints for human pose estimation. |
 
 # Scenarios
 
@@ -14,13 +15,18 @@ While the field of Computer Vision is growing rapidly, the majority of vision ap
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_ic_vis.jpg" height="150" alt="Image classification visualization"/>  
 
-- **Object Detection**: Given an input image, identify and locate which objects are present (using rectangular coordinates). Object detection can find small objects in an image. Compared to image classification, both model training and manually annotating images is more time-consuming in object detection, since both the label and location are required.
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_od_vis.jpg" height="150" alt="Object detect visualization"/>
 
 - **Image Similarity** Given an input image, find all similar objects in images from a reference dataset. Here, rather than predicting a label and/or rectangle, the task is to sort through a reference dataset to find objects similar to that found in the query image.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_is_vis.jpg" height="150" alt="Image similarity visualization"/>
+
+- **Object Detection**: Given an input image, identify and locate which objects are present (using rectangular coordinates). Object detection can find small objects in an image. Compared to image classification, both model training and manually annotating images is more time-consuming in object detection, since both the label and location are required.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_od_vis.jpg" height="150" alt="Object detect visualization"/>
+
+- **Keypoint Detection**: Given an input image, identify and locate keypoints. Conceptually this runs an object detector first, followed by detecting keypoints on the objects. In practice, a single model runs both steps (almost) at once.
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <img align="center" src="./media/intro_kp_vis.jpg" height="150" alt="Keypoint detect visualization"/>
 
 - **Image Segmentation** Given an input image, assign a label to every pixel (e.g., background, bottle, hand, sky, etc.). In practice, this problem is less common in industry, in large part due to time required to label the ground truth segmentation required in order to train a solution.
 
