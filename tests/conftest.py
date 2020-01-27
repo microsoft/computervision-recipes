@@ -390,7 +390,7 @@ def od_cup_path(tmp_session) -> str:
 
 @pytest.fixture(scope="session")
 def od_cup_mask_path(tmp_session) -> str:
-    """ Returns the path to the downloaded cup image. """
+    """ Returns the path to the downloaded cup mask image. """
     im_url = (
         "https://cvbp.blob.core.windows.net/public/images/cvbp_cup_mask.png"
     )
@@ -701,18 +701,17 @@ def od_detections(od_detection_dataset):
 
 # ------|-- Action Recognition ------------------------------------------------
 
+@pytest.fixture(scope="session")
+def ar_path(tmp_session) -> str:
+    """ Returns the path to the downloaded cup image. """
+    VID_URL = "https://cvbp.blob.core.windows.net/public/datasets/action_recognition/drinking.mp4"
+    vid_path = os.path.join(tmp_session, "drinking.mp4")
+    urllib.request.urlretrieve(VID_URL, vid_path)
+    return vid_path
 
 # TODO
-# @pytest.fixture(scope="session")
-# def od_cup_path(tmp_session) -> str:
-#     """ Returns the path to the downloaded cup image. """
-#     IM_URL = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup.jpg"
-#     im_path = os.path.join(tmp_session, "example.jpg")
-#     urllib.request.urlretrieve(IM_URL, im_path)
-#     return im_path
 
-
-# ----- AML Settings ----------------------------------------------------------
+# ----- AML Set# tings ----------------------------------------------------------
 
 
 # TODO i can't find where this function is being used

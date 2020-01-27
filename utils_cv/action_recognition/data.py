@@ -17,6 +17,7 @@ from torchvision.transforms import Compose
 
 from . import transforms_video as transforms
 from .functional_video import denormalize
+from ..common.data import data_path
 
 
 DEFAULT_MEAN = (0.43216, 0.394666, 0.37645)
@@ -24,18 +25,18 @@ DEFAULT_STD = (0.22803, 0.22145, 0.216989)
 
 
 class _DatasetSpec:
-    def __init__(self, label_url, root, num_classes):
+    def __init__(self, label_url, num_classes, data_path=data_path()):
         self.label_url = label_url
-        self.root = root
         self.num_classes = num_classes
+        self.data_path = data_path
         self._class_names = None
 
     @property
     def class_names(self):
         if self._class_names is None:
-            label_filepath = os.path.join(self.root, "label_map.txt")
+            label_filepath = os.path.join(self.data_path, "label_map.txt")
             if not os.path.isfile(label_filepath):
-                os.makedirs(self.root, exist_ok=True)
+                os.makedirs(self.data_path, exist_ok=True)
                 urlretrieve(self.label_url, label_filepath)
             with open(label_filepath) as f:
                 self._class_names = [l.strip() for l in f]
@@ -46,14 +47,14 @@ class _DatasetSpec:
 
 KINETICS = _DatasetSpec(
     "https://github.com/microsoft/ComputerVision/files/3746975/kinetics400_lable_map.txt",
+    400,
     os.path.join("data", "kinetics400"),
-    400
 )
 
 HMDB51 = _DatasetSpec(
     "https://github.com/microsoft/ComputerVision/files/3746963/hmdb51_label_map.txt",
+    51,
     os.path.join("data", "hmdb51"),
-    51
 )
 
 
