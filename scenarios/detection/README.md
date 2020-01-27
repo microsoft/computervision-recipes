@@ -24,6 +24,7 @@ We provide several notebooks to show how object detection algorithms can be desi
 | [00_webcam.ipynb](./00_webcam.ipynb)| Quick-start notebook which demonstrates how to build an object detection system using a single image or webcam as input.
 | [01_training_introduction.ipynb](./01_training_introduction.ipynb)| Notebook which explains the basic concepts around model training and evaluation.|
 | [02_mask_rcnn.ipynb](./02_mask_rcnn.ipynb) | In addition to detecting objects, also find their precise pixel-masks in an image. |
+| [03_keypoint_rcnn.ipynb](../detection/03_keypoint_rcnn.ipynb)| Notebook which shows how to (i) run a pre-trained model for human pose estimation; and (ii) train a custom keypoint detection model.|
 | [11_exploring_hyperparameters_on_azureml.ipynb](./11_exploring_hyperparameters_on_azureml.ipynb)| Performs highly parallel parameter sweeping using AzureML's HyperDrive. |
 | [12_hard_negative_sampling.ipynb](./12_hard_negative_sampling.ipynb) | Demonstrates how to sample hard negatives to improve model performance. |
 | [20_deployment_on_kubernetes.ipynb](./20_deployment_on_kubernetes.ipynb) | Deploys a trained model using AzureML. |
