@@ -37,7 +37,9 @@ class _DatasetSpec:
             label_filepath = os.path.join(self.data_path, "label_map.txt")
             if not os.path.isfile(label_filepath):
                 os.makedirs(self.data_path, exist_ok=True)
-                urlretrieve(self.label_url, label_filepath)
+            else:
+                os.remove(label_filepath)
+            urlretrieve(self.label_url, label_filepath)
             with open(label_filepath) as f:
                 self._class_names = [l.strip() for l in f]
             assert len(self._class_names) == self.num_classes
