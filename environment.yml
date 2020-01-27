@@ -18,6 +18,8 @@ channels:
 dependencies:
 - python==3.6.8
 - pytorch==1.2.0
+# pinning pillow to 6.1 to fix issue: https://github.com/python-pillow/Pillow/issues/4130
+- pillow==6.1 
 - torchvision==0.4.0
 - fastai==1.0.57
 - ipykernel>=4.6.1
@@ -38,4 +40,4 @@ dependencies:
   - nvidia-ml-py3
   - nteract-scrapbook
   - azureml-sdk[notebooks,contrib]>=1.0.30
-  - git+https://github.com/philferriere/cocoapi.git#subdirectory=PythonAPI
+  - git+https://github.com/youngpark/cocoapi.git#subdirectory=PythonAPI
