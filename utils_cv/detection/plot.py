@@ -154,7 +154,8 @@ def plot_keypoints(
         ), "Malformed keypoints array"
         if keypoint_meta:
             assert (
-                np.max(np.array(keypoint_meta["skeleton"])) < keypoints.shape[1]
+                np.max(np.array(keypoint_meta["skeleton"]))
+                < keypoints.shape[1]
             ), "Skeleton index out of range"
 
         draw = ImageDraw.Draw(im)
@@ -176,10 +177,12 @@ def plot_keypoints(
         # draw keypoints
         visible_point_xys = keypoints[keypoints[..., 2] != 0][..., :2]
         offset = 2 * plot_settings.keypoint_th
-        rects = np.hstack([
-            visible_point_xys - offset,  # left top
-            visible_point_xys + offset,  # right bottom
-        ])
+        rects = np.hstack(
+            [
+                visible_point_xys - offset,  # left top
+                visible_point_xys + offset,  # right bottom
+            ]
+        )
         for rect in rects.tolist():
             draw.ellipse(rect, fill=plot_settings.keypoint_color)
 

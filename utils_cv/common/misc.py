@@ -109,5 +109,3 @@ class Config(object):
 
         for k, v in extras.items():
             setattr(self, k, v)
-
-

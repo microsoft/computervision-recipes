@@ -72,7 +72,9 @@ class VideoRecord(object):
     @property
     def num_frames(self):
         if self._num_frames == -1:
-            self._num_frames = int(len([x for x in Path(self._data[0]).glob('img_*')]) - 1)
+            self._num_frames = int(
+                len([x for x in Path(self._data[0]).glob("img_*")]) - 1
+            )
         return self._num_frames
 
     @property
@@ -101,6 +103,7 @@ class VideoDataset(Dataset):
         video_ext (str): Video file extension.
         warning (bool): On or off warning.
     """
+
     def __init__(
         self,
         split_file,
@@ -148,7 +151,9 @@ class VideoDataset(Dataset):
         # 2. crop
         if random_crop:
             if random_crop_scales is not None:
-                crop = transforms.RandomResizedCropVideo(input_size, random_crop_scales)
+                crop = transforms.RandomResizedCropVideo(
+                    input_size, random_crop_scales
+                )
             else:
                 crop = transforms.RandomCropVideo(input_size)
         else:
@@ -183,9 +188,14 @@ class VideoDataset(Dataset):
                 )
             else:
                 # Uniform sample
-                distance = (record.num_frames - self.presample_length + 1) / self.num_segments
+                distance = (
+                    record.num_frames - self.presample_length + 1
+                ) / self.num_segments
                 offsets = np.array(
-                    [int(distance / 2.0 + distance * x) for x in range(self.num_segments)]
+                    [
+                        int(distance / 2.0 + distance * x)
+                        for x in range(self.num_segments)
+                    ]
                 )
         else:
             if self.warning:
@@ -235,7 +245,7 @@ class VideoDataset(Dataset):
         # if clip needs more frames, simply duplicate the last frame in the clip.
         while len(clip) < self.sample_length:
             clip.append(clip[-1].copy())
-                
+
         return clip
 
     def __getitem__(self, idx):
@@ -245,7 +255,9 @@ class VideoDataset(Dataset):
         """
         record = self.video_records[idx]
         video_reader = decord.VideoReader(
-            "{}.{}".format(os.path.join(self.video_dir, record.path), self.video_ext),
+            "{}.{}".format(
+                os.path.join(self.video_dir, record.path), self.video_ext
+            ),
             # TODO try to add `ctx=decord.ndarray.gpu(0) or .cuda(0)`
         )
         record._num_frames = len(video_reader)
@@ -259,10 +271,10 @@ class VideoDataset(Dataset):
         else:
             # [S, T, H, W, C] -> [S, C, T, H, W]
             return (
-                torch.stack([
-                    self.transforms(torch.from_numpy(c)) for c in clips
-                ]),
-                record.label
+                torch.stack(
+                    [self.transforms(torch.from_numpy(c)) for c in clips]
+                ),
+                record.label,
             )
 
 
@@ -277,9 +289,7 @@ def show_batch(batch, sample_length, mean=DEFAULT_MEAN, std=DEFAULT_STD):
     batch_size = len(batch)
     plt.tight_layout()
     fig, axs = plt.subplots(
-        batch_size,
-        sample_length,
-        figsize=(4 * sample_length, 3 * batch_size)
+        batch_size, sample_length, figsize=(4 * sample_length, 3 * batch_size)
     )
 
     for i, ax in enumerate(axs):
@@ -293,13 +303,5 @@ def show_batch(batch, sample_length, mean=DEFAULT_MEAN, std=DEFAULT_STD):
         for j, a in enumerate(ax):
             a.axis("off")
             a.imshow(
-                np.moveaxis(
-                    denormalize(
-                        clip[j],
-                        mean,
-                        std,
-                    ).numpy(),
-                    0,
-                    -1,
-                )
+                np.moveaxis(denormalize(clip[j], mean, std).numpy(), 0, -1)
             )

@@ -701,6 +701,7 @@ def od_detections(od_detection_dataset):
 
 # ------|-- Action Recognition ------------------------------------------------
 
+
 @pytest.fixture(scope="session")
 def ar_path(tmp_session) -> str:
     """ Returns the path to the downloaded cup image. """
@@ -708,6 +709,7 @@ def ar_path(tmp_session) -> str:
     vid_path = os.path.join(tmp_session, "drinking.mp4")
     urllib.request.urlretrieve(VID_URL, vid_path)
     return vid_path
+
 
 # TODO
 

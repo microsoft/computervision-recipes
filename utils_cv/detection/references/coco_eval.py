@@ -116,7 +116,9 @@ class CocoEvaluator(object):
                 mask_util.encode(
                     # Change according to the issue related to mask:
                     #     https://github.com/pytorch/vision/issues/1355#issuecomment-544951911
-                    np.array(mask[0, :, :, np.newaxis], dtype=np.uint8, order="F")
+                    np.array(
+                        mask[0, :, :, np.newaxis], dtype=np.uint8, order="F"
+                    )
                 )[0]
                 for mask in masks
             ]
