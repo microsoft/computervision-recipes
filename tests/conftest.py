@@ -732,7 +732,7 @@ def workspace_region(request):
 #     return can_im_paths
 
 
-# ------|-- Classification/Similarity ---------------------------------------------
+# ------|-- Similarity ---------------------------------------------
 
 @pytest.fixture(scope="session")
 def tiny_is_data_path(tmp_session) -> str:
