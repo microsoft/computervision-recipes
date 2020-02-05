@@ -75,7 +75,6 @@ def test_03_notebook_run(detection_notebooks):
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     training_losses = nb_output.scraps["training_losses"].data
     assert len(training_losses) == epochs
-    assert training_losses[-1] < 1.5
     assert training_losses[0] > 1.5*training_losses[-1]
     assert len(nb_output.scraps["keypoints"].data) == len(
         nb_output.scraps["bboxes"].data
