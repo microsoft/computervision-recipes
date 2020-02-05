@@ -2,14 +2,9 @@
 
 This directory provides examples and best practices for building image classification systems. Our goal is to enable users to easily and quickly train high-accuracy classifiers on their own datasets. We provide example notebooks with pre-set default parameters that are shown to work well on a variety of data sets. We also include extensive documentation of common pitfalls and best practices. Additionally, we show how Azure, Microsoft's cloud computing platform, can be used to speed up training on large data sets or deploy models as web services.
 
-
-<p align="center">
-
 | Image classification (single object) | Image classification (multiple objects) |
 |--|--|
 | <img align="center" src="./media/ic_example2.jpg" height="200"/>  | <img align="center" src="./media/ic_example3.jpg" height="200"/> |
-
-</p>
 
 We recommend using PyTorch as a Deep Learning platform for its ease of use, simplicity when debugging, and popularity in the data science community. For Computer Vision functionality, we also rely heavily on [fast.ai](https://github.com/fastai/fastai), a PyTorch data science library which comes with rich deep learning features and extensive documentation. We highly recommend watching the [2019 fast.ai lecture series](https://course.fast.ai/videos/?lesson=1) video to understand the underlying technology. Fast.ai's [documentation](https://docs.fast.ai/) is also a valuable resource.
 
