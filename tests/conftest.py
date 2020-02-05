@@ -21,6 +21,7 @@ from fastai.vision.data import ImageList, imagenet_stats
 from typing import List, Tuple
 from tempfile import TemporaryDirectory
 from utils_cv.common.data import unzip_url
+from utils_cv.common.gpu import db_num_workers
 from utils_cv.classification.data import Urls as ic_urls
 from utils_cv.detection.data import Urls as od_urls
 from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox
@@ -278,7 +279,7 @@ def tiny_ic_databunch(tmp_session):
         .split_by_rand_pct(valid_pct=0.1, seed=20)
         .label_from_folder()
         .transform(size=50)
-        .databunch(bs=16)
+        .databunch(bs=16, num_workers = db_num_workers())
         .normalize(imagenet_stats)
     )
 
@@ -350,7 +351,7 @@ def testing_databunch(tmp_session):
         .split_by_rand_pct(valid_pct=0.2, seed=20)
         .label_from_folder()
         .transform(size=300)
-        .databunch(bs=16)
+        .databunch(bs=16, num_workers = db_num_workers())
         .normalize(imagenet_stats)
     )
 
