@@ -2,6 +2,10 @@
 
 This directory provides examples and best practices for building object detection systems. Our goal is to enable the users to bring their own datasets and train a high-accuracy model easily and quickly. To this end, we provide example notebooks with pre-set default parameters shown to work well on a variety of datasets, and extensive documentation of common pitfalls, best practices, etc.
 
+| Object detection | Object detection and segmentation | Object detection and keypoint localization |
+|--|--|--|
+| <img align="center" src="./media/od_example1.jpg" height="150"/> | <img align="center" src="./media/od_example2a.jpg" height="150"/>  | <img align="center" src="../keypoints/media/kp_example3.jpg" height="150"/> <img align="center" src="../keypoints/media/kp_example1.jpg" height="150"/> |
+
 Object Detection is one of the main problems in Computer Vision. Traditionally, this required expert knowledge to identify and implement so called “features” that highlight the position of objects in the image. Starting in 2012 with the famous AlexNet and Fast(er) R-CNN papers, Deep Neural Networks are used to automatically find these features. This lead to a huge improvement in the field for a large range of problems.
 
 This repository uses [torchvision's](https://pytorch.org/docs/stable/torchvision/index.html) Faster R-CNN implementation which has been shown to work well on a wide variety of Computer Vision problems. See the [FAQ](FAQ.md) for an explanation of the underlying data science aspects.
