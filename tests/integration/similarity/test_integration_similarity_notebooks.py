@@ -52,7 +52,8 @@ def test_11_notebook_run(similarity_notebooks, tiny_ic_data_path):
             # Speed up testing since otherwise would take ~12 minutes on V100
             DATA_PATHS=[tiny_ic_data_path],
             REPS=1,
-            IM_SIZES=[60, 100],
+            IM_SIZES=[60, 70],
+            LEARNING_RATES=[1e-3, 1e-4]
         ),
         kernel_name=KERNEL_NAME,
     )
