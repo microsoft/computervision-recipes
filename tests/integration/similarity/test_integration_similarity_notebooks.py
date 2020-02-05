@@ -27,6 +27,21 @@ def test_01_notebook_run(similarity_notebooks):
 
 @pytest.mark.notebooks
 @pytest.mark.linuxgpu
+def test_02_notebook_run(similarity_notebooks):
+    notebook_path = similarity_notebooks["02"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(PM_VERSION=pm.__version__),
+        kernel_name=KERNEL_NAME,
+    )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert nb_output.scraps["recallAt1"].data >= 70
+
+
+@pytest.mark.notebooks
+@pytest.mark.linuxgpu
 def test_11_notebook_run(similarity_notebooks, tiny_ic_data_path):
     notebook_path = similarity_notebooks["11"]
     pm.execute_notebook(

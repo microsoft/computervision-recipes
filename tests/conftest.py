@@ -33,6 +33,7 @@ from utils_cv.detection.model import (
     _extract_od_results,
     _apply_threshold,
 )
+from utils_cv.similarity.data import Urls as is_urls
 
 
 def path_classification_notebooks():
@@ -126,6 +127,7 @@ def similarity_notebooks():
         "01": os.path.join(
             folder_notebooks, "01_training_and_evaluation_introduction.ipynb"
         ),
+        "02": os.path.join(folder_notebooks, "02_state_of_the_art.ipynb"),
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
@@ -196,7 +198,7 @@ def tmp_session(tmp_path_factory):
         yield td
 
 
-# ------|-- Classification/Similarity ---------------------------------------------
+# ------|-- Classification ---------------------------------------------
 
 
 @pytest.fixture(scope="session")
@@ -728,3 +730,16 @@ def workspace_region(request):
 #         os.path.join(im_paths, "can", im_name) for im_name in can_im_paths
 #     ][0:5]
 #     return can_im_paths
+
+
+# ------|-- Similarity ---------------------------------------------
+
+@pytest.fixture(scope="session")
+def tiny_is_data_path(tmp_session) -> str:
+    """ Returns the path to the tiny fridge objects dataset. """
+    return unzip_url(
+        is_urls.fridge_objects_retrieval_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
