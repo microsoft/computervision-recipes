@@ -28,7 +28,7 @@ notebooks in this repo. Once your environment is setup, navigate to the
 [Scenarios](scenarios) folder and start exploring the notebooks.
 
 Alternatively, we support Binder 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/microsoft/computervision-recipes/master?filepath=https%3A%2F%2Fcvbp.blob.core.windows.net%2Fpublic%2Fbinder%2Fclassification%2F01_training_introduction_BINDER.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/PatrickBue/computervision-recipes/master?filepath=scenarios%2Fclassification%2F01_training_introduction_BINDER.ipynb)
 which makes it easy to try some of our notebooks in a web-browser simply by following this link. However, Binder is free, and as as result only comes with limited CPU compute power and without GPU support. Expect the notebooks to run very slowly (this can be somewhat improved by reducing image resolution to e.g. 60 pixels but at the cost of low accuracies).
 
 ## Scenarios
