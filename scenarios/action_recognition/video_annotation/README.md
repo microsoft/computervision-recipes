@@ -21,10 +21,10 @@ How to use the tool for action recognition:
 
 ## Scripts for use with the VIA Tool
 
-The VIA tool outputs annotations as a csv file. Often however we need each annotated action to be written as its own clip and into separate files. For this, we provide some utility functions (in this folder) which help with:
-- Extraction of each action as "positive" clip, and "negative" clips defined as video segments where no action-of-interest occurs.
-- Conversion of the video clips to a format which the VIA tool knows how to read.
-
+The VIA tool outputs annotations as a csv file. Often however we need each annotated action to be written as its own clip and into separate files. These clips can then serve as training examples for action recognition models. We provide some scripts to aid in the construction of such datasets:
+- [video_conversion.py](./video_conversion.py) - Conversion of the video clips to a format which the VIA tool knows how to read.
+- [clip_extraction.py](./clip_extraction.py) - Extraction of each annotated action as a separate clip. Optionally, "negative" clips can be generated, in which no action-of-interest occurs. Negative clips can be extracted in two ways: either all contiguous non-overlapping negative clips can be extracted or a specified number of negative examples can be randomly sampled. This behaviour can be controlled using the `contiguous` flag. The script outputs clips into directories specific to each class and generates a label file that maps each filename to the clip's class label.
+- [split_examples.py](./split_examples.py) - Splits generated example clips into training and evaluation sets. Optionally, a negative candidate set and negative test set can be generated for hard negative mining.
 
 
 ## Annotation Tools Comparison
