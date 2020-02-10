@@ -1,22 +1,19 @@
 # Action Recognition
 
 ```diff
-+ Feb 2020: We are working on moving action recognition over to the scenarios\action_recognition folder.
++ Feb 2020: We are working on moving code from this folder to scenarios\action_recognition.
 +           While this work is ongoing, please visit both locations for implementations and documentation.
 ```
 
-This directory contains resources for building video-based action recognition systems.
-Our goal is to enable users to easily and quickly train high-accuracy action recognition models with fast inference speed. To this end, we provide example notebooks with pre-set default parameters shown to work well on a variety of datasets.
+This directory contains resources for building video-based action recognition systems. Our goal is to enable users to easily and quickly train highly accurate and fast models on their own custom datasets.
 
-Action recognition (also often called activity recognition) consists of classifying different actions from a sequence
-of frames in videos.
+Action recognition (also known as activity recognition) consists of classifying various actions from a sequence of frames:
+
 ![](./media/action_recognition2.gif "Example of action recognition")
 
-We provide two state of the art model implementations: (i) [I3D](https://arxiv.org/pdf/1705.07750.pdf) and (ii) [R(2+1)D](https://arxiv.org/abs/1711.11248), along with example notebooks for e.g. scoring of webcam footage or fine-tuning on the [HMDB-51](http://serre-lab.clps.brown.edu/resource/hmdb-a-large-human-motion-database/) dataset.
+We implemented two state-of-the-art approaches: (i) [I3D](https://arxiv.org/pdf/1705.07750.pdf) and (ii) [R(2+1)D](https://arxiv.org/abs/1711.11248). This includes example notebooks for e.g. scoring of webcam footage or fine-tuning on the [HMDB-51](http://serre-lab.clps.brown.edu/resource/hmdb-a-large-human-motion-database/) dataset.
 
-We recommend to use the **R(2+1)D** model for its competitive accuracy (see table below) with significantly faster inference speed as well as less-dependencies on other packages. For benchmarking and comparisons, we also provide an implementation of the I3D model which is a good example of utilizing optical flow via the two-stream approach.
-
-We evaluated our implementation and are able to re-produce the reported accuracies for the two approaches:
+We recommend to use the **R(2+1)D** model for its competitive accuracy, fast inference speed, and less dependencies on other packages. For both approaches, using our implementations, we were able to re-produce the reported accuracies:
 
 | Model | Reported in the paper | Our results |
 | ------- | -------| ------- |

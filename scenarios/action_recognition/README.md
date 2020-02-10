@@ -5,37 +5,32 @@
 +           While this work is ongoing, please visit both locations for implementations and documentation.
 ```
 
-This directory contains resources for building video-based action recognition systems.
-Our goal is to enable users to easily and quickly train high-accuracy action recognition models with fast inference speed. To this end, we provide example notebooks with pre-set default parameters shown to work well on a variety of datasets.
+This directory contains resources for building video-based action recognition systems. Our goal is to enable users to easily and quickly train highly accurate and fast models on their own custom datasets.
 
-Action recognition (also often called activity recognition) consists of classifying different actions from a sequence
-of frames in videos.
+Action recognition (also known as activity recognition) consists of classifying various actions from a sequence of frames:
+
 ![](./media/action_recognition2.gif "Example of action recognition")
 
 
 ## Notebooks
-This project provides utility scripts to fine-tune the model and examples notebooks as follows:
+This directory provides tools for data annotation (in the [video_annotation](./video_annotation) folder), as well as the following example notebooks:
 
 | Notebook | Description |
 | --- | --- |
-| [00_webcam](00_webcam.ipynb) | A real-time inference example on Webcam stream |
-| [01_training_introduction](01_training_introduction.ipynb) | An example of training R(2+1)D model on HMDB-51 dataset |
+| [00_webcam](00_webcam.ipynb) | Real-time inference example on Webcam input. |
+| [01_training_introduction](01_training_introduction.ipynb) | Fine-tuning on the HMDB-51 dataset |
 | [02_video_transformation](02_video_transformation.ipynb) | Examples of video transformations |
-
-Specifically, we use the model pre-trained on 65 million social media videos (IG) presented in "[Large-scale weakly-supervised pre-training for video action recognition (2019)](https://arxiv.org/abs/1905.00561)" paper.
-
-
 
 
 ## Technology
 
-Action recognition is an active field of research, with many different approaches being published.
+Action recognition is an active field of research, with large number of approaches being published every year.
 
-For our repository, we decided to implement an approach called R(2+1)D as published in the 2019 paper "[Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)". R(2+1)D is highly accurate and also significantly faster than other approaches (see the "Inference speed" section below).
+In this repository, we implemented the **R(2+1)D** model as published in the 2019 paper "[Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)". R(2+1)D is highly accurate and at the same time significantly faster than other approaches (see the "Inference speed" section below):
 - Its accuracy comes in large parts from an extra pre-training step which uses about 65 millions of automatically annotated video clips.
-- Its speed is due to the fact that the model can only take RGB frames as input. Many other state-of-the-art methods require optical flow fields to be pre-computed which is computationally expensive (multiple times more than evaluating the actual DNN, as can be seen in the "Inference speed" section below.
+- Its speed is due to the fact that the model takes the RGB video frames as input. Many other state-of-the-art methods require optical flow fields to be pre-computed which is computationally expensive (multiple times more than evaluating the actual DNN, as can be seen in the "Inference speed" section below.
 
-We evaluated our implementation and are able to re-produce the reported accuracy e.g. for the R(2+1)D-34 model with 34 layers:
+We evaluated our implementation and are able to re-produce the reported accuracy e.g. for the R(2+1)D model with 34 layers:
 
 | Model | Reported in the paper | Our results |
 | ------- | -------| ------- |
@@ -47,12 +42,12 @@ We evaluated our implementation and are able to re-produce the reported accuracy
 
 Popular benchmark datasets in the field, as well as state-of-the-art publications are listed below. Note that the information is reasonably exhaustive and should cover many of the major publications until 2018. Expect however some level of incompleteness and slight incorrectness (e.g. publication year being off by plus/minus 1 year due).
 
-Recommended reading:
+To ramp up to the field, we recommended to read:
 - As introduction to action recognition the blog [Deep Learning for Videos: A 2018 Guide to Action Recognition](http://blog.qure.ai/notes/deep-learning-for-videos-action-recognition-review).
 - [ActionRecognition.net](http://actionrecognition.net/files/dset.php) for the latest state-of-the-art accuracies on popular research benchmark datasets.
 - All papers with links in the publications table below.
 
-###### Popular datasets
+#### Popular datasets
 
 | Name  | Year  |  Number of classes |	#Clips |
 | ----- | ----- | ----------------- | ------- |
@@ -70,7 +65,7 @@ Recommended reading:
 |Youtube-8M Segments|	2019|	1000|	237k|
 
 
-###### Popular publications
+#### Popular publications
 
 |                                                                                       | Year | UCF101 accuracy | HMDB51 accuracy | Kinetics accuracy | Pre-training on                                                              |
 |---------------------------------------------------------------------------------------|------|-----------------|-----------------|-------------------|------------------------------------------------------------------------------|
@@ -100,7 +95,7 @@ Recommended reading:
 | Dance with Flow: Two-in-One Stream Action Recognition                                 | 2019 | 92%             |                 |                   | ImageNet                                                                     |
 
 
-###### Inference speed
+#### Inference speed
 
 Most publications focus on accuracy rather than on inferencing speed. The paper "Representation Flow for Action Recognition" is a noteworthy exception with this figure:
 
