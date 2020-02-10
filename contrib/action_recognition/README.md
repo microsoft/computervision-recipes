@@ -30,7 +30,6 @@ Nevertheless, I3D implementation gives a good example of utilizing the two-strea
 | -------- |  ----------- |
 | [r2p1d](r2p1d)  | Scripts for fine-tuning a pre-trained R(2+1)D model on HMDB-51 dataset 
 | [i3d](i3d)  | Scripts for fine-tuning a pre-trained I3D model on HMDB-51 dataset 
-| [video_annotation](video_annotation)  | Instructions and helper functions to annotate the start and end position of actions in video footage|
 
 
 ### Models
@@ -59,9 +58,6 @@ Also, the original R(2+1)D paper used the model pretrained on Kinetics400 but we
 | I3D Optical flow | 77.1 | 77.5 |
 | I3D Two-Stream | 80.7 | 81.2 |
 
-
-### Annotation
-In order to train an action recognition model for a specific task, annotated training data from the relevant domain is needed. In [video_annotation](video_annotation), we provide tips and examples for how to use a best-in-class video annotation tool ([VGG Image Annotator](http://www.robots.ox.ac.uk/~vgg/software/via/)) to label the start and end positions of actions in videos.
 
 ## State of the art
 
