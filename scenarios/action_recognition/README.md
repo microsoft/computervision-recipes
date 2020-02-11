@@ -26,7 +26,9 @@ Furthermore, tools for data annotation are located in the [video_annotation](./v
 
 ## Technology
 
-Action recognition is an active field of research, with large number of approaches being published every year. One of the approaches which stands out is the  **R(2+1)D** model which is described in the 2019 paper "[Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)". R(2+1)D is highly accurate and at the same time significantly faster than other approaches:
+Action recognition is an active field of research, with large number of approaches being published every year. One of the approaches which stands out is the  **R(2+1)D** model which is described in the 2019 paper "[Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)".
+
+R(2+1)D is highly accurate and at the same time significantly faster than other approaches:
 - Its accuracy comes in large parts from an extra pre-training step which uses 65 million automatically annotated video clips.
 - Its speed comes from simply using video frames as input. Many other state-of-the-art methods require optical flow fields to be pre-computed which is computationally expensive (see the "Inference speed" section below).
 
@@ -34,7 +36,7 @@ We base our implementation on this [github](https://github.com/moabitcoin/ig65m-
 
 | Model | Reported in the paper | Our results |
 | ------- | -------| ------- |
-| R(2+1)D RGB | 79.6% | 79.8% |
+| R(2+1)D | 79.6% | 79.8% |
 
 
 
@@ -94,7 +96,7 @@ We recommend the following reading to familiarize oneself with the field:
 
 #### Inference speed
 
-Most publications focus on accuracy rather than on inferencing speed. The figure below from the paper "[Representation Flow for Action Recognition](https://arxiv.org/abs/1810.01455)" is a noteworthy exception. Note how fast R(2+1)D is with 471ms, compared to approaches which requite optical flow ("Flow" or "Two-stream") as input.
+Most publications focus on accuracy rather than inference speed. The figure below from the paper "[Representation Flow for Action Recognition](https://arxiv.org/abs/1810.01455)" is a noteworthy exception. Note how fast R(2+1)D is with 471ms, compared especially to approaches which require optical flow fields as input to the DNN ("Flow" or "Two-stream").
 
 <img align="center" src="./media/inference_speeds.png" width = "500" />  
 
