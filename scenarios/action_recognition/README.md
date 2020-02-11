@@ -32,7 +32,7 @@ R(2+1)D is highly accurate and at the same time significantly faster than other 
 - Its accuracy comes in large parts from an extra pre-training step which uses 65 million automatically annotated video clips.
 - Its speed comes from simply using video frames as input. Many other state-of-the-art methods require optical flow fields to be pre-computed which is computationally expensive (see the "Inference speed" section below).
 
-We base our implementation on this [github](https://github.com/moabitcoin/ig65m-pytorch) repository, with added functionality to make training and evaluation custom models more user-friendly. We were able to re-produce the reported accuracy e.g. for the R(2+1)D model with 34 layers:
+We base our implementation on this [github](https://github.com/moabitcoin/ig65m-pytorch) repository, with added functionality to make training and evaluating custom models more user-friendly. We were able to re-produce the published accuracy for the HMDB-51 dataset as can be seen in this table:
 
 | Model | Reported in the paper | Our results |
 | ------- | -------| ------- |
