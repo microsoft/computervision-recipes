@@ -26,11 +26,11 @@ Furthermore, tools for data annotation are located in the [video_annotation](./v
 
 ## Technology
 
-Action recognition is an active field of research, with large number of approaches being published every year. One of the approaches which stands out is the  **R(2+1)D** model, published in the 2019 paper "[Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)". R(2+1)D is highly accurate and at the same time significantly faster than other approaches (see the "Inference speed" section below):
-- Its accuracy comes in large parts from an extra pre-training step which uses about 65 millions of automatically annotated video clips.
-- Its speed is due to the fact that the model takes only RGB video frames as input. Many other state-of-the-art methods require optical flow fields to be pre-computed which is computationally expensive.
+Action recognition is an active field of research, with large number of approaches being published every year. One of the approaches which stands out is the  **R(2+1)D** model which is described in the 2019 paper "[Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)". R(2+1)D is highly accurate and at the same time significantly faster than other approaches:
+- Its accuracy comes in large parts from an extra pre-training step which uses 65 million automatically annotated video clips.
+- Its speed comes from simply using video frames as input. Many other state-of-the-art methods require optical flow fields to be pre-computed which is computationally expensive (see the "Inference speed" section below).
 
-We base our implementation on this [github](https://github.com/moabitcoin/ig65m-pytorch) repository, fixed potential bugs and added functionality e.g. to make training custom models more user-friendly, and are able to re-produce the reported accuracy e.g. for the R(2+1)D model with 34 layers:
+We base our implementation on this [github](https://github.com/moabitcoin/ig65m-pytorch) repository, with added functionality to make training and evaluation custom models more user-friendly. We were able to re-produce the reported accuracy e.g. for the R(2+1)D model with 34 layers:
 
 | Model | Reported in the paper | Our results |
 | ------- | -------| ------- |
@@ -59,8 +59,8 @@ We recommend the following reading to familiarize oneself with the field:
 |ActivityNet|	2015|	200|	28.1k|
 |Charades|	2016|	157|	66.5k from 9848 videos|
 |Kinetics-400|	2017|	400|	306k|
-|Kinetics-600|	2018|	600|	496k|  
 |Something-Something|	2017|	174|	110k|
+|Kinetics-600|	2018|	600|	496k|  
 |AVA|	2018|	80|	1.6M from 430 videos|
 |Youtube-8M Segments|	2019|	1000|	237k|
 
@@ -77,14 +77,11 @@ We recommend the following reading to familiarize oneself with the field:
 | Beyond Short Snippets: Deep Networks for Video Classification                         | 2015 | 88%             |                 |                   | Sports-1M                                                                    |
 | Learning Spatiotemporal Features with 3D Convolutional Networks                       | 2015 | 85%             |                 |                   | Sports-1M                                                                    |
 | Initialization Strategies of Spatio-Temporal CNNs                                     | 2015 | 78%             |                 |                   | ImageNet                                                                     |
-| Deep predictive coding networks for video prediction and unsupervised learning        | 2016 |                 |                 |                   |                                                                              |
 | Temporal Segment Networks: Towards Good Practices for Deep Action Recognition         | 2016 | 94%             | 69%             |                   | ImageNet                                                                     |
 | Convolutional two-stream Network Fusion for Video Action Recognition                  | 2016 | 91%             | 58%             |                   | -                                                                            |
-| Real-time Action Recognition with Enhanced Motion Vector CNNs                         | 2016 |                 |                 |                   |                                                                              |
 | [Quo Vadis, Action Recognition? A New Model and the Kinetics Dataset](https://arxiv.org/abs/1705.07750)  **I3D model**               | 2017 | 98%             | 81%             | 74%               | Kinetics (+ImageNet)                                                         |
 | Hidden Two-Stream Convolutional Networks for Action Recognition                       | 2017 | 97%             | 79%             |                   |                                                                              |
 | Temporal 3D ConvNets: New Architecture and Transfer Learning for Video Classification | 2017 | 93%             | 64%             | 62%               | Kinetics (+ImageNet)                                                         |
-| Non-local neural networks                                                             | 2018 |                 |                 |                   |                                                                              |
 | End-to-End Learning of Motion Representation for Video Understanding (TVNet)          | 2018 | 95%             | 71%             |                   | ImageNet                                                                     |
 | ActionFlowNet: Learning Motion Representation for Action Recognition                  | 2018 | 84%             | 56%             |                   | Optical-flow dataset                                                         |
 | [A Closer Look at Spatiotemporal Convolutions for Action Recognition](https://arxiv.org/abs/1711.11248)  **R(2+1)D model**                | 2018 | 97%             | 79%             | 74%               | Kinetics                                                                     |
@@ -97,7 +94,7 @@ We recommend the following reading to familiarize oneself with the field:
 
 #### Inference speed
 
-Most publications focus on accuracy rather than on inferencing speed. The paper "Representation Flow for Action Recognition" is a noteworthy exception with this figure. Note how slow approaches are which requite optical flow ("Flow") versus simply using the video frames as input ("RGB)".
+Most publications focus on accuracy rather than on inferencing speed. The figure below from the paper "[Representation Flow for Action Recognition](https://arxiv.org/abs/1810.01455)" is a noteworthy exception. Note how fast R(2+1)D is with 471ms, compared to approaches which requite optical flow ("Flow" or "Two-stream") as input.
 
 <img align="center" src="./media/inference_speeds.png" width = "500" />  
 
