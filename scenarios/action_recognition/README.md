@@ -1,66 +1,111 @@
-# Human Action Recognition 
+# Human Action Recognition
+
 ```diff
-+ 12/4/2019: This is work-in-progress.
++ Feb 2020: We are working on moving all code from contrib\action_recognition to this folder.
++           While this work is ongoing, please visit both locations for implementations and documentation.
 ```
 
+This directory contains resources for building video-based action recognition systems. Our goal is to enable users to easily and quickly train highly accurate and fast models on their own custom datasets.
 
-This directory provides examples and best practices for building human action recognition systems. Our goal is to enable the users to bring their own datasets and train a high-accuracy model easily and quickly. To this end, we provide example notebooks with pre-set default parameters shown to work well on a variety of datasets.
+Action recognition (also known as activity recognition) consists of classifying various actions from a sequence of frames, such as "reading" or "drinking":
 
-The R(2+1)D model is used for this scenario. This model architecture was originally presented in "A Closer Look at Spatiotemporal Convolutions for Action Recognition (2017)" paper from Facebook AI group.
+![](./media/action_recognition2.gif "Example of action recognition")
 
-<img src="media/model_arch.jpg" width="300" height="300" />
 
 ## Notebooks
-This project provides utility scripts to fine-tune the model and examples notebooks as follows:
+The following example notebooks are provided:
 
 | Notebook | Description |
 | --- | --- |
-| [00_webcam](00_webcam.ipynb) | A real-time inference example on Webcam stream |
-| [01_training_introduction](01_training_introduction.ipynb) | An example of training R(2+1)D model on HMDB-51 dataset |
-| [02_video_transformation](02_video_transformation.ipynb) | Examples of video transformations | 
+| [00_webcam](00_webcam.ipynb) | Real-time inference example on Webcam input. |
+| [01_training_introduction](01_training_introduction.ipynb) | Fine-tuning on the HMDB-51 dataset. |
+| [02_video_transformation](02_video_transformation.ipynb) | Examples of video transformations. |
 
-Specifically, we use the model pre-trained on 65 million social media videos (IG) presented in "[Large-scale weakly-supervised pre-training for video action recognition (2019)](https://arxiv.org/abs/1905.00561)" paper.
-
-*Note: The official pretrained model weights can be found from [https://github.com/facebookresearch/vmz](https://github.com/facebookresearch/vmz) which are based on caffe2.
-In this repository, we use PyTorch-converted weights from [https://github.com/moabitcoin/ig65m-pytorch](https://github.com/moabitcoin/ig65m-pytorch).*
+Furthermore, tools for data annotation are located in the [video_annotation](./video_annotation) subfolder.
 
 
-## Prerequisite
-* Linux machine - We strongly recommend to use GPU machine to run the scripts and notebooks in this project smoothly (preferably [Azure NCsV3 series VMs](https://docs.microsoft.com/en-us/azure/virtual-machines/linux/sizes-gpu#ncv3-series)).
-* To use GPUs, **CUDA toolkit v10.1** is required. Details about the CUDA installation can be found [here](https://developer.nvidia.com/cuda-downloads). Once the installation is completed, you may need to reboot the VM.
+## Technology
+
+Action recognition is an active field of research, with large number of approaches being published every year. One of the approaches which stands out is the  **R(2+1)D** model which is described in the 2019 paper "[Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)".
+
+R(2+1)D is highly accurate and at the same time significantly faster than other approaches:
+- Its accuracy comes in large parts from an extra pre-training step which uses 65 million automatically annotated video clips.
+- Its speed comes from simply using video frames as input. Many other state-of-the-art methods require optical flow fields to be pre-computed which is computationally expensive (see the "Inference speed" section below).
+
+We base our implementation on this [github](https://github.com/moabitcoin/ig65m-pytorch) repository, with added functionality to make training and evaluating custom models more user-friendly. We were able to re-produce the published accuracy for the HMDB-51 dataset as can be seen in this table:
+
+| Model | Reported in the paper | Our results |
+| ------- | -------| ------- |
+| R(2+1)D | 79.6% | 79.8% |
 
 
-## Installation
-1. Setup conda environment
-`conda env create -f environment.yml`
 
-1. Activate the environment
-`conda activate r2p1d`
+## State-of-the-art
 
-1. Install jupyter kernel
-`python -m ipykernel install --user --name r2p1d`
+Popular benchmark datasets in the field, as well as state-of-the-art publications are listed below. Note that the information is reasonably exhaustive and should cover many of the major publications until 2018. Expect however some level of incompleteness and slight incorrectness (e.g. publication year being off by plus/minus a year).
 
-### (Optional) Mixed-precision training
-* To use mixed-precision training via [NVIDIA-apex](https://github.com/NVIDIA/apex),
-```
-$ git clone https://github.com/NVIDIA/apex
-$ cd apex
-$ pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
-```
+We recommend the following reading to familiarize oneself with the field:
+- As introduction to action recognition the blog [Deep Learning for Videos: A 2018 Guide to Action Recognition](http://blog.qure.ai/notes/deep-learning-for-videos-action-recognition-review).
+- [ActionRecognition.net](http://actionrecognition.net/files/dset.php) for the latest state-of-the-art accuracies on popular research benchmark datasets.
+- The three papers with links in the publications table below.
+
+#### Popular datasets
+
+| Name  | Year  |  Number of classes |	#Clips |
+| ----- | ----- | ----------------- | ------- |
+| KTH   | 2004| 6| 600|   
+|Weizmann|	2005|	9|	81|		
+|HMDB-51| 2011|	51|	6.8k| 	 
+|UCF-101|	2012|	101|	13.3k|
+|Sports-1M|	2014|	487|	1M|
+|ActivityNet|	2015|	200|	28.1k|
+|Charades|	2016|	157|	66.5k from 9848 videos|
+|Kinetics-400|	2017|	400|	306k|
+|Something-Something|	2017|	174|	110k|
+|Kinetics-600|	2018|	600|	496k|  
+|AVA|	2018|	80|	1.6M from 430 videos|
+|Youtube-8M Segments|	2019|	1000|	237k|
 
 
-### WebCam tunneling
-To run the model on remote GPU VM while using a local machine for WebCam streaming,
+#### Popular publications
 
-1. Open a terminal window that supports `ssh` from the local machine (e.g. [git-bash for Windows](https://gitforwindows.org/)).
+|                                                                                       | Year | UCF101 accuracy | HMDB51 accuracy | Kinetics accuracy | Pre-training on                                                              |
+|---------------------------------------------------------------------------------------|------|-----------------|-----------------|-------------------|------------------------------------------------------------------------------|
+| Learning Realistic Human Actions from Movies                                          | 2008 |                 |                 |                   | -                                                                            |
+| Action Recognition with Improved Trajectories                                         | 2013 |                 | 57%             |                   | -                                                                            |
+| 3D Convolutional Neural Networks for Action Recognition                               | 2013 |                 |                 |                   | -                                                                            |
+| Two-Stream Convolutional Networks for Action Recognition in Videos                    | 2014 | 86%             | 58%             |                   | Combined UCF101 and HMDB51                                                   |
+| Large-scale Video Classification with CNNs                                            | 2014 | 65%             |                 |                   | Sports-1M                                                                    |
+| Beyond Short Snippets: Deep Networks for Video Classification                         | 2015 | 88%             |                 |                   | Sports-1M                                                                    |
+| Learning Spatiotemporal Features with 3D Convolutional Networks                       | 2015 | 85%             |                 |                   | Sports-1M                                                                    |
+| Initialization Strategies of Spatio-Temporal CNNs                                     | 2015 | 78%             |                 |                   | ImageNet                                                                     |
+| Temporal Segment Networks: Towards Good Practices for Deep Action Recognition         | 2016 | 94%             | 69%             |                   | ImageNet                                                                     |
+| Convolutional two-stream Network Fusion for Video Action Recognition                  | 2016 | 91%             | 58%             |                   | -                                                                            |
+| [Quo Vadis, Action Recognition? A New Model and the Kinetics Dataset](https://arxiv.org/abs/1705.07750)  **I3D model**               | 2017 | 98%             | 81%             | 74%               | Kinetics (+ImageNet)                                                         |
+| Hidden Two-Stream Convolutional Networks for Action Recognition                       | 2017 | 97%             | 79%             |                   |                                                                              |
+| Temporal 3D ConvNets: New Architecture and Transfer Learning for Video Classification | 2017 | 93%             | 64%             | 62%               | Kinetics (+ImageNet)                                                         |
+| End-to-End Learning of Motion Representation for Video Understanding (TVNet)          | 2018 | 95%             | 71%             |                   | ImageNet                                                                     |
+| ActionFlowNet: Learning Motion Representation for Action Recognition                  | 2018 | 84%             | 56%             |                   | Optical-flow dataset                                                         |
+| [A Closer Look at Spatiotemporal Convolutions for Action Recognition](https://arxiv.org/abs/1711.11248)  **R(2+1)D model**                | 2018 | 97%             | 79%             | 74%               | Kinetics                                                                     |
+| Rethinking Spatiotemporal Feature Learning For Video Understanding,                   | 2018 | 97%             | 76%             | 77%               |                                                                              |
+| Can Spatiotemporal 3D CNNs Retrace the History of 2D CNNs and ImageNet?               | 2018 |                 |                 |                   |                                                                              |
+| [Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)  **R(2+1)D model**          | 2019 |                 |                 | 81%               | 65 million automatically labeled web-videos (not publicly available) |
+| Representation Flow for Action Recognition                                            | 2019 |                 | 81%             | 78%               | Kinetics                                                                     |
+| Dance with Flow: Two-in-One Stream Action Recognition                                 | 2019 | 92%             |                 |                   | ImageNet                                                                     |
 
-1. Run following commandPort forward as follows (assuming Jupyter notebook will be running on the port 8888 on the VM) 
-`ssh your-vm-address -L 8888:localhost:8888` 
 
-1. Clone this repository from the VM and install the conda environment and Jupyter kernel.
+#### Inference speed
 
-1. Start Jupyter notebook from the VM without starting a browser.
-`jupyter notebook --no-browser` 
-You can also set Jupyter configuration to not start browser by default.
+Most publications focus on accuracy rather than inference speed. The figure below from the paper "[Representation Flow for Action Recognition](https://arxiv.org/abs/1810.01455)" is a noteworthy exception. Note how fast R(2+1)D is with 471ms, compared especially to approaches which require optical flow fields as input to the DNN ("Flow" or "Two-stream").
 
-1. Copy the notebook address showing at the terminal and paste it to the browser on the local machine to open it.
+<img align="center" src="./media/inference_speeds.png" width = "500" />  
+
+
+
+
+
+
+
+## Coding guidelines
+
+See the [coding guidelines](../../CONTRIBUTING.md#coding-guidelines) in the root
