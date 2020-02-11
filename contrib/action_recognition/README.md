@@ -5,7 +5,7 @@
 +           While this work is ongoing, please visit both locations for implementations and documentation.
 ```
 
-This directory contains resources for building video-based action recognition systems. Our goal is to enable users to easily and quickly train highly accurate and fast models on their own custom datasets.
+This directory contains resources for building video-based action recognition systems.
 
 Action recognition (also known as activity recognition) consists of classifying various actions from a sequence of frames:
 
@@ -13,7 +13,7 @@ Action recognition (also known as activity recognition) consists of classifying 
 
 We implemented two state-of-the-art approaches: (i) [I3D](https://arxiv.org/pdf/1705.07750.pdf) and (ii) [R(2+1)D](https://arxiv.org/abs/1711.11248). This includes example notebooks for e.g. scoring of webcam footage or fine-tuning on the [HMDB-51](http://serre-lab.clps.brown.edu/resource/hmdb-a-large-human-motion-database/) dataset.
 
-We recommend to use the **R(2+1)D** model for its competitive accuracy, fast inference speed, and less dependencies on other packages. For both approaches, using our implementations, we were able to re-produce the reported accuracies:
+We recommend to use the **R(2+1)D** model for its competitive accuracy, fast inference speed, and less dependencies on other packages. For both approaches, using our implementations, we were able to reproduce reported accuracies:
 
 | Model | Reported in the paper | Our results |
 | ------- | -------| ------- |

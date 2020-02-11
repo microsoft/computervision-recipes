@@ -7,30 +7,30 @@
 
 This directory contains resources for building video-based action recognition systems. Our goal is to enable users to easily and quickly train highly accurate and fast models on their own custom datasets.
 
-Action recognition (also known as activity recognition) consists of classifying various actions from a sequence of frames:
+Action recognition (also known as activity recognition) consists of classifying various actions from a sequence of frames, such as "reading" or "drinking":
 
 ![](./media/action_recognition2.gif "Example of action recognition")
 
 
 ## Notebooks
-This directory provides tools for data annotation (in the [video_annotation](./video_annotation) folder), as well as the following example notebooks:
+The following example notebooks are provided:
 
 | Notebook | Description |
 | --- | --- |
 | [00_webcam](00_webcam.ipynb) | Real-time inference example on Webcam input. |
-| [01_training_introduction](01_training_introduction.ipynb) | Fine-tuning on the HMDB-51 dataset |
-| [02_video_transformation](02_video_transformation.ipynb) | Examples of video transformations |
+| [01_training_introduction](01_training_introduction.ipynb) | Fine-tuning on the HMDB-51 dataset. |
+| [02_video_transformation](02_video_transformation.ipynb) | Examples of video transformations. |
+
+Furthermore, tools for data annotation are located in the [video_annotation](./video_annotation) subfolder.
 
 
 ## Technology
 
-Action recognition is an active field of research, with large number of approaches being published every year.
-
-In this repository, we implemented the **R(2+1)D** model as published in the 2019 paper "[Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)". R(2+1)D is highly accurate and at the same time significantly faster than other approaches (see the "Inference speed" section below):
+Action recognition is an active field of research, with large number of approaches being published every year. One of the approaches which stands out is the  **R(2+1)D** model, published in the 2019 paper "[Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)". R(2+1)D is highly accurate and at the same time significantly faster than other approaches (see the "Inference speed" section below):
 - Its accuracy comes in large parts from an extra pre-training step which uses about 65 millions of automatically annotated video clips.
-- Its speed is due to the fact that the model takes the RGB video frames as input. Many other state-of-the-art methods require optical flow fields to be pre-computed which is computationally expensive (multiple times more than evaluating the actual DNN, as can be seen in the "Inference speed" section below.
+- Its speed is due to the fact that the model takes only RGB video frames as input. Many other state-of-the-art methods require optical flow fields to be pre-computed which is computationally expensive.
 
-We evaluated our implementation and are able to re-produce the reported accuracy e.g. for the R(2+1)D model with 34 layers:
+We base our implementation on this [github](https://github.com/moabitcoin/ig65m-pytorch) repository, fixed potential bugs and added functionality e.g. to make training custom models more user-friendly, and are able to re-produce the reported accuracy e.g. for the R(2+1)D model with 34 layers:
 
 | Model | Reported in the paper | Our results |
 | ------- | -------| ------- |
@@ -40,12 +40,12 @@ We evaluated our implementation and are able to re-produce the reported accuracy
 
 ## State-of-the-art
 
-Popular benchmark datasets in the field, as well as state-of-the-art publications are listed below. Note that the information is reasonably exhaustive and should cover many of the major publications until 2018. Expect however some level of incompleteness and slight incorrectness (e.g. publication year being off by plus/minus 1 year due).
+Popular benchmark datasets in the field, as well as state-of-the-art publications are listed below. Note that the information is reasonably exhaustive and should cover many of the major publications until 2018. Expect however some level of incompleteness and slight incorrectness (e.g. publication year being off by plus/minus a year).
 
-To ramp up to the field, we recommended to read:
+We recommend the following reading to familiarize oneself with the field:
 - As introduction to action recognition the blog [Deep Learning for Videos: A 2018 Guide to Action Recognition](http://blog.qure.ai/notes/deep-learning-for-videos-action-recognition-review).
 - [ActionRecognition.net](http://actionrecognition.net/files/dset.php) for the latest state-of-the-art accuracies on popular research benchmark datasets.
-- All papers with links in the publications table below.
+- The three papers with links in the publications table below.
 
 #### Popular datasets
 
@@ -90,14 +90,14 @@ To ramp up to the field, we recommended to read:
 | [A Closer Look at Spatiotemporal Convolutions for Action Recognition](https://arxiv.org/abs/1711.11248)  **R(2+1)D model**                | 2018 | 97%             | 79%             | 74%               | Kinetics                                                                     |
 | Rethinking Spatiotemporal Feature Learning For Video Understanding,                   | 2018 | 97%             | 76%             | 77%               |                                                                              |
 | Can Spatiotemporal 3D CNNs Retrace the History of 2D CNNs and ImageNet?               | 2018 |                 |                 |                   |                                                                              |
-| [Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)  **R(2+1)D model**          | 2019 |                 |                 | 81%               | Very large  set of automatically labeled web-videos (not publicly available) |
+| [Large-scale weakly-supervised pre-training for video action recognition](https://arxiv.org/abs/1905.00561)  **R(2+1)D model**          | 2019 |                 |                 | 81%               | 65 million automatically labeled web-videos (not publicly available) |
 | Representation Flow for Action Recognition                                            | 2019 |                 | 81%             | 78%               | Kinetics                                                                     |
 | Dance with Flow: Two-in-One Stream Action Recognition                                 | 2019 | 92%             |                 |                   | ImageNet                                                                     |
 
 
 #### Inference speed
 
-Most publications focus on accuracy rather than on inferencing speed. The paper "Representation Flow for Action Recognition" is a noteworthy exception with this figure:
+Most publications focus on accuracy rather than on inferencing speed. The paper "Representation Flow for Action Recognition" is a noteworthy exception with this figure. Note how slow approaches are which requite optical flow ("Flow") versus simply using the video frames as input ("RGB)".
 
 <img align="center" src="./media/inference_speeds.png" width = "500" />  
 
