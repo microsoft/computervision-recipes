@@ -58,7 +58,7 @@ def test_11_notebook_run(similarity_notebooks, tiny_ic_data_path):
         kernel_name=KERNEL_NAME,
     )
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
-    assert min(nb_output.scraps["ranks"].data) <= 30
+    assert min(nb_output.scraps["ranks"].data) <= 40
 
 
 @pytest.mark.notebooks
