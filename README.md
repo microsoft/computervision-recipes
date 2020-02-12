@@ -20,12 +20,16 @@ These examples are provided as [Jupyter notebooks](scenarios) and common [utilit
 
 Our target audience for this repository includes data scientists and machine learning engineers with varying levels of Computer Vision knowledge as our content is source-only and targets custom machine learning modelling. The utilities and examples provided are intended to be solution accelerators for real-world vision problems.
 
-## Get Started
+## Getting Started
 
 To get started, navigate to the [Setup Guide](SETUP.md), which lists
 instructions on how to setup the compute environment and dependencies needed to run the
 notebooks in this repo. Once your environment is setup, navigate to the
 [Scenarios](scenarios) folder and start exploring the notebooks.
+
+Alternatively, we support Binder 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/PatrickBue/computervision-recipes/master?filepath=scenarios%2Fclassification%2F01_training_introduction_BINDER.ipynb)
+which makes it easy to try one of our notebooks in a web-browser simply by following this link. However, Binder is free, and as as result only comes with limited CPU compute power and without GPU support. Expect the notebook to run very slowly (this is somewhat improved by reducing image resolution to e.g. 60 pixels but at the cost of low accuracies).
 
 ## Scenarios
 
