@@ -247,7 +247,7 @@ class R2Plus1D(object):
             # Simple step-decay
             scheduler = torch.optim.lr_scheduler.StepLR(
                 optimizer,
-                step_size=train_cfgs.get('lr_step_size', None),
+                step_size=train_cfgs.get('lr_step_size', float("inf")),
                 gamma=train_cfgs.get('lr_gamma', 0.1),
             )
 
