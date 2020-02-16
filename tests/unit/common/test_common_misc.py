@@ -6,6 +6,7 @@ from pathlib import Path
 from PIL import ImageFont
 
 from fastai.vision import ImageList
+from utils_cv.common.gpu import db_num_workers
 from utils_cv.common.misc import copy_files, set_random_seed, get_font
 
 
@@ -17,7 +18,7 @@ def test_set_random_seed(tiny_ic_data_path):
         .split_by_rand_pct()
         .label_from_folder()
         .transform()
-        .databunch(bs=5)
+        .databunch(bs=5, num_workers = db_num_workers())
         .normalize()
     )
     first_batch = first_data.one_batch()
@@ -28,7 +29,7 @@ def test_set_random_seed(tiny_ic_data_path):
         .split_by_rand_pct()
         .label_from_folder()
         .transform()
-        .databunch(bs=5)
+        .databunch(bs=5, num_workers = db_num_workers())
         .normalize()
     )
     second_batch = second_data.one_batch()
