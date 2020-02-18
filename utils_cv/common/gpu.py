@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 import platform
 
 import torch
@@ -32,6 +33,11 @@ def linux_with_gpu():
     return is_linux() and has_gpu
 
 
+def is_binder():
+    """Returns if machine is running within a Binder environment"""
+    return "BINDER_REPO_URL" in os.environ
+
+
 def torch_device():
     """ Gets the torch device. Try gpu first, otherwise gpu. """
     return (
@@ -44,11 +50,11 @@ def torch_device():
 def db_num_workers(non_windows_num_workers: int = 16):
     """Returns how many workers to use when loading images in a databunch. On windows machines using >0 works significantly slows down model
     training and evaluation. Setting num_workers to zero on Windows machines will speed up training/inference significantly, but will still be
-    2-3 times slower.
+    2-3 times slower. Additionally, also set num_workers to zero if running within Binder to avoid an error being thrown. 
 
     For a description of the slow windows speed see: https://github.com/pytorch/pytorch/issues/12831
     """
-    if is_windows():
+    if is_windows() or is_binder():
         return 0
     else:
         return non_windows_num_workers

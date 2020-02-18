@@ -131,7 +131,7 @@ def plot_masks(
 def plot_keypoints(
     im: Union[str, Path, PIL.Image.Image],
     keypoints: np.ndarray,
-    keypoint_meta: Dict,
+    keypoint_meta: Dict = None,
     plot_settings: PlotSettings = PlotSettings(),
 ) -> PIL.Image.Image:
     """ Plot connected keypoints on Image and return the Image.
@@ -152,24 +152,26 @@ def plot_keypoints(
         assert (
             keypoints.ndim == 3 and keypoints.shape[2] == 3
         ), "Malformed keypoints array"
-        assert (
-            np.max(np.array(keypoint_meta["skeleton"])) < keypoints.shape[1]
-        ), "Skeleton index out of range"
+        if keypoint_meta:
+            assert (
+                np.max(np.array(keypoint_meta["skeleton"])) < keypoints.shape[1]
+            ), "Skeleton index out of range"
 
         draw = ImageDraw.Draw(im)
 
         # get connected skeleton lines of the keypoints
-        joints = keypoints[:, keypoint_meta["skeleton"]]
-        visibles = (joints[..., 2] != 0).all(axis=2)
-        bones = joints[visibles][..., :2]
+        if keypoint_meta:
+            joints = keypoints[:, keypoint_meta["skeleton"]]
+            visibles = (joints[..., 2] != 0).all(axis=2)
+            bones = joints[visibles][..., :2]
 
-        # draw skeleton lines
-        for line in bones.reshape((-1, 4)).tolist():
-            draw.line(
-                line,
-                fill=plot_settings.keypoint_color,
-                width=plot_settings.keypoint_th,
-            )
+            # draw skeleton lines
+            for line in bones.reshape((-1, 4)).tolist():
+                draw.line(
+                    line,
+                    fill=plot_settings.keypoint_color,
+                    width=plot_settings.keypoint_th,
+                )
 
         # draw keypoints
         visible_point_xys = keypoints[keypoints[..., 2] != 0][..., :2]
@@ -379,7 +381,7 @@ def _plot_pr_curve_iou_range(
     x = np.arange(0.0, 1.01, 0.01)
     iou_thrs_idx = range(0, 10)
     iou_thrs = np.linspace(
-        0.5, 0.95, np.round((0.95 - 0.5) / 0.05) + 1, endpoint=True
+        0.5, 0.95, int(np.round((0.95 - 0.5) / 0.05)) + 1, endpoint=True
     )
 
     # get_cmap() - a function that maps each index in 0, 1, ..., n-1 to a distinct

@@ -21,6 +21,7 @@ from fastai.vision.data import ImageList, imagenet_stats
 from typing import List, Tuple
 from tempfile import TemporaryDirectory
 from utils_cv.common.data import unzip_url
+from utils_cv.common.gpu import db_num_workers
 from utils_cv.classification.data import Urls as ic_urls
 from utils_cv.detection.data import Urls as od_urls
 from utils_cv.detection.bbox import DetectionBbox, AnnotationBbox
@@ -33,6 +34,7 @@ from utils_cv.detection.model import (
     _extract_od_results,
     _apply_threshold,
 )
+from utils_cv.similarity.data import Urls as is_urls
 
 
 def path_classification_notebooks():
@@ -126,6 +128,7 @@ def similarity_notebooks():
         "01": os.path.join(
             folder_notebooks, "01_training_and_evaluation_introduction.ipynb"
         ),
+        "02": os.path.join(folder_notebooks, "02_state_of_the_art.ipynb"),
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
@@ -196,7 +199,7 @@ def tmp_session(tmp_path_factory):
         yield td
 
 
-# ------|-- Classification/Similarity ---------------------------------------------
+# ------|-- Classification ---------------------------------------------
 
 
 @pytest.fixture(scope="session")
@@ -276,7 +279,7 @@ def tiny_ic_databunch(tmp_session):
         .split_by_rand_pct(valid_pct=0.1, seed=20)
         .label_from_folder()
         .transform(size=50)
-        .databunch(bs=16)
+        .databunch(bs=16, num_workers = db_num_workers())
         .normalize(imagenet_stats)
     )
 
@@ -348,7 +351,7 @@ def testing_databunch(tmp_session):
         .split_by_rand_pct(valid_pct=0.2, seed=20)
         .label_from_folder()
         .transform(size=300)
-        .databunch(bs=16)
+        .databunch(bs=16, num_workers = db_num_workers())
         .normalize(imagenet_stats)
     )
 
@@ -728,3 +731,16 @@ def workspace_region(request):
 #         os.path.join(im_paths, "can", im_name) for im_name in can_im_paths
 #     ][0:5]
 #     return can_im_paths
+
+
+# ------|-- Similarity ---------------------------------------------
+
+@pytest.fixture(scope="session")
+def tiny_is_data_path(tmp_session) -> str:
+    """ Returns the path to the tiny fridge objects dataset. """
+    return unzip_url(
+        is_urls.fridge_objects_retrieval_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
