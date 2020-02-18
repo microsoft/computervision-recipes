@@ -16,16 +16,16 @@ az account set -s {your-azure-subscription-id}
 ## Usage:
 1. Run the vmss deployment script. This script can take up to 20 minutes to execute. 
 
-```
-python vmss_deploy_with_public_ip.py \
-    --name {your-resource-group-name} --location {location} \
-    --vm-sku {your-vm-size} --vm-count {number-of-vms-to-create} \
-    --admin-id {vm-admin-id} --admin-pw {vm-admin-pw} \
-    --post-script vm_user_env_setup.sh
-```
-After this script executes, you will have a VMSS of DSVMs, each with jupyter hub preconfigured on it. 
+    ```
+    python vmss_deploy_with_public_ip.py \
+        --name {your-resource-group-name} --location {location} \
+        --vm-sku {your-vm-size} --vm-count {number-of-vms-to-create} \
+        --admin-id {vm-admin-id} --admin-pw {vm-admin-pw} \
+        --post-script vm_user_env_setup.sh
+    ```
+    After this script executes, you will have a VMSS of DSVMs, each with jupyter hub preconfigured on it. 
 
-Each vm will have n number of users setup. You can configure this number inside the `vm_user_env_setup.sh` file before running the vmss deployment script. Inside the `vm_user_env_setup.sh` file, you can also configure the usernames and passwords of the users. By default, it will be `user1, password1`, `user2, password2`, ...
+    Each vm will have n number of users setup. You can configure this number inside the `vm_user_env_setup.sh` file before running the vmss deployment script. Inside the `vm_user_env_setup.sh` file, you can also configure the usernames and passwords of the users. By default, it will be `user1, password1`, `user2, password2`, ...
 
 1. Once the script has completed, take note of the ip addresses. These are the public addresses of the individual DSVMs. To access the repo, simply open a browser and enter `https://<ip-address>:8000`. A warning on the browser may appear, but ignore it and proceed to the webpage. You can then access the dsvm by entering the username/password of the users on each VM.
 
