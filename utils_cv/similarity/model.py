@@ -126,10 +126,17 @@ def compute_features_learner(
             "Dataset_type needs to be of type DatasetType.Train, DatasetType.Valid, DatasetType.Test or DatasetType.Fix."
         )
 
+    # Update what data the learner object is using
+    tmp_data = learn.data
+    learn.data = data
+
     # Compute features
     featurizer = SaveFeatures(embedding_layer)
     learn.get_preds(dataset_type)
     feats = featurizer.features[:]
+
+    # Set data back to before
+    learn.data = tmp_data
 
     # Get corresponding image paths
     assert len(feats) == len(label_list)

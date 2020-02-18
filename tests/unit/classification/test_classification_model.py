@@ -118,7 +118,6 @@ def test_train_metrics_recorder(tiny_ic_databunch):
     def test_callback(learn):
         tmr = TrainMetricsRecorder(learn)
         learn.callbacks.append(tmr)
-        learn.unfreeze()
         learn.fit(epochs, lr)
         return tmr
 
