@@ -54,18 +54,18 @@ class R2Plus1D(object):
 
     @staticmethod
     def init_model(sample_length, base_model, num_classes=None):
-        if sample_length not in (8, 32):
-            raise ValueError(
-                "Not supported input frame length {}. Should be 8 or 32"
-                .format(sample_length)
-            )
         if base_model not in ('ig65m', 'kinetics'):
             raise ValueError(
                 "Not supported model {}. Should be 'ig65m' or 'kinetics'"
                 .format(base_model)
             )
 
-        model_name = "r2plus1d_34_{}_{}".format(sample_length, base_model)
+        # Decide if to use pre-trained weights for DNN trained using 8 or for 32 frames
+        if sample_length<=8:
+            model_sample_length = 8
+        else:
+            model_sample_length = 32
+        model_name = "r2plus1d_34_{}_{}".format(model_sample_length, base_model)
 
         print("Loading {} model".format(model_name))
 
@@ -275,16 +275,17 @@ class R2Plus1D(object):
             )
 
             scheduler.step()
-                
-            self.save(
-                os.path.join(
-                    model_dir,
-                    "{model_name}_{epoch}.pt".format(
-                        model_name=train_cfgs.get('model_name', self.model_name),
-                        epoch=str(e).zfill(3)
+
+            if train_cfgs.get('save_models', False):   
+                self.save(
+                    os.path.join(
+                        model_dir,
+                        "{model_name}_{epoch}.pt".format(
+                            model_name=train_cfgs.get('model_name', self.model_name),
+                            epoch=str(e).zfill(3)
+                        )
                     )
                 )
-            )
 
     @staticmethod
     def train_an_epoch(
