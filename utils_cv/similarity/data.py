@@ -4,10 +4,24 @@
 import numpy as np
 import random
 from typing import List, Dict
+from urllib.parse import urljoin
 
 from fastai.data_block import LabelList
 
 from utils_cv.similarity.metrics import vector_distance
+
+
+class Urls:
+    # base url 
+    base = "https://cvbp.blob.core.windows.net/public/datasets/image_similarity/"
+
+    # traditional datasets
+    fridge_objects_retrieval_path = urljoin(base, "fridgeObjectsImageRetrieval.zip")
+    fridge_objects_retrieval_tiny_path = urljoin(base, "fridgeObjectsImageRetrievalTiny.zip")
+
+    @classmethod
+    def all(cls) -> List[str]:
+        return [v for k, v in cls.__dict__.items() if k.endswith("_path")]
 
 
 class ComparativeSet:

@@ -2,6 +2,10 @@
 
 This directory provides examples and best practices for building image classification systems. Our goal is to enable users to easily and quickly train high-accuracy classifiers on their own datasets. We provide example notebooks with pre-set default parameters that are shown to work well on a variety of data sets. We also include extensive documentation of common pitfalls and best practices. Additionally, we show how Azure, Microsoft's cloud computing platform, can be used to speed up training on large data sets or deploy models as web services.
 
+| Image classification (single object) | Image classification (multiple objects) |
+|--|--|
+| <img align="center" src="./media/ic_example2.jpg" height="200"/>  | <img align="center" src="./media/ic_example3.jpg" height="200"/> |
+
 We recommend using PyTorch as a Deep Learning platform for its ease of use, simplicity when debugging, and popularity in the data science community. For Computer Vision functionality, we also rely heavily on [fast.ai](https://github.com/fastai/fastai), a PyTorch data science library which comes with rich deep learning features and extensive documentation. We highly recommend watching the [2019 fast.ai lecture series](https://course.fast.ai/videos/?lesson=1) video to understand the underlying technology. Fast.ai's [documentation](https://docs.fast.ai/) is also a valuable resource.
 
 
@@ -14,7 +18,7 @@ Answers to Frequently Asked Questions such as "How many images do I need to trai
 
 We provide several notebooks to show how image classification algorithms are designed, evaluated and operationalized. Notebooks starting with `0` are intended to be run sequentially, as there are dependencies between them. These notebooks contain introductory "required" material. Notebooks starting with `1` can be considered optional and contain more complex and specialized topics.
 
-While all notebooks can be executed in Windows, we have found that fast.ai is much faster on the Linux operating system. Additionally, using GPU dramatically improves training speeds. We suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm), [price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)). 
+While all notebooks can be executed in Windows, we have found that fast.ai is much faster on the Linux operating system. Additionally, using GPU dramatically improves training speeds. We suggest using an Azure Data Science Virtual Machine with V100 GPU ([instructions](https://docs.microsoft.com/en-us/azure/machine-learning/data-science-virtual-machine/provision-deep-learning-dsvm), [price table](https://azure.microsoft.com/en-us/pricing/details/virtual-machines/windows/)).
 
 We have also found that some browsers do not render Jupyter widgets correctly. If you have issues, try using an alternative browser, such as  Edge or Chrome.
 
@@ -46,5 +50,3 @@ The Azure products featured in the notebooks include:
 * [Azure Container Instance](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-deploy-and-where#aci) - You can use Azure Machine Learning service to host your classification model in a web service deployment on Azure Container Instance (ACI). ACI is good for low scale, CPU-based workloads. [21_deployment_on_azure_container_instances](21_deployment_on_azure_container_instances.ipynb) explains how to deploy a web service to ACI through Azure ML.
 
 * [Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-deploy-and-where#aks) - You can use Azure Machine Learning service to host your classification model in a web service deployment on Azure Kubernetes Service (AKS). AKS is good for high-scale production deployments and provides autoscaling, and fast response times. [22_deployment_on_azure_kubernetes_service](22_deployment_on_azure_kubernetes_service.ipynb) explains how to deploy a web service to AKS through Azure ML.
-
-

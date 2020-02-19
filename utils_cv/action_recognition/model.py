@@ -13,6 +13,8 @@ try:
 except ModuleNotFoundError:
     AMP_AVAILABLE = False
 
+from IPython.core.debugger import set_trace
+import numpy as np
 import torch
 import torch.cuda as cuda
 import torch.nn as nn
@@ -55,20 +57,19 @@ class R2Plus1D(object):
 
     @staticmethod
     def init_model(sample_length, base_model, num_classes=None):
-        if sample_length not in (8, 32):
-            raise ValueError(
-                "Not supported input frame length {}. Should be 8 or 32".format(
-                    sample_length
-                )
-            )
-        if base_model not in ("ig65m", "kinetics"):
+        if base_model not in ('ig65m', 'kinetics'):
             raise ValueError(
                 "Not supported model {}. Should be 'ig65m' or 'kinetics'".format(
                     base_model
                 )
             )
 
-        model_name = "r2plus1d_34_{}_{}".format(sample_length, base_model)
+        # Decide if to use pre-trained weights for DNN trained using 8 or for 32 frames
+        if sample_length<=8:
+            model_sample_length = 8
+        else:
+            model_sample_length = 32
+        model_name = "r2plus1d_34_{}_{}".format(model_sample_length, base_model)
 
         print("Loading {} model".format(model_name))
 
@@ -230,11 +231,12 @@ class R2Plus1D(object):
             for name in named_params_to_update:
                 print("\t{}".format(name))
 
+        momentum=train_cfgs.get('momentum', 0.95)
         optimizer = optim.SGD(
             list(named_params_to_update.values()),
             lr=train_cfgs.lr,
-            momentum=train_cfgs.momentum,
-            weight_decay=train_cfgs.weight_decay,
+            momentum=momentum,
+            weight_decay=train_cfgs.get('weight_decay', 0.0001),
         )
 
         # Use mixed-precision if available
@@ -250,30 +252,22 @@ class R2Plus1D(object):
             )
 
         # Learning rate scheduler
-        scheduler = None
-        warmup_pct = train_cfgs.get("warmup_pct", None)
-        lr_decay_steps = train_cfgs.get("lr_decay_steps", None)
-        if warmup_pct is not None:
+        if train_cfgs.get('use_one_cycle_policy', False):
             # Use warmup with the one-cycle policy
-            lr_decay_total_steps = (
-                train_cfgs.epochs if lr_decay_steps is None else lr_decay_steps
-            )
             scheduler = torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
                 max_lr=train_cfgs.lr,
-                total_steps=lr_decay_total_steps,
-                pct_start=train_cfgs.get("warmup_pct", 0.3),
-                base_momentum=0.9 * train_cfgs.momentum,
-                max_momentum=train_cfgs.momentum,
-                final_div_factor=1 / train_cfgs.get("lr_decay_factor", 0.0001),
+                total_steps=train_cfgs.epochs,
+                pct_start=train_cfgs.get('warmup_pct', 0.3),
+                base_momentum=0.9*momentum,
+                max_momentum=momentum,
             )
-        elif lr_decay_steps is not None:
-            lr_decay_total_steps = train_cfgs.epochs
+        else:
             # Simple step-decay
             scheduler = torch.optim.lr_scheduler.StepLR(
                 optimizer,
-                step_size=lr_decay_steps,
-                gamma=train_cfgs.get("lr_decay_factor", 0.1),
+                step_size=train_cfgs.get('lr_step_size', float("inf")),
+                gamma=train_cfgs.get('lr_gamma', 0.1),
             )
 
         # DataParallel after amp.initialize
@@ -298,20 +292,19 @@ class R2Plus1D(object):
                 grad_steps=train_cfgs.grad_steps,
                 mixed_prec=train_cfgs.mixed_prec,
             )
-            if scheduler is not None and e < lr_decay_total_steps:
-                scheduler.step()
 
-            self.save(
-                os.path.join(
-                    model_dir,
-                    "{model_name}_{epoch}.pt".format(
-                        model_name=train_cfgs.get(
-                            "model_name", self.model_name
-                        ),
-                        epoch=str(e).zfill(3),
-                    ),
+            scheduler.step()
+
+            if train_cfgs.get('save_models', False):   
+                self.save(
+                    os.path.join(
+                        model_dir,
+                        "{model_name}_{epoch}.pt".format(
+                            model_name=train_cfgs.get('model_name', self.model_name),
+                            epoch=str(e).zfill(3)
+                        )
+                    )
                 )
-            )
 
     @staticmethod
     def train_an_epoch(
