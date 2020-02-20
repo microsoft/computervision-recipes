@@ -18,7 +18,7 @@ This repository supports various Computer Vision scenarios which either operate 
   <img src="./scenarios/media/cv_overview.jpg" height="350" alt="Some supported CV scenarios"/>
 </p>
 
-As well as scenarios which take a video sequence as input:
+As well as scenarios such as action recognition which take a video sequence as input:
 <p align="center">
   <img src=/scenarios/action_recognition/media/action_recognition2.gif "Example of action recognition"/>
 </p>
