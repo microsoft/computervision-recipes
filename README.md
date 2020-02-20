@@ -11,8 +11,16 @@ We hope that these examples and utilities can significantly reduce the “time t
 
 These examples are provided as [Jupyter notebooks](scenarios) and common [utility functions](utils_cv). All examples use PyTorch as the underlying deep learning library.
 
+## Examples
+
+This repository supports various Computer Vision scenarios which either operate on a single image:
 <p align="center">
   <img src="./scenarios/media/cv_overview.jpg" height="350" alt="Some supported CV scenarios"/>
+</p>
+
+As well as scenarios such as action recognition which take a video sequence as input:
+<p align="center">
+  <img src=/scenarios/action_recognition/media/action_recognition2.gif "Example of action recognition"/>
 </p>
 
 
