@@ -95,7 +95,7 @@ To install the repo and its dependencies perform the following steps:
     ```
     jupyter notebook
     ```
-1. At this point, you should be able to run the [notebooks](#scenarios) in this repo. 
+1. At this point, you should be able to run the notebooks within the various [scenarios](scenarios) folders. 
 
 __pip install__
 

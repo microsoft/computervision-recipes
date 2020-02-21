@@ -17,14 +17,6 @@ jobs:
 
   steps:
   - template: templates/unit-test-steps-windows.yml  # Template reference
-  
-  - script: |
-     call conda env remove -n cv -y
-     if exist C:\Anaconda\envs\cv rmdir /s /q C:\Anaconda\envs\cv
-
-    workingDirectory: tests
-    displayName: 'Conda remove'
-    timeoutInMinutes: 10
 
   - script: |
      del /q /S %LOCALAPPDATA%\Temp\*

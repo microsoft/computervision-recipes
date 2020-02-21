@@ -32,12 +32,12 @@ R(2+1)D is highly accurate and at the same time significantly faster than other 
 - Its accuracy comes in large parts from an extra pre-training step which uses 65 million automatically annotated video clips.
 - Its speed comes from simply using video frames as input. Many other state-of-the-art methods require optical flow fields to be pre-computed which is computationally expensive (see the "Inference speed" section below).
 
-We base our implementation on this [github](https://github.com/moabitcoin/ig65m-pytorch) repository, with added functionality to make training and evaluating custom models more user-friendly. We were able to re-produce the published accuracy for the HMDB-51 dataset as can be seen in this table:
+We base our implementation and pretrained weights on this [github](https://github.com/moabitcoin/ig65m-pytorch) repository, with added functionality to make training and evaluating custom models more user-friendly. We use the IG-Kinetics dataset for pre-training, however the currently only published results on the HMDB-51 dataset use the much smaller (and less noisy) Kinetics dataset. Nevertheless, the results below show that our implementation is able to achieve and push state-of-the-art accuracy on HMDB-51: 
 
-| Model | Reported in the paper | Our results |
-| ------- | -------| ------- |
-| R(2+1)D | 79.6% | 79.8% |
-
+| Model | Pre-training dataset | Reported in the paper | Our results |
+| ------- | -------| ------- | ------- |
+| R(2+1)D | Kinetics | 74.5% |  |
+| R(2+1)D | IG-Kinetics |  | 79.8% |
 
 
 ## State-of-the-art
@@ -65,6 +65,7 @@ We recommend the following reading to familiarize oneself with the field:
 |Kinetics-600|	2018|	600|	496k|  
 |AVA|	2018|	80|	1.6M from 430 videos|
 |Youtube-8M Segments|	2019|	1000|	237k|
+|IG-Kinetics|	2019|	359|	65M|
 
 
 #### Popular publications
