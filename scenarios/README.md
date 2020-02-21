@@ -5,7 +5,7 @@
 | [Classification](classification) | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
 | [Similarity](similarity)  | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
 | [Detection](detection) | Object Detection is a technique that allows you to detect the bounding box of an object within an image. |
-| [Keypoints](scenarios/keypoints) | Keypoint detection can be used to detect specific points on an object. A pre-trained model is provided to detect body joints for human pose estimation. |
+| [Keypoints](keypoints) | Keypoint detection can be used to detect specific points on an object. A pre-trained model is provided to detect body joints for human pose estimation. |
 
 # Scenarios
 

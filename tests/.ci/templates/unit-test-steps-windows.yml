@@ -30,6 +30,16 @@ steps:
   condition: always()
 
 - script: |
+    IF EXIST C:\ProgramData\Miniconda3\envs\cv (
+      echo Removing conda environment directory...
+      rmdir /s /q C:\ProgramData\Miniconda3\envs\cv
+    ) ELSE (
+      echo Conda environment directory is clean.
+    )
+  displayName: 'Ensure conda environment directory is clean'
+  condition: always()
+
+- script: |
     conda env list
   displayName: 'List conda environments to verify cleanup of the new environment'
 
