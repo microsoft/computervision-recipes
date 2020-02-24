@@ -22,14 +22,14 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from ..common.misc import Config
-from .data import (
+from .dataset import (
     DEFAULT_MEAN,
     DEFAULT_STD,
     show_batch as _show_batch,
     VideoDataset,
 )
 
-from .metrics import accuracy, AverageMeter
+from .references.metrics import accuracy, AverageMeter
 
 # From https://github.com/moabitcoin/ig65m-pytorch
 TORCH_R2PLUS1D = "moabitcoin/ig65m-pytorch"
