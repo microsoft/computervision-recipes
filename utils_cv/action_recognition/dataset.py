@@ -82,6 +82,38 @@ def _get_transforms(tfms_config: Config) -> Trans:
     return Compose(tfms)
 
 
+def get_default_tfms_config(train: bool) -> Config:
+    """
+    Args:
+        train: whether or not this is for training
+    Settings:
+        input_size (int or tuple): Model input image size.
+        im_scale (int or tuple): Resize target size.
+        resize_keep_ratio (bool): If True, keep the original ratio when resizing.
+        mean (tuple): Normalization mean.
+        std (tuple): Normalization std.
+        flip_ratio (float): Horizontal flip ratio.
+        random_crop (bool): If False, do center-crop.
+        random_crop_scales (tuple): Range of size of the origin size random cropped.
+    """
+    flip_ratio = 0.5 if train else 0.0
+    random_crop = True if train else False
+    random_crop_scales = (0.6, 1.0) if train else None
+
+    return Config(
+        dict(
+            input_size=112,
+            im_scale=128,
+            resize_keep_ratio=True,
+            mean=DEFAULT_MEAN,
+            std=DEFAULT_STD,
+            flip_ratio=flip_ratio,
+            random_crop=random_crop,
+            random_crop_scales=random_crop_scales,
+        )
+    )
+
+
 class VideoDataset(Dataset):
     """
     Args:
@@ -90,39 +122,25 @@ class VideoDataset(Dataset):
         num_segments (int): Number of clips to sample from each video.
         sample_length (int): Number of consecutive frames to sample from a video (i.e. clip length).
         sample_step (int): Sampling step.
-        input_size (int or tuple): Model input image size.
-        im_scale (int or tuple): Resize target size.
-        resize_keep_ratio (bool): If True, keep the original ratio when resizing.
-        mean (tuple): Normalization mean.
-        std (tuple): Normalization std.
-        random_shift (bool): Random temporal shift when sample a clip.
         temporal_jitter (bool): Randomly skip frames when sampling each frames.
-        flip_ratio (float): Horizontal flip ratio.
-        random_crop (bool): If False, do center-crop.
-        random_crop_scales (tuple): Range of size of the origin size random cropped.
+        random_shift (bool): Random temporal shift when sample a clip.
         video_ext (str): Video file extension.
         warning (bool): On or off warning.
+        tfms_config: configs for transforms (assume for training by default)
     """
 
     def __init__(
         self,
-        split_file,
-        video_dir,
-        num_segments=1,
-        sample_length=8,
-        sample_step=1,
-        input_size=112,
-        im_scale=128,
-        resize_keep_ratio=True,
-        mean=DEFAULT_MEAN,
-        std=DEFAULT_STD,
-        random_shift=False,
-        temporal_jitter=False,
-        flip_ratio=0.5,
-        random_crop=False,
-        random_crop_scales=(0.6, 1.0),
-        video_ext="mp4",
-        warning=False,
+        split_file: str,
+        video_dir: str,
+        num_segments: int = 1,
+        sample_length: int = 8,
+        sample_step: int = 1,
+        temporal_jitter: bool = False,
+        random_shift: bool = False,
+        video_ext: str = "mp4",
+        warning: bool = False,
+        tfms_config: Config = get_default_tfms_config(True),
     ):
         # TODO maybe check wrong arguments to early failure
         assert sample_step > 0
@@ -139,18 +157,6 @@ class VideoDataset(Dataset):
         self.presample_length = sample_length * sample_step
 
         # transform params
-        tfms_config = Config(
-            dict(
-                resize_keep_ratio=resize_keep_ratio,
-                im_scale=im_scale,
-                random_crop=random_crop,
-                random_crop_scales=random_crop_scales,
-                input_size=input_size,
-                flip_ratio=flip_ratio,
-                mean=mean,
-                std=std,
-            )
-        )
         self.transforms = _get_transforms(tfms_config)
 
         # Temporal noise

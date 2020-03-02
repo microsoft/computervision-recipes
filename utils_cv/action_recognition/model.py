@@ -27,6 +27,7 @@ from .dataset import (
     DEFAULT_STD,
     show_batch as _show_batch,
     VideoDataset,
+    get_default_tfms_config,
 )
 
 from .references.metrics import accuracy, AverageMeter
@@ -57,7 +58,7 @@ class R2Plus1D(object):
 
     @staticmethod
     def init_model(sample_length, base_model, num_classes=None):
-        if base_model not in ('ig65m', 'kinetics'):
+        if base_model not in ("ig65m", "kinetics"):
             raise ValueError(
                 "Not supported model {}. Should be 'ig65m' or 'kinetics'".format(
                     base_model
@@ -65,11 +66,13 @@ class R2Plus1D(object):
             )
 
         # Decide if to use pre-trained weights for DNN trained using 8 or for 32 frames
-        if sample_length<=8:
+        if sample_length <= 8:
             model_sample_length = 8
         else:
             model_sample_length = 32
-        model_name = "r2plus1d_34_{}_{}".format(model_sample_length, base_model)
+        model_name = "r2plus1d_34_{}_{}".format(
+            model_sample_length, base_model
+        )
 
         print("Loading {} model".format(model_name))
 
@@ -111,19 +114,12 @@ class R2Plus1D(object):
                 sample_step=cfgs.get(
                     "temporal_jitter_step", cfgs.get("sample_step", 1)
                 ),
-                input_size=112,
-                im_scale=cfgs.get("im_scale", 128),
-                resize_keep_ratio=cfgs.get("resize_keep_ratio", True),
-                mean=cfgs.get("mean", DEFAULT_MEAN),
-                std=cfgs.get("std", DEFAULT_STD),
                 random_shift=cfgs.get("random_shift", True),
                 temporal_jitter=True
                 if cfgs.get("temporal_jitter_step", 0) > 0
                 else False,
-                flip_ratio=cfgs.get("flip_ratio", 0.5),
-                random_crop=cfgs.get("random_crop", True),
-                random_crop_scales=cfgs.get("random_crop_scales", (0.6, 1.0)),
                 video_ext=cfgs.video_ext,
+                tfms_config=get_default_tfms_config(True),
             )
         )
 
@@ -137,17 +133,10 @@ class R2Plus1D(object):
                 num_segments=1,
                 sample_length=cfgs.sample_length,
                 sample_step=cfgs.get("sample_step", 1),
-                input_size=112,
-                im_scale=cfgs.get("im_scale", 128),
-                resize_keep_ratio=True,
-                mean=cfgs.get("mean", DEFAULT_MEAN),
-                std=cfgs.get("std", DEFAULT_STD),
                 random_shift=False,
                 temporal_jitter=False,
-                flip_ratio=0.0,
-                random_crop=False,  # == Center crop
-                random_crop_scales=None,
                 video_ext=cfgs.video_ext,
+                tfms_config=get_default_tfms_config(False),
             )
         )
 
@@ -231,12 +220,12 @@ class R2Plus1D(object):
             for name in named_params_to_update:
                 print("\t{}".format(name))
 
-        momentum=train_cfgs.get('momentum', 0.95)
+        momentum = train_cfgs.get("momentum", 0.95)
         optimizer = optim.SGD(
             list(named_params_to_update.values()),
             lr=train_cfgs.lr,
             momentum=momentum,
-            weight_decay=train_cfgs.get('weight_decay', 0.0001),
+            weight_decay=train_cfgs.get("weight_decay", 0.0001),
         )
 
         # Use mixed-precision if available
@@ -252,22 +241,22 @@ class R2Plus1D(object):
             )
 
         # Learning rate scheduler
-        if train_cfgs.get('use_one_cycle_policy', False):
+        if train_cfgs.get("use_one_cycle_policy", False):
             # Use warmup with the one-cycle policy
             scheduler = torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
                 max_lr=train_cfgs.lr,
                 total_steps=train_cfgs.epochs,
-                pct_start=train_cfgs.get('warmup_pct', 0.3),
-                base_momentum=0.9*momentum,
+                pct_start=train_cfgs.get("warmup_pct", 0.3),
+                base_momentum=0.9 * momentum,
                 max_momentum=momentum,
             )
         else:
             # Simple step-decay
             scheduler = torch.optim.lr_scheduler.StepLR(
                 optimizer,
-                step_size=train_cfgs.get('lr_step_size', float("inf")),
-                gamma=train_cfgs.get('lr_gamma', 0.1),
+                step_size=train_cfgs.get("lr_step_size", float("inf")),
+                gamma=train_cfgs.get("lr_gamma", 0.1),
             )
 
         # DataParallel after amp.initialize
@@ -295,14 +284,16 @@ class R2Plus1D(object):
 
             scheduler.step()
 
-            if train_cfgs.get('save_models', False):   
+            if train_cfgs.get("save_models", False):
                 self.save(
                     os.path.join(
                         model_dir,
                         "{model_name}_{epoch}.pt".format(
-                            model_name=train_cfgs.get('model_name', self.model_name),
-                            epoch=str(e).zfill(3)
-                        )
+                            model_name=train_cfgs.get(
+                                "model_name", self.model_name
+                            ),
+                            epoch=str(e).zfill(3),
+                        ),
                     )
                 )
 

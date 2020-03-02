@@ -41,6 +41,3 @@ HMDB51 = _DatasetSpec(
     51,
     os.path.join("data", "hmdb51"),
 )
-
-
-
