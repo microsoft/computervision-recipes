@@ -4,6 +4,7 @@
 import os
 from pathlib import Path
 import warnings
+from typing import Callable, Tuple
 
 import decord
 from einops.layers.torch import Rearrange
@@ -16,7 +17,9 @@ from torchvision.transforms import Compose
 
 from .references import transforms_video as transforms
 from .references.functional_video import denormalize
+from ..common.misc import Config
 
+Trans = Callable[[object, dict], Tuple[object, dict]]
 
 DEFAULT_MEAN = (0.43216, 0.394666, 0.37645)
 DEFAULT_STD = (0.22803, 0.22145, 0.216989)
@@ -42,6 +45,41 @@ class VideoRecord(object):
     @property
     def label(self):
         return int(self._data[1])
+
+
+def _get_transforms(tfms_config: Config) -> Trans:
+    """ Get default transformations to apply.
+
+    Args:
+        Config object with tranforms-related configs
+
+    Returns:
+        A list of transforms to apply
+    """
+    # 1. resize
+    tfms = [
+        transforms.ToTensorVideo(),
+        transforms.ResizeVideo(
+            tfms_config.im_scale, tfms_config.resize_keep_ratio
+        ),
+    ]
+    # 2. crop
+    if tfms_config.random_crop:
+        if tfms_config.random_crop_scales is not None:
+            crop = transforms.RandomResizedCropVideo(
+                tfms_config.input_size, tfms_config.random_crop_scales
+            )
+        else:
+            crop = transforms.RandomCropVideo(tfms_config.input_size)
+    else:
+        crop = transforms.CenterCropVideo(tfms_config.input_size)
+    tfms.append(crop)
+    # 3. flip
+    tfms.append(transforms.RandomHorizontalFlipVideo(tfms_config.flip_ratio))
+    # 4. normalize
+    tfms.append(transforms.NormalizeVideo(tfms_config.mean, tfms_config.std))
+
+    return Compose(tfms)
 
 
 class VideoDataset(Dataset):
@@ -100,32 +138,25 @@ class VideoDataset(Dataset):
         self.sample_step = sample_step
         self.presample_length = sample_length * sample_step
 
+        # transform params
+        tfms_config = Config(
+            dict(
+                resize_keep_ratio=resize_keep_ratio,
+                im_scale=im_scale,
+                random_crop=random_crop,
+                random_crop_scales=random_crop_scales,
+                input_size=input_size,
+                flip_ratio=flip_ratio,
+                mean=mean,
+                std=std,
+            )
+        )
+        self.transforms = _get_transforms(tfms_config)
+
         # Temporal noise
         self.random_shift = random_shift
         self.temporal_jitter = temporal_jitter
 
-        # Video transforms
-        # 1. resize
-        trfms = [
-            transforms.ToTensorVideo(),
-            transforms.ResizeVideo(im_scale, resize_keep_ratio),
-        ]
-        # 2. crop
-        if random_crop:
-            if random_crop_scales is not None:
-                crop = transforms.RandomResizedCropVideo(
-                    input_size, random_crop_scales
-                )
-            else:
-                crop = transforms.RandomCropVideo(input_size)
-        else:
-            crop = transforms.CenterCropVideo(input_size)
-        trfms.append(crop)
-        # 3. flip
-        trfms.append(transforms.RandomHorizontalFlipVideo(flip_ratio))
-        # 4. normalize
-        trfms.append(transforms.NormalizeVideo(mean, std))
-        self.transforms = Compose(trfms)
         self.video_ext = video_ext
         self.warning = warning
 
@@ -216,16 +247,12 @@ class VideoDataset(Dataset):
             clips (torch.tensor), label (int)
         """
         record = self.video_records[idx]
-        print(record.path)
-        print(self.video_dir)
-        print(self.video_ext)
         video_reader = decord.VideoReader(
             "{}.{}".format(
                 os.path.join(self.video_dir, record.path), self.video_ext
             ),
             # TODO try to add `ctx=decord.ndarray.gpu(0) or .cuda(0)`
         )
-        print("here")
         record._num_frames = len(video_reader)
 
         offsets = self._sample_indices(record)
