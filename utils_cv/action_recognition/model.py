@@ -44,16 +44,25 @@ MODELS = {
 
 
 class R2Plus1D(object):
-    def __init__(self, cfgs):
+    """ tk """
+
+    def __init__(
+        self,
+        dataset: VideoDataset,
+        num_classes: int, # ie 51 for hmdb51
+        base_model: str = "ig65m", # or "kinetics"
+        cfgs: Config = None,
+    ):
+        """ tk """
         self.configs = Config(cfgs)
-        self.train_ds, self.valid_ds = self.load_datasets(self.configs)
+        self.dataset = dataset
         self.model = self.init_model(
-            self.configs.sample_length,
-            self.configs.base_model,
-            self.configs.num_classes,
+            self.dataset.sample_length,
+            base_model,
+            num_classes,
         )
         self.model_name = "r2plus1d_34_{}_{}".format(
-            self.configs.sample_length, self.configs.base_model
+            self.dataset.sample_length, base_model
         )
 
     @staticmethod
@@ -88,66 +97,66 @@ class R2Plus1D(object):
             model.fc = nn.Linear(model.fc.in_features, num_classes)
         return model
 
-    @staticmethod
-    def load_datasets(cfgs):
-        """Load VideoDataset
+    # @staticmethod
+    # def load_datasets(cfgs):
+    #     """Load VideoDataset
 
-        Args:
-            cfgs (dict or Config): Dataset configuration. For validation dataset,
-                data augmentation such as random shift and temporal jitter is not used.
+    #     Args:
+    #         cfgs (dict or Config): Dataset configuration. For validation dataset,
+    #             data augmentation such as random shift and temporal jitter is not used.
 
-        Return:
-             VideoDataset, VideoDataset: Train and validation datasets.
-                If split file is not provided, returns None.
-        """
-        cfgs = Config(cfgs)
+    #     Return:
+    #          VideoDataset, VideoDataset: Train and validation datasets.
+    #             If split file is not provided, returns None.
+    #     """
+    #     cfgs = Config(cfgs)
 
-        train_split = cfgs.get("train_split", None)
-        train_ds = (
-            None
-            if train_split is None
-            else VideoDataset(
-                split_file=train_split,
-                video_dir=cfgs.video_dir,
-                num_segments=1,
-                sample_length=cfgs.sample_length,
-                sample_step=cfgs.get(
-                    "temporal_jitter_step", cfgs.get("sample_step", 1)
-                ),
-                random_shift=cfgs.get("random_shift", True),
-                temporal_jitter=True
-                if cfgs.get("temporal_jitter_step", 0) > 0
-                else False,
-                video_ext=cfgs.video_ext,
-                tfms_config=get_default_tfms_config(True),
-            )
-        )
+    #     train_split = cfgs.get("train_split", None)
+    #     train_ds = (
+    #         None
+    #         if train_split is None
+    #         else VideoDataset(
+    #             split_file=train_split,
+    #             video_dir=cfgs.video_dir,
+    #             num_segments=1,
+    #             sample_length=cfgs.sample_length,
+    #             sample_step=cfgs.get(
+    #                 "temporal_jitter_step", cfgs.get("sample_step", 1)
+    #             ),
+    #             random_shift=cfgs.get("random_shift", True),
+    #             temporal_jitter=True
+    #             if cfgs.get("temporal_jitter_step", 0) > 0
+    #             else False,
+    #             video_ext=cfgs.video_ext,
+    #             tfms_config=get_default_tfms_config(True),
+    #         )
+    #     )
 
-        valid_split = cfgs.get("valid_split", None)
-        valid_ds = (
-            None
-            if valid_split is None
-            else VideoDataset(
-                split_file=valid_split,
-                video_dir=cfgs.video_dir,
-                num_segments=1,
-                sample_length=cfgs.sample_length,
-                sample_step=cfgs.get("sample_step", 1),
-                random_shift=False,
-                temporal_jitter=False,
-                video_ext=cfgs.video_ext,
-                tfms_config=get_default_tfms_config(False),
-            )
-        )
+    #     valid_split = cfgs.get("valid_split", None)
+    #     valid_ds = (
+    #         None
+    #         if valid_split is None
+    #         else VideoDataset(
+    #             split_file=valid_split,
+    #             video_dir=cfgs.video_dir,
+    #             num_segments=1,
+    #             sample_length=cfgs.sample_length,
+    #             sample_step=cfgs.get("sample_step", 1),
+    #             random_shift=False,
+    #             temporal_jitter=False,
+    #             video_ext=cfgs.video_ext,
+    #             tfms_config=get_default_tfms_config(False),
+    #         )
+    #     )
 
-        return train_ds, valid_ds
+    #     return train_ds, valid_ds
 
     def show_batch(self, which_data="train", num_samples=1):
         """Plot first few samples in the datasets"""
         if which_data == "train":
-            batch = [self.train_ds[i][0] for i in range(num_samples)]
+            batch = [self.dataset.train_ds[i][0] for i in range(num_samples)]
         elif which_data == "valid":
-            batch = [self.valid_ds[i][0] for i in range(num_samples)]
+            batch = [self.dataset.test_ds[i][0] for i in range(num_samples)]
         else:
             raise ValueError("Unknown data type {}".format(which_data))
         _show_batch(
@@ -186,17 +195,17 @@ class R2Plus1D(object):
             num_devices = 1
 
         data_loaders = {}
-        if self.train_ds is not None:
+        if self.dataset.train_ds is not None:
             data_loaders["train"] = DataLoader(
-                self.train_ds,
+                self.dataset.train_ds,
                 batch_size=train_cfgs.get("batch_size", 8) * num_devices,
                 shuffle=True,
                 num_workers=0,  # Torch 1.2 has a bug when num-workers > 0 (0 means run a main-processor worker)
                 pin_memory=True,
             )
-        if self.valid_ds is not None:
+        if self.dataset.test_ds is not None:
             data_loaders["valid"] = DataLoader(
-                self.valid_ds,
+                self.dataset.test_ds,
                 batch_size=train_cfgs.get("batch_size", 8) * num_devices,
                 shuffle=False,
                 num_workers=0,

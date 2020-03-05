@@ -2,9 +2,10 @@
 # Licensed under the MIT License.
 
 import os
+import copy
 from pathlib import Path
 import warnings
-from typing import Callable, Tuple
+from typing import Callable, Tuple, Union
 
 import decord
 from einops.layers.torch import Rearrange
@@ -12,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import randint
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, Subset
 from torchvision.transforms import Compose
 
 from .references import transforms_video as transforms
@@ -47,15 +48,23 @@ class VideoRecord(object):
         return int(self._data[1])
 
 
-def _get_transforms(tfms_config: Config) -> Trans:
-    """ Get default transformations to apply.
+def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
+    """ Get default transformations to apply depending on whether we're applying it to the training or the validation set. If no tfms configurations are passed in, use the defaults.
 
     Args:
-        Config object with tranforms-related configs
+        train: whether or not this is for training
+        tfms_config: Config object with tranforms-related configs
 
     Returns:
         A list of transforms to apply
     """
+    if tfms_config == None:
+        tfms_config = (
+            get_default_tfms_config(train=True)
+            if train
+            else get_default_tfms_config(train=False)
+        )
+
     # 1. resize
     tfms = [
         transforms.ToTensorVideo(),
@@ -86,11 +95,13 @@ def get_default_tfms_config(train: bool) -> Config:
     """
     Args:
         train: whether or not this is for training
+
     Settings:
         input_size (int or tuple): Model input image size.
         im_scale (int or tuple): Resize target size.
         resize_keep_ratio (bool): If True, keep the original ratio when resizing.
         mean (tuple): Normalization mean.
+        if train:
         std (tuple): Normalization std.
         flip_ratio (float): Horizontal flip ratio.
         random_crop (bool): If False, do center-crop.
@@ -114,57 +125,151 @@ def get_default_tfms_config(train: bool) -> Config:
     )
 
 
-class VideoDataset(Dataset):
-    """
-    Args:
-        split_file (str): Annotation file containing video filenames and labels.
-        video_dir (str): Videos directory.
-        num_segments (int): Number of clips to sample from each video.
-        sample_length (int): Number of consecutive frames to sample from a video (i.e. clip length).
-        sample_step (int): Sampling step.
-        temporal_jitter (bool): Randomly skip frames when sampling each frames.
-        random_shift (bool): Random temporal shift when sample a clip.
-        video_ext (str): Video file extension.
-        warning (bool): On or off warning.
-        tfms_config: configs for transforms (assume for training by default)
-    """
+class VideoDataset:
+    """ A video recognition dataset. """
 
     def __init__(
         self,
-        split_file: str,
-        video_dir: str,
+        root: str,
+        train_pct: float = 0.75,
         num_segments: int = 1,
         sample_length: int = 8,
         sample_step: int = 1,
-        temporal_jitter: bool = False,
-        random_shift: bool = False,
+        temporal_jitter: bool = True,
+        temporal_jitter_step: int = 2,
+        random_shift: bool = True,
         video_ext: str = "mp4",
         warning: bool = False,
-        tfms_config: Config = get_default_tfms_config(True),
+        train_split_file: str = None,
+        test_split_file: str = None,
+        train_transforms: Trans = get_transforms(train=True),
+        test_transforms: Trans = get_transforms(train=False),
     ):
-        # TODO maybe check wrong arguments to early failure
+        """ initialize dataset
+
+        Arg:
+            root: Videos directory.
+            train_pct: percentage of dataset to use for training
+            num_segments: Number of clips to sample from each video.
+            sample_length: Number of consecutive frames to sample from a video (i.e. clip length).
+            sample_step: Sampling step.
+            temporal_jitter: Randomly skip frames when sampling each frames.
+            temporal_jitter_step: temporal jitter in frames
+            random_shift: Random temporal shift when sample a clip.
+            video_ext: Video file extension.
+            warning: On or off warning.
+            train_split_file: Annotation file containing video filenames and labels.
+            test_split_file: Annotation file containing video filenames and labels.
+            train_transforms: transforms for training
+            test_transforms: transforms for testing 
+        """
+
+        # TODO check wrong arguments early to prevent failure
         assert sample_step > 0
         assert num_segments > 0
 
-        self.video_dir = video_dir
-        self.video_records = [
-            VideoRecord(x.strip().split(" ")) for x in open(split_file)
-        ]
+        if temporal_jitter:
+            assert temporal_jitter_step > 0
 
+        if train_split_file:
+            assert Path(train_split_file).exists()
+            assert (
+                test_split_file is not None and Path(test_split_file).exists()
+            )
+
+        if test_split_file:
+            assert Path(test_split_file).exists()
+            assert (
+                train_split_file is not None
+                and Path(train_split_file).exists()
+            )
+
+        self.root = root
         self.num_segments = num_segments
         self.sample_length = sample_length
         self.sample_step = sample_step
         self.presample_length = sample_length * sample_step
-
-        # transform params
-        self.transforms = _get_transforms(tfms_config)
-
-        # Temporal noise
+        self.temporal_jitter_step = temporal_jitter_step
+        self.train_transforms = train_transforms
+        self.test_transforms = test_transforms
         self.random_shift = random_shift
         self.temporal_jitter = temporal_jitter
-
         self.video_ext = video_ext
         self.warning = warning
+
+        # create training and validation datasets
+        self.train_ds, self.test_ds = (
+            self.split_with_file(
+                train_split_file=train_split_file,
+                test_split_file=test_split_file,
+            )
+            if train_split_file
+            else self.split_train_test(train_pct=train_pct)
+        )
+
+    def split_train_test(
+        self, train_pct: float = 0.8
+    ) -> Tuple[Dataset, Dataset]:
+        """ Split this dataset into a training and testing set
+
+        Args:
+            train_pct: the ratio of images to use for training vs
+            testing
+
+        Return
+            A training and testing dataset in that order
+        """
+        pass
+
+    def split_with_file(
+        self,
+        train_split_file: Union[Path, str],
+        test_split_file: Union[Path, str],
+    ) -> Tuple[Dataset, Dataset]:
+        """ Split this dataset into a training and testing set using a split file.
+
+        Args:
+            split_files: a tuple of 2 files
+
+        Return:
+            A training and testing dataset in that order
+        """
+        self.video_records = []
+
+        # add train records
+        self.video_records.extend(
+            [VideoRecord(x.strip().split(" ")) for x in open(train_split_file)]
+        )
+        train_len = len(self.video_records)
+
+        # add validation records
+        self.video_records.extend(
+            [VideoRecord(x.strip().split(" ")) for x in open(test_split_file)]
+        )
+        test_len = len(self.video_records) - train_len
+
+        # create indices
+        indices = torch.arange(0, len(self.video_records))
+        train_range = indices[:train_len]
+        test_range = indices[train_len:]
+
+        # create train subset
+        train = copy.deepcopy(Subset(self, train_range))
+        train.dataset.transforms = self.train_transforms
+        train.dataset.sample_step = (
+            self.temporal_jitter_step
+            if self.temporal_jitter
+            else self.sample_step
+        )
+        train.dataset.presample_length = self.sample_length * self.sample_step
+
+        # create test subset
+        test = copy.deepcopy(Subset(self, test_range))
+        test.dataset.transforms = self.test_transforms
+        test.dataset.random_shift = False
+        test.dataset.temporal_jitter = False
+
+        return train, test
 
     def __len__(self):
         return len(self.video_records)
@@ -255,7 +360,7 @@ class VideoDataset(Dataset):
         record = self.video_records[idx]
         video_reader = decord.VideoReader(
             "{}.{}".format(
-                os.path.join(self.video_dir, record.path), self.video_ext
+                os.path.join(self.root, record.path), self.video_ext
             ),
             # TODO try to add `ctx=decord.ndarray.gpu(0) or .cuda(0)`
         )
