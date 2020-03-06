@@ -23,7 +23,6 @@ def evaluate(ds, features, use_rerank = False):  #labels, features
     return evaluate_with_query_set(labels, groups, features, labels, groups, features, use_rerank)
 
 
-
 # Note: the Market1501 dataset has a slightly different evaluation procedure which can be used 
 #       by setting is_market1501=True. 
 def evaluate_with_query_set(gallery_labels, gallery_groups, gallery_features, query_labels, 
