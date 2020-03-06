@@ -8,22 +8,26 @@ import torch
 from .re_ranking import re_ranking
 
 
-def evaluate(ds, dnn_features, use_rerank = False):  #labels, features
+def evaluate(ds, features, use_rerank = False):  #labels, features
     labels = np.array([ds.y[i].obj for i in range(len(ds.y))])
-    features = np.array([dnn_features[str(s)] for s in ds.items])  #np.array(list(dnn_features.values()))
+    features = np.array([features[str(s)] for s in ds.items])
 
-    # Assign each image into its own group. This serves as id and is used to determine 
-    # which reference and query image are the same image.
-    groups = np.array(list(range(len(labels))))
+    # Assign each image into its own group. This serves as id during evaluation to
+    # ensure a query image is not compared to itself during rank computation. 
+    # For the market-1501 dataset, the group ids can be used to ensure that a query
+    # can not match to an image taken from the same camera.
+    groups = np.array(range(len(labels)))
     assert len(labels) == len(groups) == features.shape[0]
 
-    # Use all images in the reference set also as query images 
-    return evaluate_separate_query_set(labels, groups, features, labels, groups, features, use_rerank)
+    # Run evaluation
+    return evaluate_with_query_set(labels, groups, features, labels, groups, features, use_rerank)
 
 
 
-def evaluate_separate_query_set(gallery_labels, gallery_groups, gallery_features, query_labels, 
-                                query_groups, query_features, use_rerank = False, is_market1501 = False):
+# Note: the Market1501 dataset has a slightly different evaluation procedure which can be used 
+#       by setting is_market1501=True. 
+def evaluate_with_query_set(gallery_labels, gallery_groups, gallery_features, query_labels, 
+                            query_groups, query_features, use_rerank = False, is_market1501 = False):
 
     # Init
     ap = 0.0
@@ -31,9 +35,8 @@ def evaluate_separate_query_set(gallery_labels, gallery_groups, gallery_features
     
     # Compute pairwise distance
     q_g_dist = np.dot(query_features, np.transpose(gallery_features))
-    q_g_dist.shape
 
-    # Compute re-ranking
+    # Improve pairwise distances using re-ranking 
     if use_rerank:
         print('Calculate re-ranked distances..')
         q_q_dist = np.dot(query_features, np.transpose(query_features))
@@ -47,7 +50,7 @@ def evaluate_separate_query_set(gallery_labels, gallery_groups, gallery_features
 
     # Compute accuracies
     norm = 0
-    skip = 1 #to to >1 to only consider a subset of the query images
+    skip = 1 #set to >1 to only consider a subset of the query images
     for i in range(len(query_labels))[::skip]:
         ap_tmp, CMC_tmp = evaluate_helper(distances[i,:], query_labels[i], query_groups[i], gallery_labels, gallery_groups, is_market1501)
         if CMC_tmp[0]==-1:
@@ -67,11 +70,11 @@ def evaluate_separate_query_set(gallery_labels, gallery_groups, gallery_features
     return (CMC, ap)
 
 
-# Evaluation implementation
+
 # Explanation:
 # - query_index: all images in the reference set with the same label as the query image ("true match")
-# - camera_index: all images which share the same group (here called "camera"). 
-# - junk_index2: all reference images with the same group (here called "camera") as the query are considered "false matches".
+# - camera_index: all images which share the same group (called "camera" since the code was originally written for the Market-1501 dataset). 
+# - junk_index2: all reference images with the same group ("camera") as the query are considered "false matches".
 # - junk_index1: for the market1501 dataset, images with label -1 should be ignored.
 def evaluate_helper(score,ql,qc,gl,gc,is_market1501 = False):
     assert type(gl) == np.ndarray, "Input gl has to be a numpy ndarray"
@@ -80,8 +83,7 @@ def evaluate_helper(score,ql,qc,gl,gc,is_market1501 = False):
     # Sort scores 
     index = np.argsort(score)  #from small to large
 
-    # Determine which refernces images, when compared to the query image, are considered 
-    # "true matches" or "false matches"  
+    # Compare reference images to the query image.  
     query_index = np.argwhere(gl==ql)
     camera_index = np.argwhere(gc==qc)
     good_index = np.setdiff1d(query_index, camera_index, assume_unique=True)
@@ -91,7 +93,8 @@ def evaluate_helper(score,ql,qc,gl,gc,is_market1501 = False):
     if is_market1501:
         junk_index1a = np.argwhere(gl==-1)
         junk_index1b = np.argwhere(gl=="-1")
-        junk_index = np.append(np.append(junk_index2, junk_index1a), junk_index1b)
+        junk_index1 = np.append(junk_index1a, junk_index1b)
+        junk_index = np.append(junk_index2, junk_index1)
     else:
         junk_index = junk_index2
     
