@@ -287,7 +287,8 @@ class DetectionDataset:
         highres_counts = np.sum((im_sizes[:,0] * im_sizes[:,1]) > 8000000)
         highres_ratio = highres_counts / float(len(self.im_paths))
         if highres_ratio > 0.2:
-            print("WARNING: {:2.0f} percent of the images are very high resolution (>8 MPixels). Consider down-sizing to speed up model training.".format(100*highres_ratio))
+            print("WARNING: {:2.0f} percent of the images are of very high resolution (>8 MPixels). ".format(100*highres_ratio) +
+                  "Consider down-sizing the images before usage since JPEG decoding of large images is slow.")
 
     def _read_annos(self) -> None:
         """ Parses all Pascal VOC formatted annotation files to extract all
