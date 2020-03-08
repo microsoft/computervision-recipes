@@ -23,13 +23,15 @@ def test_01_notebook_run(detection_notebooks):
     )
 
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    skip_evaluation = nb_output.scraps["skip_evaluation"].data
     training_losses = nb_output.scraps["training_losses"].data
     assert len(training_losses) == epochs
     assert training_losses[-1] < 0.5
-    training_aps = nb_output.scraps["training_average_precision"].data
-    assert len(training_aps) == epochs
-    for d in training_aps[-1].values():
-        assert d > 0.5
+    if not skip_evaluation:
+        training_aps = nb_output.scraps["training_average_precision"].data
+        assert len(training_aps) == epochs
+        for d in training_aps[-1].values():
+            assert d > 0.5
 
 
 @pytest.mark.notebooks
@@ -40,10 +42,7 @@ def test_02_notebook_run(detection_notebooks):
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(
-            PM_VERSION=pm.__version__,
-            EPOCHS=epochs,
-        ),
+        parameters=dict(PM_VERSION=pm.__version__, EPOCHS=epochs),
         kernel_name=KERNEL_NAME,
     )
 
@@ -65,17 +64,14 @@ def test_03_notebook_run(detection_notebooks):
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(
-            PM_VERSION=pm.__version__,
-            EPOCHS=epochs,
-        ),
+        parameters=dict(PM_VERSION=pm.__version__, EPOCHS=epochs),
         kernel_name=KERNEL_NAME,
     )
 
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     training_losses = nb_output.scraps["training_losses"].data
     assert len(training_losses) == epochs
-    assert training_losses[0] > 1.5*training_losses[-1]
+    assert training_losses[0] > 1.5 * training_losses[-1]
     assert len(nb_output.scraps["keypoints"].data) == len(
         nb_output.scraps["bboxes"].data
     )
@@ -96,4 +92,3 @@ def test_12_notebook_run(detection_notebooks):
     assert nb_output.scraps["valid_accs"].data[-1] > 0.5
     assert len(nb_output.scraps["valid_accs"].data) == 1
     assert len(nb_output.scraps["hard_im_scores"].data) == 10
-
