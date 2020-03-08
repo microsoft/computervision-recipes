@@ -12,8 +12,9 @@ import PIL
 from PIL import Image, ImageDraw
 from torch.utils.data import Subset
 import matplotlib.pyplot as plt
+import matplotlib
 
-from .bbox import _Bbox
+from .bbox import _Bbox, DetectionBbox
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
@@ -27,7 +28,7 @@ class PlotSettings:
         self,
         rect_th: int = 4,
         rect_color: Tuple[int, int, int] = (0, 0, 255),
-        text_size: int = 25,
+        text_size: int = 20,
         text_color: Tuple[int, int, int] = (0, 0, 255),
         mask_color: Tuple[int, int, int] = (0, 0, 128),
         mask_alpha: float = 0.8,
@@ -65,26 +66,46 @@ def plot_boxes(
         draw = ImageDraw.Draw(im)
         font = get_font(size=plot_settings.text_size)
 
+        # get color map and convert to list of integer tuples
+        if not (plot_settings.rect_color and plot_settings.text_color):
+            colors = matplotlib.cm.get_cmap('tab20').colors
+            colors = np.floor(np.array(colors) * 255).astype('int')
+            colors = tuple(map(tuple, colors))
+
         for bbox in bboxes:
             # do not draw background bounding boxes
             if hasattr(bbox, "label_idx") and bbox.label_idx == 0:
                 continue
 
-            box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
+            # show detection score in rectangle label
+            bbox_text = bbox.label_name
+            if type(bbox) is DetectionBbox:
+                bbox_text += " ({:0.2f})".format(bbox.score)
+
+            # pick rectangle and text color
+            if plot_settings.rect_color and plot_settings.text_color:
+                text_color = plot_settings.text_color
+                rect_color = plot_settings.rect_color
+            else:
+                i = bbox.label_idx % 10
+                text_color = colors[i*2]
+                rect_color = colors[i*2+1]
 
             # draw rect
+            box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
             draw.rectangle(
                 box,
-                outline=plot_settings.rect_color,
+                outline=rect_color,
                 width=plot_settings.rect_th,
             )
 
             # write prediction class
+            text_offset = plot_settings.text_size + plot_settings.rect_th
             draw.text(
-                (bbox.left, bbox.top),
-                bbox.label_name,
+                (bbox.left, max(0,bbox.top-text_offset)),
+                bbox_text,
                 font=font,
-                fill=plot_settings.text_color,
+                fill=text_color,
             )
 
         if title is not None:
@@ -207,6 +228,12 @@ def plot_detections(
     assert detection["im_path"], 'Detection["im_path"] should not be None.'
     im = Image.open(detection["im_path"])
 
+    # Adjust the rectangle thickness etc. to the image resolution
+    scale = max(im.size) / 500.0
+    rect_th = int(PlotSettings().rect_th * scale)
+    text_size = int(PlotSettings().text_size * scale)
+    keypoint_th = int(PlotSettings().keypoint_th * scale)
+
     # Get id of ground truth image/annotation
     if data and idx is None:
         idx = detection["idx"]
@@ -235,7 +262,7 @@ def plot_detections(
             im,
             data.keypoints[idx],
             data.keypoint_meta,
-            PlotSettings(keypoint_color=(0, 192, 0)),
+            PlotSettings(keypoint_color=(0, 192, 0), rect_th=rect_th, text_size=text_size, keypoint_th=keypoint_th),
         )
 
     # Plot predicted keypoints
@@ -244,7 +271,7 @@ def plot_detections(
             im,
             detection["keypoints"],
             keypoint_meta,
-            PlotSettings(keypoint_color=(192, 165, 0)),
+            PlotSettings(keypoint_color=(192, 165, 0), rect_th=rect_th, text_size=text_size, keypoint_th=keypoint_th),
         )
 
     # Plot the detections
@@ -252,7 +279,7 @@ def plot_detections(
         im,
         det_bboxes,
         plot_settings=PlotSettings(
-            rect_color=(255, 165, 0), text_color=(255, 165, 0), rect_th=2
+            rect_color=None, rect_th=rect_th, text_size=text_size, keypoint_th=keypoint_th
         ),
     )
 
@@ -263,7 +290,7 @@ def plot_detections(
             im,
             anno_bboxes,
             plot_settings=PlotSettings(
-                rect_color=(0, 255, 0), text_color=(0, 255, 0)
+                rect_color=(0, 255, 0), text_color=(0, 255, 0), rect_th=int(0.5*rect_th), text_size=text_size, keypoint_th=keypoint_th
             ),
         )
 
