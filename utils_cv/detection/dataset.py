@@ -2,8 +2,10 @@
 # Licensed under the MIT License.
 
 import os
+from collections import Counter
 import copy
 from functools import partial
+import itertools
 import math
 import numpy as np
 from pathlib import Path
@@ -16,7 +18,7 @@ from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import plot_detections, plot_grid
+from .plot import plot_bbox_stats, plot_detections, plot_grid
 from .bbox import AnnotationBbox
 from .mask import binarise_mask
 from .references.utils import collate_fn
@@ -274,6 +276,9 @@ class DetectionDataset:
         # read annotations
         self._read_annos()
 
+        # check if data is valid
+        self._verify_data()
+
         # create training and validation datasets
         self.train_ds, self.test_ds = self.split_train_test(
             train_pct=train_pct
@@ -282,10 +287,27 @@ class DetectionDataset:
         # create training and validation data loaders
         self.init_data_loaders()
 
+    def _verify_data(self) -> None:
+        """ Function to verify data is correct. """
+        # Display warning if many of the images are large and hence slow
+        # down training. Note: Image.open() only loads the image header,
+        # not the full images and is hence fast.
+        self.im_sizes = np.array([Image.open(p).size for p in self.im_paths])
+        highres_counts = np.sum(
+            (self.im_sizes[:, 0] * self.im_sizes[:, 1]) > 8000000
+        )
+        highres_ratio = highres_counts / float(len(self.im_paths))
+        if highres_ratio > 0.2:
+            print(
+                "WARNING: {:2.0f} percent of the images are of very high resolution (>8 MPixels). ".format(
+                    100 * highres_ratio
+                )
+                + "Consider down-sizing the images before usage since JPEG decoding of large images is slow."
+            )
+
     def _read_annos(self) -> None:
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible labels. """
-
         # All annotation files are assumed to be in the anno_dir directory.
         # If im_dir is provided then find all images in that directory, and
         # it's assumed that the annotation filenames end with .xml.
@@ -382,6 +404,98 @@ class DetectionDataset:
                     anno_bbox.label_idx = (
                         self.labels.index(anno_bbox.label_name) + 1
                     )
+
+    def bbox_stats(self) -> None:
+        """Compute statistics such as number of annotations for class, or
+           distribution of width/height of the annotations.
+        """
+        # Compute statistics
+        anno_bboxes = list(
+            itertools.chain(*self.anno_bboxes)
+        )  # flatten list of lists
+        box_widths = [bbox.width() for bbox in anno_bboxes]
+        box_heights = [bbox.height() for bbox in anno_bboxes]
+        labels_counts = Counter([bbox.label_name for bbox in anno_bboxes])
+
+        box_rel_widths = []
+        box_rel_heights = []
+        for (im_width, im_height), boxes in zip(
+            self.im_sizes, self.anno_bboxes
+        ):
+            for box in boxes:
+                box_rel_widths += [box.width() / float(im_width)]
+                box_rel_heights += [box.height() / float(im_height)]
+
+        return (
+            labels_counts,
+            box_widths,
+            box_heights,
+            box_rel_widths,
+            box_rel_heights,
+        )
+
+    def plot_bbox_stats(
+        self, show: bool = True, figsize: tuple = (18, 3)
+    ) -> None:
+        """Plot statistics such as number of annotations for class, or
+           distribution of width/height of the annotations.
+
+        Args:
+            show: Show plot. Use False if want to manually show the plot later.
+            figsize: Figure size (w, h).
+        """
+        plot_bbox_stats(self, show, figsize)
+
+    def print_anno_stats(self) -> None:
+        # Get annotation statistics
+        labels_counts, box_widths, box_heights, box_rel_widths, box_rel_heights = (
+            self.bbox_stats()
+        )
+
+        # Print to screen
+        print(
+            f"Dataset has {len(self.im_paths)} images with in total {sum(labels_counts.values())} bounding boxes."
+        )
+        for class_name, count in labels_counts.most_common():
+            print("{:>5} annotations: {}".format(count, class_name))
+        print("Distribution of annotation size [absolute pixels]")
+        print(
+            "   Width:  min={:.0f}, 1/4-percentile={:.0f}, median={:.0f}, 3/4-percentile={:.0f}, max={:.0f}".format(
+                min(box_widths),
+                np.percentile(box_widths, 25),
+                np.median(box_widths),
+                np.percentile(box_widths, 75),
+                max(box_widths),
+            )
+        )
+        print(
+            "   Height: min={:.0f}, 1/4-percentile={:.0f}, median={:.0f}, 3/4-percentile={:.0f}, max={:.0f}".format(
+                min(box_heights),
+                np.percentile(box_heights, 25),
+                np.median(box_heights),
+                np.percentile(box_heights, 75),
+                max(box_heights),
+            )
+        )
+        print("Distribution of annotation size [normalized by image size]")
+        print(
+            "   Width:  min={:.2f}, 1/4-percentile={:.2f}, median={:.2f}, 3/4-percentile={:.2f}, max={:.2f}".format(
+                min(box_rel_widths),
+                np.percentile(box_rel_widths, 25),
+                np.median(box_rel_widths),
+                np.percentile(box_rel_widths, 75),
+                max(box_rel_widths),
+            )
+        )
+        print(
+            "   Height: min={:.2f}, 1/4-percentile={:.2f}, median={:.2f}, 3/4-percentile={:.2f}, max={:.2f}".format(
+                min(box_rel_heights),
+                np.percentile(box_rel_heights, 25),
+                np.median(box_rel_heights),
+                np.percentile(box_rel_heights, 75),
+                max(box_rel_heights),
+            )
+        )
 
     def split_train_test(
         self, train_pct: float = 0.8

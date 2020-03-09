@@ -15,10 +15,10 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 from .bbox import _Bbox, DetectionBbox
+from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
-from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 
 
 class PlotSettings:
@@ -45,6 +45,53 @@ class PlotSettings:
         self.keypoint_color = keypoint_color
 
 
+def plot_bbox_stats(data, show: bool = True, figsize: tuple = (18, 3)) -> None:
+    """Plot statistics such as number of annotations for class, or
+        distribution of width/height of the annotations.
+
+    Args:
+        data: detection dataset.
+        show: Show plot. Use False if want to manually show the plot later.
+        figsize: Figure size (w, h).
+    """
+    # Get annotation statistics
+    labels_counts, box_widths, box_heights, box_rel_widths, box_rel_heights = (
+        data.bbox_stats()
+    )
+
+    # Plot results
+    plt.subplots(1, 3, figsize=figsize)
+    plt.subplot(1, 3, 1)
+    class_names = [l for [l, c] in labels_counts.most_common()][::-1]
+    counts = [c for [l, c] in labels_counts.most_common()][::-1]
+    plt.barh(range(len(class_names)), counts)
+    plt.gca().set_yticks(range(len(class_names)))
+    plt.gca().set_yticklabels(class_names)
+    plt.xlabel("Number of annotations per class")
+
+    plt.subplot(1, 3, 2)
+    plt.hist([box_widths, box_heights], 20, label=["Width", "Height"])
+    plt.xlabel("Distribution of box sizes")
+    plt.legend()
+    plt.ylabel("Pixels")
+
+    plt.subplot(1, 3, 3)
+    plt.hist(
+        [box_rel_widths, box_rel_heights],
+        20,
+        label=["Normalized width", "Normalized height"],
+    )
+    plt.xlabel("Distribution of box sizes [normalized by image dimension]")
+    plt.legend()
+    plt.ylabel("Pixels")
+
+    if show:
+        plt.show()
+
+
+# ===== Plotting of ground truth and prediction =====
+
+
 def plot_boxes(
     im: PIL.Image.Image,
     bboxes: List[_Bbox],
@@ -68,8 +115,8 @@ def plot_boxes(
 
         # get color map and convert to list of integer tuples
         if not (plot_settings.rect_color and plot_settings.text_color):
-            colors = matplotlib.cm.get_cmap('tab20').colors
-            colors = np.floor(np.array(colors) * 255).astype('int')
+            colors = matplotlib.cm.get_cmap("tab20").colors
+            colors = np.floor(np.array(colors) * 255).astype("int")
             colors = tuple(map(tuple, colors))
 
         for bbox in bboxes:
@@ -88,21 +135,19 @@ def plot_boxes(
                 rect_color = plot_settings.rect_color
             else:
                 i = bbox.label_idx % 10
-                text_color = colors[i*2]
-                rect_color = colors[i*2+1]
+                text_color = colors[i * 2]
+                rect_color = colors[i * 2 + 1]
 
             # draw rect
             box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
             draw.rectangle(
-                box,
-                outline=rect_color,
-                width=plot_settings.rect_th,
+                box, outline=rect_color, width=plot_settings.rect_th
             )
 
             # write prediction class
             text_offset = plot_settings.text_size + plot_settings.rect_th
             draw.text(
-                (bbox.left, max(0,bbox.top-text_offset)),
+                (bbox.left, max(0, bbox.top - text_offset)),
                 bbox_text,
                 font=font,
                 fill=text_color,
@@ -175,7 +220,8 @@ def plot_keypoints(
         ), "Malformed keypoints array"
         if keypoint_meta:
             assert (
-                np.max(np.array(keypoint_meta["skeleton"])) < keypoints.shape[1]
+                np.max(np.array(keypoint_meta["skeleton"]))
+                < keypoints.shape[1]
             ), "Skeleton index out of range"
 
         draw = ImageDraw.Draw(im)
@@ -197,10 +243,12 @@ def plot_keypoints(
         # draw keypoints
         visible_point_xys = keypoints[keypoints[..., 2] != 0][..., :2]
         offset = 2 * plot_settings.keypoint_th
-        rects = np.hstack([
-            visible_point_xys - offset,  # left top
-            visible_point_xys + offset,  # right bottom
-        ])
+        rects = np.hstack(
+            [
+                visible_point_xys - offset,  # left top
+                visible_point_xys + offset,  # right bottom
+            ]
+        )
         for rect in rects.tolist():
             draw.ellipse(rect, fill=plot_settings.keypoint_color)
 
@@ -262,7 +310,12 @@ def plot_detections(
             im,
             data.keypoints[idx],
             data.keypoint_meta,
-            PlotSettings(keypoint_color=(0, 192, 0), rect_th=rect_th, text_size=text_size, keypoint_th=keypoint_th),
+            PlotSettings(
+                keypoint_color=(0, 192, 0),
+                rect_th=rect_th,
+                text_size=text_size,
+                keypoint_th=keypoint_th,
+            ),
         )
 
     # Plot predicted keypoints
@@ -271,7 +324,12 @@ def plot_detections(
             im,
             detection["keypoints"],
             keypoint_meta,
-            PlotSettings(keypoint_color=(192, 165, 0), rect_th=rect_th, text_size=text_size, keypoint_th=keypoint_th),
+            PlotSettings(
+                keypoint_color=(192, 165, 0),
+                rect_th=rect_th,
+                text_size=text_size,
+                keypoint_th=keypoint_th,
+            ),
         )
 
     # Plot the detections
@@ -279,7 +337,10 @@ def plot_detections(
         im,
         det_bboxes,
         plot_settings=PlotSettings(
-            rect_color=None, rect_th=rect_th, text_size=text_size, keypoint_th=keypoint_th
+            rect_color=None,
+            rect_th=rect_th,
+            text_size=text_size,
+            keypoint_th=keypoint_th,
         ),
     )
 
@@ -290,7 +351,11 @@ def plot_detections(
             im,
             anno_bboxes,
             plot_settings=PlotSettings(
-                rect_color=(0, 255, 0), text_color=(0, 255, 0), rect_th=int(0.5*rect_th), text_size=text_size, keypoint_th=keypoint_th
+                rect_color=(0, 255, 0),
+                text_color=(0, 255, 0),
+                rect_th=int(0.5 * rect_th),
+                text_size=text_size,
+                keypoint_th=keypoint_th,
             ),
         )
 
