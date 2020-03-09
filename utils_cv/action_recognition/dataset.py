@@ -5,7 +5,7 @@ import os
 import copy
 from pathlib import Path
 import warnings
-from typing import Callable, Tuple, Union
+from typing import Callable, Tuple, Union, List
 
 import decord
 from einops.layers.torch import Rearrange
@@ -13,12 +13,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import randint
 import torch
-from torch.utils.data import Dataset, Subset
+import torch.cuda as cuda
+from torch.utils.data import Dataset, Subset, DataLoader
 from torchvision.transforms import Compose
 
 from .references import transforms_video as transforms
 from .references.functional_video import denormalize
 from ..common.misc import Config
+from ..common.gpu import num_devices
 
 Trans = Callable[[object, dict], Tuple[object, dict]]
 
@@ -36,7 +38,7 @@ class VideoRecord(object):
         return self._data[0]
 
     @property
-    def num_frames(self):
+    def num_frames(self) -> int:
         if self._num_frames == -1:
             self._num_frames = int(
                 len([x for x in Path(self._data[0]).glob("img_*")]) - 1
@@ -44,7 +46,7 @@ class VideoRecord(object):
         return self._num_frames
 
     @property
-    def label(self):
+    def label(self) -> int:
         return int(self._data[1])
 
 
@@ -138,6 +140,7 @@ class VideoDataset:
         temporal_jitter: bool = True,
         temporal_jitter_step: int = 2,
         random_shift: bool = True,
+        batch_size: int = 8,
         video_ext: str = "mp4",
         warning: bool = False,
         train_split_file: str = None,
@@ -194,6 +197,7 @@ class VideoDataset:
         self.test_transforms = test_transforms
         self.random_shift = random_shift
         self.temporal_jitter = temporal_jitter
+        self.batch_size = batch_size
         self.video_ext = video_ext
         self.warning = warning
 
@@ -206,6 +210,9 @@ class VideoDataset:
             if train_split_file
             else self.split_train_test(train_pct=train_pct)
         )
+
+        # initialize dataloaders
+        self.init_data_loaders()
 
     def split_train_test(
         self, train_pct: float = 0.8
@@ -270,6 +277,27 @@ class VideoDataset:
         test.dataset.temporal_jitter = False
 
         return train, test
+
+    def init_data_loaders(self):
+        """ Create training and validation data loaders. """
+        num_devices = num_devices()
+
+        self.train_dl = DataLoader(
+            self.train_ds,
+            batch_size=self.batch_size * num_devices,
+            shuffle=True,
+            num_workers=0,
+            pin_memory=True
+        )
+
+        self.test_dl = DataLoader(
+            self.test_ds,
+            batch_size=self.batch_size * num_devices,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=True,
+        )
+
 
     def __len__(self):
         return len(self.video_records)
@@ -381,31 +409,54 @@ class VideoDataset:
                 record.label,
             )
 
+    def _show_batch(
+        self,
+        batch: List[torch.tensor],
+        sample_length: int,
+        mean: Tuple[int, int, int] = DEFAULT_MEAN,
+        std: Tuple[int, int, int] = DEFAULT_STD,
+    ) -> None:
+        """
+        Display a batch of images.
 
-def show_batch(batch, sample_length, mean=DEFAULT_MEAN, std=DEFAULT_STD):
-    """
-    Args:
-        batch (list[torch.tensor]): List of sample (clip) tensors
-        sample_length (int): Number of frames to show for each sample
-        mean (tuple): Normalization mean
-        std (tuple): Normalization std-dev
-    """
-    batch_size = len(batch)
-    plt.tight_layout()
-    fig, axs = plt.subplots(
-        batch_size, sample_length, figsize=(4 * sample_length, 3 * batch_size)
-    )
+        Args:
+            batch: List of sample (clip) tensors
+            sample_length: Number of frames to show for each sample
+            mean: Normalization mean
+            std: Normalization std-dev
+        """
+        batch_size = len(batch)
+        plt.tight_layout()
+        fig, axs = plt.subplots(
+            batch_size,
+            sample_length,
+            figsize=(4 * sample_length, 3 * batch_size),
+        )
 
-    for i, ax in enumerate(axs):
-        if batch_size == 1:
-            clip = batch[0]
+        for i, ax in enumerate(axs):
+            if batch_size == 1:
+                clip = batch[0]
+            else:
+                clip = batch[i]
+            clip = Rearrange("c t h w -> t c h w")(clip)
+            if not isinstance(ax, np.ndarray):
+                ax = [ax]
+            for j, a in enumerate(ax):
+                a.axis("off")
+                a.imshow(
+                    np.moveaxis(denormalize(clip[j], mean, std).numpy(), 0, -1)
+                )
+            pass
+
+    def show_batch(self, train_or_test: str = "train", num_samples: int = 1):
+        """Plot first few samples in the datasets"""
+        if train_or_test == "train":
+            batch = [self.train_ds.dataset[i][0] for i in range(num_samples)]
+        elif train_or_test == "valid":
+            batch = [self.test_ds.dataset[i][0] for i in range(num_samples)]
         else:
-            clip = batch[i]
-        clip = Rearrange("c t h w -> t c h w")(clip)
-        if not isinstance(ax, np.ndarray):
-            ax = [ax]
-        for j, a in enumerate(ax):
-            a.axis("off")
-            a.imshow(
-                np.moveaxis(denormalize(clip[j], mean, std).numpy(), 0, -1)
-            )
+            raise ValueError("Unknown data type {}".format(which_data))
+
+        self._show_batch(
+            batch, self.sample_length, mean=DEFAULT_MEAN, std=DEFAULT_STD,
+        )

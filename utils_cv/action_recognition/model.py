@@ -19,13 +19,12 @@ import torch
 import torch.cuda as cuda
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
 
 from ..common.misc import Config
+from ..common.gpu import torch_device, num_devices
 from .dataset import (
     DEFAULT_MEAN,
     DEFAULT_STD,
-    show_batch as _show_batch,
     VideoDataset,
     get_default_tfms_config,
 )
@@ -43,30 +42,50 @@ MODELS = {
 }
 
 
-class R2Plus1D(object):
+class VideoLearner(object):
     """ tk """
 
     def __init__(
         self,
         dataset: VideoDataset,
-        num_classes: int, # ie 51 for hmdb51
-        base_model: str = "ig65m", # or "kinetics"
-        cfgs: Config = None,
+        num_classes: int,  # ie 51 for hmdb51
+        base_model: str = "ig65m",  # or "kinetics"
     ):
-        """ tk """
-        self.configs = Config(cfgs)
+        """ By default, the Video Learner will use a R2plus1D model. Pass in
+        a dataset of type Video Dataset and the Video Learner will intialize
+        the model.
+
+        Args:
+            dataset: the datset to use for this model
+            num_class: the number of actions/classifications
+            base_model: the R2plus1D model is based on either ig65m or
+            kinetics. By default it will use the weights from ig65m since it
+            tends attain higher results.
+        """
         self.dataset = dataset
         self.model = self.init_model(
-            self.dataset.sample_length,
-            base_model,
-            num_classes,
+            self.dataset.sample_length, base_model, num_classes,
         )
         self.model_name = "r2plus1d_34_{}_{}".format(
             self.dataset.sample_length, base_model
         )
 
     @staticmethod
-    def init_model(sample_length, base_model, num_classes=None):
+    def init_model(
+        sample_length: int, base_model: str, num_classes: int = None
+    ):
+        """
+        Initializes the model by loading it using torch's `hub.load`
+        functionality. Uses the model from TORCH_R2PLUS1D.
+
+        Args:
+            sample_length: Number of consecutive frames to sample from a video (i.e. clip length).
+            base_model: the R2plus1D model is based on either ig65m or kinetics.
+            num_classes: the number of classes/actions
+
+        Returns:
+            Load a model from a github repo, with pretrained weights
+        """
         if base_model not in ("ig65m", "kinetics"):
             raise ValueError(
                 "Not supported model {}. Should be 'ig65m' or 'kinetics'".format(
@@ -97,75 +116,6 @@ class R2Plus1D(object):
             model.fc = nn.Linear(model.fc.in_features, num_classes)
         return model
 
-    # @staticmethod
-    # def load_datasets(cfgs):
-    #     """Load VideoDataset
-
-    #     Args:
-    #         cfgs (dict or Config): Dataset configuration. For validation dataset,
-    #             data augmentation such as random shift and temporal jitter is not used.
-
-    #     Return:
-    #          VideoDataset, VideoDataset: Train and validation datasets.
-    #             If split file is not provided, returns None.
-    #     """
-    #     cfgs = Config(cfgs)
-
-    #     train_split = cfgs.get("train_split", None)
-    #     train_ds = (
-    #         None
-    #         if train_split is None
-    #         else VideoDataset(
-    #             split_file=train_split,
-    #             video_dir=cfgs.video_dir,
-    #             num_segments=1,
-    #             sample_length=cfgs.sample_length,
-    #             sample_step=cfgs.get(
-    #                 "temporal_jitter_step", cfgs.get("sample_step", 1)
-    #             ),
-    #             random_shift=cfgs.get("random_shift", True),
-    #             temporal_jitter=True
-    #             if cfgs.get("temporal_jitter_step", 0) > 0
-    #             else False,
-    #             video_ext=cfgs.video_ext,
-    #             tfms_config=get_default_tfms_config(True),
-    #         )
-    #     )
-
-    #     valid_split = cfgs.get("valid_split", None)
-    #     valid_ds = (
-    #         None
-    #         if valid_split is None
-    #         else VideoDataset(
-    #             split_file=valid_split,
-    #             video_dir=cfgs.video_dir,
-    #             num_segments=1,
-    #             sample_length=cfgs.sample_length,
-    #             sample_step=cfgs.get("sample_step", 1),
-    #             random_shift=False,
-    #             temporal_jitter=False,
-    #             video_ext=cfgs.video_ext,
-    #             tfms_config=get_default_tfms_config(False),
-    #         )
-    #     )
-
-    #     return train_ds, valid_ds
-
-    def show_batch(self, which_data="train", num_samples=1):
-        """Plot first few samples in the datasets"""
-        if which_data == "train":
-            batch = [self.dataset.train_ds[i][0] for i in range(num_samples)]
-        elif which_data == "valid":
-            batch = [self.dataset.test_ds[i][0] for i in range(num_samples)]
-        else:
-            raise ValueError("Unknown data type {}".format(which_data))
-        _show_batch(
-            batch,
-            self.configs.sample_length,
-            mean=self.configs.get("mean", DEFAULT_MEAN),
-            std=self.configs.get("std", DEFAULT_STD),
-        )
-
     def freeze(self):
         """Freeze model except the last layer"""
         self._set_requires_grad(False)
@@ -180,40 +130,21 @@ class R2Plus1D(object):
             param.requires_grad = requires_grad
 
     def fit(self, train_cfgs):
+        """ The primary fit function """
         train_cfgs = Config(train_cfgs)
 
         model_dir = train_cfgs.get("model_dir", "checkpoints")
         os.makedirs(model_dir, exist_ok=True)
 
-        if cuda.is_available():
-            device = torch.device("cuda")
-            num_devices = cuda.device_count()
-            # Look for the optimal set of algorithms to use in cudnn. Use this only with fixed-size inputs.
-            torch.backends.cudnn.benchmark = True
-        else:
-            device = torch.device("cpu")
-            num_devices = 1
-
         data_loaders = {}
-        if self.dataset.train_ds is not None:
-            data_loaders["train"] = DataLoader(
-                self.dataset.train_ds,
-                batch_size=train_cfgs.get("batch_size", 8) * num_devices,
-                shuffle=True,
-                num_workers=0,  # Torch 1.2 has a bug when num-workers > 0 (0 means run a main-processor worker)
-                pin_memory=True,
-            )
-        if self.dataset.test_ds is not None:
-            data_loaders["valid"] = DataLoader(
-                self.dataset.test_ds,
-                batch_size=train_cfgs.get("batch_size", 8) * num_devices,
-                shuffle=False,
-                num_workers=0,
-                pin_memory=True,
-            )
+        data_loaders["train"] = self.dataset.train_dl
+        data_loaders["valid"] = self.dataset.test_dl
 
         # Move model to gpu before constructing optimizers and amp.initialize
+        device = torch_device()
         self.model.to(device)
+        count_devices = num_devices()
+        torch.backends.cudnn.benchmark = True
 
         named_params_to_update = {}
         total_params = 0
@@ -269,10 +200,11 @@ class R2Plus1D(object):
             )
 
         # DataParallel after amp.initialize
-        if num_devices > 1:
-            model = nn.DataParallel(self.model)
-        else:
-            model = self.model
+        model = (
+            nn.DataParallel(self.model)
+            if count_devices > 1
+            else model = self.model
+        )
 
         criterion = nn.CrossEntropyLoss().to(device)
 

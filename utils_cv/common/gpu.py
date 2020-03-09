@@ -49,6 +49,15 @@ def torch_device():
     )
 
 
+def num_devices():
+    """ Gets the number of devices based on cpu/gpu """
+    return (
+        torch.cuda.device_count()
+        if torch.cuda.is_available()
+        else 1
+    )
+
+
 def db_num_workers(non_windows_num_workers: int = 16):
     """Returns how many workers to use when loading images in a databunch. On windows machines using >0 works significantly slows down model
     training and evaluation. Setting num_workers to zero on Windows machines will speed up training/inference significantly, but will still be
