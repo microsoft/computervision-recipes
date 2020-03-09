@@ -274,6 +274,9 @@ class DetectionDataset:
         # read annotations
         self._read_annos()
 
+        # check if data is valid
+        self._verify_data()
+
         # create training and validation datasets
         self.train_ds, self.test_ds = self.split_train_test(
             train_pct=train_pct
@@ -282,9 +285,13 @@ class DetectionDataset:
         # create training and validation data loaders
         self.init_data_loaders()
 
-        # Display warning if many of the images are large and hence slow down training 
-        im_sizes = np.array([Image.open(p).size for p in self.im_paths]) # open() only loads the image header and is hence fast 
-        highres_counts = np.sum((im_sizes[:,0] * im_sizes[:,1]) > 8000000)
+    def _verify_data(self) -> None:
+        """ Function to verify data is correct. """
+        # Display warning if many of the images are large and hence slow 
+        # down training. Note: Image.open() only loads the image header, 
+        # not the full images and is hence fast. 
+        self.im_sizes = np.array([Image.open(p).size for p in self.im_paths]) 
+        highres_counts = np.sum((self.im_sizes[:,0] * self.im_sizes[:,1]) > 8000000)
         highres_ratio = highres_counts / float(len(self.im_paths))
         if highres_ratio > 0.2:
             print("WARNING: {:2.0f} percent of the images are of very high resolution (>8 MPixels). ".format(100*highres_ratio) +
@@ -293,7 +300,6 @@ class DetectionDataset:
     def _read_annos(self) -> None:
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible labels. """
-
         # All annotation files are assumed to be in the anno_dir directory.
         # If im_dir is provided then find all images in that directory, and
         # it's assumed that the annotation filenames end with .xml.
