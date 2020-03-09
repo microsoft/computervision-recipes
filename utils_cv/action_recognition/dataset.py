@@ -287,7 +287,7 @@ class VideoDataset:
             batch_size=self.batch_size * num_devices,
             shuffle=True,
             num_workers=0,
-            pin_memory=True
+            pin_memory=True,
         )
 
         self.test_dl = DataLoader(
@@ -298,14 +298,14 @@ class VideoDataset:
             pin_memory=True,
         )
 
-
     def __len__(self):
         return len(self.video_records)
 
-    def _sample_indices(self, record):
+    def _sample_indices(self, record: VideoRecord):
         """
         Args:
             record (VideoRecord): A video record.
+
         Return:
             list: Segment offsets (start indices)
         """
@@ -340,7 +340,7 @@ class VideoDataset:
 
         return offsets
 
-    def _get_frames(self, video_reader, offset):
+    def _get_frames(self, video_reader: decord.VideoReader, offset: int):
         clip = list()
 
         # decord.seek() seems to have a bug. use seek_accurate().
@@ -380,7 +380,7 @@ class VideoDataset:
 
         return clip
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int):
         """
         Return:
             clips (torch.tensor), label (int)
