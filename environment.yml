@@ -16,7 +16,7 @@ channels:
 - pytorch
 - fastai
 dependencies:
-- python==3.6.8
+- python==3.7
 - pytorch==1.2.0
 # pinning pillow to 6.1 to fix issue: https://github.com/python-pillow/Pillow/issues/4130
 - pillow==6.1 
