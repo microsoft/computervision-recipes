@@ -5,6 +5,8 @@ from collections import OrderedDict
 import os
 import time
 import warnings
+from typing import Union
+from pathlib import Path
 
 try:
     from apex import amp
@@ -13,21 +15,13 @@ try:
 except ModuleNotFoundError:
     AMP_AVAILABLE = False
 
-from IPython.core.debugger import set_trace
-import numpy as np
 import torch
-import torch.cuda as cuda
 import torch.nn as nn
 import torch.optim as optim
 
 from ..common.misc import Config
 from ..common.gpu import torch_device, num_devices
-from .dataset import (
-    DEFAULT_MEAN,
-    DEFAULT_STD,
-    VideoDataset,
-    get_default_tfms_config,
-)
+from .dataset import VideoDataset
 
 from .references.metrics import accuracy, AverageMeter
 
@@ -43,14 +37,14 @@ MODELS = {
 
 
 class VideoLearner(object):
-    """ tk """
+    """ Video recognition learner object that handles training loop and evaluation. """
 
     def __init__(
         self,
         dataset: VideoDataset,
         num_classes: int,  # ie 51 for hmdb51
         base_model: str = "ig65m",  # or "kinetics"
-    ):
+    ) -> None:
         """ By default, the Video Learner will use a R2plus1D model. Pass in
         a dataset of type Video Dataset and the Video Learner will intialize
         the model.
@@ -73,7 +67,7 @@ class VideoLearner(object):
     @staticmethod
     def init_model(
         sample_length: int, base_model: str, num_classes: int = None
-    ):
+    ) -> None:
         """
         Initializes the model by loading it using torch's `hub.load`
         functionality. Uses the model from TORCH_R2PLUS1D.
@@ -116,20 +110,20 @@ class VideoLearner(object):
             model.fc = nn.Linear(model.fc.in_features, num_classes)
         return model
 
-    def freeze(self):
+    def freeze(self) -> None:
         """Freeze model except the last layer"""
         self._set_requires_grad(False)
         for param in self.model.fc.parameters():
             param.requires_grad = True
 
-    def unfreeze(self):
+    def unfreeze(self) -> None:
         self._set_requires_grad(True)
 
-    def _set_requires_grad(self, requires_grad=True):
+    def _set_requires_grad(self, requires_grad=True) -> None:
         for param in self.model.parameters():
             param.requires_grad = requires_grad
 
-    def fit(self, train_cfgs):
+    def fit(self, train_cfgs) -> None:
         """ The primary fit function """
         train_cfgs = Config(train_cfgs)
 
@@ -201,9 +195,7 @@ class VideoLearner(object):
 
         # DataParallel after amp.initialize
         model = (
-            nn.DataParallel(self.model)
-            if count_devices > 1
-            else model = self.model
+            nn.DataParallel(self.model) if count_devices > 1 else self.model
         )
 
         criterion = nn.CrossEntropyLoss().to(device)
@@ -247,23 +239,26 @@ class VideoLearner(object):
         optimizer,
         grad_steps=1,
         mixed_prec=False,
-    ):
+    ) -> None:
         """Train / validate a model for one epoch.
 
-        :param model:
-        :param data_loaders: dict {'train': train_dl, 'valid': valid_dl}
-        :param device:
-        :param criterion:
-        :param optimizer:
-        :param grad_steps: If > 1, use gradient accumulation. Useful for larger batching
-        :param mixed_prec: If True, use FP16 + FP32 mixed precision via NVIDIA apex.amp
-        :return: dict {
-            'train/time': batch_time.avg,
-            'train/loss': losses.avg,
-            'train/top1': top1.avg,
-            'train/top5': top5.avg,
-            'valid/time': ...
-        }
+        Args:
+            model: the model to use to train
+            data_loaders: dict {'train': train_dl, 'valid': valid_dl}
+            device: gpu or not
+            criterion: TODO
+            optimizer: TODO
+            grad_steps: If > 1, use gradient accumulation. Useful for larger batching
+            mixed_prec: If True, use FP16 + FP32 mixed precision via NVIDIA apex.amp
+
+        Return:
+            dict {
+                'train/time': batch_time.avg,
+                'train/loss': losses.avg,
+                'train/top1': top1.avg,
+                'train/top5': top5.avg,
+                'valid/time': ...
+            }
         """
         assert "train" in data_loaders
         if mixed_prec and not AMP_AVAILABLE:
@@ -335,10 +330,11 @@ class VideoLearner(object):
 
         return result
 
-    def save(self, model_path):
+    def save(self, model_path: Union[Path, str]) -> None:
+        """ Save the model to a path on disk. """
         torch.save(self.model.state_dict(), model_path)
 
-    def load(self, model_name, model_dir="checkpoints"):
+    def load(self, model_name: str, model_dir: str = "checkpoints") -> None:
         """
         TODO accept epoch. If None, load the latest model.
         :param model_name: Model name format should be 'name_0EE' where E is the epoch

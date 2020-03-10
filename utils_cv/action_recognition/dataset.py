@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import randint
 import torch
-import torch.cuda as cuda
 from torch.utils.data import Dataset, Subset, DataLoader
 from torchvision.transforms import Compose
 
@@ -60,7 +59,7 @@ def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
     Returns:
         A list of transforms to apply
     """
-    if tfms_config == None:
+    if tfms_config is None:
         tfms_config = (
             get_default_tfms_config(train=True)
             if train
@@ -147,7 +146,7 @@ class VideoDataset:
         test_split_file: str = None,
         train_transforms: Trans = get_transforms(train=True),
         test_transforms: Trans = get_transforms(train=False),
-    ):
+    ) -> None:
         """ initialize dataset
 
         Arg:
@@ -164,7 +163,7 @@ class VideoDataset:
             train_split_file: Annotation file containing video filenames and labels.
             test_split_file: Annotation file containing video filenames and labels.
             train_transforms: transforms for training
-            test_transforms: transforms for testing 
+            test_transforms: transforms for testing
         """
 
         # TODO check wrong arguments early to prevent failure
@@ -253,7 +252,6 @@ class VideoDataset:
         self.video_records.extend(
             [VideoRecord(x.strip().split(" ")) for x in open(test_split_file)]
         )
-        test_len = len(self.video_records) - train_len
 
         # create indices
         indices = torch.arange(0, len(self.video_records))
@@ -278,13 +276,13 @@ class VideoDataset:
 
         return train, test
 
-    def init_data_loaders(self):
+    def init_data_loaders(self) -> None:
         """ Create training and validation data loaders. """
-        num_devices = num_devices()
+        devices = num_devices()
 
         self.train_dl = DataLoader(
             self.train_ds,
-            batch_size=self.batch_size * num_devices,
+            batch_size=self.batch_size * devices,
             shuffle=True,
             num_workers=0,
             pin_memory=True,
@@ -292,16 +290,16 @@ class VideoDataset:
 
         self.test_dl = DataLoader(
             self.test_ds,
-            batch_size=self.batch_size * num_devices,
+            batch_size=self.batch_size * devices,
             shuffle=False,
             num_workers=0,
             pin_memory=True,
         )
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.video_records)
 
-    def _sample_indices(self, record: VideoRecord):
+    def _sample_indices(self, record: VideoRecord) -> List[int]:
         """
         Args:
             record (VideoRecord): A video record.
@@ -340,7 +338,18 @@ class VideoDataset:
 
         return offsets
 
-    def _get_frames(self, video_reader: decord.VideoReader, offset: int):
+    def _get_frames(
+        self, video_reader: decord.VideoReader, offset: int,
+    ) -> List[np.ndarray]:
+        """ Get frames at sample length.
+
+        Args:
+            video_reader: the decord tool for parsing videos
+            offset: where to start the reader from
+
+        Returns
+            Frames at sample length in a List
+        """
         clip = list()
 
         # decord.seek() seems to have a bug. use seek_accurate().
@@ -380,7 +389,7 @@ class VideoDataset:
 
         return clip
 
-    def __getitem__(self, idx: int):
+    def __getitem__(self, idx: int) -> Tuple[torch.tensor, int]:
         """
         Return:
             clips (torch.tensor), label (int)
@@ -448,7 +457,9 @@ class VideoDataset:
                 )
             pass
 
-    def show_batch(self, train_or_test: str = "train", num_samples: int = 1):
+    def show_batch(
+        self, train_or_test: str = "train", num_samples: int = 1
+    ) -> None:
         """Plot first few samples in the datasets"""
         if train_or_test == "train":
             batch = [self.train_ds.dataset[i][0] for i in range(num_samples)]

@@ -2,20 +2,28 @@
 # Licensed under the MIT License.
 
 import os
+from typing import Union, List
 from urllib.request import urlretrieve
 
 from ..common.data import data_path
 
 
 class _DatasetSpec:
-    def __init__(self, label_url, num_classes, data_path=data_path()):
+    """ Properties of a Video Dataset. """
+
+    def __init__(
+        self,
+        label_url: str,
+        num_classes: int,
+        data_path: Union[Path, str] = data_path(),
+    ) -> None:
         self.label_url = label_url
         self.num_classes = num_classes
         self.data_path = data_path
         self._class_names = None
 
     @property
-    def class_names(self):
+    def class_names(self) -> List[str]:
         if self._class_names is None:
             label_filepath = os.path.join(self.data_path, "label_map.txt")
             if not os.path.isfile(label_filepath):
