@@ -45,7 +45,9 @@ class PlotSettings:
         self.keypoint_color = keypoint_color
 
 
-def plot_bbox_stats(data, show: bool = True, figsize: tuple = (18, 3)) -> None:
+def plot_boxes_stats(
+    data, show: bool = True, figsize: tuple = (18, 3)
+) -> None:
     """Plot statistics such as number of annotations for class, or
         distribution of width/height of the annotations.
 
@@ -56,7 +58,7 @@ def plot_bbox_stats(data, show: bool = True, figsize: tuple = (18, 3)) -> None:
     """
     # Get annotation statistics
     labels_counts, box_widths, box_heights, box_rel_widths, box_rel_heights = (
-        data.bbox_stats()
+        data.boxes_stats()
     )
 
     # Plot results

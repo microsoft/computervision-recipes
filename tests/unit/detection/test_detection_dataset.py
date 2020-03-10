@@ -2,12 +2,14 @@
 # Licensed under the MIT License.
 
 import numpy as np
-import pytest
-import torch
 from pathlib import Path
-from torch import Tensor
 from PIL import Image
+import pytest
+from pytest import approx
+import torch
+from torch import Tensor
 from typing import Tuple, List
+
 
 from utils_cv.detection.dataset import (
     get_transform,
@@ -219,6 +221,40 @@ def test_detection_dataset_init_train_pct(
     validate_milkbottle_keypoint_tiny_dataset(data)
     assert len(data.test_ds) == 7
     assert len(data.train_ds) == 24
+
+
+def test_detection_dataset_verify(basic_detection_dataset):
+    # simply test that this is error free
+    basic_detection_dataset._verify()
+
+
+def test_detection_dataset_boxes_stats(basic_detection_dataset):
+    labels_counts, box_widths, box_heights, box_rel_widths, box_rel_heights = (
+        basic_detection_dataset.boxes_stats()
+    )
+    assert len(labels_counts) == 4
+    assert (
+        len(box_widths)
+        == len(box_heights)
+        == len(box_rel_widths)
+        == len(box_rel_heights)
+        == sum(labels_counts.values())
+        == 100
+    )
+    assert sum(box_widths) == 16767
+    assert sum(box_heights) == 22619
+    assert sum(box_rel_widths) == approx(84.26, rel=1e-1)
+    assert sum(box_rel_heights) == approx(85.03, rel=1e-1)
+
+
+def test_detection_dataset_print_boxes_stats(basic_detection_dataset):
+    # simply test that this is error free
+    basic_detection_dataset.print_boxes_stats()
+
+
+def test_detection_dataset_plot_boxes_stats(basic_detection_dataset):
+    # simply test that this is error free
+    basic_detection_dataset.plot_boxes_stats()
 
 
 def test_detection_dataset_show_ims(

@@ -18,7 +18,7 @@ from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import plot_bbox_stats, plot_detections, plot_grid
+from .plot import plot_boxes_stats, plot_detections, plot_grid
 from .bbox import AnnotationBbox
 from .mask import binarise_mask
 from .references.utils import collate_fn
@@ -276,8 +276,8 @@ class DetectionDataset:
         # read annotations
         self._read_annos()
 
-        # check if data is valid
-        self._verify_data()
+        # check if there are any concerns with the data (e.g. images too large)
+        self._verify()
 
         # create training and validation datasets
         self.train_ds, self.test_ds = self.split_train_test(
@@ -287,22 +287,16 @@ class DetectionDataset:
         # create training and validation data loaders
         self.init_data_loaders()
 
-    def _verify_data(self) -> None:
+    def _verify(self) -> None:
         """ Function to verify data is correct. """
-        # Display warning if many of the images are large and hence slow
-        # down training. Note: Image.open() only loads the image header,
-        # not the full images and is hence fast.
-        self.im_sizes = np.array([Image.open(p).size for p in self.im_paths])
+        # Display warning if many of the images are large and hence slow down training.
         highres_counts = np.sum(
             (self.im_sizes[:, 0] * self.im_sizes[:, 1]) > 8000000
         )
         highres_ratio = highres_counts / float(len(self.im_paths))
         if highres_ratio > 0.2:
             print(
-                "WARNING: {:2.0f} percent of the images are of very high resolution (>8 MPixels). ".format(
-                    100 * highres_ratio
-                )
-                + "Consider down-sizing the images before usage since JPEG decoding of large images is slow."
+                f"WARNING: {100 * highres_ratio:2.0f} percent of the images are of very high resolution (>8 MPixels). Consider down-sizing the images before usage since JPEG decoding of large images is slow."
             )
 
     def _read_annos(self) -> None:
@@ -405,7 +399,11 @@ class DetectionDataset:
                         self.labels.index(anno_bbox.label_name) + 1
                     )
 
-    def bbox_stats(self) -> None:
+        # Get images sized. Note that Image.open() only loads the image header,
+        # not the full images and is hence fast.
+        self.im_sizes = np.array([Image.open(p).size for p in self.im_paths])
+
+    def boxes_stats(self) -> None:
         """Compute statistics such as number of annotations for class, or
            distribution of width/height of the annotations.
         """
@@ -434,7 +432,7 @@ class DetectionDataset:
             box_rel_heights,
         )
 
-    def plot_bbox_stats(
+    def plot_boxes_stats(
         self, show: bool = True, figsize: tuple = (18, 3)
     ) -> None:
         """Plot statistics such as number of annotations for class, or
@@ -444,12 +442,12 @@ class DetectionDataset:
             show: Show plot. Use False if want to manually show the plot later.
             figsize: Figure size (w, h).
         """
-        plot_bbox_stats(self, show, figsize)
+        plot_boxes_stats(self, show, figsize)
 
-    def print_anno_stats(self) -> None:
+    def print_boxes_stats(self) -> None:
         # Get annotation statistics
         labels_counts, box_widths, box_heights, box_rel_widths, box_rel_heights = (
-            self.bbox_stats()
+            self.boxes_stats()
         )
 
         # Print to screen
