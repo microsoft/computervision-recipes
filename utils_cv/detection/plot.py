@@ -44,6 +44,16 @@ class PlotSettings:
         self.keypoint_th = keypoint_th
         self.keypoint_color = keypoint_color
 
+        # Create color table
+        colors = matplotlib.cm.get_cmap("tab20").colors
+        colors = np.floor(np.array(colors) * 255).astype("int")
+        self._colors = tuple(map(tuple, colors))
+
+    def get_colors(self, index):
+        dark_color = self._colors[(index % 10) * 2]
+        bright_color = self._colors[(index % 10) * 2 + 1]
+        return dark_color, bright_color
+
 
 def plot_boxes_stats(
     data, show: bool = True, figsize: tuple = (18, 3)
@@ -115,12 +125,6 @@ def plot_boxes(
         draw = ImageDraw.Draw(im)
         font = get_font(size=plot_settings.text_size)
 
-        # get color map and convert to list of integer tuples
-        if not (plot_settings.rect_color and plot_settings.text_color):
-            colors = matplotlib.cm.get_cmap("tab20").colors
-            colors = np.floor(np.array(colors) * 255).astype("int")
-            colors = tuple(map(tuple, colors))
-
         for bbox in bboxes:
             # do not draw background bounding boxes
             if hasattr(bbox, "label_idx") and bbox.label_idx == 0:
@@ -131,14 +135,15 @@ def plot_boxes(
             if type(bbox) is DetectionBbox:
                 bbox_text += " ({:0.2f})".format(bbox.score)
 
-            # pick rectangle and text color
-            if plot_settings.rect_color and plot_settings.text_color:
-                text_color = plot_settings.text_color
-                rect_color = plot_settings.rect_color
-            else:
-                i = bbox.label_idx % 10
-                text_color = colors[i * 2]
-                rect_color = colors[i * 2 + 1]
+            # pick rectangle and text color if set to None
+            text_color = (
+                plot_settings.text_color
+                or plot_settings.get_colors(bbox.label_idx)[0]
+            )
+            rect_color = (
+                plot_settings.rect_color
+                or plot_settings.get_colors(bbox.label_idx)[1]
+            )
 
             # draw rect
             box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
@@ -340,6 +345,7 @@ def plot_detections(
         det_bboxes,
         plot_settings=PlotSettings(
             rect_color=None,
+            text_color=None,
             rect_th=rect_th,
             text_size=text_size,
             keypoint_th=keypoint_th,
