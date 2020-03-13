@@ -13,7 +13,6 @@ trigger:
 
 jobs:
 - job: LinuxGPU
-  timeoutInMinutes: 300
   pool:
     name: cvbplinuxpool
 

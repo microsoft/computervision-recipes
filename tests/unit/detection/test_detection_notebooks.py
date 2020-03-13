@@ -98,7 +98,7 @@ def test_03_notebook_run(
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
-            IM_SIZE=50,
+            IM_SIZE=100,
             EPOCHS=1,
             DATA_PATH=tiny_od_keypoint_data_path,
             DATA_PATH2=data_path2,
