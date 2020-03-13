@@ -43,7 +43,7 @@ def test_01_notebook_run(detection_notebooks, tiny_od_data_path):
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_od_data_path,
             EPOCHS=1,
-            IM_SIZE=100,
+            IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
     )
@@ -68,7 +68,7 @@ def test_02_notebook_run(detection_notebooks, tiny_od_mask_data_path):
             PM_VERSION=pm.__version__,
             DATA_PATH=tiny_od_mask_data_path,
             EPOCHS=1,
-            IM_SIZE=100,
+            IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
     )
@@ -98,7 +98,7 @@ def test_03_notebook_run(
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
-            IM_SIZE=100,
+            IM_SIZE=50,
             EPOCHS=1,
             DATA_PATH=tiny_od_keypoint_data_path,
             DATA_PATH2=data_path2,
@@ -126,7 +126,7 @@ def test_12_notebook_run(
             DATA_PATH=tiny_od_data_path,
             NEG_DATA_PATH=tiny_ic_negatives_path,
             EPOCHS=1,
-            IM_SIZE=100,
+            IM_SIZE=50,
         ),
         kernel_name=KERNEL_NAME,
     )
