@@ -29,7 +29,7 @@ dependencies:
 - scikit-learn>=0.19.1
 - pip>=19.0.3
 - cython>=0.29.1
-- papermill>=0.15.0
+- papermill==1.2.0
 - black>=18.6b4
 - ipywebrtc 
 - lxml>=4.3.2
