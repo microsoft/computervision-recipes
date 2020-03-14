@@ -16,7 +16,7 @@ channels:
 - pytorch
 - fastai
 dependencies:
-- python==3.6.8
+- python==3.7.6
 - pytorch==1.2.0
 # pinning pillow to 6.1 to fix issue: https://github.com/python-pillow/Pillow/issues/4130
 - pillow==6.1 
@@ -29,7 +29,7 @@ dependencies:
 - scikit-learn>=0.19.1
 - pip>=19.0.3
 - cython>=0.29.1
-- papermill>=0.15.0
+- papermill==1.2.0
 - black>=18.6b4
 - ipywebrtc 
 - lxml>=4.3.2
