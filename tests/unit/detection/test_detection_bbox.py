@@ -106,7 +106,7 @@ def test__bbox_standardization():
 
 def test__bbox_is_valid(basic_bbox):
     assert basic_bbox.is_valid() is True
-    assert _Bbox(left=0, top=0, right=0, bottom=0).is_valid() is False
+    assert _Bbox(left=100, top=100, right=100, bottom=100).is_valid() is True
 
 
 def test_annotation_bbox_init(anno_bbox):
