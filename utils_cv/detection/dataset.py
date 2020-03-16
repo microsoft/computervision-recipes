@@ -194,21 +194,16 @@ def parse_pascal_voc_anno(
 
         # get bounding box
         bnd_box = obj.find("bndbox")
-        left = int(bnd_box.find("xmin").text)
-        top = int(bnd_box.find("ymin").text)
-        right = int(bnd_box.find("xmax").text)
-        bottom = int(bnd_box.find("ymax").text)
+        left = int(float(bnd_box.find("xmin").text))
+        top = int(float(bnd_box.find("ymin").text))
+        right = int(float(bnd_box.find("xmax").text))
+        bottom = int(float(bnd_box.find("ymax").text))
 
-        # Set mapping of label name to label index
-        if labels is None:
-            label_idx = None
-        else:
-            label_idx = labels.index(label)
-
+        # add to list of bounding boxes
         anno_bbox = AnnotationBbox.from_array(
             [left, top, right, bottom],
             label_name=label,
-            label_idx=label_idx,
+            label_idx=None,
             im_path=im_path,
         )
         assert anno_bbox.is_valid()
@@ -237,6 +232,7 @@ class DetectionDataset:
         keypoint_meta: Dict = None,
         seed: int = None,
         allow_negatives: bool = False,
+        labels: List[str] = None,
     ):
         """ initialize dataset
 
@@ -259,6 +255,7 @@ class DetectionDataset:
             keypoint_meta: meta data of keypoints which should include
                 "labels", "skeleton" and "hflip_inds".
             seed: random seed for splitting dataset to training and testing data
+            labels:  ###### dictionary of label names to label ids
         """
 
         self.root = Path(root)
@@ -272,6 +269,7 @@ class DetectionDataset:
         self.allow_negatives = allow_negatives
         self.seed = seed
         self.keypoint_meta = keypoint_meta
+        self.labels = labels
 
         # read annotations
         self._read_annos()
@@ -380,12 +378,13 @@ class DetectionDataset:
         assert len(self.im_paths) == len(self.anno_paths)
 
         # Get list of all labels
-        labels = []
-        for anno_bboxes in self.anno_bboxes:
-            for anno_bbox in anno_bboxes:
-                if anno_bbox.label_name is not None:
-                    labels.append(anno_bbox.label_name)
-        self.labels = list(set(labels))
+        if not self.labels:
+            labels = []
+            for anno_bboxes in self.anno_bboxes:
+                for anno_bbox in anno_bboxes:
+                    if anno_bbox.label_name is not None:
+                        labels.append(anno_bbox.label_name)
+            self.labels = list(set(labels))
 
         # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
@@ -395,9 +394,11 @@ class DetectionDataset:
                 ):  # background rectangle is assigned id 0 by design
                     anno_bbox.label_idx = 0
                 else:
-                    anno_bbox.label_idx = (
-                        self.labels.index(anno_bbox.label_name) + 1
-                    )
+                    #if not self.label_id_map:
+                    label = self.labels.index(anno_bbox.label_name) + 1
+                    #else:
+                    #    label = self.label_id_map[anno_bbox.label_name]
+                    anno_bbox.label_idx = (label)
 
         # Get images sized. Note that Image.open() only loads the image header,
         # not the full images and is hence fast.
