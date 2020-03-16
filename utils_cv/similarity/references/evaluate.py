@@ -4,24 +4,8 @@
 import numpy as np
 import time
 import torch
+
 from .re_ranking import re_ranking
-
-
-def evaluate(ds, features, use_rerank=False):  # labels, features
-    labels = np.array([ds.y[i].obj for i in range(len(ds.y))])
-    features = np.array([features[str(s)] for s in ds.items])
-
-    # Assign each image into its own group. This serves as id during evaluation to
-    # ensure a query image is not compared to itself during rank computation.
-    # For the market-1501 dataset, the group ids can be used to ensure that a query
-    # can not match to an image taken from the same camera.
-    groups = np.array(range(len(labels)))
-    assert len(labels) == len(groups) == features.shape[0]
-
-    # Run evaluation
-    return evaluate_with_query_set(
-        labels, groups, features, labels, groups, features, use_rerank
-    )
 
 
 # Note: the Market1501 dataset has a slightly different evaluation procedure which can be used
@@ -34,6 +18,9 @@ def evaluate_with_query_set(
     query_groups,
     query_features,
     use_rerank=False,
+    rerank_k1=20,
+    rerank_k2=6,
+    rerank_lambda=0.3,
     is_market1501=False,
 ):
 
@@ -51,7 +38,7 @@ def evaluate_with_query_set(
         g_g_dist = np.dot(gallery_features, np.transpose(gallery_features))
         since = time.time()
         distances = re_ranking(
-            q_g_dist, q_q_dist, g_g_dist, k1=20, k2=6, lambda_value=0.3
+            q_g_dist, q_q_dist, g_g_dist, k1=rerank_k1, k2=rerank_k2, lambda_value=rerank_lambda,
         )
         time_elapsed = time.time() - since
         print(
@@ -87,9 +74,7 @@ def evaluate_with_query_set(
     CMC = CMC.float()
     CMC = CMC / norm
     print(
-        "Rank@1:{:.1f}, rank@5:{:.1f}, rank@10:{:.1f}, mAP:{:.2f}".format(
-            100 * CMC[0], 100 * CMC[4], 100 * CMC[9], ap
-        )
+        "Rank@1:{:.1f}, rank@5:{:.1f}, mAP:{:.2f}".format(100 * CMC[0], 100 * CMC[4], ap)
     )
 
     return (CMC, ap)
