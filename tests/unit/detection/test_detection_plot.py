@@ -9,6 +9,7 @@ import numpy as np
 from utils_cv.detection.plot import (
     PlotSettings,
     plot_boxes,
+    plot_boxes_stats,
     plot_grid,
     plot_detections,
     _setup_pr_axes,
@@ -42,6 +43,11 @@ def test_plot_setting_init(basic_plot_settings):
     assert basic_plot_settings.mask_alpha is not None
     assert basic_plot_settings.keypoint_th is not None
     assert basic_plot_settings.keypoint_color is not None
+
+
+def test_plot_boxes_stats(tiny_od_detection_keypoint_dataset):
+    # simply test that this is error free
+    plot_boxes_stats(tiny_od_detection_keypoint_dataset)
 
 
 def test_plot_boxes(od_cup_path, od_cup_anno_bboxes, basic_plot_settings):
