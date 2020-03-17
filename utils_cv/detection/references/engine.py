@@ -5,9 +5,9 @@ import torch
 
 import torchvision.models.detection.mask_rcnn
 
-from coco_utils import get_coco_api_from_dataset
-from coco_eval import CocoEvaluator
-import utils
+from .coco_utils import get_coco_api_from_dataset
+from .coco_eval import CocoEvaluator
+from . import utils
 
 
 def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
@@ -51,6 +51,8 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
+
+    return metric_logger  # EDITED
 
 
 def _get_iou_types(model):
