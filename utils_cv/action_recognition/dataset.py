@@ -5,7 +5,8 @@ import os
 import copy
 from pathlib import Path
 import warnings
-from typing import Callable, Tuple, Union, List
+from typing import Callable, Tuple, Union, List, NamedTuple
+from collections import namedtuple
 
 import decord
 from einops.layers.torch import Rearrange
@@ -18,7 +19,8 @@ from torchvision.transforms import Compose
 
 from .references import transforms_video as transforms
 from .references.functional_video import denormalize
-from ..common.misc import Config
+
+# from ..common.misc import Config
 from ..common.gpu import num_devices
 
 Trans = Callable[[object, dict], Tuple[object, dict]]
@@ -28,12 +30,32 @@ DEFAULT_STD = (0.22803, 0.22145, 0.216989)
 
 
 class VideoRecord(object):
-    def __init__(self, row):
-        self._data = row
+    """
+    This class is used for parsing split-files where each row contains a path
+    and a label:
+
+    Ex:
+    ```
+    path/to/my/clip.mp4 3
+    path/to/another/clip.mp4 32
+    ```
+    """
+
+    def __init__(self, data: List[str]):
+        """ Initialized a VideoRecord
+
+        Args:
+            row: a list where first element is the path and second element is
+            the label
+        """
+        # assert len(data) == 2
+        # self.path = data[0]
+        # self.label = data[1]
+        self._data = data
         self._num_frames = -1
 
     @property
-    def path(self):
+    def path(self) -> str:
         return self._data[0]
 
     @property
@@ -49,12 +71,12 @@ class VideoRecord(object):
         return int(self._data[1])
 
 
-def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
+def get_transforms(train: bool, tfms_config: NamedTuple = None) -> Trans:
     """ Get default transformations to apply depending on whether we're applying it to the training or the validation set. If no tfms configurations are passed in, use the defaults.
 
     Args:
         train: whether or not this is for training
-        tfms_config: Config object with tranforms-related configs
+        tfms_config: NamedTuple object with tranforms-related configs
 
     Returns:
         A list of transforms to apply
@@ -75,7 +97,7 @@ def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
     ]
     # 2. crop
     if tfms_config.random_crop:
-        if tfms_config.random_crop_scales is not None:
+        if tfms_config.random_crop_scales:
             crop = transforms.RandomResizedCropVideo(
                 tfms_config.input_size, tfms_config.random_crop_scales
             )
@@ -92,7 +114,7 @@ def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
     return Compose(tfms)
 
 
-def get_default_tfms_config(train: bool) -> Config:
+def get_default_tfms_config(train: bool) -> NamedTuple:
     """
     Args:
         train: whether or not this is for training
@@ -112,18 +134,29 @@ def get_default_tfms_config(train: bool) -> Config:
     random_crop = True if train else False
     random_crop_scales = (0.6, 1.0) if train else None
 
-    return Config(
-        dict(
-            input_size=112,
-            im_scale=128,
-            resize_keep_ratio=True,
-            mean=DEFAULT_MEAN,
-            std=DEFAULT_STD,
-            flip_ratio=flip_ratio,
-            random_crop=random_crop,
-            random_crop_scales=random_crop_scales,
-        )
+    d = dict(
+        input_size=112,
+        im_scale=128,
+        resize_keep_ratio=True,
+        mean=DEFAULT_MEAN,
+        std=DEFAULT_STD,
+        flip_ratio=flip_ratio,
+        random_crop=random_crop,
+        random_crop_scales=random_crop_scales,
     )
+    return namedtuple("Config", d.keys())(*d.values())
+    # return Config(
+    #     dict(
+    #         input_size=112,
+    #         im_scale=128,
+    #         resize_keep_ratio=True,
+    #         mean=DEFAULT_MEAN,
+    #         std=DEFAULT_STD,
+    #         flip_ratio=flip_ratio,
+    #         random_crop=random_crop,
+    #         random_crop_scales=random_crop_scales,
+    #     )
+    # )
 
 
 class VideoDataset:
@@ -234,6 +267,13 @@ class VideoDataset:
     ) -> Tuple[Dataset, Dataset]:
         """ Split this dataset into a training and testing set using a split file.
 
+        Each line in the split file must use the form:
+        ```
+        path/to/jumping/video.mp4 3
+        path/to/swimming/video.mp4 5
+        path/to/another/jumping/video.mp4 3
+        ```
+
         Args:
             split_files: a tuple of 2 files
 
@@ -244,13 +284,19 @@ class VideoDataset:
 
         # add train records
         self.video_records.extend(
-            [VideoRecord(x.strip().split(" ")) for x in open(train_split_file)]
+            [
+                VideoRecord(row.strip().split(" "))
+                for row in open(train_split_file)
+            ]
         )
         train_len = len(self.video_records)
 
         # add validation records
         self.video_records.extend(
-            [VideoRecord(x.strip().split(" ")) for x in open(test_split_file)]
+            [
+                VideoRecord(row.strip().split(" "))
+                for row in open(test_split_file)
+            ]
         )
 
         # create indices
@@ -284,7 +330,7 @@ class VideoDataset:
             self.train_ds,
             batch_size=self.batch_size * devices,
             shuffle=True,
-            num_workers=0,
+            num_workers=0,  # Torch 1.2 has a bug when num-workers > 0 (0 means run a main-processor worker)
             pin_memory=True,
         )
 
@@ -301,6 +347,10 @@ class VideoDataset:
 
     def _sample_indices(self, record: VideoRecord) -> List[int]:
         """
+        Create a list of frame-wise offsets into a video record. Depending on
+        whether or not 'random shift' is used, perform a uniform sample or a
+        random sample.
+
         Args:
             record (VideoRecord): A video record.
 
@@ -330,9 +380,7 @@ class VideoDataset:
         else:
             if self.warning:
                 warnings.warn(
-                    "num_segments and/or sample_length > num_frames in {}".format(
-                        record.path
-                    )
+                    f"num_segments and/or sample_length > num_frames in {record.path}"
                 )
             offsets = np.zeros((self.num_segments,), dtype=int)
 
@@ -354,33 +402,29 @@ class VideoDataset:
 
         # decord.seek() seems to have a bug. use seek_accurate().
         video_reader.seek_accurate(offset)
+
         # first frame
         clip.append(video_reader.next().asnumpy())
+
         # remaining frames
         try:
-            if self.temporal_jitter:
-                for i in range(self.sample_length - 1):
-                    step = randint(self.sample_step + 1)
-                    if step == 0:
-                        clip.append(clip[-1].copy())
-                    else:
-                        if step > 1:
-                            video_reader.skip_frames(step - 1)
-                        cur_frame = video_reader.next().asnumpy()
-                        if len(cur_frame.shape) != 3:
-                            # maybe end of the video
-                            break
-                        clip.append(cur_frame)
-            else:
-                for i in range(self.sample_length - 1):
-                    if self.sample_step > 1:
-                        video_reader.skip_frames(self.sample_step - 1)
+            for i in range(self.sample_length - 1):
+                step = (
+                    randint(self.sample_step + 1)
+                    if self.temporal_jitter
+                    else self.sample_step
+                )
+
+                if step == 0 and self.temporal_jitter:
+                    clip.append(clip[-1].copy())
+                else:
+                    if step > 1:
+                        video_reader.skip_frames(step - 1)
                     cur_frame = video_reader.next().asnumpy()
-                    if len(cur_frame.shape) != 3:
-                        # maybe end of the video
-                        break
                     clip.append(cur_frame)
+
         except StopIteration:
+            # pass when video has ended
             pass
 
         # if clip needs more frames, simply duplicate the last frame in the clip.
@@ -457,17 +501,13 @@ class VideoDataset:
                 )
             pass
 
-    def show_batch(
-        self, train_or_test: str = "train", num_samples: int = 1
-    ) -> None:
+    def show_batch(self, train_or_test: str = "train", rows: int = 1) -> None:
         """Plot first few samples in the datasets"""
         if train_or_test == "train":
-            batch = [self.train_ds.dataset[i][0] for i in range(num_samples)]
+            batch = [self.train_ds.dataset[i][0] for i in range(rows)]
         elif train_or_test == "valid":
-            batch = [self.test_ds.dataset[i][0] for i in range(num_samples)]
+            batch = [self.test_ds.dataset[i][0] for i in range(rows)]
         else:
             raise ValueError("Unknown data type {}".format(which_data))
 
-        self._show_batch(
-            batch, self.sample_length, mean=DEFAULT_MEAN, std=DEFAULT_STD,
-        )
+        self._show_batch(batch, self.sample_length)

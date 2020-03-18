@@ -39,14 +39,12 @@ class _DatasetSpec:
         return self._class_names
 
 
+KINETICS_URL = "https://github.com/microsoft/ComputerVision/files/3746975/kinetics400_lable_map.txt"
+
+HMDB51_URL = "https://github.com/microsoft/ComputerVision/files/3746963/hmdb51_label_map.txt"
+
 KINETICS = _DatasetSpec(
-    "https://github.com/microsoft/ComputerVision/files/3746975/kinetics400_lable_map.txt",
-    400,
-    os.path.join("data", "kinetics400"),
+    KINETICS_URL, 400, os.path.join("data", "kinetics400"),
 )
 
-HMDB51 = _DatasetSpec(
-    "https://github.com/microsoft/ComputerVision/files/3746963/hmdb51_label_map.txt",
-    51,
-    os.path.join("data", "hmdb51"),
-)
+HMDB51 = _DatasetSpec(HMDB51_URL, 51, os.path.join("data", "hmdb51"),)

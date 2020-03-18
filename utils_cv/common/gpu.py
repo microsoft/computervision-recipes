@@ -73,11 +73,11 @@ def db_num_workers(non_windows_num_workers: int = 16):
 
 def system_info():
     print(sys.version, "\n")
-    print("PyTorch {}".format(torch.__version__), "\n")
-    print("Torch-vision {}".format(torchvision.__version__), "\n")
+    print(f"PyTorch {torch.__version__} \n")
+    print(f"Torch-vision {torchvision.__version__} \n")
     print("Available devices:")
     if cuda.is_available():
         for i in range(cuda.device_count()):
-            print("{}: {}".format(i, cuda.get_device_name(i)))
+            print(f"{i}: {cuda.get_device_name(i)}")
     else:
-        print("CPUs")
+        print("CPUs only, no GPUs found")
