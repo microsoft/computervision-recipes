@@ -174,7 +174,8 @@ def action_recognition_notebooks():
     paths = {
         "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
         "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
-        "02": os.path.join(folder_notebooks, "02_video_transformation.ipynb"),
+        "02": os.path.join(folder_notebooks, "02_training_hmbd.ipynb"),
+        "10": os.path.join(folder_notebooks, "10_video_transformation.ipynb"),
     }
     return paths
 

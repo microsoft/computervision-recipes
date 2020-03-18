@@ -51,8 +51,13 @@ def test_01_notebook_run(action_recognition_notebooks):
 
 
 @pytest.mark.notebooks
-def test_02_notebook_run(classification_notebooks, multilabel_ic_data_path):
-    notebook_path = classification_notebooks["02"]
+def test_02_notebook_run(action_recognition_notebooks):
+    pass
+
+
+@pytest.mark.notebooks
+def test_10_notebook_run(action_recognition_notebooks):
+    notebook_path = action_recognition_notebooks["10"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -63,3 +68,6 @@ def test_02_notebook_run(classification_notebooks, multilabel_ic_data_path):
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     # TODO add some asserts like below
     # assert len(nb_output.scraps["training_accuracies"].data) == 1
+
+
+

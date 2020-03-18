@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import os
+from pathlib import Path
 from typing import Union, List
 from urllib.request import urlretrieve
 
