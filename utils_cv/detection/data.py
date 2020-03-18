@@ -12,6 +12,7 @@ import shutil
 import urllib.request
 import xml.etree.ElementTree as ET
 
+from .references.anno_coco2voc import coco2voc_main
 
 class Urls:
     # for now hardcoding base url into Urls class
@@ -156,6 +157,24 @@ def coco_labels() -> List[str]:
         "hair drier",
         "toothbrush",
     ]
+
+
+def coco2voc(
+    anno_path: str,
+    output_dir: str,
+    anno_type: str = "instance",
+    download_images: bool = False
+) -> None:
+    """ Convert COCO annotation (single .json file) to Pascal VOC annotations
+        (multiple .xml files).
+
+    Args:
+        anno_path: path coco-formated .json annotation file
+        output_dir: root output directory
+        anno_type: "instance" for object detection annotation, or "keypoint"
+        download_images: if tru then download images given their urls.
+    """
+    coco2voc_main(anno_path, output_dir, anno_type, download_images)
 
 
 def extract_masks_from_labelbox_json(

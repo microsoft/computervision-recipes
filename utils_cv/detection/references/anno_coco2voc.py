@@ -12,7 +12,16 @@ import urllib.request, pdb
 from urllib.parse import urlparse
 
 
-def instance2xml_base(anno):
+def instance2xml_base(anno, download_images):
+    # EDITED - make coco_url optional since only used when downloading the images
+    if 'coco_url' not in anno:
+        if 'url' in anno:
+            anno['coco_url'] = anno['url']
+        elif not download_images:
+            anno['coco_url'] = "not used anywhere in code"
+        else:
+            raise Exception("Annotation has to contain a 'url' or 'coco_url' field to download the image.")
+
     E = objectify.ElementMaker(annotate=False)
     anno_tree = E.annotation(
         E.folder('VOC2014_instance/{}'.format(anno['category_id'])),
@@ -90,8 +99,6 @@ def parse_instance(content, outdir, download_images = False):
     
     # convert category id to name
     for instance in merged_info_list:
-        if 'category_id' not in instance:
-            pdb.set_trace()
         assert 'category_id' in instance, f"WARNING: annotation error: image {instance['file_name']} has a rectangle without a 'category_id' field."
         instance['category_id'] = categories[instance['category_id']]
 
@@ -102,7 +109,7 @@ def parse_instance(content, outdir, download_images = False):
         print(f"Converting annotations for image {index} of {len(names_groups)}: {name}")
         assert not name.lower().startswith(("http:","https:")), "Image seems to be a url rather than local. Need to set 'download_images' = False"
 
-        anno_tree = instance2xml_base(groups[0])
+        anno_tree = instance2xml_base(groups[0], download_images)
         # if one file have multiple different objects, save it in each category sub-directory
         filenames = []
         for group in groups:
@@ -178,11 +185,7 @@ def parse_keypoints(content, outdir):
         print("Formating keypoints xml file {} done!".format(name))
 
 
-def coco2voc(anno_file, output_dir, anno_type = "instance", download_images = False):
-    main(anno_file, output_dir, anno_type, download_images)
-
-
-def main(anno_file, output_dir, anno_type, download_images = False):
+def coco2voc_main(anno_file, output_dir, anno_type, download_images = False):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     content = json.load(open(anno_file, 'r'))
