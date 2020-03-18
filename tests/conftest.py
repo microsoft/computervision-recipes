@@ -16,7 +16,7 @@ import random
 from PIL import Image
 from torch import tensor
 from pathlib import Path
-from fastai.vision import cnn_learner, models
+from fastai.vision import cnn_learner, DatasetType, models
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List, Tuple
 from tempfile import TemporaryDirectory
@@ -35,6 +35,7 @@ from utils_cv.detection.model import (
     _apply_threshold,
 )
 from utils_cv.similarity.data import Urls as is_urls
+from utils_cv.similarity.model import compute_features_learner
 
 
 def path_classification_notebooks():
@@ -279,7 +280,7 @@ def tiny_ic_databunch(tmp_session):
         .split_by_rand_pct(valid_pct=0.1, seed=20)
         .label_from_folder()
         .transform(size=50)
-        .databunch(bs=16, num_workers = db_num_workers())
+        .databunch(bs=16, num_workers=db_num_workers())
         .normalize(imagenet_stats)
     )
 
@@ -351,7 +352,7 @@ def testing_databunch(tmp_session):
         .split_by_rand_pct(valid_pct=0.2, seed=20)
         .label_from_folder()
         .transform(size=300)
-        .databunch(bs=16, num_workers = db_num_workers())
+        .databunch(bs=16, num_workers=db_num_workers())
         .normalize(imagenet_stats)
     )
 
@@ -735,6 +736,7 @@ def workspace_region(request):
 
 # ------|-- Similarity ---------------------------------------------
 
+
 @pytest.fixture(scope="session")
 def tiny_is_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
@@ -744,3 +746,13 @@ def tiny_is_data_path(tmp_session) -> str:
         dest=tmp_session,
         exist_ok=True,
     )
+
+
+@pytest.fixture(scope="session")
+def tiny_ic_databunch_valid_features(tiny_ic_databunch):
+    learn = cnn_learner(tiny_ic_databunch, models.resnet18)
+    embedding_layer = learn.model[1][6]
+    features = compute_features_learner(
+        tiny_ic_databunch, DatasetType.Valid, learn, embedding_layer
+    )
+    return features
