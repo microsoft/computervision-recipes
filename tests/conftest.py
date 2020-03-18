@@ -686,7 +686,6 @@ def od_detections(od_detection_dataset):
 @pytest.fixture(scope="session")
 def coco_sample_path(tmp_session) -> str:
     """ Returns the path to a coco-formatted annotation. """
-    anno_path = "../../data/misc/coco/coco_sample.json",
     return os.path.abspath(
         os.path.join(
             os.path.dirname(__file__), os.path.pardir, "data", "misc", "coco", "coco_sample.json"

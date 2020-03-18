@@ -169,10 +169,10 @@ def coco2voc(
         (multiple .xml files).
 
     Args:
-        anno_path: path coco-formated .json annotation file
+        anno_path: path to coco-formated .json annotation file
         output_dir: root output directory
-        anno_type: "instance" for object detection annotation, or "keypoint"
-        download_images: if tru then download images given their urls.
+        anno_type: "instance" for rectangle annotation, or "keypoint" for keypoint annotation.
+        download_images: if true then download images from their urls.
     """
     coco2voc_main(anno_path, output_dir, anno_type, download_images)
 
