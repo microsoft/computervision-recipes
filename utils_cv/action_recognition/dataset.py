@@ -5,7 +5,7 @@ import os
 import copy
 from pathlib import Path
 import warnings
-from typing import Callable, Tuple, Union, List, NamedTuple
+from typing import Callable, Tuple, Union, List
 from collections import namedtuple
 
 import decord
@@ -20,7 +20,7 @@ from torchvision.transforms import Compose
 from .references import transforms_video as transforms
 from .references.functional_video import denormalize
 
-# from ..common.misc import Config
+from ..common.misc import Config
 from ..common.gpu import num_devices
 
 Trans = Callable[[object, dict], Tuple[object, dict]]
@@ -71,12 +71,12 @@ class VideoRecord(object):
         return int(self._data[1])
 
 
-def get_transforms(train: bool, tfms_config: NamedTuple = None) -> Trans:
+def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
     """ Get default transformations to apply depending on whether we're applying it to the training or the validation set. If no tfms configurations are passed in, use the defaults.
 
     Args:
         train: whether or not this is for training
-        tfms_config: NamedTuple object with tranforms-related configs
+        tfms_config: Config object with tranforms-related configs
 
     Returns:
         A list of transforms to apply
@@ -114,7 +114,7 @@ def get_transforms(train: bool, tfms_config: NamedTuple = None) -> Trans:
     return Compose(tfms)
 
 
-def get_default_tfms_config(train: bool) -> NamedTuple:
+def get_default_tfms_config(train: bool) -> Config:
     """
     Args:
         train: whether or not this is for training
@@ -134,29 +134,18 @@ def get_default_tfms_config(train: bool) -> NamedTuple:
     random_crop = True if train else False
     random_crop_scales = (0.6, 1.0) if train else None
 
-    d = dict(
-        input_size=112,
-        im_scale=128,
-        resize_keep_ratio=True,
-        mean=DEFAULT_MEAN,
-        std=DEFAULT_STD,
-        flip_ratio=flip_ratio,
-        random_crop=random_crop,
-        random_crop_scales=random_crop_scales,
+    return Config(
+        dict(
+            input_size=112,
+            im_scale=128,
+            resize_keep_ratio=True,
+            mean=DEFAULT_MEAN,
+            std=DEFAULT_STD,
+            flip_ratio=flip_ratio,
+            random_crop=random_crop,
+            random_crop_scales=random_crop_scales,
+        )
     )
-    return namedtuple("Config", d.keys())(*d.values())
-    # return Config(
-    #     dict(
-    #         input_size=112,
-    #         im_scale=128,
-    #         resize_keep_ratio=True,
-    #         mean=DEFAULT_MEAN,
-    #         std=DEFAULT_STD,
-    #         flip_ratio=flip_ratio,
-    #         random_crop=random_crop,
-    #         random_crop_scales=random_crop_scales,
-    #     )
-    # )
 
 
 class VideoDataset:
