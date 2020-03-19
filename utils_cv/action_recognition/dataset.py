@@ -155,7 +155,7 @@ class VideoDataset:
         self,
         root: str,
         train_pct: float = 0.75,
-        num_segments: int = 1,
+        num_samples: int = 1,
         sample_length: int = 8,
         sample_step: int = 1,
         temporal_jitter: bool = True,
@@ -174,7 +174,7 @@ class VideoDataset:
         Arg:
             root: Videos directory.
             train_pct: percentage of dataset to use for training
-            num_segments: Number of clips to sample from each video.
+            num_samples: Number of clips to sample from each video.
             sample_length: Number of consecutive frames to sample from a video (i.e. clip length).
             sample_step: Sampling step.
             temporal_jitter: Randomly skip frames when sampling each frames.
@@ -190,7 +190,7 @@ class VideoDataset:
 
         # TODO check wrong arguments early to prevent failure
         assert sample_step > 0
-        assert num_segments > 0
+        assert num_samples > 0
 
         if temporal_jitter:
             assert temporal_jitter_step > 0
@@ -209,7 +209,7 @@ class VideoDataset:
             )
 
         self.root = root
-        self.num_segments = num_segments
+        self.num_samples = num_samples
         self.sample_length = sample_length
         self.sample_step = sample_step
         self.presample_length = sample_length * sample_step
@@ -352,26 +352,26 @@ class VideoDataset:
                 offsets = np.sort(
                     randint(
                         record.num_frames - self.presample_length + 1,
-                        size=self.num_segments,
+                        size=self.num_samples,
                     )
                 )
             else:
                 # Uniform sample
                 distance = (
                     record.num_frames - self.presample_length + 1
-                ) / self.num_segments
+                ) / self.num_samples
                 offsets = np.array(
                     [
                         int(distance / 2.0 + distance * x)
-                        for x in range(self.num_segments)
+                        for x in range(self.num_samples)
                     ]
                 )
         else:
             if self.warning:
                 warnings.warn(
-                    f"num_segments and/or sample_length > num_frames in {record.path}"
+                    f"num_samples and/or sample_length > num_frames in {record.path}"
                 )
-            offsets = np.zeros((self.num_segments,), dtype=int)
+            offsets = np.zeros((self.num_samples,), dtype=int)
 
         return offsets
 
@@ -439,7 +439,7 @@ class VideoDataset:
         offsets = self._sample_indices(record)
         clips = np.array([self._get_frames(video_reader, o) for o in offsets])
 
-        if self.num_segments == 1:
+        if self.num_samples == 1:
             # [T, H, W, C] -> [C, T, H, W]
             return self.transforms(torch.from_numpy(clips[0])), record.label
         else:

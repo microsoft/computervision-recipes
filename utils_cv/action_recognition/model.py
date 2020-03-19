@@ -18,6 +18,7 @@ except ModuleNotFoundError:
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torchvision
 
 from ..common.misc import Config
 from ..common.gpu import torch_device, num_devices
@@ -25,10 +26,11 @@ from .dataset import VideoDataset
 
 from .references.metrics import accuracy, AverageMeter
 
-# From https://github.com/moabitcoin/ig65m-pytorch
-TORCH_R2PLUS1D = "moabitcoin/ig65m-pytorch"
+# These paramaters are set so that we can use torch hub to download pretrained
+# models from the specified repo
+TORCH_R2PLUS1D = "moabitcoin/ig65m-pytorch"  # From https://github.com/moabitcoin/ig65m-pytorch
 MODELS = {
-    # model: output classes
+    # Model name followed by the number of output classes.
     "r2plus1d_34_32_ig65m": 359,
     "r2plus1d_34_32_kinetics": 400,
     "r2plus1d_34_8_ig65m": 487,
@@ -57,17 +59,14 @@ class VideoLearner(object):
             tends attain higher results.
         """
         self.dataset = dataset
-        self.model = self.init_model(
+        self.model, self.model_name = self.init_model(
             self.dataset.sample_length, base_model, num_classes,
-        )
-        self.model_name = "r2plus1d_34_{}_{}".format(
-            self.dataset.sample_length, base_model
         )
 
     @staticmethod
     def init_model(
         sample_length: int, base_model: str, num_classes: int = None
-    ) -> None:
+    ) -> torchvision.models.video.resnet.VideoResNet:
         """
         Initializes the model by loading it using torch's `hub.load`
         functionality. Uses the model from TORCH_R2PLUS1D.
@@ -92,6 +91,7 @@ class VideoLearner(object):
             model_sample_length = 8
         else:
             model_sample_length = 32
+
         model_name = "r2plus1d_34_{}_{}".format(
             model_sample_length, base_model
         )
@@ -108,7 +108,8 @@ class VideoLearner(object):
         # Replace head
         if num_classes is not None:
             model.fc = nn.Linear(model.fc.in_features, num_classes)
-        return model
+
+        return model, model_name
 
     def freeze(self) -> None:
         """Freeze model except the last layer"""
@@ -152,8 +153,9 @@ class VideoLearner(object):
             print("\tfull network")
         else:
             for name in named_params_to_update:
-                print("\t{}".format(name))
+                print(f"\t{name}")
 
+        # create optimizer
         momentum = train_cfgs.get("momentum", 0.95)
         optimizer = optim.SGD(
             list(named_params_to_update.values()),
@@ -164,7 +166,9 @@ class VideoLearner(object):
 
         # Use mixed-precision if available
         # Currently, only O1 works with DataParallel: See issues https://github.com/NVIDIA/apex/issues/227
-        if train_cfgs.get("mixed_prec", False) and AMP_AVAILABLE:
+        if train_cfgs.get("mixed_prec", False):
+            # break if not AMP_AVAILABLE
+            assert AMP_AVAILABLE
             # 'O0': Full FP32, 'O1': Conservative, 'O2': Standard, 'O3': Full FP16
             self.model, optimizer = amp.initialize(
                 self.model,
@@ -201,9 +205,8 @@ class VideoLearner(object):
         criterion = nn.CrossEntropyLoss().to(device)
 
         for e in range(1, train_cfgs.epochs + 1):
-            print("Epoch {} ==========".format(e))
-            if scheduler is not None:
-                print("lr={}".format(scheduler.get_lr()))
+            print(f"Epoch {e} ==========")
+            print(f"lr={scheduler.get_lr()}")
 
             self.train_an_epoch(
                 model,
@@ -260,11 +263,14 @@ class VideoLearner(object):
                 'valid/time': ...
             }
         """
-        assert "train" in data_loaders
         if mixed_prec and not AMP_AVAILABLE:
             warnings.warn(
-                "NVIDIA apex module is not installed. Cannot use mixed-precision."
+                """
+                NVIDIA apex module is not installed. Cannot use
+                mixed-precision. Turning off mixed-precision.
+                """
             )
+            mixed_prec = False
 
         result = OrderedDict()
         for phase in ["train", "valid"]:
@@ -302,7 +308,7 @@ class VideoLearner(object):
                         # make the accumulated gradient to be the same scale as without the accumulation
                         loss = loss / grad_steps
 
-                        if mixed_prec and AMP_AVAILABLE:
+                        if mixed_prec:
                             with amp.scale_loss(
                                 loss, optimizer
                             ) as scaled_loss:
