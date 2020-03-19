@@ -2,8 +2,10 @@
 # Licensed under the MIT License.
 
 import os
+from collections import Counter
 import copy
 from functools import partial
+import itertools
 import math
 import numpy as np
 from pathlib import Path
@@ -16,7 +18,7 @@ from torchvision.transforms import ColorJitter
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-from .plot import plot_detections, plot_grid
+from .plot import plot_boxes_stats, plot_detections, plot_grid
 from .bbox import AnnotationBbox
 from .mask import binarise_mask
 from .references.utils import collate_fn
@@ -192,21 +194,16 @@ def parse_pascal_voc_anno(
 
         # get bounding box
         bnd_box = obj.find("bndbox")
-        left = int(bnd_box.find("xmin").text)
-        top = int(bnd_box.find("ymin").text)
-        right = int(bnd_box.find("xmax").text)
-        bottom = int(bnd_box.find("ymax").text)
+        left = int(float(bnd_box.find("xmin").text))
+        top = int(float(bnd_box.find("ymin").text))
+        right = int(float(bnd_box.find("xmax").text))
+        bottom = int(float(bnd_box.find("ymax").text))
 
-        # Set mapping of label name to label index
-        if labels is None:
-            label_idx = None
-        else:
-            label_idx = labels.index(label)
-
+        # add to list of bounding boxes
         anno_bbox = AnnotationBbox.from_array(
             [left, top, right, bottom],
             label_name=label,
-            label_idx=label_idx,
+            label_idx=None,
             im_path=im_path,
         )
         assert anno_bbox.is_valid()
@@ -235,6 +232,7 @@ class DetectionDataset:
         keypoint_meta: Dict = None,
         seed: int = None,
         allow_negatives: bool = False,
+        labels: List[str] = None,
     ):
         """ initialize dataset
 
@@ -257,6 +255,7 @@ class DetectionDataset:
             keypoint_meta: meta data of keypoints which should include
                 "labels", "skeleton" and "hflip_inds".
             seed: random seed for splitting dataset to training and testing data
+            labels:  ###### dictionary of label names to label ids
         """
 
         self.root = Path(root)
@@ -270,9 +269,13 @@ class DetectionDataset:
         self.allow_negatives = allow_negatives
         self.seed = seed
         self.keypoint_meta = keypoint_meta
+        self.labels = labels
 
         # read annotations
         self._read_annos()
+
+        # check if there are any concerns with the data (e.g. images too large)
+        self._verify()
 
         # create training and validation datasets
         self.train_ds, self.test_ds = self.split_train_test(
@@ -282,10 +285,21 @@ class DetectionDataset:
         # create training and validation data loaders
         self.init_data_loaders()
 
+    def _verify(self) -> None:
+        """ Function to verify data is correct. """
+        # Display warning if many of the images are large and hence slow down training.
+        highres_counts = np.sum(
+            (self.im_sizes[:, 0] * self.im_sizes[:, 1]) > 8000000
+        )
+        highres_ratio = highres_counts / float(len(self.im_paths))
+        if highres_ratio > 0.2:
+            print(
+                f"WARNING: {100 * highres_ratio:2.0f} percent of the images are of very high resolution (>8 MPixels). Consider down-sizing the images before usage since JPEG decoding of large images is slow."
+            )
+
     def _read_annos(self) -> None:
         """ Parses all Pascal VOC formatted annotation files to extract all
         possible labels. """
-
         # All annotation files are assumed to be in the anno_dir directory.
         # If im_dir is provided then find all images in that directory, and
         # it's assumed that the annotation filenames end with .xml.
@@ -364,12 +378,13 @@ class DetectionDataset:
         assert len(self.im_paths) == len(self.anno_paths)
 
         # Get list of all labels
-        labels = []
-        for anno_bboxes in self.anno_bboxes:
-            for anno_bbox in anno_bboxes:
-                if anno_bbox.label_name is not None:
-                    labels.append(anno_bbox.label_name)
-        self.labels = list(set(labels))
+        if not self.labels:
+            labels = []
+            for anno_bboxes in self.anno_bboxes:
+                for anno_bbox in anno_bboxes:
+                    if anno_bbox.label_name is not None:
+                        labels.append(anno_bbox.label_name)
+            self.labels = list(set(labels))
 
         # Set for each bounding box label name also what its integer representation is
         for anno_bboxes in self.anno_bboxes:
@@ -379,9 +394,107 @@ class DetectionDataset:
                 ):  # background rectangle is assigned id 0 by design
                     anno_bbox.label_idx = 0
                 else:
-                    anno_bbox.label_idx = (
-                        self.labels.index(anno_bbox.label_name) + 1
-                    )
+                    #if not self.label_id_map:
+                    label = self.labels.index(anno_bbox.label_name) + 1
+                    #else:
+                    #    label = self.label_id_map[anno_bbox.label_name]
+                    anno_bbox.label_idx = (label)
+
+        # Get images sized. Note that Image.open() only loads the image header,
+        # not the full images and is hence fast.
+        self.im_sizes = np.array([Image.open(p).size for p in self.im_paths])
+
+    def boxes_stats(self) -> None:
+        """Compute statistics such as number of annotations for class, or
+           distribution of width/height of the annotations.
+        """
+        # Compute statistics
+        anno_bboxes = list(
+            itertools.chain(*self.anno_bboxes)
+        )  # flatten list of lists
+        box_widths = [bbox.width() for bbox in anno_bboxes]
+        box_heights = [bbox.height() for bbox in anno_bboxes]
+        labels_counts = Counter([bbox.label_name for bbox in anno_bboxes])
+
+        box_rel_widths = []
+        box_rel_heights = []
+        for (im_width, im_height), boxes in zip(
+            self.im_sizes, self.anno_bboxes
+        ):
+            for box in boxes:
+                box_rel_widths += [box.width() / float(im_width)]
+                box_rel_heights += [box.height() / float(im_height)]
+
+        return (
+            labels_counts,
+            box_widths,
+            box_heights,
+            box_rel_widths,
+            box_rel_heights,
+        )
+
+    def plot_boxes_stats(
+        self, show: bool = True, figsize: tuple = (18, 3)
+    ) -> None:
+        """Plot statistics such as number of annotations for class, or
+           distribution of width/height of the annotations.
+
+        Args:
+            show: Show plot. Use False if want to manually show the plot later.
+            figsize: Figure size (w, h).
+        """
+        plot_boxes_stats(self, show, figsize)
+
+    def print_boxes_stats(self) -> None:
+        # Get annotation statistics
+        labels_counts, box_widths, box_heights, box_rel_widths, box_rel_heights = (
+            self.boxes_stats()
+        )
+
+        # Print to screen
+        print(
+            f"Dataset has {len(self.im_paths)} images with in total {sum(labels_counts.values())} bounding boxes."
+        )
+        for class_name, count in labels_counts.most_common():
+            print("{:>5} annotations: {}".format(count, class_name))
+        print("Distribution of annotation size [absolute pixels]")
+        print(
+            "   Width:  min={:.0f}, 1/4-percentile={:.0f}, median={:.0f}, 3/4-percentile={:.0f}, max={:.0f}".format(
+                min(box_widths),
+                np.percentile(box_widths, 25),
+                np.median(box_widths),
+                np.percentile(box_widths, 75),
+                max(box_widths),
+            )
+        )
+        print(
+            "   Height: min={:.0f}, 1/4-percentile={:.0f}, median={:.0f}, 3/4-percentile={:.0f}, max={:.0f}".format(
+                min(box_heights),
+                np.percentile(box_heights, 25),
+                np.median(box_heights),
+                np.percentile(box_heights, 75),
+                max(box_heights),
+            )
+        )
+        print("Distribution of annotation size [normalized by image size]")
+        print(
+            "   Width:  min={:.2f}, 1/4-percentile={:.2f}, median={:.2f}, 3/4-percentile={:.2f}, max={:.2f}".format(
+                min(box_rel_widths),
+                np.percentile(box_rel_widths, 25),
+                np.median(box_rel_widths),
+                np.percentile(box_rel_widths, 75),
+                max(box_rel_widths),
+            )
+        )
+        print(
+            "   Height: min={:.2f}, 1/4-percentile={:.2f}, median={:.2f}, 3/4-percentile={:.2f}, max={:.2f}".format(
+                min(box_rel_heights),
+                np.percentile(box_rel_heights, 25),
+                np.median(box_rel_heights),
+                np.percentile(box_rel_heights, 75),
+                max(box_rel_heights),
+            )
+        )
 
     def split_train_test(
         self, train_pct: float = 0.8

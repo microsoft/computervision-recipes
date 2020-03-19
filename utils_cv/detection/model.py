@@ -452,6 +452,10 @@ class DetectionLearner:
         if model:
             assert im_size is None
 
+        # if dataset is not None, labels must be (since it is already set in dataset)
+        if not dataset:
+            assert labels is not None
+
         # if im_size is not specified, use 500
         if im_size is None:
             im_size = 500

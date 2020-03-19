@@ -65,11 +65,13 @@ def copy_files(
 
 
 def get_font(size: int = 12) -> ImageFont:
-    """ Gets a font object. """
+    """ Gets a font object. 
+        Tries different fonts and lower/upper case to be compatible with both Linux and Windows.
+    """
     font = None
-    for font in "Tahoma Verdana Arial Helvetica DejaVuSans".split():
+    for font_name in "Tahoma tahoma Verdana verdana Arial arial Helvetica helvetica DejaVuSans dejavusans".split():
         try:
-            font = ImageFont.truetype(f"{font}.ttf", size)
+            font = ImageFont.truetype(f"{font_name}.ttf", size)
         except (AttributeError, IOError):
             font = None
         if font:
