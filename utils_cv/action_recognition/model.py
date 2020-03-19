@@ -81,9 +81,7 @@ class VideoLearner(object):
         """
         if base_model not in ("ig65m", "kinetics"):
             raise ValueError(
-                "Not supported model {}. Should be 'ig65m' or 'kinetics'".format(
-                    base_model
-                )
+                f"Not supported model {base_model}. Should be 'ig65m' or 'kinetics'"
             )
 
         # Decide if to use pre-trained weights for DNN trained using 8 or for 32 frames
@@ -92,11 +90,9 @@ class VideoLearner(object):
         else:
             model_sample_length = 32
 
-        model_name = "r2plus1d_34_{}_{}".format(
-            model_sample_length, base_model
-        )
+        model_name = f"r2plus1d_34_{model_sample_length}_{base_model}"
 
-        print("Loading {} model".format(model_name))
+        print(f"Loading {model_name} model")
 
         model = torch.hub.load(
             TORCH_R2PLUS1D,
@@ -325,14 +321,12 @@ class VideoLearner(object):
                     end = time.time()
 
             print(
-                "{} took {:.2f} sec: loss = {:.4f}, top1_acc = {:.4f}, top5_acc = {:.4f}".format(
-                    phase, batch_time.sum, losses.avg, top1.avg, top5.avg
-                )
+                f"{phase} took {batch_time.sum:.2f} sec: loss = {losses.avg:.4f}, top1_acc = {top1.avg:.4f}, top5_acc = {top5.avg:.4f}"
             )
-            result["{}/time".format(phase)] = batch_time.sum
-            result["{}/loss".format(phase)] = losses.avg
-            result["{}/top1".format(phase)] = top1.avg
-            result["{}/top5".format(phase)] = top5.avg
+            result[f"{phase}/time"] = batch_time.sum
+            result[f"{phase}/loss"] = losses.avg
+            result[f"{phase}/top1"] = top1.avg
+            result[f"{phase}/top5"] = top5.avg
 
         return result
 
@@ -348,5 +342,5 @@ class VideoLearner(object):
         :return:
         """
         self.model.load_state_dict(
-            torch.load(os.path.join(model_dir, "{}.pt".format(model_name)))
+            torch.load(os.path.join(model_dir, f"{model_name}.pt"))
         )
