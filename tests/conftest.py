@@ -20,6 +20,8 @@ from fastai.vision import cnn_learner, models
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List, Tuple
 from tempfile import TemporaryDirectory
+
+from .resources import coco_sample
 from utils_cv.common.data import unzip_url
 from utils_cv.common.gpu import db_num_workers
 from utils_cv.classification.data import Urls as ic_urls
@@ -685,13 +687,11 @@ def od_detections(od_detection_dataset):
 
 
 @pytest.fixture(scope="session")
-def coco_sample_path(tmp_session) -> str:
+def coco_sample_path(tmpdir_factory) -> str:
     """ Returns the path to a coco-formatted annotation. """
-    return os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__), os.path.pardir, "data", "misc", "coco", "coco_sample.json"
-        )
-    )
+    path = tmpdir_factory.mktemp("data").join("coco_sample.json")
+    path.write_text(coco_sample, encoding=None)
+    return path
 
 
 # ----- AML Settings ----------------------------------------------------------
