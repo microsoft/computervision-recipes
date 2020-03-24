@@ -233,6 +233,7 @@ class DetectionDataset:
         seed: int = None,
         allow_negatives: bool = False,
         labels: List[str] = None,
+        max_num_images = None,
     ):
         """ initialize dataset
 
@@ -270,6 +271,7 @@ class DetectionDataset:
         self.seed = seed
         self.keypoint_meta = keypoint_meta
         self.labels = labels
+        self.max_num_images = max_num_images
 
         # read annotations
         self._read_annos()
@@ -305,6 +307,7 @@ class DetectionDataset:
         # it's assumed that the annotation filenames end with .xml.
         # If im_dir is not provided, then the image paths are read from inside
         # the .xml annotations.
+        im_paths = None
         if self.im_dir is None:
             anno_filenames = sorted(os.listdir(self.root / self.anno_dir))
         else:
@@ -315,6 +318,13 @@ class DetectionDataset:
             anno_filenames = [
                 os.path.splitext(s)[0] + ".xml" for s in im_filenames
             ]
+
+        # Reduce number of images if max_num_images is set
+        if self.max_num_images and len(anno_filenames) > self.max_num_images:
+            indices = np.unique(np.floor(np.linspace(0, len(anno_filenames)-1, self.max_num_images)).astype(int))
+            anno_filenames = [anno_filenames[i] for i in indices]
+            if im_paths:
+                im_paths = [im_paths[i] for i in indices]
 
         # Read all annotations
         self.im_paths = []

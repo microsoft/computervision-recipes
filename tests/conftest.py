@@ -20,6 +20,8 @@ from fastai.vision import cnn_learner, DatasetType, models
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List, Tuple
 from tempfile import TemporaryDirectory
+
+from .resources import coco_sample
 from utils_cv.common.data import unzip_url
 from utils_cv.common.gpu import db_num_workers
 from utils_cv.classification.data import Urls as ic_urls
@@ -148,6 +150,7 @@ def detection_notebooks():
         "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
         "02": os.path.join(folder_notebooks, "02_mask_rcnn.ipynb"),
         "03": os.path.join(folder_notebooks, "03_keypoint_rcnn.ipynb"),
+        "04": os.path.join(folder_notebooks, "04_coco_accuracy_vs_speed.ipynb"),
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters_on_azureml.ipynb"
         ),
@@ -682,6 +685,14 @@ def od_detections(od_detection_dataset):
     """ returns output of the object detector for a given test set. """
     learner = DetectionLearner(od_detection_dataset)
     return learner.predict_dl(od_detection_dataset.test_dl, threshold=0)
+
+
+@pytest.fixture(scope="session")
+def coco_sample_path(tmpdir_factory) -> str:
+    """ Returns the path to a coco-formatted annotation. """
+    path = tmpdir_factory.mktemp("data").join("coco_sample.json")
+    path.write_text(coco_sample, encoding=None)
+    return path
 
 
 # ----- AML Settings ----------------------------------------------------------
