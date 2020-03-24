@@ -48,11 +48,8 @@ class VideoRecord(object):
             row: a list where first element is the path and second element is
             the label
         """
-        # assert len(data) == 2
-        # self.path = data[0]
-        # self.label = data[1]
         self._data = data
-        self._num_frames = -1
+        self._num_frames = None
 
     @property
     def path(self) -> str:
