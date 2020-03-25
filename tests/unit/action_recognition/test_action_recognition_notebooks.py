@@ -68,6 +68,3 @@ def test_10_notebook_run(action_recognition_notebooks):
     nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
     # TODO add some asserts like below
     # assert len(nb_output.scraps["training_accuracies"].data) == 1
-
-
-
