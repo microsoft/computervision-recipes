@@ -6,7 +6,6 @@ import copy
 from pathlib import Path
 import warnings
 from typing import Callable, Tuple, Union, List
-from collections import namedtuple
 
 import decord
 from einops.layers.torch import Rearrange
@@ -57,7 +56,7 @@ class VideoRecord(object):
 
     @property
     def num_frames(self) -> int:
-        if self._num_frames == -1:
+        if self._num_frames is None:
             self._num_frames = int(
                 len([x for x in Path(self._data[0]).glob("img_*")]) - 1
             )
