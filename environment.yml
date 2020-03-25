@@ -36,6 +36,7 @@ dependencies:
 - pyyaml>=5.1.2
 - requests>=2.22.0
 - einops==0.1.0
+- cytoolz
 - pip:
   - decord==0.3.5
   - nvidia-ml-py3

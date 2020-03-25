@@ -3,6 +3,7 @@
 
 import hashlib
 import numpy as np
+import os
 import pytest
 import requests
 
@@ -12,10 +13,48 @@ import xml.etree.ElementTree as ET
 
 from utils_cv.detection.data import (
     coco_labels,
+    coco2voc,
     Urls,
     extract_keypoints_from_labelbox_json,
     extract_masks_from_labelbox_json,
 )
+
+
+def test_urls():
+    # Test if all urls are valid
+    all_urls = Urls.all()
+    for url in all_urls:
+        with requests.get(url):
+            pass
+
+
+def test_coco_labels():
+    # Compare first five labels for quick check
+    COCO_LABELS_FIRST_FIVE = (
+        "__background__",
+        "person",
+        "bicycle",
+        "car",
+        "motorcycle",
+    )
+
+    labels = coco_labels()
+    for i in range(5):
+        assert labels[i] == COCO_LABELS_FIRST_FIVE[i]
+
+    # Check total number of labels
+    assert len(labels) == 91
+
+
+def test_coco2voc(coco_sample_path):
+    output_dir = "coco2voc_output"
+    coco2voc(
+        anno_path = coco_sample_path,
+        output_dir = output_dir,
+        download_images = False
+    )
+    filenames = os.listdir(os.path.join(output_dir, "annotations"))
+    assert len(filenames) == 3
 
 
 @pytest.fixture(scope="session")
@@ -144,32 +183,6 @@ def labelbox_export_data(tmp_session):
         f.write(mask_json)
 
     return data_dir, mask_json_path, keypoint_json_path, keypoint_truth_dict
-
-
-def test_urls():
-    # Test if all urls are valid
-    all_urls = Urls.all()
-    for url in all_urls:
-        with requests.get(url):
-            pass
-
-
-def test_coco_labels():
-    # Compare first five labels for quick check
-    COCO_LABELS_FIRST_FIVE = (
-        "__background__",
-        "person",
-        "bicycle",
-        "car",
-        "motorcycle",
-    )
-
-    labels = coco_labels()
-    for i in range(5):
-        assert labels[i] == COCO_LABELS_FIRST_FIVE[i]
-
-    # Check total number of labels
-    assert len(labels) == 91
 
 
 def test_extract_keypoints_from_labelbox_json(
