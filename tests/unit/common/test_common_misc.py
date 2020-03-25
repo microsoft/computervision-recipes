@@ -8,7 +8,7 @@ from PIL import ImageFont
 
 from fastai.vision import ImageList
 from utils_cv.common.gpu import db_num_workers
-from utils_cv.common.misc import copy_files, set_random_seed, get_font
+from utils_cv.common.misc import copy_files, set_random_seed, get_font, Config
 
 
 def test_set_random_seed(tiny_ic_data_path):
