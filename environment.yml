@@ -37,6 +37,7 @@ dependencies:
 - requests>=2.22.0
 - decord==0.3.5
 - einops==0.1.0
+- cytoolz
 - pip:
   - nvidia-ml-py3
   - nteract-scrapbook
