@@ -5,198 +5,137 @@ from collections import OrderedDict
 import os
 import time
 import warnings
+from typing import Union
+from pathlib import Path
 
 try:
     from apex import amp
+
     AMP_AVAILABLE = True
 except ModuleNotFoundError:
     AMP_AVAILABLE = False
 
-from IPython.core.debugger import set_trace
-import numpy as np
 import torch
-import torch.cuda as cuda
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+import torchvision
 
-from . import Config
-from .data import (
-    DEFAULT_MEAN,
-    DEFAULT_STD,
-    show_batch as _show_batch,
-    VideoDataset,
-)
+from ..common.misc import Config
+from ..common.gpu import torch_device, num_devices
+from .dataset import VideoDataset
 
-from .metrics import accuracy, AverageMeter
+from .references.metrics import accuracy, AverageMeter
 
-# From https://github.com/moabitcoin/ig65m-pytorch
-TORCH_R2PLUS1D = "moabitcoin/ig65m-pytorch"
+# These paramaters are set so that we can use torch hub to download pretrained
+# models from the specified repo
+TORCH_R2PLUS1D = "moabitcoin/ig65m-pytorch"  # From https://github.com/moabitcoin/ig65m-pytorch
 MODELS = {
-    # model: output classes
-    'r2plus1d_34_32_ig65m': 359,
-    'r2plus1d_34_32_kinetics': 400,
-    'r2plus1d_34_8_ig65m': 487,
-    'r2plus1d_34_8_kinetics': 400,
+    # Model name followed by the number of output classes.
+    "r2plus1d_34_32_ig65m": 359,
+    "r2plus1d_34_32_kinetics": 400,
+    "r2plus1d_34_8_ig65m": 487,
+    "r2plus1d_34_8_kinetics": 400,
 }
 
 
-class R2Plus1D(object):
-    def __init__(self, cfgs):
-        self.configs = Config(cfgs)
-        self.train_ds, self.valid_ds = self.load_datasets(self.configs)
-        self.model = self.init_model(
-            self.configs.sample_length,
-            self.configs.base_model,
-            self.configs.num_classes
+class VideoLearner(object):
+    """ Video recognition learner object that handles training loop and evaluation. """
+
+    def __init__(
+        self,
+        dataset: VideoDataset,
+        num_classes: int,  # ie 51 for hmdb51
+        base_model: str = "ig65m",  # or "kinetics"
+    ) -> None:
+        """ By default, the Video Learner will use a R2plus1D model. Pass in
+        a dataset of type Video Dataset and the Video Learner will intialize
+        the model.
+
+        Args:
+            dataset: the datset to use for this model
+            num_class: the number of actions/classifications
+            base_model: the R2plus1D model is based on either ig65m or
+            kinetics. By default it will use the weights from ig65m since it
+            tends attain higher results.
+        """
+        self.dataset = dataset
+        self.model, self.model_name = self.init_model(
+            self.dataset.sample_length, base_model, num_classes,
         )
-        self.model_name = "r2plus1d_34_{}_{}".format(self.configs.sample_length, self.configs.base_model)
 
     @staticmethod
-    def init_model(sample_length, base_model, num_classes=None):
-        if base_model not in ('ig65m', 'kinetics'):
+    def init_model(
+        sample_length: int, base_model: str, num_classes: int = None
+    ) -> torchvision.models.video.resnet.VideoResNet:
+        """
+        Initializes the model by loading it using torch's `hub.load`
+        functionality. Uses the model from TORCH_R2PLUS1D.
+
+        Args:
+            sample_length: Number of consecutive frames to sample from a video (i.e. clip length).
+            base_model: the R2plus1D model is based on either ig65m or kinetics.
+            num_classes: the number of classes/actions
+
+        Returns:
+            Load a model from a github repo, with pretrained weights
+        """
+        if base_model not in ("ig65m", "kinetics"):
             raise ValueError(
-                "Not supported model {}. Should be 'ig65m' or 'kinetics'"
-                .format(base_model)
+                f"Not supported model {base_model}. Should be 'ig65m' or 'kinetics'"
             )
 
         # Decide if to use pre-trained weights for DNN trained using 8 or for 32 frames
-        if sample_length<=8:
+        if sample_length <= 8:
             model_sample_length = 8
         else:
             model_sample_length = 32
-        model_name = "r2plus1d_34_{}_{}".format(model_sample_length, base_model)
 
-        print("Loading {} model".format(model_name))
+        model_name = f"r2plus1d_34_{model_sample_length}_{base_model}"
+
+        print(f"Loading {model_name} model")
 
         model = torch.hub.load(
-            TORCH_R2PLUS1D, model_name, num_classes=MODELS[model_name], pretrained=True
+            TORCH_R2PLUS1D,
+            model_name,
+            num_classes=MODELS[model_name],
+            pretrained=True,
         )
 
         # Replace head
         if num_classes is not None:
             model.fc = nn.Linear(model.fc.in_features, num_classes)
-        return model
 
-    @staticmethod
-    def load_datasets(cfgs):
-        """Load VideoDataset
+        return model, model_name
 
-        Args:
-            cfgs (dict or Config): Dataset configuration. For validation dataset,
-                data augmentation such as random shift and temporal jitter is not used.
-
-        Return:
-             VideoDataset, VideoDataset: Train and validation datasets.
-                If split file is not provided, returns None.
-        """
-        cfgs = Config(cfgs)
-
-        train_split = cfgs.get('train_split', None)
-        train_ds = None if train_split is None else VideoDataset(
-            split_file=train_split,
-            video_dir=cfgs.video_dir,
-            num_segments=1,
-            sample_length=cfgs.sample_length,
-            sample_step=cfgs.get('temporal_jitter_step', cfgs.get('sample_step', 1)),
-            input_size=112,
-            im_scale=cfgs.get('im_scale', 128),
-            resize_keep_ratio=cfgs.get('resize_keep_ratio', True),
-            mean=cfgs.get('mean', DEFAULT_MEAN),
-            std=cfgs.get('std', DEFAULT_STD),
-            random_shift=cfgs.get('random_shift', True),
-            temporal_jitter=True if cfgs.get('temporal_jitter_step', 0) > 0 else False,
-            flip_ratio=cfgs.get('flip_ratio', 0.5),
-            random_crop=cfgs.get('random_crop', True),
-            random_crop_scales=cfgs.get('random_crop_scales', (0.6, 1.0)),
-            video_ext=cfgs.video_ext,
-        )
-
-        valid_split = cfgs.get('valid_split', None)
-        valid_ds = None if valid_split is None else VideoDataset(
-            split_file=valid_split,
-            video_dir=cfgs.video_dir,
-            num_segments=1,
-            sample_length=cfgs.sample_length,
-            sample_step=cfgs.get('sample_step', 1),
-            input_size=112,
-            im_scale=cfgs.get('im_scale', 128),
-            resize_keep_ratio=True,
-            mean=cfgs.get('mean', DEFAULT_MEAN),
-            std=cfgs.get('std', DEFAULT_STD),
-            random_shift=False,
-            temporal_jitter=False,
-            flip_ratio=0.0,
-            random_crop=False,  # == Center crop
-            random_crop_scales=None,
-            video_ext=cfgs.video_ext,
-        )
-
-        return train_ds, valid_ds
-
-    def show_batch(self, which_data='train', num_samples=1):
-        """Plot first few samples in the datasets"""
-        if which_data == 'train':
-            batch = [self.train_ds[i][0] for i in range(num_samples)]
-        elif which_data == 'valid':
-            batch = [self.valid_ds[i][0] for i in range(num_samples)]
-        else:
-            raise ValueError("Unknown data type {}".format(which_data))
-        _show_batch(
-            batch,
-            self.configs.sample_length,
-            mean=self.configs.get('mean', DEFAULT_MEAN),
-            std=self.configs.get('std', DEFAULT_STD),
-        )
-
-    def freeze(self):
+    def freeze(self) -> None:
         """Freeze model except the last layer"""
         self._set_requires_grad(False)
         for param in self.model.fc.parameters():
             param.requires_grad = True
 
-    def unfreeze(self):
+    def unfreeze(self) -> None:
         self._set_requires_grad(True)
 
-    def _set_requires_grad(self, requires_grad=True):
+    def _set_requires_grad(self, requires_grad=True) -> None:
         for param in self.model.parameters():
             param.requires_grad = requires_grad
 
-    def fit(self, train_cfgs):
+    def fit(self, train_cfgs) -> None:
+        """ The primary fit function """
         train_cfgs = Config(train_cfgs)
 
-        model_dir = train_cfgs.get('model_dir', "checkpoints")
+        model_dir = train_cfgs.get("model_dir", "checkpoints")
         os.makedirs(model_dir, exist_ok=True)
 
-        if cuda.is_available():
-            device = torch.device("cuda")
-            num_devices = cuda.device_count()
-            # Look for the optimal set of algorithms to use in cudnn. Use this only with fixed-size inputs.
-            torch.backends.cudnn.benchmark = True
-        else:
-            device = torch.device("cpu")
-            num_devices = 1
-
         data_loaders = {}
-        if self.train_ds is not None:
-            data_loaders['train'] = DataLoader(
-                self.train_ds,
-                batch_size=train_cfgs.get('batch_size', 8) * num_devices,
-                shuffle=True,
-                num_workers=0,  # Torch 1.2 has a bug when num-workers > 0 (0 means run a main-processor worker)
-                pin_memory=True,
-            )
-        if self.valid_ds is not None:
-            data_loaders['valid'] = DataLoader(
-                self.valid_ds,
-                batch_size=train_cfgs.get('batch_size', 8) * num_devices,
-                shuffle=False,
-                num_workers=0,
-                pin_memory=True,
-            )
+        data_loaders["train"] = self.dataset.train_dl
+        data_loaders["valid"] = self.dataset.test_dl
 
         # Move model to gpu before constructing optimizers and amp.initialize
+        device = torch_device()
         self.model.to(device)
+        count_devices = num_devices()
+        torch.backends.cudnn.benchmark = True
 
         named_params_to_update = {}
         total_params = 0
@@ -210,19 +149,22 @@ class R2Plus1D(object):
             print("\tfull network")
         else:
             for name in named_params_to_update:
-                print("\t{}".format(name))
+                print(f"\t{name}")
 
-        momentum=train_cfgs.get('momentum', 0.95)
+        # create optimizer
+        momentum = train_cfgs.get("momentum", 0.95)
         optimizer = optim.SGD(
             list(named_params_to_update.values()),
             lr=train_cfgs.lr,
             momentum=momentum,
-            weight_decay=train_cfgs.get('weight_decay', 0.0001),
+            weight_decay=train_cfgs.get("weight_decay", 0.0001),
         )
 
         # Use mixed-precision if available
         # Currently, only O1 works with DataParallel: See issues https://github.com/NVIDIA/apex/issues/227
-        if train_cfgs.get('mixed_prec', False) and AMP_AVAILABLE:
+        if train_cfgs.get("mixed_prec", False):
+            # break if not AMP_AVAILABLE
+            assert AMP_AVAILABLE
             # 'O0': Full FP32, 'O1': Conservative, 'O2': Standard, 'O3': Full FP16
             self.model, optimizer = amp.initialize(
                 self.model,
@@ -233,37 +175,35 @@ class R2Plus1D(object):
             )
 
         # Learning rate scheduler
-        if train_cfgs.get('use_one_cycle_policy', False):
+        if train_cfgs.get("use_one_cycle_policy", False):
             # Use warmup with the one-cycle policy
             scheduler = torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
                 max_lr=train_cfgs.lr,
                 total_steps=train_cfgs.epochs,
-                pct_start=train_cfgs.get('warmup_pct', 0.3),
-                base_momentum=0.9*momentum,
+                pct_start=train_cfgs.get("warmup_pct", 0.3),
+                base_momentum=0.9 * momentum,
                 max_momentum=momentum,
             )
         else:
             # Simple step-decay
             scheduler = torch.optim.lr_scheduler.StepLR(
                 optimizer,
-                step_size=train_cfgs.get('lr_step_size', float("inf")),
-                gamma=train_cfgs.get('lr_gamma', 0.1),
+                step_size=train_cfgs.get("lr_step_size", float("inf")),
+                gamma=train_cfgs.get("lr_gamma", 0.1),
             )
 
         # DataParallel after amp.initialize
-        if num_devices > 1:
-            model = nn.DataParallel(self.model)
-        else:
-            model = self.model
+        model = (
+            nn.DataParallel(self.model) if count_devices > 1 else self.model
+        )
 
         criterion = nn.CrossEntropyLoss().to(device)
 
         for e in range(1, train_cfgs.epochs + 1):
-            print("Epoch {} ==========".format(e))
-            if scheduler is not None:
-                print("lr={}".format(scheduler.get_lr()))
-            
+            print(f"Epoch {e} ==========")
+            print(f"lr={scheduler.get_lr()}")
+
             self.train_an_epoch(
                 model,
                 data_loaders,
@@ -276,14 +216,16 @@ class R2Plus1D(object):
 
             scheduler.step()
 
-            if train_cfgs.get('save_models', False):   
+            if train_cfgs.get("save_models", False):
                 self.save(
                     os.path.join(
                         model_dir,
                         "{model_name}_{epoch}.pt".format(
-                            model_name=train_cfgs.get('model_name', self.model_name),
-                            epoch=str(e).zfill(3)
-                        )
+                            model_name=train_cfgs.get(
+                                "model_name", self.model_name
+                            ),
+                            epoch=str(e).zfill(3),
+                        ),
                     )
                 )
 
@@ -296,29 +238,35 @@ class R2Plus1D(object):
         optimizer,
         grad_steps=1,
         mixed_prec=False,
-    ):
+    ) -> None:
         """Train / validate a model for one epoch.
 
-        :param model:
-        :param data_loaders: dict {'train': train_dl, 'valid': valid_dl}
-        :param device:
-        :param criterion:
-        :param optimizer:
-        :param grad_steps: If > 1, use gradient accumulation. Useful for larger batching
-        :param mixed_prec: If True, use FP16 + FP32 mixed precision via NVIDIA apex.amp
-        :return: dict {
-            'train/time': batch_time.avg,
-            'train/loss': losses.avg,
-            'train/top1': top1.avg,
-            'train/top5': top5.avg,
-            'valid/time': ...
-        }
+        Args:
+            model: the model to use to train
+            data_loaders: dict {'train': train_dl, 'valid': valid_dl}
+            device: gpu or not
+            criterion: TODO
+            optimizer: TODO
+            grad_steps: If > 1, use gradient accumulation. Useful for larger batching
+            mixed_prec: If True, use FP16 + FP32 mixed precision via NVIDIA apex.amp
+
+        Return:
+            dict {
+                'train/time': batch_time.avg,
+                'train/loss': losses.avg,
+                'train/top1': top1.avg,
+                'train/top5': top5.avg,
+                'valid/time': ...
+            }
         """
-        assert "train" in data_loaders
         if mixed_prec and not AMP_AVAILABLE:
             warnings.warn(
-                "NVIDIA apex module is not installed. Cannot use mixed-precision."
+                """
+                NVIDIA apex module is not installed. Cannot use
+                mixed-precision. Turning off mixed-precision.
+                """
             )
+            mixed_prec = False
 
         result = OrderedDict()
         for phase in ["train", "valid"]:
@@ -356,8 +304,10 @@ class R2Plus1D(object):
                         # make the accumulated gradient to be the same scale as without the accumulation
                         loss = loss / grad_steps
 
-                        if mixed_prec and AMP_AVAILABLE:
-                            with amp.scale_loss(loss, optimizer) as scaled_loss:
+                        if mixed_prec:
+                            with amp.scale_loss(
+                                loss, optimizer
+                            ) as scaled_loss:
                                 scaled_loss.backward()
                         else:
                             loss.backward()
@@ -371,30 +321,26 @@ class R2Plus1D(object):
                     end = time.time()
 
             print(
-                "{} took {:.2f} sec: loss = {:.4f}, top1_acc = {:.4f}, top5_acc = {:.4f}".format(
-                    phase, batch_time.sum, losses.avg, top1.avg, top5.avg
-                )
+                f"{phase} took {batch_time.sum:.2f} sec: loss = {losses.avg:.4f}, top1_acc = {top1.avg:.4f}, top5_acc = {top5.avg:.4f}"
             )
-            result["{}/time".format(phase)] = batch_time.sum
-            result["{}/loss".format(phase)] = losses.avg
-            result["{}/top1".format(phase)] = top1.avg
-            result["{}/top5".format(phase)] = top5.avg
+            result[f"{phase}/time"] = batch_time.sum
+            result[f"{phase}/loss"] = losses.avg
+            result[f"{phase}/top1"] = top1.avg
+            result[f"{phase}/top5"] = top5.avg
 
         return result
 
-    def save(self, model_path):
-        torch.save(
-            self.model.state_dict(),
-            model_path
-        )
+    def save(self, model_path: Union[Path, str]) -> None:
+        """ Save the model to a path on disk. """
+        torch.save(self.model.state_dict(), model_path)
 
-    def load(self, model_name, model_dir="checkpoints"):
+    def load(self, model_name: str, model_dir: str = "checkpoints") -> None:
         """
         TODO accept epoch. If None, load the latest model.
         :param model_name: Model name format should be 'name_0EE' where E is the epoch
         :param model_dir: By default, 'checkpoints'
         :return:
         """
-        self.model.load_state_dict(torch.load(
-            os.path.join(model_dir, "{}.pt".format(model_name))
-        ))
+        self.model.load_state_dict(
+            torch.load(os.path.join(model_dir, f"{model_name}.pt"))
+        )

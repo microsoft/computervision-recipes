@@ -37,13 +37,19 @@ class ResizeVideo(object):
                 size = (int(self.size), int(self.size))
         else:
             if self.keep_ratio:
-                scale = min(self.size[0] / clip.shape[-2], self.size[1] / clip.shape[-1], )
+                scale = min(
+                    self.size[0] / clip.shape[-2],
+                    self.size[1] / clip.shape[-1],
+                )
             else:
                 size = self.size
 
         return nn.functional.interpolate(
-            clip, size=size, scale_factor=scale,
-            mode=self.interpolation_mode, align_corners=False
+            clip,
+            size=size,
+            scale_factor=scale,
+            mode=self.interpolation_mode,
+            align_corners=False,
         )
 
 
@@ -66,7 +72,7 @@ class RandomCropVideo(object):
         return F.crop(clip, i, j, h, w)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(size={0})'.format(self.size)
+        return self.__class__.__name__ + "(size={0})".format(self.size)
 
     @staticmethod
     def get_params(clip, output_size):
@@ -87,8 +93,8 @@ class RandomCropVideo(object):
         i = random.randint(0, h - th)
         j = random.randint(0, w - tw)
         return i, j, th, tw
-    
-    
+
+
 class RandomResizedCropVideo(object):
     def __init__(
         self,
@@ -116,13 +122,17 @@ class RandomResizedCropVideo(object):
                 size is (C, T, H, W)
         """
         i, j, h, w = self.get_params(clip, self.scale, self.ratio)
-        return F.resized_crop(clip, i, j, h, w, self.size, self.interpolation_mode)
+        return F.resized_crop(
+            clip, i, j, h, w, self.size, self.interpolation_mode
+        )
 
     def __repr__(self):
-        return self.__class__.__name__ + \
-            '(size={0}, interpolation_mode={1}, scale={2}, ratio={3})'.format(
+        return (
+            self.__class__.__name__
+            + "(size={0}, interpolation_mode={1}, scale={2}, ratio={3})".format(
                 self.size, self.interpolation_mode, self.scale, self.ratio
             )
+        )
 
     @staticmethod
     def get_params(clip, scale, ratio):
@@ -187,7 +197,7 @@ class CenterCropVideo(object):
         return F.center_crop(clip, self.size)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(size={0})'.format(self.size)
+        return self.__class__.__name__ + "(size={0})".format(self.size)
 
 
 class NormalizeVideo(object):
@@ -212,8 +222,12 @@ class NormalizeVideo(object):
         return F.normalize(clip, self.mean, self.std, self.inplace)
 
     def __repr__(self):
-        return self.__class__.__name__ + '(mean={0}, std={1}, inplace={2})'.format(
-            self.mean, self.std, self.inplace)
+        return (
+            self.__class__.__name__
+            + "(mean={0}, std={1}, inplace={2})".format(
+                self.mean, self.std, self.inplace
+            )
+        )
 
 
 class ToTensorVideo(object):

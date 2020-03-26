@@ -3,8 +3,10 @@
 
 import os
 import platform
-
+import sys
 import torch
+import torch.cuda as cuda
+import torchvision
 from torch.cuda import current_device, get_device_name, is_available
 
 
@@ -47,6 +49,15 @@ def torch_device():
     )
 
 
+def num_devices():
+    """ Gets the number of devices based on cpu/gpu """
+    return (
+        torch.cuda.device_count()
+        if torch.cuda.is_available()
+        else 1
+    )
+
+
 def db_num_workers(non_windows_num_workers: int = 16):
     """Returns how many workers to use when loading images in a databunch. On windows machines using >0 works significantly slows down model
     training and evaluation. Setting num_workers to zero on Windows machines will speed up training/inference significantly, but will still be
@@ -58,3 +69,15 @@ def db_num_workers(non_windows_num_workers: int = 16):
         return 0
     else:
         return non_windows_num_workers
+
+
+def system_info():
+    print(sys.version, "\n")
+    print(f"PyTorch {torch.__version__} \n")
+    print(f"Torch-vision {torchvision.__version__} \n")
+    print("Available devices:")
+    if cuda.is_available():
+        for i in range(cuda.device_count()):
+            print(f"{i}: {cuda.get_device_name(i)}")
+    else:
+        print("CPUs only, no GPUs found")
