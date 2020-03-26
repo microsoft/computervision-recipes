@@ -23,7 +23,7 @@ def test_ic_20_notebook_run(
     workspace_name,
     workspace_region,
 ):
-    notebook_path = classification_notebooks["20_azure_workspace_setup"]
+    notebook_path = classification_notebooks["20"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -46,9 +46,7 @@ def test_ic_21_notebook_run(
     workspace_name,
     workspace_region,
 ):
-    notebook_path = classification_notebooks[
-        "21_deployment_on_azure_container_instances"
-    ]
+    notebook_path = classification_notebooks["21"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -71,9 +69,7 @@ def test_ic_22_notebook_run(
     workspace_name,
     workspace_region,
 ):
-    notebook_path = classification_notebooks[
-        "22_deployment_on_azure_kubernetes_service"
-    ]
+    notebook_path = classification_notebooks["22"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -96,7 +92,7 @@ def test_ic_23_notebook_run(
     workspace_name,
     workspace_region,
 ):
-    notebook_path = classification_notebooks["23_aci_aks_web_service_testing"]
+    notebook_path = classification_notebooks["23"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -119,9 +115,7 @@ def test_ic_24_notebook_run(
     workspace_name,
     workspace_region,
 ):
-    notebook_path = classification_notebooks[
-        "24_exploring_hyperparameters_on_azureml"
-    ]
+    notebook_path = classification_notebooks["24"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -180,7 +174,7 @@ def test_od_20_notebook_run(
     workspace_name,
     workspace_region,
 ):
-    notebook_path = detection_notebooks["20_deployment_on_kubernetes"]
+    notebook_path = detection_notebooks["20"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,

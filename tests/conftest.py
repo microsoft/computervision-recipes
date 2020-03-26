@@ -16,10 +16,12 @@ import random
 from PIL import Image
 from torch import tensor
 from pathlib import Path
-from fastai.vision import cnn_learner, models
+from fastai.vision import cnn_learner, DatasetType, models
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List, Tuple
 from tempfile import TemporaryDirectory
+
+from .resources import coco_sample
 from utils_cv.common.data import unzip_url
 from utils_cv.common.gpu import db_num_workers
 from utils_cv.classification.data import Urls as ic_urls
@@ -35,6 +37,7 @@ from utils_cv.detection.model import (
     _apply_threshold,
 )
 from utils_cv.similarity.data import Urls as is_urls
+from utils_cv.similarity.model import compute_features_learner
 
 
 def path_classification_notebooks():
@@ -70,6 +73,18 @@ def path_detection_notebooks():
     )
 
 
+def path_action_recognition_notebooks():
+    """ Returns the path of the action recognition notebooks folder. """
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.path.pardir,
+            "scenarios",
+            "action_recognition",
+        )
+    )
+
+
 # ----- Module fixtures ----------------------------------------------------------
 
 
@@ -79,39 +94,33 @@ def classification_notebooks():
 
     # Path for the notebooks
     paths = {
-        "00_webcam": os.path.join(folder_notebooks, "00_webcam.ipynb"),
-        "01_training_introduction": os.path.join(
-            folder_notebooks, "01_training_introduction.ipynb"
-        ),
-        "02_multilabel_classification": os.path.join(
+        "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
+        "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
+        "02": os.path.join(
             folder_notebooks, "02_multilabel_classification.ipynb"
         ),
-        "03_training_accuracy_vs_speed": os.path.join(
+        "03": os.path.join(
             folder_notebooks, "03_training_accuracy_vs_speed.ipynb"
         ),
-        "10_image_annotation": os.path.join(
-            folder_notebooks, "10_image_annotation.ipynb"
-        ),
-        "11_exploring_hyperparameters": os.path.join(
+        "10": os.path.join(folder_notebooks, "10_image_annotation.ipynb"),
+        "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters.ipynb"
         ),
-        "12_hard_negative_sampling": os.path.join(
+        "12": os.path.join(
             folder_notebooks, "12_hard_negative_sampling.ipynb"
         ),
-        "20_azure_workspace_setup": os.path.join(
-            folder_notebooks, "20_azure_workspace_setup.ipynb"
-        ),
-        "21_deployment_on_azure_container_instances": os.path.join(
+        "20": os.path.join(folder_notebooks, "20_azure_workspace_setup.ipynb"),
+        "21": os.path.join(
             folder_notebooks,
             "21_deployment_on_azure_container_instances.ipynb",
         ),
-        "22_deployment_on_azure_kubernetes_service": os.path.join(
+        "22": os.path.join(
             folder_notebooks, "22_deployment_on_azure_kubernetes_service.ipynb"
         ),
-        "23_aci_aks_web_service_testing": os.path.join(
+        "23": os.path.join(
             folder_notebooks, "23_aci_aks_web_service_testing.ipynb"
         ),
-        "24_exploring_hyperparameters_on_azureml": os.path.join(
+        "24": os.path.join(
             folder_notebooks, "24_exploring_hyperparameters_on_azureml.ipynb"
         ),
     }
@@ -147,6 +156,7 @@ def detection_notebooks():
         "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
         "02": os.path.join(folder_notebooks, "02_mask_rcnn.ipynb"),
         "03": os.path.join(folder_notebooks, "03_keypoint_rcnn.ipynb"),
+        "04": os.path.join(folder_notebooks, "04_coco_accuracy_vs_speed.ipynb"),
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters_on_azureml.ipynb"
         ),
@@ -156,6 +166,20 @@ def detection_notebooks():
         "20": os.path.join(
             folder_notebooks, "20_deployment_on_kubernetes.ipynb"
         ),
+    }
+    return paths
+
+
+@pytest.fixture(scope="module")
+def action_recognition_notebooks():
+    folder_notebooks = path_action_recognition_notebooks()
+
+    # Path for the notebooks
+    paths = {
+        "00": os.path.join(folder_notebooks, "00_webcam.ipynb"),
+        "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
+        "02": os.path.join(folder_notebooks, "02_training_hmbd.ipynb"),
+        "10": os.path.join(folder_notebooks, "10_video_transformation.ipynb"),
     }
     return paths
 
@@ -279,7 +303,7 @@ def tiny_ic_databunch(tmp_session):
         .split_by_rand_pct(valid_pct=0.1, seed=20)
         .label_from_folder()
         .transform(size=50)
-        .databunch(bs=16, num_workers = db_num_workers())
+        .databunch(bs=16, num_workers=db_num_workers())
         .normalize(imagenet_stats)
     )
 
@@ -351,7 +375,7 @@ def testing_databunch(tmp_session):
         .split_by_rand_pct(valid_pct=0.2, seed=20)
         .label_from_folder()
         .transform(size=300)
-        .databunch(bs=16, num_workers = db_num_workers())
+        .databunch(bs=16, num_workers=db_num_workers())
         .normalize(imagenet_stats)
     )
 
@@ -374,7 +398,7 @@ def od_cup_path(tmp_session) -> str:
 
 @pytest.fixture(scope="session")
 def od_cup_mask_path(tmp_session) -> str:
-    """ Returns the path to the downloaded cup image. """
+    """ Returns the path to the downloaded cup mask image. """
     im_url = (
         "https://cvbp.blob.core.windows.net/public/images/cvbp_cup_mask.png"
     )
@@ -683,7 +707,28 @@ def od_detections(od_detection_dataset):
     return learner.predict_dl(od_detection_dataset.test_dl, threshold=0)
 
 
+# ------|-- Action Recognition ------------------------------------------------
+
+
+@pytest.fixture(scope="session")
+def ar_path(tmp_session) -> str:
+    """ Returns the path to the downloaded cup image. """
+    VID_URL = "https://cvbp.blob.core.windows.net/public/datasets/action_recognition/drinking.mp4"
+    vid_path = os.path.join(tmp_session, "drinking.mp4")
+    urllib.request.urlretrieve(VID_URL, vid_path)
+    return vid_path
+
+
+# TODO
+
 # ----- AML Settings ----------------------------------------------------------
+
+@pytest.fixture(scope="session")
+def coco_sample_path(tmpdir_factory) -> str:
+    """ Returns the path to a coco-formatted annotation. """
+    path = tmpdir_factory.mktemp("data").join("coco_sample.json")
+    path.write_text(coco_sample, encoding=None)
+    return path
 
 
 # TODO i can't find where this function is being used
@@ -735,6 +780,7 @@ def workspace_region(request):
 
 # ------|-- Similarity ---------------------------------------------
 
+
 @pytest.fixture(scope="session")
 def tiny_is_data_path(tmp_session) -> str:
     """ Returns the path to the tiny fridge objects dataset. """
@@ -744,3 +790,14 @@ def tiny_is_data_path(tmp_session) -> str:
         dest=tmp_session,
         exist_ok=True,
     )
+
+
+@pytest.fixture(scope="session")
+def tiny_ic_databunch_valid_features(tiny_ic_databunch):
+    learn = cnn_learner(tiny_ic_databunch, models.resnet18)
+    embedding_layer = learn.model[1][6]
+    features = compute_features_learner(
+        tiny_ic_databunch, DatasetType.Valid, learn, embedding_layer
+    )
+    return features
+

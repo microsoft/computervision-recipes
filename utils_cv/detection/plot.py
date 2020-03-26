@@ -12,12 +12,13 @@ import PIL
 from PIL import Image, ImageDraw
 from torch.utils.data import Subset
 import matplotlib.pyplot as plt
+import matplotlib
 
-from .bbox import _Bbox
+from .bbox import _Bbox, DetectionBbox
+from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 from .model import ims_eval_detections
 from .references.coco_eval import CocoEvaluator
 from ..common.misc import get_font
-from .mask import binarise_mask, colorise_binary_mask, transparentise_mask
 
 
 class PlotSettings:
@@ -27,7 +28,7 @@ class PlotSettings:
         self,
         rect_th: int = 4,
         rect_color: Tuple[int, int, int] = (0, 0, 255),
-        text_size: int = 25,
+        text_size: int = 20,
         text_color: Tuple[int, int, int] = (0, 0, 255),
         mask_color: Tuple[int, int, int] = (0, 0, 128),
         mask_alpha: float = 0.8,
@@ -42,6 +43,65 @@ class PlotSettings:
         self.mask_alpha = mask_alpha
         self.keypoint_th = keypoint_th
         self.keypoint_color = keypoint_color
+
+        # Create color table
+        colors = matplotlib.cm.get_cmap("tab20").colors
+        colors = np.floor(np.array(colors) * 255).astype("int")
+        self._colors = tuple(map(tuple, colors))
+
+    def get_colors(self, index):
+        dark_color = self._colors[(index % 10) * 2]
+        bright_color = self._colors[(index % 10) * 2 + 1]
+        return dark_color, bright_color
+
+
+def plot_boxes_stats(
+    data, show: bool = True, figsize: tuple = (18, 3)
+) -> None:
+    """Plot statistics such as number of annotations for class, or
+        distribution of width/height of the annotations.
+
+    Args:
+        data: detection dataset.
+        show: Show plot. Use False if want to manually show the plot later.
+        figsize: Figure size (w, h).
+    """
+    # Get annotation statistics
+    labels_counts, box_widths, box_heights, box_rel_widths, box_rel_heights = (
+        data.boxes_stats()
+    )
+
+    # Plot results
+    plt.subplots(1, 3, figsize=figsize)
+    plt.subplot(1, 3, 1)
+    class_names = [l for [l, c] in labels_counts.most_common()][::-1]
+    counts = [c for [l, c] in labels_counts.most_common()][::-1]
+    plt.barh(range(len(class_names)), counts)
+    plt.gca().set_yticks(range(len(class_names)))
+    plt.gca().set_yticklabels(class_names)
+    plt.xlabel("Number of annotations per class")
+
+    plt.subplot(1, 3, 2)
+    plt.hist([box_widths, box_heights], 20, label=["Width", "Height"])
+    plt.xlabel("Distribution of box sizes")
+    plt.legend()
+    plt.ylabel("Pixels")
+
+    plt.subplot(1, 3, 3)
+    plt.hist(
+        [box_rel_widths, box_rel_heights],
+        20,
+        label=["Normalized width", "Normalized height"],
+    )
+    plt.xlabel("Distribution of box sizes [normalized by image dimension]")
+    plt.legend()
+    plt.ylabel("Pixels")
+
+    if show:
+        plt.show()
+
+
+# ===== Plotting of ground truth and prediction =====
 
 
 def plot_boxes(
@@ -70,21 +130,34 @@ def plot_boxes(
             if hasattr(bbox, "label_idx") and bbox.label_idx == 0:
                 continue
 
-            box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
+            # show detection score in rectangle label
+            bbox_text = bbox.label_name
+            if type(bbox) is DetectionBbox:
+                bbox_text += " ({:0.2f})".format(bbox.score)
+
+            # pick rectangle and text color if set to None
+            text_color = (
+                plot_settings.text_color
+                or plot_settings.get_colors(bbox.label_idx)[0]
+            )
+            rect_color = (
+                plot_settings.rect_color
+                or plot_settings.get_colors(bbox.label_idx)[1]
+            )
 
             # draw rect
+            box = [(bbox.left, bbox.top), (bbox.right, bbox.bottom)]
             draw.rectangle(
-                box,
-                outline=plot_settings.rect_color,
-                width=plot_settings.rect_th,
+                box, outline=rect_color, width=plot_settings.rect_th
             )
 
             # write prediction class
+            text_offset = plot_settings.text_size + plot_settings.rect_th
             draw.text(
-                (bbox.left, bbox.top),
-                bbox.label_name,
+                (bbox.left, max(0, bbox.top - text_offset)),
+                bbox_text,
                 font=font,
-                fill=plot_settings.text_color,
+                fill=text_color,
             )
 
         if title is not None:
@@ -154,7 +227,8 @@ def plot_keypoints(
         ), "Malformed keypoints array"
         if keypoint_meta:
             assert (
-                np.max(np.array(keypoint_meta["skeleton"])) < keypoints.shape[1]
+                np.max(np.array(keypoint_meta["skeleton"]))
+                < keypoints.shape[1]
             ), "Skeleton index out of range"
 
         draw = ImageDraw.Draw(im)
@@ -176,10 +250,12 @@ def plot_keypoints(
         # draw keypoints
         visible_point_xys = keypoints[keypoints[..., 2] != 0][..., :2]
         offset = 2 * plot_settings.keypoint_th
-        rects = np.hstack([
-            visible_point_xys - offset,  # left top
-            visible_point_xys + offset,  # right bottom
-        ])
+        rects = np.hstack(
+            [
+                visible_point_xys - offset,  # left top
+                visible_point_xys + offset,  # right bottom
+            ]
+        )
         for rect in rects.tolist():
             draw.ellipse(rect, fill=plot_settings.keypoint_color)
 
@@ -206,6 +282,12 @@ def plot_detections(
     # Open image
     assert detection["im_path"], 'Detection["im_path"] should not be None.'
     im = Image.open(detection["im_path"])
+
+    # Adjust the rectangle thickness etc. to the image resolution
+    scale = max(im.size) / 500.0
+    rect_th = int(PlotSettings().rect_th * scale)
+    text_size = int(PlotSettings().text_size * scale)
+    keypoint_th = int(PlotSettings().keypoint_th * scale)
 
     # Get id of ground truth image/annotation
     if data and idx is None:
@@ -235,7 +317,12 @@ def plot_detections(
             im,
             data.keypoints[idx],
             data.keypoint_meta,
-            PlotSettings(keypoint_color=(0, 192, 0)),
+            PlotSettings(
+                keypoint_color=(0, 192, 0),
+                rect_th=rect_th,
+                text_size=text_size,
+                keypoint_th=keypoint_th,
+            ),
         )
 
     # Plot predicted keypoints
@@ -244,7 +331,12 @@ def plot_detections(
             im,
             detection["keypoints"],
             keypoint_meta,
-            PlotSettings(keypoint_color=(192, 165, 0)),
+            PlotSettings(
+                keypoint_color=(192, 165, 0),
+                rect_th=rect_th,
+                text_size=text_size,
+                keypoint_th=keypoint_th,
+            ),
         )
 
     # Plot the detections
@@ -252,7 +344,11 @@ def plot_detections(
         im,
         det_bboxes,
         plot_settings=PlotSettings(
-            rect_color=(255, 165, 0), text_color=(255, 165, 0), rect_th=2
+            rect_color=None,
+            text_color=None,
+            rect_th=rect_th,
+            text_size=text_size,
+            keypoint_th=keypoint_th,
         ),
     )
 
@@ -263,7 +359,11 @@ def plot_detections(
             im,
             anno_bboxes,
             plot_settings=PlotSettings(
-                rect_color=(0, 255, 0), text_color=(0, 255, 0)
+                rect_color=(0, 255, 0),
+                text_color=(0, 255, 0),
+                rect_th=int(0.5 * rect_th),
+                text_size=text_size,
+                keypoint_th=keypoint_th,
             ),
         )
 

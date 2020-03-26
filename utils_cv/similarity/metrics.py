@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-from typing import List
-
+from typing import Dict, List
 import numpy as np
 import scipy
+
+from fastai.vision import LabelList
+from .references.evaluate import evaluate_with_query_set
 
 
 def vector_distance(
@@ -105,3 +106,52 @@ def recall_at_k(ranks: List[int], k: int) -> float:
     below_threshold = [x for x in ranks if x <= k]
     percent_in_top_k = round(100.0 * len(below_threshold) / len(ranks), 1)
     return percent_in_top_k
+
+
+def evaluate(
+    data: LabelList,
+    features: Dict[str, np.array],
+    use_rerank=False,
+    rerank_k1=20,
+    rerank_k2=6,
+    rerank_lambda=0.3,
+):
+    """
+    Computes rank@1 through rank@10 accuracy as well as mAP, optionally with re-ranking
+    post-processor to improve accuracy (see the re-ranking implementation for more info).
+
+    Args:
+        data: Fastai's image labellist
+        features: Dictionary of DNN features for each image
+        use_rerank: use re-ranking
+        rerank_k1, rerank_k2, rerank_lambda: re-ranking parameters
+    Returns:
+        rank_accs: accuracy at rank1 through rank10
+        mAP: average precision
+
+    """
+
+    labels = np.array([data.y[i].obj for i in range(len(data.y))])
+    features = np.array([features[str(s)] for s in data.items])
+
+    # Assign each image into its own group. This serves as id during evaluation to
+    # ensure a query image is not compared to itself during rank computation.
+    # For the market-1501 dataset, the group ids can be used to ensure that a query
+    # can not match to an image taken from the same camera.
+    groups = np.array(range(len(labels)))
+    assert len(labels) == len(groups) == features.shape[0]
+
+    # Run evaluation
+    rank_accs, mAP = evaluate_with_query_set(
+        labels,
+        groups,
+        features,
+        labels,
+        groups,
+        features,
+        use_rerank,
+        rerank_k1,
+        rerank_k2,
+        rerank_lambda,
+    )
+    return rank_accs, mAP
