@@ -28,7 +28,9 @@ class Urls:
         base, "fridgeObjectsWatermarkTiny.zip"
     )
     fridge_objects_negatives_path = urljoin(base, "fridgeObjectsNegative.zip")
-    fridge_objects_negatives_tiny_path = urljoin(base, "fridgeObjectsNegativeTiny.zip")
+    fridge_objects_negatives_tiny_path = urljoin(
+        base, "fridgeObjectsNegativeTiny.zip"
+    )
 
     # multilabel datasets
     multilabel_fridge_objects_path = urljoin(

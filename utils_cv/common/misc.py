@@ -65,11 +65,13 @@ def copy_files(
 
 
 def get_font(size: int = 12) -> ImageFont:
-    """ Gets a font object. """
+    """ Gets a font object. 
+        Tries different fonts and lower/upper case to be compatible with both Linux and Windows.
+    """
     font = None
-    for font in "Tahoma Verdana Arial Helvetica DejaVuSans".split():
+    for font_name in "Tahoma tahoma Verdana verdana Arial arial Helvetica helvetica DejaVuSans dejavusans".split():
         try:
-            font = ImageFont.truetype(f"{font}.ttf", size)
+            font = ImageFont.truetype(f"{font_name}.ttf", size)
         except (AttributeError, IOError):
             font = None
         if font:
@@ -81,3 +83,34 @@ def get_font(size: int = 12) -> ImageFont:
             font = None
 
     return font
+
+
+class Config(object):
+    def __init__(self, config=None, **extras):
+        """Dictionary wrapper to access keys as attributes.
+
+        Args:
+            config (dict or Config): Configurations
+            extras (kwargs): Extra configurations
+
+        Examples:
+            >>> cfg = Config({'lr': 0.01}, momentum=0.95)
+            or
+            >>> cfg = Config({'lr': 0.01, 'momentum': 0.95})
+            then, use as follows:
+            >>> print(cfg.lr, cfg.momentum)
+        """
+        if config is not None:
+            if isinstance(config, dict):
+                for k in config:
+                    setattr(self, k, config[k])
+            elif isinstance(config, self.__class__):
+                self.__dict__ = config.__dict__.copy()
+            else:
+                raise ValueError("Unknown config")
+
+        for k, v in extras.items():
+            setattr(self, k, v)
+
+    def get(self, key, default):
+        return getattr(self, key, default)

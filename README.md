@@ -1,5 +1,11 @@
 <img src="scenarios/media/logo_cvbp.png" align="right" alt="" width="300"/>
 
+```diff
++ March 27: Released v1.1 with new and improved
++   functionality for image retrieval, object detection, 
++   keypoint detection and action recognition.  
++   For additional details, please refer to our releases page.
+```
 
 # Computer Vision
 

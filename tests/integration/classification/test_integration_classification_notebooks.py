@@ -13,7 +13,7 @@ OUTPUT_NOTEBOOK = "output.ipynb"
 @pytest.mark.notebooks
 @pytest.mark.linuxgpu
 def test_01_notebook_run(classification_notebooks):
-    notebook_path = classification_notebooks["01_training_introduction"]
+    notebook_path = classification_notebooks["01"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -30,7 +30,7 @@ def test_01_notebook_run(classification_notebooks):
 @pytest.mark.notebooks
 @pytest.mark.linuxgpu
 def test_02_notebook_run(classification_notebooks):
-    notebook_path = classification_notebooks["02_multilabel_classification"]
+    notebook_path = classification_notebooks["02"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -48,7 +48,7 @@ def test_02_notebook_run(classification_notebooks):
 @pytest.mark.notebooks
 @pytest.mark.linuxgpu
 def test_03_notebook_run(classification_notebooks):
-    notebook_path = classification_notebooks["03_training_accuracy_vs_speed"]
+    notebook_path = classification_notebooks["03"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -65,7 +65,7 @@ def test_03_notebook_run(classification_notebooks):
 @pytest.mark.notebooks
 @pytest.mark.linuxgpu
 def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
-    notebook_path = classification_notebooks["11_exploring_hyperparameters"]
+    notebook_path = classification_notebooks["11"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
@@ -91,7 +91,7 @@ def test_11_notebook_run(classification_notebooks, tiny_ic_data_path):
 @pytest.mark.notebooks
 @pytest.mark.linuxgpu
 def test_12_notebook_run(classification_notebooks):
-    notebook_path = classification_notebooks["12_hard_negative_sampling"]
+    notebook_path = classification_notebooks["12"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,

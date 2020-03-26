@@ -103,7 +103,7 @@ bottom={self.bottom}]\
         return self
 
     def is_valid(self) -> bool:
-        if self.left >= self.right or self.top >= self.bottom:
+        if self.left > self.right or self.top > self.bottom:
             return False
         if (
             min(self.rect()) < -self.MAX_VALID_DIM
