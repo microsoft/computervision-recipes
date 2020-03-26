@@ -109,7 +109,13 @@ class CocoEvaluator(object):
             labels = prediction["labels"].tolist()
 
             rles = [
-                mask_util.encode(np.array(mask[0, :, :, np.newaxis], dtype=np.uint8, order="F"))[0]
+                mask_util.encode(
+                    # Change according to the issue related to mask:
+                    #     https://github.com/pytorch/vision/issues/1355#issuecomment-544951911
+                    np.array(
+                        mask[0, :, :, np.newaxis], dtype=np.uint8, order="F"
+                    )
+                )[0]
                 for mask in masks
             ]
             for rle in rles:
