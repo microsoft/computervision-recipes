@@ -1,0 +1,72 @@
+canvas{
+  background-color: #F2F7F6;
+  width: 100%;
+}
+.icon {
+    display: inline-flex;
+    align-self: center;
+}
+
+.img-wrap {
+  position: relative;
+}
+
+.img-wrap-ph {
+  min-width: 150px;
+  min-height: 150px;
+  border-style: dashed;
+  border-color: grey;
+  border-width: thin;
+}
+
+.img-wrap .clearBtn {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 100;
+}
+
+.hide{
+  display:none;
+}
+
+.sImg {
+  cursor: pointer;
+  max-width: 150px;
+  max-height: 150px;
+}
+
+.eImg {
+  cursor: pointer;
+  max-width: 150px;
+  max-height: 150px;
+}
+
+#hidden {
+  display: none;
+}
+
+#thumbnails, #exampleImages {
+  width: 100%;
+  text-align: center;
+}
+
+#thumbnails > div {
+  display: inline-block;
+  vertical-align: top;
+  text-align:center;
+  margin:2%;  
+}
+
+.item{
+  width:150px;
+  text-align:center;
+  display: inline-block;
+  background-color: transparent;
+  border: 1px solid transparent;
+}
+
+.card-body .imSim {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+} 

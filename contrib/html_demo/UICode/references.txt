@@ -1,0 +1,28 @@
+<!--
+    Frameworks and examples used to build this code (not sure how to reference these): 
+    https://stuk.github.io/jszip/
+    http://stuk.github.io/jszip-utils/
+    https://stackoverflow.com/questions/39254218/js-get-top-5-max-elements-from-array
+    https://arjunphp.com/download-file-node-js-express-js/
+    https://stackoverflow.com/questions/3524827/sort-a-2d-array-by-the-second-value
+    https://supunkavinda.blog/js-euclidean-distance
+    https://stackoverflow.com/questions/15164655/generate-html-table-from-2d-javascript-array
+    https://davidwalsh.name/browser-camera
+    https://kirupa.com/html5/accessing_your_webcam_in_html5.htm
+    https://forum.kirupa.com/t/accessing-your-webcam-in-html5/352092/38?u=kirupa
+    https://stackoverflow.com/questions/4129102/html5-video-dimensions
+    https://blog.prototypr.io/align-svg-icons-to-text-and-say-goodbye-to-font-icons-d44b3d7b26b4
+    https://feathericons.com/
+    https://stackoverflow.com/questions/36828271/how-to-show-delete-button-in-right-corner-of-image
+    https://stackoverflow.com/questions/50623279/js-event-handler-async-function/50623441
+    https://stackoverflow.com/questions/20958078/resize-a-base-64-image-in-javascript-without-using-canvas
+    https://stackoverflow.com/questions/33291436/can-you-resize-or-change-resolution-of-base64-image-through-manipulating-the-bas/33291682
+    https://stackoverflow.com/questions/17774928/js-get-image-width-and-height-from-the-base64-code
+    https://stackoverflow.com/questions/18333427/how-to-insert-a-row-in-an-html-table-body-in-javascript
+    https://stackoverflow.com/questions/11985156/clone-div-and-change-id
+    https://www.geeksforgeeks.org/remove-all-the-child-elements-of-a-dom-node-in-javascript/
+    https://flaviocopes.com/how-to-add-event-listener-multiple-elements-javascript/
+    https://stackoverflow.com/questions/11235206/twitter-bootstrap-form-file-element-upload-button
+    https://stackoverflow.com/questions/26023319/distribute-divs-evenly-in-a-horizontal-line
+-->
+
