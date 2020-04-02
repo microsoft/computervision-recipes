@@ -1,6 +1,7 @@
-var fn_array = [];
-var ref_array;
-var dist_array = [];
+var fn_array = [];  // File name array for image similarity
+var ref_array;  // Reference features array for image similarity
+var fn_array_ex = [];  // File name array for image similarity EXAMPLE images
+var ref_array_ex;  // Reference features array for image similarity EXAMPLE images
 var imgList = [0, 0, 0, 0];
 var imgListEmpty = 4;  // Number of available slots in the imgList
 var b64o = [0, 0, 0, 0];
@@ -12,31 +13,7 @@ tempImg[0] = new Image();
 tempImg[1] = new Image();
 tempImg[2] = new Image();
 tempImg[3] = new Image();
-// Create arrays to hold example image data
-var exampleIC = ['[{"label":"asdasd","probability":"0.21354"},{"label": "klsdfjkdsfjklsdf","probability":"0.4512457"}]',
-'[{"label":"asdasd","probability":"0.21354"}]',
-'[{"label":"asdasd","probability":"0.21354"}]',
-'[{"label":"asdasd","probability":"0.21354"}]',
-'[{"label":"asdasd","probability":"0.21354"}]',
-'[{"label":"asdasd","probability":"0.21354"}]',
-'[{"label":"asdasd","probability":"0.21354"}]',
-'[{"label":"asdasd","probability":"0.21354"}]'];
-var exampleOD = ['[[{"top": "153", "left": "96", "bottom": "515", "right": "234", "label_name": "carton", "label_idx": "2", "score": "0.9971401691436768"}]]',
-'[[{"top": "153", "left": "96", "bottom": "515", "right": "234", "label_name": "carton", "label_idx": "2", "score": "0.9971401691436768"}]]',
-'[[{"top": "153", "left": "96", "bottom": "515", "right": "234", "label_name": "carton", "label_idx": "2", "score": "0.9971401691436768"}]]',
-'[[{"top": "153", "left": "96", "bottom": "515", "right": "234", "label_name": "carton", "label_idx": "2", "score": "0.9971401691436768"}]]',
-'[[{"top": "153", "left": "96", "bottom": "515", "right": "234", "label_name": "carton", "label_idx": "2", "score": "0.9971401691436768"}]]',
-'[[{"top": "153", "left": "96", "bottom": "515", "right": "234", "label_name": "carton", "label_idx": "2", "score": "0.9971401691436768"}]]',
-'[[{"top": "153", "left": "96", "bottom": "515", "right": "234", "label_name": "carton", "label_idx": "2", "score": "0.9971401691436768"}]]',
-'[[{"top": "153", "left": "96", "bottom": "515", "right": "234", "label_name": "carton", "label_idx": "2", "score": "0.9971401691436768"}]]'];
-var exampleIS = ['[{"features": []}]',
-'[{"features": []}]',
-'[{"features": []}]',
-'[{"features": []}]',
-'[{"features": []}]',
-'[{"features": []}]',
-'[{"features": []}]',
-'[{"features": []}]'];
+
 // Grab elements, create settings, etc.
 var video = document.getElementById('videoElement');
 // Elements for taking the snapshot
@@ -44,39 +21,18 @@ var webCamCanvas = document.getElementById('webCamCanvas');
 var wCCcontext = webCamCanvas.getContext('2d');
 
 function populateTable(i, tableData) {
-  var destDivContent = document.getElementById('resultsDiv'+i+'-content');
-  destDivContent.classList.add("text-center");
-  // Clear the destination div children
-  var child = destDivContent.lastElementChild;  
-  while (child) { 
-    destDivContent.removeChild(child); 
-    child = destDivContent.lastElementChild; 
-  } 
-  // Now append the <p> tag indicating the query image
-  var p = document.createElement('p');
-  p.innerText = "Query Image";
-  p.classList.add("font-weight-bold");
-  destDivContent.appendChild(p);
-
-  // Now append the <img> tag to hold the query image
-  var div = document.getElementById('queryImg');
-  clone = div.cloneNode(true); // true means clone all childNodes and all event handlers
-  clone.id = "queryImg"+i;
-  clone.classList.add("mb-3");
-  destDivContent.appendChild(clone);
-
+  var cardBody = document.getElementById("resultsDiv"+i).getElementsByClassName('card-body')[0];
+  cardBody.innerHTML = "<p class='card-text'>Image Similarity</p>";
   tableData.forEach(function(rowData) {
     var item = document.createElement('div');
     item.classList.add("item");
     var img = document.createElement('img');
-    img.src = 'small-150/' + rowData[0];
+    img.src = 'https://ec528simtest.blob.core.windows.net/ec528simtest/small-150/' + rowData[0];
+    //img.src = 'small-150/' + rowData[0];
     var txt = document.createElement('p');
     txt.innerHTML = rowData[0] + "<br/><i>Dist.: " + rowData[1] + "</i>";
-
     item.appendChild(img);
     item.appendChild(txt);
-
-    var cardBody = document.getElementById("resultsDiv"+i).getElementsByClassName('card-body')[0];
     cardBody.appendChild(item);
   });
 }
@@ -88,43 +44,66 @@ function eucDistance(a, b) {
   ** (1/2)
 }
 
-function calcSimilar(top, queryFeatures) {
-  var rows = ref_array.length;
+function calcSimilar(top, queryFeatures, simType) {
+  var dist_array = [];
+  var rows = 0;
+  if (simType == "example") {
+    rows = ref_array_ex.length;
+  } else {
+    rows = ref_array.length;
+  }
   var retImg = "-1";
   if (!queryFeatures) {
     var queryRow = Math.floor(Math.random() * (rows - 0 + 1) + 0);
     var queryimg = ref_array[queryRow];
-    retImg = 'small-150/' + fn_array[queryRow];
+    retImg = 'https://ec528simtest.blob.core.windows.net/ec528simtest/small-150/' + fn_array[queryRow];
+    //retImg = 'small-150/' + fn_array[queryRow];
   } else {
     var queryimg = queryFeatures;
   }
     
   for (i = 0; i < rows; i++) {
+    if (simType == "example") {
+      let euc = eucDistance(queryimg, ref_array_ex[i]).toFixed(2);
+      var arr = [fn_array_ex[i],euc];
+    } else {
       let euc = eucDistance(queryimg, ref_array[i]).toFixed(2);
       var arr = [fn_array[i],euc];
-      dist_array.push(arr); 
+    }
+    dist_array.push(arr); 
   }
   var topValues = dist_array.sort((a,b) => a[1]-b[1]).slice(0,top);
   return [topValues, retImg];
 }
 
 // Process zip file of filenames and parse into array
-async function parseSimFileNames() {
+async function parseSimFileNames(fileType) {
   return new Promise(async function(res,rej) {
     new JSZip.external.Promise(function (resolve, reject) {
-      JSZipUtils.getBinaryContent('data/ref_filenames.zip', function(err, data) {
+      zipFile_fn = 'data/ref_filenames.zip';
+      if (fileType == "example") 
+        zipFile_fn = 'https://ec528simtest.blob.core.windows.net/ec528simtest/data/ref_filenames.zip';
+      //JSZipUtils.getBinaryContent('data/ref_filenames.zip', function(err, data) {
+      JSZipUtils.getBinaryContent(zipFile_fn, function(err, data) {
           if (err) {
-              reject(err);
+            reject(err);
           } else {
-              resolve(data);
+            resolve(data);
           }
       });
     }).then(function (data) {
       return JSZip.loadAsync(data);
     }).then(function (zip) {
-      return zip.file("ref_filenames.txt").async("string");
+      if (zip.file("../visualize/data/ref_filenames.txt")) {
+        return zip.file("../visualize/data/ref_filenames.txt").async("string");
+      } else {
+        return zip.file("ref_filenames.txt").async("string");
+      }
     }).then(function (text) {
-      fn_array = JSON.parse(text);
+      if (fileType == "example") 
+        fn_array_ex = JSON.parse(text);
+      else 
+        fn_array = JSON.parse(text);
       res();
     });
   })
@@ -132,10 +111,14 @@ async function parseSimFileNames() {
 }
 
 // Process zip file of reference image features and parse into array
-async function parseSimFileFeatures() {
+async function parseSimFileFeatures(fileType) {
   return new Promise(async function(res,rej) {
     new JSZip.external.Promise(function (resolve, reject) {
-      JSZipUtils.getBinaryContent('data/ref_features.zip', function(err, data) {
+      zipFile_ref = 'data/ref_features.zip';
+      if (fileType == "example") 
+        zipFile_ref = 'https://ec528simtest.blob.core.windows.net/ec528simtest/data/ref_features.zip';
+      // JSZipUtils.getBinaryContent('data/ref_features.zip', function(err, data) {
+      JSZipUtils.getBinaryContent(zipFile_ref, function(err, data) {
           if (err) {
               reject(err);
           } else {
@@ -145,9 +128,16 @@ async function parseSimFileFeatures() {
     }).then(function (data) {
       return JSZip.loadAsync(data);
     }).then(function (zip) {
-      return zip.file("ref_features.txt").async("string");
+      if (zip.file("../visualize/data/ref_features.txt")) {
+        return zip.file("../visualize/data/ref_features.txt").async("string");
+      } else {
+        return zip.file("ref_features.txt").async("string");
+      }
     }).then(function (text) {
-      ref_array = JSON.parse(text);
+      if (fileType == "example") 
+        ref_array_ex = JSON.parse(text);
+      else 
+        ref_array = JSON.parse(text);
       res();
     });
   })
@@ -168,10 +158,17 @@ async function handleSamples(imgItem) {
   tmpCanvas.width = imgItem.naturalWidth;
   tmpCanvas.height = imgItem.naturalHeight;
   var tmpCtx = tmpCanvas.getContext("2d");
-  tmpCtx.drawImage(imgItem, 0, 0);
-  b64temp = tmpCanvas.toDataURL();
-  await photoSave(0,b64temp);
-  b64temp = 0;
+  // Below 2 lines required to access images from external domain
+  // Else the canvas is "tainted" by the external content and cannot be Base64 converted 
+  var imgTemp = new Image;
+  imgTemp.crossOrigin = "anonymous";
+  imgTemp.onload = async function(){
+    tmpCtx.drawImage(imgTemp, 0, 0);
+    b64temp = tmpCanvas.toDataURL();
+    await photoSave(0,b64temp);
+    b64temp = 0;
+  };
+  imgTemp.src = imgItem.src;
 }
 
 // Handle example image clicks - need this unsual syntax to accomodate the async nature of the process
@@ -182,23 +179,32 @@ document.querySelectorAll('.eImg').forEach(item => {
 // Handle example image clicks - actual work
 async function exampleClick(imgItem) {
   var tmpCanvas = document.createElement("canvas");
+  var tmpCanvas = document.getElementById("resultsCanvas8");
   tmpCanvas.width = imgItem.naturalWidth;
   tmpCanvas.height = imgItem.naturalHeight;
   var tmpCtx = tmpCanvas.getContext("2d");
-  tmpCtx.drawImage(imgItem, 0, 0);
-  b64e = tmpCanvas.toDataURL();
-  // Image classification
-  let exampleId = imgItem.getAttribute("data-eid");
-  var exampleData = exampleIC[exampleId];
-  var showExample = await jsonParser(exampleData, 7);
-  
-  // Object detection
-  exampleData = exampleOD[exampleId];
-  showExample = await jsonParser(exampleData, 8);
+  // Below 2 lines required to access images from external domain
+  // Else the canvas is "tainted" by the external content and cannot be Base64 converted 
+  var imgTemp = new Image;
+  imgTemp.crossOrigin = "anonymous";
+  imgTemp.onload = async function(){
+    tmpCtx.drawImage(imgTemp, 0, 0);
+    b64e = tmpCanvas.toDataURL();
 
-  // Image similarity
-  exampleData = exampleIS[exampleId];
-  showExample = await jsonParser(exampleData, 9);
+    // Image classification
+    let exampleId = imgItem.getAttribute("data-eid");
+    var exampleData = exampleIC[exampleId];
+    var showExample = await jsonParser(exampleData, 7);
+  
+    // Object detection
+    exampleData = exampleOD[exampleId];
+    showExample = await jsonParser(exampleData, 8);
+
+    // Image similarity
+    exampleData = exampleIS[exampleId];
+    showExample = await jsonParser(exampleData, 9);
+  };
+  imgTemp.src = imgItem.src;
 }
 
 function exampleModels() {
@@ -474,19 +480,21 @@ function imgclassification(i, label, probability) {
 // So example call without queryFeatures:  imgsimilarity(0,5)
 async function imgsimilarity(i, count, queryFeatures) {
   // Do work here
-  if (fn_array.length == 0) {
+  simType = "mymodel";
+  if (i > 6)
+    simType = "example";
+  if (fn_array.length == 0 && i < 7) {
     // The zip files for the similarity comparison have't been processed yet
-    await parseSimFileNames();
-    await parseSimFileFeatures();
+    await parseSimFileNames(simType);
+    await parseSimFileFeatures(simType);
+  } else if (fn_array_ex.length == 0 && i > 6) {
+    // The zip files for the similarity comparison have't been processed yet
+    await parseSimFileNames(simType);
+    await parseSimFileFeatures(simType);
   }
-  var results = calcSimilar(count, queryFeatures);
+  var results = calcSimilar(count, queryFeatures, simType);
   // results: [topResults from image matching, path to query image if no queryFeatures]
   populateTable(i, results[0]);
-  if (results[1] == "-1") {
-    document.getElementById("queryImg"+i).src=b64o[i]
-  } else {
-    document.getElementById("queryImg"+i).src=results[1];
-  }
 }
 
 async function jsonParser(jString, ovr) {
@@ -536,9 +544,10 @@ async function jsonParser(jString, ovr) {
       if (ovr) {
         j = ovr
       }
-      if (j != "9")
-          await renderImage(j);
-      imgsimilarity(j, 5)
+      // if (j == "9")
+      await renderImage(j);
+      let features = resp[i].features;
+      imgsimilarity(j, 5, features);
     }
     return "similarity"
   }
