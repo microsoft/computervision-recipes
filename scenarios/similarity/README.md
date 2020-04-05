@@ -27,6 +27,11 @@ Below are a subset of popular papers in the field with reported accuracies on st
 | [Classification is a Strong Baseline for DeepMetric Learning](https://arxiv.org/abs/1811.12649) <br> (Implemented in this repository)  | BMVC 2019	| No  | **84%** (512-dim) <br> **89%** (2048-dim) |	61% (512-dim) <br> **65%** (2048-dim) |	**78%** (512-dim) <br> **80%** (2048-dim) |			
 
 
+## Re-ranking
+
+In addition to the SOTA method introduced above, we provide an implementation of a popular re-ranking approach published in the CVPR 2017 paper [Re-ranking Person Re-identification with k-reciprocal Encoding](http://openaccess.thecvf.com/content_cvpr_2017/papers/Zhong_Re-Ranking_Person_Re-Identification_CVPR_2017_paper.pdf). Re-ranking is a post-processing step to improve retrieval accuracy. The proposed approach is fast, fully automatic, unsupervised, and shown to outperform other state-of-the-art methods with regards to accuracy.
+
+
 ## Frequently asked questions
 
 Answers to Frequently Asked Questions such as "How many images do I need to train a model?" or "How to annotate images?" can be found in the [FAQ.md](FAQ.md) file. For image classification specified questions, see the [FAQ.md](../classification/FAQ.md) in the classification folder.

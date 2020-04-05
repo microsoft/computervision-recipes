@@ -70,10 +70,10 @@ def read_classes_file(classes_filepath):
     classes = {}
     with open(classes_filepath) as class_file:
         for line in class_file:
-            class_name, class_id = line.split(' ')
+            class_name, class_id = line.split(" ")
             classes[class_name] = class_id.rstrip()
     return classes
-    
+
 
 def create_clip_file_name(row, clip_file_format="mp4"):
     """
@@ -87,7 +87,7 @@ def create_clip_file_name(row, clip_file_format="mp4"):
     :return: str.
         The output clip file name.
     """
-    #video_file = ast.literal_eval(row.file_list)[0]
+    # video_file = ast.literal_eval(row.file_list)[0]
     video_file = os.path.splitext(row["file_list"])[0]
     clip_id = row["# CSV_HEADER = metadata_id"]
     clip_file = "{}_{}.{}".format(video_file, clip_id, clip_file_format)
@@ -477,14 +477,14 @@ def extract_contiguous_negative_clips(
 
         # video_path = os.path.join(video_dir, negative_sample_file)
         video_fname = os.path.splitext(os.path.basename(video_file_path))[0]
-        clip_fname = video_fname+no_action_class+str(i)
+        clip_fname = video_fname + no_action_class + str(i)
         clip_subdir_fname = os.path.join(no_action_class, clip_fname)
         negative_clip_file_list.append(clip_subdir_fname)
         _extract_clip_ffmpeg(
             start_time,
             duration,
             video_file_path,
-            os.path.join(negative_clip_dir, clip_fname+"."+clip_format),
+            os.path.join(negative_clip_dir, clip_fname + "." + clip_format),
             ffmpeg_path,
         )
 
@@ -495,6 +495,7 @@ def extract_contiguous_negative_clips(
             "video_file": video_file,
         }
     )
+
 
 def extract_sampled_negative_clips(
     video_info_df,
@@ -548,7 +549,9 @@ def extract_sampled_negative_clips(
     clips_sampled = 0
     while clips_sampled < num_negative_samples:
         # pick random file in list of videos
-        negative_sample_file = video_files[random.randint(0, len(video_files)-1)]
+        negative_sample_file = video_files[
+            random.randint(0, len(video_files) - 1)
+        ]
         # get video duration
         duration = video_len[negative_sample_file]
         # pick random start time for clip
@@ -559,15 +562,27 @@ def extract_sampled_negative_clips(
         # check to ensure negative clip doesn't overlap a positive clip or pick another file
         if negative_sample_file in positive_intervals.keys():
             clip_positive_intervals = positive_intervals[negative_sample_file]
-            if check_interval_overlaps(clip_start, clip_end, clip_positive_intervals):
+            if check_interval_overlaps(
+                clip_start, clip_end, clip_positive_intervals
+            ):
                 continue
         video_path = os.path.join(video_dir, negative_sample_file)
         video_fname = os.path.splitext(negative_sample_file)[0]
-        clip_fname = video_fname+no_action_class+str(clips_sampled)
+        clip_fname = video_fname + no_action_class + str(clips_sampled)
         clip_subdir_fname = os.path.join(no_action_class, clip_fname)
         _extract_clip_ffmpeg(
-            clip_start, negative_clip_length, video_path, os.path.join(clip_dir, clip_subdir_fname+"."+clip_format),
+            clip_start,
+            negative_clip_length,
+            video_path,
+            os.path.join(clip_dir, clip_subdir_fname + "." + clip_format),
         )
-        with open(label_filepath, 'a') as f:
-            f.write("\""+clip_subdir_fname+"\""+" "+str(classes[no_action_class])+"\n")
+        with open(label_filepath, "a") as f:
+            f.write(
+                '"'
+                + clip_subdir_fname
+                + '"'
+                + " "
+                + str(classes[no_action_class])
+                + "\n"
+            )
         clips_sampled += 1

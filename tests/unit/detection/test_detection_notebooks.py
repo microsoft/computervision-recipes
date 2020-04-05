@@ -114,6 +114,26 @@ def test_03_notebook_run(
 
 @pytest.mark.gpu
 @pytest.mark.notebooks
+def test_04_notebook_run(detection_notebooks, tiny_od_data_path):
+    notebook_path = detection_notebooks["04"]
+    pm.execute_notebook(
+        notebook_path,
+        OUTPUT_NOTEBOOK,
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            DATA_PATH=tiny_od_data_path,
+            LABELS=["can", "carton", "milk_bottle", "water_bottle"]*21 #coco model was pre-trained on 80 classes 
+        ),
+        kernel_name=KERNEL_NAME,
+    )
+
+    nb_output = sb.read_notebook(OUTPUT_NOTEBOOK)
+    assert len(nb_output.scraps["aps"].data) == 2
+    assert nb_output.scraps["num_test_images"].data == 38
+
+
+@pytest.mark.gpu
+@pytest.mark.notebooks
 def test_12_notebook_run(
     detection_notebooks, tiny_od_data_path, tiny_ic_negatives_path
 ):

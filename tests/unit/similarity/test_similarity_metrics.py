@@ -8,6 +8,7 @@ from pytest import approx
 from utils_cv.similarity.data import comparative_set_builder
 from utils_cv.similarity.metrics import (
     compute_distances,
+    evaluate,
     positive_image_ranks,
     recall_at_k,
     vector_distance,
@@ -64,3 +65,31 @@ def test_recall_at_k():
     assert recall_at_k(rank_list, 3) == 60
     assert recall_at_k(rank_list, 6) == 100
     assert recall_at_k(rank_list, 10) == 100
+
+
+def test_evaluate(tiny_ic_databunch, tiny_ic_databunch_valid_features):
+    (rank_accs, mAP) = evaluate(
+        tiny_ic_databunch.valid_ds,
+        tiny_ic_databunch_valid_features,
+        use_rerank=False,
+    )
+    assert 0 <= mAP <= 1.0
+    assert len(rank_accs) == 6
+    assert max(rank_accs) <= 1.001
+    assert min(rank_accs) >= -0.001
+    for i in range(len(rank_accs) - 1):
+        rank_accs[i] <= rank_accs[i + 1]
+
+    (rank_accs, ap) = evaluate(
+        tiny_ic_databunch.valid_ds,
+        tiny_ic_databunch_valid_features,
+        use_rerank=True,
+        rerank_k1=2,
+        rerank_k2=3,
+    )
+    assert 0 <= mAP <= 1.0
+    assert len(rank_accs) == 6
+    assert max(rank_accs) <= 1.001
+    assert min(rank_accs) >= -0.001
+    for i in range(len(rank_accs) - 1):
+        rank_accs[i] <= rank_accs[i + 1]
