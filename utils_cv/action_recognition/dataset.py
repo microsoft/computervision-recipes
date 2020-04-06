@@ -229,16 +229,30 @@ class VideoDataset:
                 test_split_file=test_split_file,
             )
             if train_split_file
-            else self.split_train_test(train_pct=train_pct)
+            else self.split_by_folder(train_pct=train_pct)
         )
 
         # initialize dataloaders
         self.init_data_loaders()
 
-    def split_train_test(
+    def split_by_folder(
         self, train_pct: float = 0.8
     ) -> Tuple[Dataset, Dataset]:
-        """ Split this dataset into a training and testing set
+        """ Split this dataset into a training and testing set based on the
+        folders that the videos are in.
+
+        ```
+        /data
+        +-- action_class_1
+        |   +-- video_01.mp4
+        |   +-- video_02.mp4
+        |   +-- ...
+        +-- action_class_2
+        |   +-- video_11.mp4
+        |   +-- video_12.mp4
+        |   +-- ...
+        +-- ...
+        ```
 
         Args:
             train_pct: the ratio of images to use for training vs
@@ -260,14 +274,12 @@ class VideoDataset:
         for action in dirs:
             self.video_records.extend(
                 [
-                    VideoRecord([
-                        os.path.join(
-                            self.root,
-                            action,
-                            vid.split(".")[0]
-                        ),
-                        label,
-                    ])
+                    VideoRecord(
+                        [
+                            os.path.join(self.root, action, vid.split(".")[0]),
+                            label,
+                        ]
+                    )
                     for vid in os.listdir(os.path.join(self.root, action))
                 ]
             )
@@ -277,25 +289,13 @@ class VideoDataset:
         test_num = math.floor(len(self) * (1 - train_pct))
         if self.seed:
             torch.manual_seed(self.seed)
+
+        # set indices
         indices = torch.randperm(len(self)).tolist()
+        train_range = indices[test_num:]
+        test_range = indices[:test_num]
 
-        # create train subset
-        train = copy.deepcopy(Subset(self, indices[test_num:]))
-        train.dataset.transforms = self.train_transforms
-        train.dataset.sample_step = (
-            self.temporal_jitter_step
-            if self.temporal_jitter
-            else self.sample_step
-        )
-        train.dataset.presample_length = self.sample_length * self.sample_step
-
-        # create test subset
-        test = copy.deepcopy(Subset(self, indices[:test_num]))
-        test.dataset.transforms = self.test_transforms
-        test.dataset.random_shift = False
-        test.dataset.temporal_jitter = False
-
-        return train, test
+        return self.split_train_test(train_range, test_range)
 
     def split_with_file(
         self,
@@ -341,6 +341,20 @@ class VideoDataset:
         train_range = indices[:train_len]
         test_range = indices[train_len:]
 
+        return self.split_train_test(train_range, test_range)
+
+    def split_train_test(
+        self, train_range: torch.Tensor, test_range: torch.Tensor,
+    ) -> Tuple[Dataset, Dataset]:
+        """ Split this dataset into a training and testing set
+
+        Args:
+            train_range: range of indices for training set
+            test_range: range of indices for testing set
+
+        Return
+            A training and testing dataset in that order
+        """
         # create train subset
         train = copy.deepcopy(Subset(self, train_range))
         train.dataset.transforms = self.train_transforms
