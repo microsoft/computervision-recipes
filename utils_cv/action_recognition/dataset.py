@@ -3,6 +3,7 @@
 
 import os
 import copy
+import math
 from pathlib import Path
 import warnings
 from typing import Callable, Tuple, Union, List
@@ -35,8 +36,8 @@ class VideoRecord(object):
 
     Ex:
     ```
-    path/to/my/clip.mp4 3
-    path/to/another/clip.mp4 32
+    path/to/my/clip_1 3
+    path/to/another/clip_2 32
     ```
     """
 
@@ -150,6 +151,7 @@ class VideoDataset:
     def __init__(
         self,
         root: str,
+        seed: int = None,
         train_pct: float = 0.75,
         num_samples: int = 1,
         sample_length: int = 8,
@@ -169,6 +171,7 @@ class VideoDataset:
 
         Arg:
             root: Videos directory.
+            seed: random seed
             train_pct: percentage of dataset to use for training
             num_samples: Number of clips to sample from each video.
             sample_length: Number of consecutive frames to sample from a video (i.e. clip length).
@@ -205,6 +208,7 @@ class VideoDataset:
             )
 
         self.root = root
+        self.seed = seed
         self.num_samples = num_samples
         self.sample_length = sample_length
         self.sample_step = sample_step
@@ -243,7 +247,55 @@ class VideoDataset:
         Return
             A training and testing dataset in that order
         """
-        pass
+        self.video_records = []
+
+        # get all dirs in root (and make sure they are dirs)
+        dirs = []
+        for entry in os.listdir(self.root):
+            if os.path.isdir(os.path.join(self.root, entry)):
+                dirs.append(os.path.join(self.root, entry))
+
+        # add each video in each dir as a video record
+        label = 0
+        for action in dirs:
+            self.video_records.extend(
+                [
+                    VideoRecord([
+                        os.path.join(
+                            self.root,
+                            action,
+                            vid.split(".")[0]
+                        ),
+                        label,
+                    ])
+                    for vid in os.listdir(os.path.join(self.root, action))
+                ]
+            )
+            label += 1
+
+        # random split
+        test_num = math.floor(len(self) * (1 - train_pct))
+        if self.seed:
+            torch.manual_seed(self.seed)
+        indices = torch.randperm(len(self)).tolist()
+
+        # create train subset
+        train = copy.deepcopy(Subset(self, indices[test_num:]))
+        train.dataset.transforms = self.train_transforms
+        train.dataset.sample_step = (
+            self.temporal_jitter_step
+            if self.temporal_jitter
+            else self.sample_step
+        )
+        train.dataset.presample_length = self.sample_length * self.sample_step
+
+        # create test subset
+        test = copy.deepcopy(Subset(self, indices[:test_num]))
+        test.dataset.transforms = self.test_transforms
+        test.dataset.random_shift = False
+        test.dataset.temporal_jitter = False
+
+        return train, test
 
     def split_with_file(
         self,
@@ -254,9 +306,9 @@ class VideoDataset:
 
         Each line in the split file must use the form:
         ```
-        path/to/jumping/video.mp4 3
-        path/to/swimming/video.mp4 5
-        path/to/another/jumping/video.mp4 3
+        path/to/jumping/video_name_1 3
+        path/to/swimming/video_name_2 5
+        path/to/another/jumping/video_name_3 3
         ```
 
         Args:

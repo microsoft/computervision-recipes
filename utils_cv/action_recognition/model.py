@@ -63,6 +63,9 @@ class VideoLearner(object):
             self.dataset.sample_length, base_model, num_classes,
         )
 
+        # set num classes
+        self.num_classes = num_classes
+
     @staticmethod
     def init_model(
         sample_length: int, base_model: str, num_classes: int = None
@@ -200,6 +203,11 @@ class VideoLearner(object):
 
         criterion = nn.CrossEntropyLoss().to(device)
 
+        # set num classes
+        topk = 5
+        if topk >= self.num_classes:
+            topk = self.num_classes
+
         for e in range(1, train_cfgs.epochs + 1):
             print(f"Epoch {e} ==========")
             print(f"lr={scheduler.get_lr()}")
@@ -212,6 +220,7 @@ class VideoLearner(object):
                 optimizer,
                 grad_steps=train_cfgs.grad_steps,
                 mixed_prec=train_cfgs.mixed_prec,
+                topk=topk,
             )
 
             scheduler.step()
@@ -236,8 +245,9 @@ class VideoLearner(object):
         device,
         criterion,
         optimizer,
-        grad_steps=1,
-        mixed_prec=False,
+        grad_steps: int = 1,
+        mixed_prec: bool = False,
+        topk: int = 5,
     ) -> None:
         """Train / validate a model for one epoch.
 
@@ -249,6 +259,7 @@ class VideoLearner(object):
             optimizer: TODO
             grad_steps: If > 1, use gradient accumulation. Useful for larger batching
             mixed_prec: If True, use FP16 + FP32 mixed precision via NVIDIA apex.amp
+            topk: top k classes
 
         Return:
             dict {
@@ -294,7 +305,7 @@ class VideoLearner(object):
                     loss = criterion(outputs, target)
 
                     # measure accuracy and record loss
-                    prec1, prec5 = accuracy(outputs, target, topk=(1, 5))
+                    prec1, prec5 = accuracy(outputs, target, topk=(1, topk))
 
                     losses.update(loss.item(), inputs.size(0))
                     top1.update(prec1[0], inputs.size(0))

@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import Union, List
 from urllib.request import urlretrieve
+from urllib.parse import urljoin
 
 from ..common.data import data_path
 
@@ -40,8 +41,15 @@ class _DatasetSpec:
 
 
 class Urls:
+    # base url
+    base = "https://cvbp.blob.core.windows.net/public/datasets/action_recognition/"
+
+    # label maps
     kinetics_label_map = "https://github.com/microsoft/ComputerVision/files/3746975/kinetics400_lable_map.txt"
     hmdb51_label_map = "https://github.com/microsoft/ComputerVision/files/3746963/hmdb51_label_map.txt"
+
+    # testing datasets
+    milk_bottle_action_path = urljoin(base, "milkBottleActions.zip")
 
 
 KINETICS = _DatasetSpec(
