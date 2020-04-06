@@ -17,6 +17,9 @@
   * [How to speed up training?](#how-to-speed-up-training)
   * [How to improve accuracy or inference speed?](#how-to-improve-accuracy-or-inference-speed)
   * [How to monitor GPU usage during training?](#how-to-monitor-gpu-usage-during-training)
+* Troubleshooting
+  * [Widget is not showing](#widget-is-not-showing)
+
 
 ## General
 
@@ -37,6 +40,7 @@ Transfer-learning is the current state-of-the-art approach for CV problems. To g
 
 ### Which problems can be solved using image classification?
 Image classification can be used if the object-of-interest is relatively large in the image (more than 20% image width/height). If the object is smaller, or if the location of the object is required, then _object detection_ methods should be used instead.
+
 
 ## Data
 
@@ -82,6 +86,7 @@ Often a random split is fine but there are exceptions. For example, if the image
 ### How to design a good test set?
 The test set should contain images which resemble the population the model will be used to score. For example, images taken under similar lighting conditions, similar angles, etc. This helps to ensure that the accuracy estimate reflects the real performance of the application which uses the trained model.
 
+
 ## Training
 
 ### How to speed up training?
@@ -99,3 +104,21 @@ Various tools for monitoring real-time GPU information (e.g. GPU or memory load)
 - [GPU-Z](https://www.techpowerup.com/gpuz/): Has an easy to install UI.
 - [nvidia-smi](https://developer.nvidia.com/nvidia-system-management-interface): Command line tool. Pre-installed on the Azure Data Science VM.
 - [GPU monitor](https://github.com/msalvaris/gpu_monitor): Python SDK for monitoring GPU on a single machine or across a cluster.
+
+
+## Troubleshooting
+ 
+### Widget is not showing
+
+Jupyter widgets are quite unstable and might not render correctly on some systems, or often even not show at all. If that is the case, try:
+- Using different browsers
+- Upgrading the Jupyter notebook library using the commands below:
+```python
+# Update jupyter notebook
+activate cv
+conda upgrade notebook 
+
+#Run notebook server in activated 'cv' environment
+activate cv
+jupyter notebook
+```

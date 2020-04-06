@@ -1,6 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+from fastai.vision.data import ImageDataBunch
 from ipywidgets import widgets
+import numpy as np
+from typing import List, Dict
+
 from utils_cv.similarity.metrics import compute_distances
 
 
@@ -12,12 +16,20 @@ def _list_sort(list1D, reverse=False, comparison_fct=lambda x: x):
 
 
 class RetrievalWidget(object):
-    def __init__(self, ds, features, rows=2, cols=5):
+    def __init__(self, 
+        ds: ImageDataBunch, 
+        features: List[Dict[str, np.array]], 
+        rows: int = 2, 
+        cols: int = 5
+    ):
         """Helper class to show most similar images to a query image.
+           A new image can be used as query by clicking its yellow box above the image. 
 
         Args:
             ds: Dataset used for prediction, containing ImageList x.
             features: DNN features for each image.
+            rows: number of image rows
+            cols: number images per row
         """
         assert len(ds) == len(features)
 
@@ -66,10 +78,13 @@ class RetrievalWidget(object):
 
                 w_button.layout.visibility = "visible"
                 w_button.value = str(img_index)
-                w_button.tooltip = f"Image index: {img_index}"
+                w_button.tooltip = f"Rank {i} ({distance:.2f}), image index: {img_index}"
 
-                if i > 0:
-                    w_button.description = f"Dist = {distance:.1f}"
+                if i == 0:
+                    w_button.description = "Query"
+                else:
+                    w_button.description = f"Rank {i} ({distance:.2f})"
+                
             else:
                 w_img.layout.visibility = "hidden"
                 w_button.layout.visibility = "hidden"
@@ -92,28 +107,25 @@ class RetrievalWidget(object):
 
         for i in range(self.rows * self.cols):
             # Initialize images
-            w_img = widgets.Image(description="") #width=180
+            w_img = widgets.Image(description="", width=180)
             self.w_imgs.append(w_img)
 
             # Initialize buttons
+            w_button = widgets.Button(description="", value=i)
+            w_button.on_click(button_pressed)
             if i == 0:
-                w_button = widgets.Button(description="QUERY: ", value=i)
                 w_button.button_style = "primary"
             else:
-                w_button = widgets.Button(description="Image id: ", value=i)
                 w_button.button_style = "warning"
-            #w_button.layout.width = "100px"
-            w_button.on_click(button_pressed)
             self.w_buttons.append(w_button)
 
-            # combine into image grid widget
+            # combine into image+button widget
             w_img_button = widgets.VBox(
                 children=[w_button, w_img]
-            )  # , w_label])
-            #w_img_button.width = "230px"
+            )
             w_img_buttons.append(w_img_button)
 
-        # Image grid widget
+        # Image grid
         w_grid_HBoxes = []
         for r in range(self.rows):
             hbox = widgets.HBox(
@@ -125,7 +137,7 @@ class RetrievalWidget(object):
             w_grid_HBoxes.append(hbox)
         w_img_grid = widgets.VBox(w_grid_HBoxes)
 
-        # Create tab widget
+        # Create tab
         self.ui = widgets.Tab(children=[w_img_grid])
         self.ui.set_title(0, "Image retrieval viewer")
 
