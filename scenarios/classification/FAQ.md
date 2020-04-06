@@ -113,12 +113,12 @@ Various tools for monitoring real-time GPU information (e.g. GPU or memory load)
 Jupyter widgets are quite unstable and might not render correctly on some systems, or often even not show at all. If that is the case, try:
 - Using different browsers
 - Upgrading the Jupyter notebook library using the commands below:
-```python
-# Update jupyter notebook
-activate cv
-conda upgrade notebook 
+  ```python
+  # Update jupyter notebook
+  activate cv
+  conda upgrade notebook 
 
-#Run notebook server in activated 'cv' environment
-activate cv
-jupyter notebook
-```
+  # Run notebook server in activated 'cv' environment
+  activate cv
+  jupyter notebook
+  ```
