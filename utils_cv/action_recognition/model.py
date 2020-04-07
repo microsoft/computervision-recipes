@@ -5,6 +5,7 @@ from collections import OrderedDict
 import os
 import time
 import warnings
+import numpy as np
 from typing import Union
 from pathlib import Path
 
@@ -123,11 +124,31 @@ class VideoLearner(object):
         for param in self.model.parameters():
             param.requires_grad = requires_grad
 
-    def fit(self, train_cfgs) -> None:
+    def fit(
+        self,
+        lr: float,
+        epochs: int,
+        model_dir: str = "checkpoints",
+        model_name: str = None,
+        momentum: float = 0.95,
+        weight_decay: float = 0.0001,
+        mixed_prec: bool = False,
+        use_one_cycle_policy: bool = False,
+        warmup_pct: float = 0.3,
+        lr_gamma: float = 0.1,
+        lr_step_size: float = None,
+        grad_steps: int = 2,
+        save_model: bool = False,
+    ) -> None:
         """ The primary fit function """
-        train_cfgs = Config(train_cfgs)
+        # set lr_step_size based on epochs
+        if lr_step_size is None:
+            lr_step_size = np.ceil(2 / 3 * epochs)
 
-        model_dir = train_cfgs.get("model_dir", "checkpoints")
+        # set model name
+        if model_name is None:
+            model_name = self.model_name
+
         os.makedirs(model_dir, exist_ok=True)
 
         data_loaders = {}
@@ -155,17 +176,16 @@ class VideoLearner(object):
                 print(f"\t{name}")
 
         # create optimizer
-        momentum = train_cfgs.get("momentum", 0.95)
         optimizer = optim.SGD(
             list(named_params_to_update.values()),
-            lr=train_cfgs.lr,
+            lr=lr,
             momentum=momentum,
-            weight_decay=train_cfgs.get("weight_decay", 0.0001),
+            weight_decay=weight_decay
         )
 
         # Use mixed-precision if available
         # Currently, only O1 works with DataParallel: See issues https://github.com/NVIDIA/apex/issues/227
-        if train_cfgs.get("mixed_prec", False):
+        if mixed_prec:
             # break if not AMP_AVAILABLE
             assert AMP_AVAILABLE
             # 'O0': Full FP32, 'O1': Conservative, 'O2': Standard, 'O3': Full FP16
@@ -178,13 +198,13 @@ class VideoLearner(object):
             )
 
         # Learning rate scheduler
-        if train_cfgs.get("use_one_cycle_policy", False):
+        if use_one_cycle_policy:
             # Use warmup with the one-cycle policy
             scheduler = torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
-                max_lr=train_cfgs.lr,
-                total_steps=train_cfgs.epochs,
-                pct_start=train_cfgs.get("warmup_pct", 0.3),
+                max_lr=lr,
+                total_steps=epochs,
+                pct_start=warmup_pct,
                 base_momentum=0.9 * momentum,
                 max_momentum=momentum,
             )
@@ -192,8 +212,8 @@ class VideoLearner(object):
             # Simple step-decay
             scheduler = torch.optim.lr_scheduler.StepLR(
                 optimizer,
-                step_size=train_cfgs.get("lr_step_size", float("inf")),
-                gamma=train_cfgs.get("lr_gamma", 0.1),
+                step_size=lr_step_size,
+                gamma=lr_gamma,
             )
 
         # DataParallel after amp.initialize
@@ -208,7 +228,7 @@ class VideoLearner(object):
         if topk >= self.num_classes:
             topk = self.num_classes
 
-        for e in range(1, train_cfgs.epochs + 1):
+        for e in range(1, epochs + 1):
             print(f"Epoch {e} ==========")
             print(f"lr={scheduler.get_lr()}")
 
@@ -218,21 +238,19 @@ class VideoLearner(object):
                 device,
                 criterion,
                 optimizer,
-                grad_steps=train_cfgs.grad_steps,
-                mixed_prec=train_cfgs.mixed_prec,
+                grad_steps=grad_steps,
+                mixed_prec=mixed_prec,
                 topk=topk,
             )
 
             scheduler.step()
 
-            if train_cfgs.get("save_models", False):
+            if save_model:
                 self.save(
                     os.path.join(
                         model_dir,
                         "{model_name}_{epoch}.pt".format(
-                            model_name=train_cfgs.get(
-                                "model_name", self.model_name
-                            ),
+                            model_name=model_name,
                             epoch=str(e).zfill(3),
                         ),
                     )
@@ -295,7 +313,7 @@ class VideoLearner(object):
             top5 = AverageMeter()
 
             end = time.time()
-            for step, (inputs, target) in enumerate(dl, start=1):
+            for step, (inputs, target, label_name) in enumerate(dl, start=1):
                 inputs = inputs.to(device, non_blocking=True)
                 target = target.to(device, non_blocking=True)
 

@@ -44,9 +44,12 @@ class VideoRecord(object):
     def __init__(self, data: List[str]):
         """ Initialized a VideoRecord
 
+        Ex.
+        data = ["path/to/video.mp4", 2, "cooking"]
+
         Args:
             row: a list where first element is the path and second element is
-            the label
+            the label, and the third element (optional) is the label name
         """
         self._data = data
         self._num_frames = None
@@ -66,6 +69,14 @@ class VideoRecord(object):
     @property
     def label(self) -> int:
         return int(self._data[1])
+
+    @property
+    def label_name(self) -> str:
+        return (
+            None
+            if len(self._data) <= 2
+            else self._data[2]
+        )
 
 
 def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
@@ -272,12 +283,14 @@ class VideoDataset:
         # add each video in each dir as a video record
         label = 0
         for action in dirs:
+            action = os.path.basename(os.path.normpath(action))
             self.video_records.extend(
                 [
                     VideoRecord(
                         [
                             os.path.join(self.root, action, vid.split(".")[0]),
                             label,
+                            action,
                         ]
                     )
                     for vid in os.listdir(os.path.join(self.root, action))
@@ -484,7 +497,7 @@ class VideoDataset:
 
         return clip
 
-    def __getitem__(self, idx: int) -> Tuple[torch.tensor, int]:
+    def __getitem__(self, idx: int) -> Tuple[torch.tensor, int, str]:
         """
         Return:
             clips (torch.tensor), label (int)
@@ -503,7 +516,12 @@ class VideoDataset:
 
         if self.num_samples == 1:
             # [T, H, W, C] -> [C, T, H, W]
-            return self.transforms(torch.from_numpy(clips[0])), record.label
+            return (
+                self.transforms(torch.from_numpy(clips[0])),
+                record.label,
+                record.label_name,
+            )
+
         else:
             # [S, T, H, W, C] -> [S, C, T, H, W]
             return (
@@ -511,11 +529,14 @@ class VideoDataset:
                     [self.transforms(torch.from_numpy(c)) for c in clips]
                 ),
                 record.label,
+                record.label_name,
             )
 
     def _show_batch(
         self,
-        batch: List[torch.tensor],
+        images: List[torch.tensor],
+        labels: List[int],
+        label_names: List[str],
         sample_length: int,
         mean: Tuple[int, int, int] = DEFAULT_MEAN,
         std: Tuple[int, int, int] = DEFAULT_STD,
@@ -524,12 +545,14 @@ class VideoDataset:
         Display a batch of images.
 
         Args:
-            batch: List of sample (clip) tensors
+            images: List of sample (clip) tensors
+            labels: List of labels
+            label_names: List of label names
             sample_length: Number of frames to show for each sample
             mean: Normalization mean
             std: Normalization std-dev
         """
-        batch_size = len(batch)
+        batch_size = len(images)
         plt.tight_layout()
         fig, axs = plt.subplots(
             batch_size,
@@ -539,9 +562,9 @@ class VideoDataset:
 
         for i, ax in enumerate(axs):
             if batch_size == 1:
-                clip = batch[0]
+                clip = images[0]
             else:
-                clip = batch[i]
+                clip = images[i]
             clip = Rearrange("c t h w -> t c h w")(clip)
             if not isinstance(ax, np.ndarray):
                 ax = [ax]
@@ -550,15 +573,31 @@ class VideoDataset:
                 a.imshow(
                     np.moveaxis(denormalize(clip[j], mean, std).numpy(), 0, -1)
                 )
+
+                # display label/label_name on the first image
+                label_name = '' if label_names[i] is None else f'-{label_names[i]}'
+                text = f"{labels[i]}{label_name}"
+                if j is 0:
+                    a.text(
+                        x=3,
+                        y=15,
+                        s=text,
+                        fontsize=20,
+                        bbox=dict(facecolor='white', alpha=0.80),
+                    )
             pass
 
     def show_batch(self, train_or_test: str = "train", rows: int = 1) -> None:
         """Plot first few samples in the datasets"""
         if train_or_test == "train":
-            batch = [self.train_ds.dataset[i][0] for i in range(rows)]
-        elif train_or_test == "valid":
-            batch = [self.test_ds.dataset[i][0] for i in range(rows)]
+            batch = [self.train_ds.dataset[i] for i in range(rows)]
+        elif train_or_test == "test":
+            batch = [self.test_ds.dataset[i] for i in range(rows)]
         else:
             raise ValueError("Unknown data type {}".format(which_data))
 
-        self._show_batch(batch, self.sample_length)
+        images = [im[0] for im in batch]
+        labels = [im[1] for im in batch]
+        label_names = [im[2] for im in batch]
+
+        self._show_batch(images, labels, label_names, self.sample_length)
