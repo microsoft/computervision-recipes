@@ -2,287 +2,259 @@
 <html lang="en">
 
 <head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<title>Microsoft CVBP</title>
-	<link rel = "icon" href ="https://ec528simtest.blob.core.windows.net/ec528simtest/img/logo_small.png" type = "image/x-icon"> 
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
-	 crossorigin="anonymous">
-	<link href="style.css" rel="stylesheet" type="text/css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/> 
+  <title>Microsoft CVBP</title>
+  <link rel = "icon" href ="https://ec528simtest.blob.core.windows.net/ec528simtest/img/logo_small.png" type = "image/x-icon"> 
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+   crossorigin="anonymous">
+  <link href="style.css" rel="stylesheet" type="text/css" />
+  
 </head>
 
 <body>
-	<!-- Nav Bar -->
-	<nav class="navbar navbar-toggleable-md navbar-dark fixed-top" style="background-color: #1D7D72">
-		<a class="navbar-brand" href="#">Microsoft CVBP</a>
-		<div class="ml-auto">
-			<a class="nav-link" href="https://github.com/BU-CLOUD-S20/Building-a-deployable-application-to-visualizing-the-output-of-a-Deep-Neural-Network-model"
-			 style="color:#FFFFFF;">
-				Github Repo <img class="ml-2" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/github_logo.png" alt="Github Logo" style="width:25px;">
+  <!-- Nav Bar -->
+  <nav class="navbar navbar-toggleable-md navbar-dark fixed-top mainColor">
+    <a class="navbar-brand" href="#">Microsoft CVBP</a>
+    <div class="ml-auto">
+      <a class="nav-link nav-link-color" href="https://github.com/BU-CLOUD-S20/Building-a-deployable-application-to-visualizing-the-output-of-a-Deep-Neural-Network-model"
+      >
+        Github Repo <img class="ml-2 resizeGit" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/github_logo.png" alt="Github Logo">
      </a>
     </div>
   </nav>
 
 <main role="main">
   <div class="jumbotron">
-    <div class="container">
+    <div class="container-xl">
       <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item">
-          <a class="nav-link active" id="mymodel-tab" data-toggle="tab" href="#mymodel" role="tab" aria-controls="mymodel" aria-selected="true" style="font-size:18px">Use My Model</a>
+          <a class="nav-link active font18" id="mymodel-tab" data-toggle="tab" href="#mymodel" role="tab" aria-controls="mymodel" aria-selected="true">Use My Model</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" id="seeexample-tab" data-toggle="tab" href="#seeexample" role="tab" aria-controls="seeexample" aria-selected="false" style="font-size:18px">See Example</a>
+          <a class="nav-link font18" id="seeexample-tab" data-toggle="tab" href="#seeexample" role="tab" aria-controls="seeexample" aria-selected="false">See Example</a>
         </li>
       </ul>
-      <div class="tab-content card" style="border-top-left-radius: 0rem !important; border-top-right-radius: .25rem; border-top: 0px !important;" id="myTabContent">
-        <!-- for usemymodel tab -->
-        <div class="tab-pane fade show active card-body mt-4" id="mymodel" role="tabpanel" aria-labelledby="mymodel-tab" style="padding-left:0px !important; padding-right:0px !important;">
+      <div class="tab-content card" id="myTabContent">
+        <!-- for use my model tab -->
+        <div class="tab-pane fade show active card-body" id="mymodel" role="tabpanel" aria-labelledby="mymodel-tab">
           <!-- Image upload and thumbnail container -->
-          <div class="container mx-auto">
+          <div class="container-fluid mx-auto">
             <form onsubmit="return false">
-              <div class="form-group mx-md-5 mt-5 px-5">
-                <input type="text" class="form-control form-control-lg" placeholder="Enter API url here" id="url" style="color:#a9a9a9; font-size:20px;" name="text2" required>
+              <div class="form-group">
+                <div class="text-muted mb-2"><span class="badge badge-primary">1</span> Enter your model's API URL:</div>
+                <input type="text" class="form-control form-control-lg" id="url" name="text2" required>
               </div>
-            </form>
-            
+            </form>  
+
+            <div id="alertdiv"></div>
+
             <div class="row">
-              <p class="text-center mt-5 mx-auto font-weight-bold" style="font-size:20px; color: #1D7D72">Upload upto 4 image files from local machine, webcam, or use sample images </p>
-              <div class="input-group mx-auto mt-3 justify-content-md-center"> 
-                <div class="col">
-                  <div class="input-group-prepend">
+              <!-- Image Upload Button and Thumnails - Outer Col1 -->
+              <div class="col">
+                <div class="text-muted mb-2"><span class="badge badge-primary">2</span> Choose up to 4 images from your webcam, sample images, or your own local images:</div>
+                <div class="row">
+                  <div class="thumbnails col text-center">
+
                     <!--Webcam Feature-->
-                    <button class="btn btn-secondary shadow rounded" type="button" onclick="webcamActivate()" data-toggle="modal" data-target="#webModal" style="background-color: #1D7D72; color: #FFFFFF; font-size:18px; width: 100px">Webcam</button>
-                    <style>
-                    .modal-dialog {
-                      width: 100% !important;
-                      height: 100% !important;
-                      margin: 0 !important;
-                      padding: 0 !important;
-                      max-width:none !important;
-                    }
-                    .modal-content {
-                      height: auto !important;
-                      min-height: 100% !important;
-                      border-radius: 0 !important;
-                      background-color: #ececec !important
-                    }
-                    </style>
-                    <div class="modal fade right" id="webModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalPreviewLabel" aria-hidden="true">
-                      <div class="modal-dialog momodel modal-fluid" role="document">
-                        <div class="modal-content ">
-                          <style>
-                          #container {
-	                           margin: 0px auto;
-	                           width: 500px;
-	                           height: 370px;
-	                           border: 10px #333 solid;
-                          }
-                          #videoElement {
-	                           width: 500px;
-	                           height: 375px;
-	                           background-color: #666;
-                          }
-                          </style>
+                    <button id="btnWebcam" class="btn btn-secondary btn-block shadow rounded mb-2 mainColor" type="button" data-toggle="collapse" href="#multiCollapseWebcam" aria-expanded="false" aria-controls="multiCollapseWebcam">Webcam</button>
 
-                          <div class=" modal-header text-center">
-                            <h5 class="modal-title w-100" id="exampleModalPreviewLabel">Webcam</h5>
-                            <button  type="button" class="close " data-dismiss="modal" aria-label="Close">
-                              <span style="font-size: 1.3em;" aria-hidden="true">&times;</span>
-                            </button>
-                          </div>
-                          <div class="modal-body">
-                            <h1 class="section-heading text-center wow fadeIn my-5 pt-3">Please allow access to your webcam</h1>
-                            <div class="container">
-                              <video autoplay="true" id="videoElement">
-	                            </video>
-                              <div class="text-left">
-                                <button id="snap" type="button" class="btn btn-primary">Capture Image</button>
-                              </div>
-                              <div class="hide">
-                                <canvas id="webCamCanvas" width="30" height="30"></canvas>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="modal-footer">
-                            <button type="button" id="useImage" class="btn btn-primary btn-md btn-rounded">Add Images</button>
-                            <button type="button" class="btn btn-danger btn-md btn-rounded" onclick="webcamStop()"data-dismiss="modal">Close</button>
-                          </div>
-                        </div>  <!-- END Modal-Content -->
-                      </div>  <!-- END Modal-Dialog -->
-                    </div>  <!-- END Modal -->
-                  </div>
-                 </div> 
+                    <!-- Sample Images -->
+                    <button id="btnSample" class="btn btn-secondary btn-block shadow rounded mb-2 mainColor" type="button" data-toggle="collapse" href="#multiCollapseSample" aria-expanded="false" aria-controls="multiCollapseSample">Samples</button>
 
-                <div class="col">
-                  <div class="input-group-prepend mx-auto">
-                    <button class="btn btn-secondary shadow rounded" type="button" data-toggle="modal" data-target="#sampleModal" style="background-color: #1D7D72; color: #FFFFFF; font-size:18px; width: 100px">Samples</button>
-                    <style>
-                    .modal-dialog2 {
-                      width: 100% !important;
-                      height: 100% !important;
-                      margin: 0 !important;
-                      padding: 0 !important;
-                      max-width:none !important;
-                    }
-                    </style>
-                    <div class="modal right" id="sampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalPreviewLabel" aria-hidden="true">
-                      <div class="modal-dialog2 momodel modal-fluid" role="document">
-                        <div class="modal-content">
-
-                          <div class=" modal-header text-center">
-                            <h5 class="modal-title w-100" id="exampleModalPreviewLabel">Samples Images</h5>
-                              <button type="button" class="close " data-dismiss="modal" aria-label="Close">
-                                <span style="font-size: 1.3em;" aria-hidden="true">&times;</span>
-                              </button>
-                          </div>
-                          <div class="modal-body">
-                            <h1 class="section-heading text-center wow fadeIn my-5 pt-3">Please select sample images to test your model</h1>
-                            <div class="container mx-auto">
-                              <div class="row">
-                                <div class="col-sm-2">
-                                  <img id="sample1" data-eid="1" class="rounded mr-2 mb-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/can_1.jpg">
-                                </div>
-                                <div class="col-sm-2">
-                                  <img id="sample2" data-eid="2" class="rounded mr-2 mb-2 sImg"  src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/can_15.jpg">
-                                </div>
-                                <div class="col-sm-2">
-                                  <img id="sample3" data-eid="3" class="rounded mr-2 mb-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/can_28.jpg"> 
-                                </div>
-                                <div class="col-sm-2">
-                                  <img id="sample4" data-eid="4" class="rounded mr-2 mb-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/carton_33.jpg"> 
-                                </div>
-                                <div class="col-sm-2">
-                                  <img id="sample5" data-eid="5" class="rounded mr-2 mb-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/carton_40.jpg">
-                                </div>
-                                <div class="col-sm-2">
-                                  <img id="sample6" data-eid="6" class="rounded mr-2 mb-2 sImg"  src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/carton_50.jpg"> 
-                                </div>
-                                <div class="col-sm-2">
-                                  <img id="sample7" data-eid="7" class="rounded mr-2 mb-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/milk_bottle_66.jpg">
-                                </div>
-                                <div class="col-sm-2">
-                                  <img id="sample8" data-eid="8" class="rounded mr-2 mb-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/milk_bottle_77.jpg"> 
-                                </div>
-                                <div class="col-sm-2">
-                                  <img id="sample9" data-eid="9" class="rounded mr-2 mb-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/water_bottle_111.jpg"> 
-                                </div>
-                                <div class="col-sm-2">
-                                  <img id="sample10" data-eid="10" class="rounded mr-2 mb-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/water_bottle_115.jpg">
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div class="modal-footer">
-                            <button type="button" class="btn btn-danger btn-md btn-rounded" data-dismiss="modal">Close</button>
-                          </div>
-                        </div>  <!-- END Modal-Content -->
-                      </div>  <!-- END Modal-Dialog -->
-                    </div>  <!-- END Modal -->
-                  </div>
-                 </div>
-
-                <div class="col">
-                  <div class="custom-file" style="width:500px"> 
-                    <div class="input-group-prepend">
-                      <!-- <input type="file" multiple class="custom-file-input"  accept="image/*" id="inputGroupFile03" onchange="handleFiles(this.files)">                 
-                      <label class="custom-file-label" for="inputGroupFile03" style="color: #1D7D72;  font-size:18px">Choose file</label> -->
-                      <label class="custom-file-label" for="inputGroupFile03" style="color: #1D7D72;  font-size:18px"></label>                      
+                    <!-- Choose (Local) Files Button -->
+                    <label class="btn btn-secondary btn-block shadow rounded  mb-2 mainColor">
+                    Choose Files <input type="file" multiple class="custom-file-input mx-auto"  accept="image/*" id="inputGroupFile03" onchange="handleFiles(this.files)" hidden>
+                    </label>                                          
+                    
+                  </div> <!-- END Inner col 1 -->
+          
+                  <!-- img thumbnails - 4 columns -->
+                  <div class="col thumbnails mb-2">
+                    <div class="img-wrap img-wrap-ph rounded" id="b64imgwrap-0">
+                      <button id="clear-0" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(0)"> <div class="icon regular">X</div></button>
+                      <img id="b64img-0" class="rounded" src="">
                     </div>
-                   </div> 
-                </div>
-                <div class="col">
-                  <div class="input-group-prepend mx-auto">
-                    <button class="btn btn-secondary shadow rounded mx-2" type="button" id="uploadbtn" data-target="#exampleModalCenter" style="background-color: #1D7D72; color: #FFFFFF; font-size:18px; width: 100px" onclick="APIRequest()"> Upload</button>
-                    <div class="alert alert-danger alert-dismissable" style="display:none;">
-                      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                      Please check API url.
+                  </div>
+                  <div class="col thumbnails mb-2">
+                    <div class="img-wrap img-wrap-ph rounded" id="b64imgwrap-1">
+                      <button id="clear-1" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(1)"> <div class="icon regular">X</div></button>
+                      <img id="b64img-1" class="rounded" src="">
+                    </div>
+                    </div>
+                  <div class="col thumbnails mb-2">
+                    <div class="img-wrap img-wrap-ph rounded" id="b64imgwrap-2">
+                      <button id="clear-2" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(2)"> <div class="icon regular">X</div></button>
+                      <img id="b64img-2" class="rounded" src="">
+                    </div>
+                  </div>
+                  <div class="col thumbnails mb-2">
+                    <div class="img-wrap img-wrap-ph rounded" id="b64imgwrap-3">
+                      <button id="clear-3" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(3)"> <div class="icon regular">X</div></button>
+                      <img id="b64img-3" class="rounded" src="">
+                    </div>
+                  </div>
+                </div> <!-- Close Inner row -->
+              </div> <!-- Close Outer Col1 -->
+
+              <!-- Upload button - Outer Col2 -->
+              <div class="text-center col-md-auto">
+                <div class="text-muted mb-2"><span class="badge badge-primary">3</span> Test your model:</div>
+
+                <button class="btn btn-primary btn-block shadow rounded button-font" type="button" id="uploadbtn" data-target="#exampleModalCenter" onclick="APIRequest()"> Upload</button>
+                
+                <!-- spinners -->
+                <div id="uploadstatus" class="mt-1">
+                </div> <!-- END spinners  -->
+
+              </div> <!-- END upload button - Close Outer Col2   -->
+
+            </div> <!-- END main row  -->
+            
+            <!-- New Row For Hidden Display Element: Webcam -->
+            <div class="row collapse multi-collapse mt-2" id="multiCollapseWebcam">
+              <div class="col-12">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <div class="card text-white bg-secondary">
+                      <div class="card-header d-flex align-items-center">
+                        <span>LIVE Webcam</span>
+                        <button id="snap" type="button" class="btn btn-light ml-auto">Snap Photo</button>
+                      </div>
+                      <div class="card-body">
+                        <div class="embed-responsive embed-responsive-4by3">
+                          <video id="videoElement" class="embed-responsive-item" autoplay></video>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="card text-white bg-secondary">
+                      <div class="card-header d-flex align-items-center">
+                        <span>Captured Image</span>
+                        <button id="useImage" class="btn btn-light ml-auto">Use Image</button>
+                      </div>
+                      <div class="card-body">
+                        <canvas id="webCamCanvas" class="hide" width="30" height="30"></canvas>
+                      </div>
                     </div>
                   </div>
                 </div>
-               
-              </div>  <!-- END Input Group -->
+              </div>
+            </div> <!-- END Hidden Row: Webcam -->
 
-              <!-- Thumbnails -->
-              <div id="thumbnails" class="col">
-                <div class="img-wrap img-wrap-ph mr-4 mt-4 rounded" id="b64imgwrap-0">
-                  <button id="clear-0" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(0)"> <div class="icon regular">X</div></button>
-                  <img id="b64img-0" class="rounded" src="">
+            <!-- New Row For Hidden Display Element: Sample Images -->
+            <div class="row collapse multi-collapse mt-2" id="multiCollapseSample">
+              <div class="col-12">
+                <div class="row">
+                  <div class="col-sm-12">
+                    <div class="card text-white bg-secondary">
+                      <div class="card-header d-flex align-items-center">
+                        <span>Select Sample Images to Test your Model</span>
+                        <button id="sampleClose" type="button" class="btn btn-light ml-auto" onclick="sampleClose()">Hide Samples</button>
+                      </div>
+                      <div class="card-body">
+                        <div class="row text-center">
+                          <div class="col-xs">
+                            <img id="sample1" data-eid="1" class="rounded m-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/can_1.jpg">
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample2" data-eid="2" class="rounded m-2 sImg"  src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/can_15.jpg">
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample3" data-eid="3" class="rounded m-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/can_28.jpg"> 
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample4" data-eid="4" class="rounded m-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/carton_33.jpg">
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample5" data-eid="5" class="rounded m-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/carton_40.jpg">
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample6" data-eid="6" class="rounded m-2 sImg"  src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/carton_50.jpg"> 
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample7" data-eid="7" class="rounded m-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/milk_bottle_66.jpg">
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample8" data-eid="8" class="rounded m-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/milk_bottle_77.jpg"> 
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample9" data-eid="9" class="rounded m-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/water_bottle_111.jpg"> 
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample10" data-eid="10" class="rounded m-2 sImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/water_bottle_115.jpg">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="img-wrap img-wrap-ph mr-4 mt-4 rounded" id="b64imgwrap-1">
-                  <button id="clear-1" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(1)"> <div class="icon regular">X</div></button>
-                  <img id="b64img-1" class="rounded" src="">
-                </div>
-                <div class="img-wrap img-wrap-ph mr-4 mt-4 rounded" id="b64imgwrap-2">
-                  <button id="clear-2" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(2)"> <div class="icon regular">X</div></button>
-                  <img id="b64img-2" class="rounded" src="">
-                </div>
-                <div class="img-wrap img-wrap-ph mr-4 mt-4 rounded" id="b64imgwrap-3">
-                  <button id="clear-3" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(3)"> <div class="icon regular">X</div></button>
-                  <img id="b64img-3" class="rounded" src="">
-                </div>
-              </div>  <!-- END Thumbnails -->
-            </div>  <!-- END Row -->
-          </div>  <!-- END Image upload and thumbnail container -->
+              </div>
+            </div> <!-- END Hidden Row: Sample Images -->
+
+          </div> <!-- END container -->
 
           <!-- Results Container -->
-          <div class="container mt-4 mx-auto" style="clear: both; background-color: #F2F7F6;">
-            <p class="text-center font-weight-bold pt-4" style="color:#165A67; font-size:24px;">RESULTS</p>
+          <div class="container-xl">
+            <p class="text-center font-weight-bold pt-4 result-font">RESULTS</p>
             <!--displays result images-->
-            <div class="row mt-4">
+            <div class="row">
               <div class="col-md-6 mx-auto" id="resultsDiv0">
                 <div class="card mb-4 shadow-sm">
-                  <div id="resultsDiv0-content" style="overflow:hidden;" class="card-img-top" >
+                  <div id="resultsDiv0-content" class="card-img-top hide-overflow" >
                     <canvas id="resultsCanvas0" width="30" height="30"></canvas>
                     <img id="resultsImg0">
                   </div>
                   <div class="card-body">
-                    <p class="card-text">Object Detection</p>
+                    <p class="card-text"></p>
                   </div>
                 </div>
               </div>  <!-- END Col -->
               <div class="col-md-6 mx-auto" id="resultsDiv1">
                 <div class="card mb-4 shadow-sm">
-                  <div id="resultsDiv1-content" style="overflow:hidden;" class="card-img-top" >
+                  <div id="resultsDiv1-content"  class="card-img-top" >
                     <canvas id="resultsCanvas1" width="30" height="30"></canvas>
                     <img id="resultsImg1">
                   </div>
                   <div class="card-body">
-                    <p class="card-text">Object Detection</p>
+                    <p class="card-text"></p>
                   </div>
                 </div>
               </div>  <!-- END Col -->
               <div class="col-md-6 mx-auto" id="resultsDiv2">
                 <div class="card mb-4 shadow-sm">
-                  <div id="resultsDiv2-content" style="overflow:hidden;" class="card-img-top" >
+                  <div id="resultsDiv2-content" class="card-img-top hide-overflow" >
                     <canvas id="resultsCanvas2" width="30" height="30"></canvas>
                     <img id="resultsImg2">
                   </div>
                   <div class="card-body">
-                    <p class="card-text">Object Detection</p>
+                    <p class="card-text"></p>
                   </div>
                 </div>
               </div>  <!-- END Col -->
               <div class="col-md-6 mx-auto" id="resultsDiv3">
                 <div class="card mb-4 shadow-sm">
-                  <div id="resultsDiv3-content" style="overflow:hidden;" class="card-img-top" >
+                  <div id="resultsDiv3-content" class="card-img-top hide-overflow">
                     <canvas id="resultsCanvas3" width="30" height="30"></canvas>
                     <img id="resultsImg3">
                   </div>
-                  <div class="card-body">
-                    <p class="card-text">Object Detection</p>
+                  <!-- </div> --> <div class="card-body">
+                    <p class="card-text"></p>
                   </div>
                 </div>
               </div>  <!-- END Col -->
 
-            </div>  <!-- END Row -->
+            </div>  <!-- END main Row -->
 
           </div>  <!-- END Results Container -->
-
-        </div>  <!-- END Tab-Pane Use My Model -->
+          
+        </div> <!--  END Tab-Pane Use My Model -->
 
         <!-- for see example tab  -->
-        <div class="tab-pane fade card-body mt-3" id="seeexample" role="tabpanel" aria-labelledby="seeexample-tab" style="padding-left:0px !important; padding-right:0px !important;">
-          <div id="exampleImages" class="container mx-auto" style="background-color: #FFFFFF">
+        <div class="tab-pane fade card-body mt-3" id="seeexample" role="tabpanel" aria-labelledby="seeexample-tab">
+          <!-- img thumbnails and checkbox -->
+          <div id="exampleImages" class="container mx-auto" >
             <img id="example0" data-eid="0" class="rounded mr-2 mb-2 eImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/can_8.jpg">
             <img id="example1" data-eid="1" class="rounded mr-2 mb-2 eImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/can_31.jpg">
             <img id="example2" data-eid="2" class="rounded mr-2 mb-2 eImg" src="https://ec528simtest.blob.core.windows.net/ec528simtest/img/carton_47.jpg">
@@ -309,14 +281,15 @@
                 </label>
               </div>
             </div>
-          </div>
+          </div>  <!-- END img thumbnails and checkbox -->
 
-          <div class="container mt-5 mx-auto" style="background-color: #F2F7F6;">
-            <p class="text-center font-weight-bold pt-1" style="color:#165A67; font-size:24px;">RESULTS</p>
+          <!-- results container -->
+          <div class="container mx-auto mt-4">
+            <p class="text-center font-weight-bold result-font">RESULTS</p>
             <div class="row">
-              <div class="col-md-4 mt-4 mx-auto" id="resultsDiv8">
+              <div class="col-md-4 mx-auto" id="resultsDiv8">
                 <div class="card mb-4 shadow-sm">
-                  <div id="resultsDiv8-content" style="overflow:hidden;" class="card-img-top" >
+                  <div id="resultsDiv8-content" class="card-img-top hide-overflow" >
                     <canvas id="resultsCanvas8" width="30" height="30"></canvas>
                     <img id="resultsImg8">
                   </div>
@@ -325,9 +298,9 @@
                   </div>
                 </div>
               </div>
-              <div class="col-md-4 mt-4 mx-auto" id="resultsDiv7">
+              <div class="col-md-4 mx-auto" id="resultsDiv7">
                 <div class="card mb-4 shadow-sm">
-                  <div id="resultsDiv7-content" style="overflow:hidden;" class="card-img-top" >
+                  <div id="resultsDiv7-content" class="card-img-top hide-overflow" >
                     <canvas id="resultsCanvas7" width="30" height="30"></canvas>
                     <img id="resultsImg7">
                   </div>
@@ -336,9 +309,9 @@
                   </div>
                 </div>
               </div>
-              <div class="col-md-4 mt-4 mx-auto" id="resultsDiv9">
+              <div class="col-md-4 mx-auto" id="resultsDiv9">
                 <div class="card mb-4 shadow-sm">
-                  <div id="resultsDiv9-content" style="overflow:hidden;" class="card-img-top" >
+                  <div id="resultsDiv9-content" class="card-img-top hide-overflow" >
                     <canvas id="resultsCanvas9" width="30" height="30"></canvas>
                     <img id="resultsImg9">
                   </div>
@@ -348,8 +321,7 @@
                 </div>
               </div>
             </div>
-          </div>
-
+          </div> <!-- END results container -->
         </div>  <!-- END Tab-Pane See Example -->
       </div>  <!-- END Tab-Content -->
     </div>  <!-- END Jumbotron Container -->
@@ -362,6 +334,7 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.3.0/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip-utils/0.1.0/jszip-utils.min.js"></script>
+
 <script src="script.js"></script>
 <script src="example_imgs.js"></script>
 

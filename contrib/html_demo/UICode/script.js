@@ -37,6 +37,7 @@ function populateTable(i, tableData) {
   });
 }
 
+
 function eucDistance(a, b) {
   return a
   .map((x, i) => Math.abs( x - b[i] ) ** 2) // square the difference
@@ -147,6 +148,13 @@ async function parseSimFileFeatures(fileType) {
 document.querySelectorAll('.sImg').forEach(item => {
   item.addEventListener('click', () => handleSamples(item), false)
 });
+document.querySelectorAll('.sImg').forEach(item => {
+  item.addEventListener('click', () => custom_close(), false)
+});
+
+function custom_close(){
+    $('#sampleModal').modal('hide');
+    }
 
 // Handle sample image clicks - actual work
 async function handleSamples(imgItem) {
@@ -169,6 +177,7 @@ async function handleSamples(imgItem) {
     b64temp = 0;
   };
   imgTemp.src = imgItem.src;
+ 
 }
 
 // Handle example image clicks - need this unsual syntax to accomodate the async nature of the process
@@ -208,12 +217,14 @@ async function exampleClick(imgItem) {
 }
 
 function exampleModels() {
-  var icCheck = document.getElementById("icCheck").checked;
+var icCheck = document.getElementById("icCheck").checked;
   var odCheck = document.getElementById("odCheck").checked;
   var isCheck = document.getElementById("isCheck").checked;
+
   var icDiv = document.getElementById("resultsDiv7");
   var odDiv = document.getElementById("resultsDiv8");
   var isDiv = document.getElementById("resultsDiv9");
+
   if (icCheck) icDiv.classList.remove("hide");
   else icDiv.classList.add("hide");
   if (odCheck) odDiv.classList.remove("hide");
@@ -225,7 +236,7 @@ function exampleModels() {
 
 // Trigger photo take
 document.getElementById("snap").addEventListener("click", function() {
-  console.log("in snap");
+  webCamCanvas.classList.remove("hide");
   var width = video.videoWidth;
   var height = video.videoHeight;
   wCCcontext.canvas.width = width;
@@ -233,10 +244,13 @@ document.getElementById("snap").addEventListener("click", function() {
   wCCcontext.drawImage(video, 0, 0, width, height);
 });
 
+
 // Trigger photo save - need this unsual syntax to accomodate the async nature of the "photoSave" process
 document.getElementById("useImage").addEventListener("click", () => photoSave(), false);
 
+
 async function photoSave(saveType, b64i) {
+  $("#imageaddedmsg").toggleClass("show");
   if (saveType == 0)
     var dataURL = b64i;
   else {
@@ -250,8 +264,8 @@ async function photoSave(saveType, b64i) {
   var thumbnailURL = await resizeImg(dataURL, 150);
   var fullimgURL = await resizeImg(dataURL, 480);
   for (let i = 0; i < 4; i++) {
-    if (imgList[i] == 0) {
-      console.log("imgList has empty slot at: " + i); 
+      if (imgList[i] == 0) {
+      console.log("imgList has empty slot at: " + i);   
       document.getElementById("b64img-" + i).src=thumbnailURL;
       document.getElementById("clear-" + i).classList.remove("hide");
       document.getElementById("b64imgwrap-" + i).classList.remove("img-wrap-ph");
@@ -260,10 +274,41 @@ async function photoSave(saveType, b64i) {
       imgListEmpty--;
       i = 4;
       }
+   
       if (("b64o"+i) == 0) {
         console.log("b64 object " + i + "is empty (set to 0)");
       }
   }
+  
+  if (video.srcObject) {
+    $('#multiCollapseWebcam').collapse('hide');
+  }
+    
+}
+
+$('#multiCollapseWebcam').on('hide.bs.collapse', function () {
+  webcamStop();
+  webCamCanvas.classList.add("hide");
+  document.getElementById("btnWebcam").classList.remove("active");
+  document.getElementById("btnWebcam").innerText = "Webcam";
+})
+
+$('#multiCollapseWebcam').on('shown.bs.collapse', function () {
+  webcamActivate1();
+})
+
+$('#multiCollapseSample').on('hidden.bs.collapse', function () {
+  document.getElementById("btnSample").classList.remove("active");
+  document.getElementById("btnSample").innerText = "Samples";
+})
+
+$('#multiCollapseSample').on('shown.bs.collapse', function () {
+  document.getElementById("btnSample").classList.add("active");
+  document.getElementById("btnSample").innerText = "Hide Samples";
+})
+
+function sampleClose() {
+  $('#multiCollapseSample').collapse('hide');
 }
 
 function handleFiles(files) {
@@ -297,6 +342,7 @@ function handleFiles(files) {
   }
 }
 
+
 async function saveFiles(numFiles) {
   for (let k = 0; k < numFiles; k++) {
     await photoSave(0, tempImg[k].src);
@@ -315,7 +361,6 @@ function removeImg(imgNumber) {
   b64o[imgNumber] = 0;
   imgListEmpty++;
   console.log("imgListEmpty in removeImg: " + imgListEmpty);
-  loading(0);
 }
 
 function resizeImg(b64Orig, newHeight) {
@@ -353,12 +398,15 @@ function APIValidation(url) {
     console.log("url is valid")
     return true;
   } else {
-    $('.alert').show();
+    displayError(3);
     return false;
   }
 }
 
-function webcamActivate(){
+
+function webcamActivate1(){
+  document.getElementById("btnWebcam").classList.add("active");
+  document.getElementById("btnWebcam").innerText = "Hide Webcam";
   if (navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({ video: true })
     .then(function (stream) {
@@ -380,6 +428,7 @@ function webcamStop(){
   video.srcObject = null;
 }
 
+
 function displayError(errno) {
   var errtext = "";
   switch (errno) {
@@ -389,35 +438,20 @@ function displayError(errno) {
     case 2:
       errtext = "Error during API request.";
       break;
+    case 3:
+      errtext = "Invalid API url.";
+      break;
     default:
       errtext = "An error occured.";
       break;
   }
+  var alertDiv = document.getElementById("alertdiv");
+  alertDiv.innerHTML = '<div id="alert" class="alert alert-danger alert-dismissible fade hide" role="alert"><strong>Alert!</strong> <span id="progress">You should check in on some of those fields below.</span><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>'
   var progress = document.getElementById("progress");
   progress.innerHTML = errtext;
-  progress.classList.remove("text-muted");
-  progress.classList.add("text-danger");
-  progress.classList.add("font-weight-bold");
-}
-
-function loading(status) {
-  var progress = document.getElementById("progress");
-  switch(status) {
-    case 1:
-      progress.innerHTML = "Sending images to model...waiting for results";
-      progress.classList.remove("text-danger");
-      progress.classList.add("text-muted");
-      progress.classList.remove("font-weight-bold");
-      break;
-    case 2:
-      progress.innerHTML += "<br/>Results received...parsing and displaying";
-      break;
-    case 3:
-      progress.innerHTML += "<br/>Results complete!";
-      break;
-    default:
-      progress.innerHTML = " ";
-  }
+  var alert = document.getElementById("alert");
+  alert.classList.remove("hide");
+  alert.classList.add("show");
 }
 
 function renderImage(i) {
@@ -544,7 +578,6 @@ async function jsonParser(jString, ovr) {
       if (ovr) {
         j = ovr
       }
-      // if (j == "9")
       await renderImage(j);
       let features = resp[i].features;
       imgsimilarity(j, 5, features);
@@ -557,33 +590,51 @@ async function jsonParser(jString, ovr) {
 //whatever calls this should have a timeout
 function APIRequest() {
   let url = document.getElementById("url").value;
-  console.log(url);
   if (!APIValidation(url))
-    return;
+    return 0;
+
+  var uplBtn = document.getElementById("uploadbtn");
+  var uplStatus = document.getElementById("uploadstatus");
+  uplBtn.disabled = "true";
+  uplStatus.classList.remove("hide");
+  uplStatus.innerHTML = 'Loading... <div class="spinner-border ml-auto spinner-border-sm" role="status" aria-hidden="true"></div>';
+  //console.log(url);
+  //console.log(JSON.stringify({data: b64o}));
   let xhr = new XMLHttpRequest();
 
   xhr.onload = function() {
     console.log("request completed")
     if (xhr.readyState == 4) {
       if (xhr.status == 200) {
-        loading(2);
+        console.log(xhr.responseXML);
+        //loading(2);
         jsonParser(xhr.responseText);
-        loading(3);
+        //loading(3);
       } else {
         displayError(0);  // Display generic error message in bold, red text
-        document.getElementById("progress").innerHTML = "Error: " + xhr.status + " response";  // Replace generic error text
+        console.log("Error: " + xhr.status + " response. " + xhr.responseText);
       }
+      uplBtn.disabled = false;
+      uplStatus.innerHTML = '<span class="text-muted font-weight-light font-italic">Complete</span>';
     }
   }
 
   xhr.onerror = function() {
     console.log(xhr.status)
     displayError(2);  // Display generic API error message in bold, red text
-    //document.getElementById("progress").innerHTML = "Error during API request."
+    uplBtn.disabled = false;
+    uplStatus.innerHTML = '<span class="text-muted font-weight-light font-italic">Complete</span>';
   }
 
   xhr.open("POST", url, true);
+  xhr.setRequestHeader('Content-Type', 'application/json');
   //add b64 strings to payload list at key "data"
   console.log("sending request")
-  xhr.send(JSON.stringify({data: b64o}));
+  let dataList = []
+  for (let i in b64o) {
+    if (b64o[i] != 0) {
+      dataList.push(b64o[i].split(',')[1]);
+    }
+  }
+  xhr.send(JSON.stringify({"data": dataList}));
 }

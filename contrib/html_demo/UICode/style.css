@@ -1,3 +1,8 @@
+@media (max-width: 576px) { 
+  body {
+    padding-top:40px; 
+  }
+}
 canvas{
   background-color: #F2F7F6;
   width: 100%;
@@ -30,6 +35,10 @@ canvas{
   display:none;
 }
 
+.show{
+  display:block;
+}
+
 .sImg {
   cursor: pointer;
   max-width: 150px;
@@ -46,16 +55,16 @@ canvas{
   display: none;
 }
 
-#thumbnails, #exampleImages {
+.thumbnails, #exampleImages {
   width: 100%;
   text-align: center;
 }
 
-#thumbnails > div {
+.thumbnails > div {
   display: inline-block;
   vertical-align: top;
   text-align:center;
-  margin:2%;  
+  /* margin:2%;   */
 }
 
 .item{
@@ -70,3 +79,49 @@ canvas{
   padding-left: 0.25rem;
   padding-right: 0.25rem;
 } 
+
+.mainColor {
+background-color: #1D7D72;
+}
+
+.nav-link-color {
+  color:#FFFFFF;
+}
+
+.resizeGit {
+  width:25px;
+}
+
+.font18 {
+ font-size:18px;
+}
+
+.tab-content {
+  border-top-left-radius: 0rem !important; 
+  border-top-right-radius: .25rem; 
+  border-top: 0px !important;
+}
+
+.tab-pane {
+  padding-left:0px !important;
+  padding-right:0px !important;
+}
+
+.span-font {
+  font-size: 1.3em;
+}
+
+.button-font {
+  color: #FFFFFF; 
+  font-size:18px;
+}
+
+.result-font {
+  color:#165A67;
+  font-size:24px;
+}
+
+
+.hide-overflow {
+  overflow:hidden;
+}
