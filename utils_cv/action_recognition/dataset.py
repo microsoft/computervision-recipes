@@ -21,7 +21,7 @@ from .references import transforms_video as transforms
 from .references.functional_video import denormalize
 
 from ..common.misc import Config
-from ..common.gpu import num_devices
+from ..common.gpu import num_devices, db_num_workers
 
 Trans = Callable[[object, dict], Tuple[object, dict]]
 
@@ -394,7 +394,7 @@ class VideoDataset:
             self.train_ds,
             batch_size=self.batch_size * devices,
             shuffle=True,
-            num_workers=0,  # Torch 1.2 has a bug when num-workers > 0 (0 means run a main-processor worker)
+            num_workers=db_num_workers(),
             pin_memory=True,
         )
 
@@ -402,7 +402,7 @@ class VideoDataset:
             self.test_ds,
             batch_size=self.batch_size * devices,
             shuffle=False,
-            num_workers=0,
+            num_workers=db_num_workers(),
             pin_memory=True,
         )
 
@@ -520,6 +520,7 @@ class VideoDataset:
                 self.transforms(torch.from_numpy(clips[0])),
                 record.label,
                 record.label_name,
+                record.path,
             )
 
         else:
@@ -530,6 +531,7 @@ class VideoDataset:
                 ),
                 record.label,
                 record.label_name,
+                record.path,
             )
 
     def _show_batch(
@@ -585,14 +587,13 @@ class VideoDataset:
                         fontsize=20,
                         bbox=dict(facecolor='white', alpha=0.80),
                     )
-            pass
 
     def show_batch(self, train_or_test: str = "train", rows: int = 1) -> None:
         """Plot first few samples in the datasets"""
         if train_or_test == "train":
-            batch = [self.train_ds.dataset[i] for i in range(rows)]
+            batch = [self.train_ds[i] for i in range(rows)]
         elif train_or_test == "test":
-            batch = [self.test_ds.dataset[i] for i in range(rows)]
+            batch = [self.test_ds[i] for i in range(rows)]
         else:
             raise ValueError("Unknown data type {}".format(which_data))
 

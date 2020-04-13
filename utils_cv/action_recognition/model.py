@@ -313,7 +313,7 @@ class VideoLearner(object):
             top5 = AverageMeter()
 
             end = time.time()
-            for step, (inputs, target, label_name) in enumerate(dl, start=1):
+            for step, (inputs, target, label_name, path) in enumerate(dl, start=1):
                 inputs = inputs.to(device, non_blocking=True)
                 target = target.to(device, non_blocking=True)
 
