@@ -6,8 +6,9 @@ import os
 import time
 import warnings
 import numpy as np
-from typing import Union
+from typing import Union, Dict, Tuple, Any
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 try:
     from apex import amp
@@ -66,6 +67,9 @@ class VideoLearner(object):
 
         # set num classes
         self.num_classes = num_classes
+
+        # set empty - populated when fit is called
+        self.results = []
 
     @staticmethod
     def init_model(
@@ -141,9 +145,12 @@ class VideoLearner(object):
         save_model: bool = False,
     ) -> None:
         """ The primary fit function """
+        # set epochs
+        self.epochs = epochs
+
         # set lr_step_size based on epochs
         if lr_step_size is None:
-            lr_step_size = np.ceil(2 / 3 * epochs)
+            lr_step_size = np.ceil(2 / 3 * self.epochs)
 
         # set model name
         if model_name is None:
@@ -203,7 +210,7 @@ class VideoLearner(object):
             scheduler = torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
                 max_lr=lr,
-                total_steps=epochs,
+                total_steps=self.epochs,
                 pct_start=warmup_pct,
                 base_momentum=0.9 * momentum,
                 max_momentum=momentum,
@@ -228,19 +235,21 @@ class VideoLearner(object):
         if topk >= self.num_classes:
             topk = self.num_classes
 
-        for e in range(1, epochs + 1):
-            print(f"Epoch {e} ==========")
+        for e in range(1, self.epochs + 1):
+            print(f"Epoch {e} =========================================================")
             print(f"lr={scheduler.get_lr()}")
 
-            self.train_an_epoch(
-                model,
-                data_loaders,
-                device,
-                criterion,
-                optimizer,
-                grad_steps=grad_steps,
-                mixed_prec=mixed_prec,
-                topk=topk,
+            self.results.append(
+                self.train_an_epoch(
+                    model,
+                    data_loaders,
+                    device,
+                    criterion,
+                    optimizer,
+                    grad_steps=grad_steps,
+                    mixed_prec=mixed_prec,
+                    topk=topk,
+                )
             )
 
             scheduler.step()
@@ -249,12 +258,13 @@ class VideoLearner(object):
                 self.save(
                     os.path.join(
                         model_dir,
-                        "{model_name}_{epoch}.pt".format(
+                        "{model_name}_{self.epoch}.pt".format(
                             model_name=model_name,
                             epoch=str(e).zfill(3),
                         ),
                     )
                 )
+        self.plot_precision_loss_curves()
 
     @staticmethod
     def train_an_epoch(
@@ -266,7 +276,7 @@ class VideoLearner(object):
         grad_steps: int = 1,
         mixed_prec: bool = False,
         topk: int = 5,
-    ) -> None:
+    ) -> Dict[str, Any]:
         """Train / validate a model for one epoch.
 
         Args:
@@ -313,7 +323,7 @@ class VideoLearner(object):
             top5 = AverageMeter()
 
             end = time.time()
-            for step, (inputs, target, label_name, path) in enumerate(dl, start=1):
+            for step, (inputs, target, _, _) in enumerate(dl, start=1):
                 inputs = inputs.to(device, non_blocking=True)
                 target = target.to(device, non_blocking=True)
 
@@ -349,15 +359,40 @@ class VideoLearner(object):
                     batch_time.update(time.time() - end)
                     end = time.time()
 
-            print(
-                f"{phase} took {batch_time.sum:.2f} sec: loss = {losses.avg:.4f}, top1_acc = {top1.avg:.4f}, top5_acc = {top5.avg:.4f}"
-            )
+            print(f"{phase} took {batch_time.sum:.2f} sec ", end="| ")
+            print(f"loss = {losses.avg:.4f} ", end="| ")
+            print(f"top1_acc = {top1.avg:.4f} ", end=" ")
+            if topk >= 5:
+                print(f"| top5_acc = {top5.avg:.4f}", end="")
+            print()
+
             result[f"{phase}/time"] = batch_time.sum
             result[f"{phase}/loss"] = losses.avg
             result[f"{phase}/top1"] = top1.avg
             result[f"{phase}/top5"] = top5.avg
 
         return result
+
+    def plot_precision_loss_curves(
+        self, figsize: Tuple[int, int] = (10, 5)
+    ) -> None:
+        """ Plot training loss and accuracy from calling `fit` on the test set. """
+        assert len(self.results) > 0
+
+        fig = plt.figure(figsize=figsize)
+        valid_losses = [dic['valid/loss'] for dic in self.results]
+        valid_top1 = [float(dic['valid/top1']) for dic in self.results]
+
+        ax1 = fig.add_subplot(1, 1, 1)
+        ax1.set_xlim([0, self.epochs - 1 ])
+        ax1.set_xticks(range(0, self.epochs))
+        ax1.set_xlabel("epochs")
+        ax1.set_ylabel("loss", color="g")
+        ax1.plot(valid_losses, "g-")
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("%acc", color="b")
+        ax2.plot(valid_top1, "b-")
+        fig.suptitle("Loss and Average Precision (AP) over Epochs")
 
     def save(self, model_path: Union[Path, str]) -> None:
         """ Save the model to a path on disk. """
