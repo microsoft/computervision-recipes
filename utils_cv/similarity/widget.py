@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-import copy
-from fastai.data_block import LabelList
-from ipywidgets import widgets, Layout, IntSlider
+from fastai.vision.data import ImageDataBunch
+from ipywidgets import widgets
 import numpy as np
+from typing import List, Dict
+
+from utils_cv.similarity.metrics import compute_distances
 
 
 def _list_sort(list1D, reverse=False, comparison_fct=lambda x: x):
@@ -14,38 +15,30 @@ def _list_sort(list1D, reverse=False, comparison_fct=lambda x: x):
     return (list1D_sorted, sort_order)
 
 
-class DistanceWidget(object):
-    IM_WIDTH = 500  # pixels
-
-    def __init__(
-        self,
-        dataset: LabelList,
-        distances: np.ndarray,
-        query_im_path=None,
-        sort=True,
+class RetrievalWidget(object):
+    def __init__(self, 
+        ds: ImageDataBunch, 
+        features: List[Dict[str, np.array]], 
+        rows: int = 2, 
+        cols: int = 5
     ):
-        """Helper class to draw and update Image classification results widgets.
+        """Helper class to show most similar images to a query image.
+           A new image can be used as query by clicking its yellow box above the image. 
 
         Args:
-            dataset: Data used for prediction, containing ImageList x and CategoryList y.
-            distances: Distance for each image to the query.
-            query_im_path: Path to query image.
-            sort: set to true to sort images by their smallest distance.
+            ds: Dataset used for prediction, containing ImageList x.
+            features: DNN features for each image.
+            rows: number of image rows
+            cols: number images per row
         """
-        assert len(dataset) == len(distances)
+        assert len(ds) == len(features)
 
-        if sort:
-            distances, sort_order = _list_sort(distances, reverse=False)
-            dataset = copy.deepcopy(
-                dataset
-            )  # create copy to not modify the input
-            dataset.x.items = [dataset.x.items[i] for i in sort_order]
-            dataset.y.items = [dataset.y.items[i] for i in sort_order]
-
-        self.dataset = dataset
-        self.distances = distances
-        self.query_im_path = query_im_path
-        self.vis_image_index = 0
+        # init
+        self.ds = ds
+        self.features = features
+        self.rows = rows
+        self.cols = cols
+        self.query_im_index = 1
 
         self._create_ui()
 
@@ -53,24 +46,48 @@ class DistanceWidget(object):
         return self.ui
 
     def update(self):
-        im = self.dataset.x[self.vis_image_index]  # fastai Image object
+        # Get the DNN feature for the query image
+        query_im_path = str(self.ds.items[self.query_im_index])
+        query_feature = self.features[query_im_path]
 
-        self.w_image_header.value = f"Image index: {self.vis_image_index}"
-        self.w_img.value = im._repr_png_()
-        self.w_distance.value = "{:.2f}".format(
-            self.distances[self.vis_image_index]
-        )
-        self.w_filename.value = str(
-            self.dataset.items[self.vis_image_index].name
-        )
-        self.w_path.value = str(
-            self.dataset.items[self.vis_image_index].parent
-        )
+        # Compute the distances between the query and all reference images
+        distances_obj = compute_distances(query_feature, self.features)
 
-        # Fix the width of the image widget and adjust the height
-        self.w_img.layout.height = (
-            f"{int(self.IM_WIDTH * (im.size[0]/im.size[1]))}px"
-        )
+        # Get image paths and the distances sorted by smallest distance first
+        im_paths = [
+            str(distances_obj[i][0]) for i in range(len(distances_obj))
+        ]
+        distances = [
+            float(distances_obj[i][1]) for i in range(len(distances_obj))
+        ]
+        _, sort_order = _list_sort(distances)
+
+        # Update image grid UI
+        for i in range(len(self.w_imgs)):
+            w_img = self.w_imgs[i]
+            w_button = self.w_buttons[i]
+
+            if i < len(im_paths):
+                img_index = sort_order[i]
+                img_path = im_paths[img_index]
+                distance = distances[img_index]
+
+                w_img.layout.visibility = "visible"
+                w_img.value = open(img_path, "rb").read()
+                w_img.description = str(img_index)
+
+                w_button.layout.visibility = "visible"
+                w_button.value = str(img_index)
+                w_button.tooltip = f"Rank {i} ({distance:.2f}), image index: {img_index}"
+
+                if i == 0:
+                    w_button.description = "Query"
+                else:
+                    w_button.description = f"Rank {i} ({distance:.2f})"
+                
+            else:
+                w_img.layout.visibility = "hidden"
+                w_button.layout.visibility = "hidden"
 
     def _create_ui(self):
         """Create and initialize widgets"""
@@ -78,96 +95,51 @@ class DistanceWidget(object):
         # Callbacks + logic
         # ------------
         def button_pressed(obj):
-            """Next / previous image button callback."""
-            step = int(obj.value)
-            self.vis_image_index += step
-            self.vis_image_index = min(
-                max(0, self.vis_image_index), int(len(self.dataset)) - 1
-            )
-            self.w_image_slider.value = self.vis_image_index
+            self.query_im_index = int(obj.value)
             self.update()
 
-        def slider_changed(obj):
-            """Image slider callback.
-            Need to wrap in try statement to avoid errors when slider value is not a number.
-            """
-            try:
-                self.vis_image_index = int(obj["new"]["value"])
-                self.update()
-            except Exception:
-                pass
-
         # ------------
-        # UI - image + controls (left side)
+        # UI - image grid
         # ------------
-        w_next_image_button = widgets.Button(description="Next")
-        w_next_image_button.value = "1"
-        w_next_image_button.layout = Layout(width="80px")
-        w_next_image_button.on_click(button_pressed)
-        w_previous_image_button = widgets.Button(description="Previous")
-        w_previous_image_button.value = "-1"
-        w_previous_image_button.layout = Layout(width="80px")
-        w_previous_image_button.on_click(button_pressed)
+        self.w_imgs = []
+        self.w_buttons = []
+        w_img_buttons = []
 
-        self.w_image_slider = IntSlider(
-            min=0,
-            max=len(self.dataset) - 1,
-            step=1,
-            value=self.vis_image_index,
-            continuous_update=False,
-        )
-        self.w_image_slider.observe(slider_changed)
-        self.w_image_header = widgets.Text("", layout=Layout(width="130px"))
-        self.w_img = widgets.Image()
-        self.w_img.layout.width = f"{self.IM_WIDTH}px"
-        w_header = widgets.HBox(
-            children=[
-                w_previous_image_button,
-                w_next_image_button,
-                self.w_image_slider,
-            ]
-        )
+        for i in range(self.rows * self.cols):
+            # Initialize images
+            w_img = widgets.Image(description="", width=180)
+            self.w_imgs.append(w_img)
 
-        # ------------
-        # UI - info (right side)
-        # ------------
-        self.w_filename = widgets.Text(
-            value="", description="Filename:", layout=Layout(width="400px")
-        )
-        self.w_path = widgets.Text(
-            value="", description="Path:", layout=Layout(width="400px")
-        )
-        self.w_distance = widgets.Text(
-            value="", description="Distance:", layout=Layout(width="200px")
-        )
-        info_widgets = [
-            widgets.HTML(value="Image:"),
-            self.w_filename,
-            self.w_path,
-            self.w_distance,
-        ]
+            # Initialize buttons
+            w_button = widgets.Button(description="", value=i)
+            w_button.on_click(button_pressed)
+            if i == 0:
+                w_button.button_style = "primary"
+            else:
+                w_button.button_style = "warning"
+            self.w_buttons.append(w_button)
 
-        # Show query image if path is provided
-        if self.query_im_path:
-            info_widgets.append(widgets.HTML(value="Query Image:"))
-            w_query_img = widgets.Image(layout=Layout(width="200px"))
-            w_query_img.value = open(self.query_im_path, "rb").read()
-            info_widgets.append(w_query_img)
+            # combine into image+button widget
+            w_img_button = widgets.VBox(
+                children=[w_button, w_img]
+            )
+            w_img_buttons.append(w_img_button)
 
-        # Combine UIs into tab widget
-        w_info = widgets.VBox(children=info_widgets)
-        w_info.layout.padding = "20px"
-        self.ui = widgets.Tab(
-            children=[
-                widgets.VBox(
-                    children=[
-                        w_header,
-                        widgets.HBox(children=[self.w_img, w_info]),
-                    ]
-                )
-            ]
-        )
-        self.ui.set_title(0, "Results viewer")
+        # Image grid
+        w_grid_HBoxes = []
+        for r in range(self.rows):
+            hbox = widgets.HBox(
+                children=[
+                    w_img_buttons[r * self.cols + c] for c in range(self.cols)
+                ]
+            )
+            hbox.layout.padding = "10px"
+            w_grid_HBoxes.append(hbox)
+        w_img_grid = widgets.VBox(w_grid_HBoxes)
+
+        # Create tab
+        self.ui = widgets.Tab(children=[w_img_grid])
+        self.ui.set_title(0, "Image retrieval viewer")
 
         # Fill UI with content
         self.update()
