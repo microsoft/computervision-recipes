@@ -27,7 +27,7 @@ function populateTable(i, tableData) {
     var item = document.createElement('div');
     item.classList.add("item");
     var img = document.createElement('img');
-    img.src = 'https://ec528simtest.blob.core.windows.net/ec528simtest/small-150/' + rowData[0];
+    img.src = 'https://cvbp.blob.core.windows.net/public/html_demo/small-150/' + rowData[0];
     //img.src = 'small-150/' + rowData[0];
     var txt = document.createElement('p');
     txt.innerHTML = rowData[0] + "<br/><i>Dist.: " + rowData[1] + "</i>";
@@ -57,7 +57,7 @@ function calcSimilar(top, queryFeatures, simType) {
   if (!queryFeatures) {
     var queryRow = Math.floor(Math.random() * (rows - 0 + 1) + 0);
     var queryimg = ref_array[queryRow];
-    retImg = 'https://ec528simtest.blob.core.windows.net/ec528simtest/small-150/' + fn_array[queryRow];
+    retImg = 'https://cvbp.blob.core.windows.net/public/html_demo/small-150/' + fn_array[queryRow];
     //retImg = 'small-150/' + fn_array[queryRow];
   } else {
     var queryimg = queryFeatures;
@@ -83,7 +83,7 @@ async function parseSimFileNames(fileType) {
     new JSZip.external.Promise(function (resolve, reject) {
       zipFile_fn = 'data/ref_filenames.zip';
       if (fileType == "example") 
-        zipFile_fn = 'https://ec528simtest.blob.core.windows.net/ec528simtest/data/ref_filenames.zip';
+        zipFile_fn = 'https://cvbp.blob.core.windows.net/public/html_demo/data/ref_filenames.zip';
       //JSZipUtils.getBinaryContent('data/ref_filenames.zip', function(err, data) {
       JSZipUtils.getBinaryContent(zipFile_fn, function(err, data) {
           if (err) {
@@ -117,7 +117,7 @@ async function parseSimFileFeatures(fileType) {
     new JSZip.external.Promise(function (resolve, reject) {
       zipFile_ref = 'data/ref_features.zip';
       if (fileType == "example") 
-        zipFile_ref = 'https://ec528simtest.blob.core.windows.net/ec528simtest/data/ref_features.zip';
+        zipFile_ref = 'https://cvbp.blob.core.windows.net/public/html_demo/data/ref_features.zip';
       // JSZipUtils.getBinaryContent('data/ref_features.zip', function(err, data) {
       JSZipUtils.getBinaryContent(zipFile_ref, function(err, data) {
           if (err) {
