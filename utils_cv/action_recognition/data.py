@@ -48,8 +48,20 @@ class Urls:
     kinetics_label_map = "https://github.com/microsoft/ComputerVision/files/3746975/kinetics400_lable_map.txt"
     hmdb51_label_map = "https://github.com/microsoft/ComputerVision/files/3746963/hmdb51_label_map.txt"
 
+    # milk bottle action split test files
+    hmdb_train_split_1 = urljoin(base, "hmdb51_vid_train_split_1.txt")
+    hmdb_test_split_1 = urljoin(base, "hmdb51_vid_test_split_1.txt")
+
     # testing datasets
     milk_bottle_action_path = urljoin(base, "milkBottleActions.zip")
+
+    # milk bottle action split test files
+    milk_bottle_action_train_split = urljoin(
+        base, "milk_bottle_action_train_split.txt"
+    )
+    milk_bottle_action_test_split = urljoin(
+        base, "milk_bottle_action_test_split.txt"
+    )
 
 
 KINETICS = _DatasetSpec(

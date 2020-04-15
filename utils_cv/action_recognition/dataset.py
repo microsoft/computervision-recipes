@@ -72,11 +72,7 @@ class VideoRecord(object):
 
     @property
     def label_name(self) -> str:
-        return (
-            None
-            if len(self._data) <= 2
-            else self._data[2]
-        )
+        return None if len(self._data) <= 2 else self._data[2]
 
 
 def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
@@ -497,10 +493,10 @@ class VideoDataset:
 
         return clip
 
-    def __getitem__(self, idx: int) -> Tuple[torch.tensor, int, str]:
+    def __getitem__(self, idx: int) -> Tuple[torch.tensor, int]:
         """
         Return:
-            clips (torch.tensor), label (int)
+            (clips (torch.tensor), label (int))
         """
         record = self.video_records[idx]
         video_reader = decord.VideoReader(
@@ -515,30 +511,25 @@ class VideoDataset:
         clips = np.array([self._get_frames(video_reader, o) for o in offsets])
 
         if self.num_samples == 1:
-            # [T, H, W, C] -> [C, T, H, W]
             return (
+                # [T, H, W, C] -> [C, T, H, W]
                 self.transforms(torch.from_numpy(clips[0])),
                 record.label,
-                record.label_name,
-                record.path,
             )
 
         else:
-            # [S, T, H, W, C] -> [S, C, T, H, W]
             return (
+                # [S, T, H, W, C] -> [S, C, T, H, W]
                 torch.stack(
                     [self.transforms(torch.from_numpy(c)) for c in clips]
                 ),
                 record.label,
-                record.label_name,
-                record.path,
             )
 
     def _show_batch(
         self,
         images: List[torch.tensor],
         labels: List[int],
-        label_names: List[str],
         sample_length: int,
         mean: Tuple[int, int, int] = DEFAULT_MEAN,
         std: Tuple[int, int, int] = DEFAULT_STD,
@@ -549,7 +540,6 @@ class VideoDataset:
         Args:
             images: List of sample (clip) tensors
             labels: List of labels
-            label_names: List of label names
             sample_length: Number of frames to show for each sample
             mean: Normalization mean
             std: Normalization std-dev
@@ -577,15 +567,13 @@ class VideoDataset:
                 )
 
                 # display label/label_name on the first image
-                label_name = '' if label_names[i] is None else f'-{label_names[i]}'
-                text = f"{labels[i]}{label_name}"
-                if j is 0:
+                if j == 0:
                     a.text(
                         x=3,
                         y=15,
-                        s=text,
+                        s=f"{labels[i]}",
                         fontsize=20,
-                        bbox=dict(facecolor='white', alpha=0.80),
+                        bbox=dict(facecolor="white", alpha=0.80),
                     )
 
     def show_batch(self, train_or_test: str = "train", rows: int = 1) -> None:
@@ -599,6 +587,5 @@ class VideoDataset:
 
         images = [im[0] for im in batch]
         labels = [im[1] for im in batch]
-        label_names = [im[2] for im in batch]
 
-        self._show_batch(images, labels, label_names, self.sample_length)
+        self._show_batch(images, labels, self.sample_length)

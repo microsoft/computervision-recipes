@@ -9,6 +9,8 @@ import numpy as np
 from typing import Union, Dict, Tuple, Any
 from pathlib import Path
 import matplotlib.pyplot as plt
+import torch.cuda as cuda
+from sklearn.metrics import accuracy_score
 
 try:
     from apex import amp
@@ -22,7 +24,6 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision
 
-from ..common.misc import Config
 from ..common.gpu import torch_device, num_devices
 from .dataset import VideoDataset
 
@@ -187,7 +188,7 @@ class VideoLearner(object):
             list(named_params_to_update.values()),
             lr=lr,
             momentum=momentum,
-            weight_decay=weight_decay
+            weight_decay=weight_decay,
         )
 
         # Use mixed-precision if available
@@ -218,9 +219,7 @@ class VideoLearner(object):
         else:
             # Simple step-decay
             scheduler = torch.optim.lr_scheduler.StepLR(
-                optimizer,
-                step_size=lr_step_size,
-                gamma=lr_gamma,
+                optimizer, step_size=lr_step_size, gamma=lr_gamma,
             )
 
         # DataParallel after amp.initialize
@@ -236,7 +235,9 @@ class VideoLearner(object):
             topk = self.num_classes
 
         for e in range(1, self.epochs + 1):
-            print(f"Epoch {e} =========================================================")
+            print(
+                f"Epoch {e} ========================================================="
+            )
             print(f"lr={scheduler.get_lr()}")
 
             self.results.append(
@@ -259,8 +260,7 @@ class VideoLearner(object):
                     os.path.join(
                         model_dir,
                         "{model_name}_{self.epoch}.pt".format(
-                            model_name=model_name,
-                            epoch=str(e).zfill(3),
+                            model_name=model_name, epoch=str(e).zfill(3),
                         ),
                     )
                 )
@@ -315,15 +315,17 @@ class VideoLearner(object):
             else:
                 model.eval()
 
+            # set loader
             dl = data_loaders[phase]
 
+            # collect metrics
             batch_time = AverageMeter()
             losses = AverageMeter()
             top1 = AverageMeter()
             top5 = AverageMeter()
 
             end = time.time()
-            for step, (inputs, target, _, _) in enumerate(dl, start=1):
+            for step, (inputs, target) in enumerate(dl, start=1):
                 inputs = inputs.to(device, non_blocking=True)
                 target = target.to(device, non_blocking=True)
 
@@ -380,19 +382,111 @@ class VideoLearner(object):
         assert len(self.results) > 0
 
         fig = plt.figure(figsize=figsize)
-        valid_losses = [dic['valid/loss'] for dic in self.results]
-        valid_top1 = [float(dic['valid/top1']) for dic in self.results]
+        valid_losses = [dic["valid/loss"] for dic in self.results]
+        valid_top1 = [float(dic["valid/top1"]) for dic in self.results]
 
         ax1 = fig.add_subplot(1, 1, 1)
-        ax1.set_xlim([0, self.epochs - 1 ])
+        ax1.set_xlim([0, self.epochs - 1])
         ax1.set_xticks(range(0, self.epochs))
         ax1.set_xlabel("epochs")
         ax1.set_ylabel("loss", color="g")
         ax1.plot(valid_losses, "g-")
         ax2 = ax1.twinx()
-        ax2.set_ylabel("%acc", color="b")
+        ax2.set_ylabel("top1 %acc", color="b")
         ax2.plot(valid_top1, "b-")
         fig.suptitle("Loss and Average Precision (AP) over Epochs")
+
+    def evaluate(
+        self,
+        num_samples: int = 10,
+        report_every: int = 100,
+        train_or_test: str = "test",
+    ) -> None:
+        """ eval code for validation/test set and saves the evaluation results in self.results.
+
+        Args:
+            num_samples: number of samples (clips) of the validation set to test
+            report_every: print line of results every n times
+            train_or_test: use train or test set
+        """
+        # asset train or test valid
+        assert train_or_test in ["train", "test"]
+
+        # set device and num_gpus
+        num_gpus = num_devices()
+        device = torch_device()
+        torch.backends.cudnn.benchmark = True if cuda.is_available() else False
+
+        # init model with gpu (or not)
+        self.model.to(device)
+        if num_gpus > 1:
+            self.model = nn.DataParallel(model)
+        self.model.eval()
+
+        # set train or test
+        ds = (
+            self.dataset.test_ds
+            if train_or_test == "test"
+            else self.dataset.train_ds
+        )
+
+        # set num_samples
+        ds.dataset.num_samples = num_samples
+        print(
+            f"{len(self.dataset.test_ds)} samples of {self.dataset.test_ds[0][0][0].shape}"
+        )
+
+        # Loop over all examples in the test set and compute accuracies
+        ret = dict(
+            infer_times=[],
+            video_preds=[],
+            video_trues=[],
+            clip_preds=[],
+            clip_trues=[],
+        )
+        report_every = 100
+
+        # inference
+        with torch.no_grad():
+            for i in range(
+                1, len(ds)
+            ):  # [::10]:  # Skip some examples to speed up accuracy computation
+                if i % report_every == 0:
+                    print(
+                        f"Processsing {i} of {len(self.dataset.test_ds)} samples.."
+                    )
+
+                # Get model inputs
+                inputs, label = ds[i]
+                inputs = inputs.to(device, non_blocking=True)
+
+                # Run inference
+                start_time = time.time()
+                outputs = self.model(inputs)
+                outputs = outputs.cpu().numpy()
+                infer_time = time.time() - start_time
+                ret["infer_times"].append(infer_time)
+
+                # Store results
+                ret["video_preds"].append(outputs.sum(axis=0).argmax())
+                ret["video_trues"].append(label)
+                ret["clip_preds"].extend(outputs.argmax(axis=1))
+                ret["clip_trues"].extend([label] * num_samples)
+
+        print(
+            f"Avg. inference time per video ({len(ds)} clips) =",
+            np.array(ret["infer_times"]).mean() * 1000,
+            "ms",
+        )
+        print(
+            "Video prediction accuracy =",
+            accuracy_score(ret["video_trues"], ret["video_preds"]),
+        )
+        print(
+            "Clip prediction accuracy =",
+            accuracy_score(ret["clip_trues"], ret["clip_preds"]),
+        )
+        return ret
 
     def save(self, model_path: Union[Path, str]) -> None:
         """ Save the model to a path on disk. """
