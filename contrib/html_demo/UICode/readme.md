@@ -13,11 +13,9 @@ This directory contains an html file with separate stylesheet and JavaScript fun
 
 
 ### File List
-
-├── 13_image_similarity_export.ipynb
-├── 20_upload_ui.ipynb
-├── 30_deployment_to_azure_app_service.ipynb
-└── readme.md
+| index.html | User interface components |
+| style.css | Styling of the components on the website |
+| script.js | JavaScript functions to drive the back-end of the website |
 
 
 ### Usage
