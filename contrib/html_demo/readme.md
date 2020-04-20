@@ -48,9 +48,13 @@ To view examples in the See Example tab:
 2. See results from image classification, object detection, and image similarity models below!
 
 ### Photo
-Below is a screenshot of the working website with Use My Model tab and See Example Tab
-<img src="./media/UI-UseMyModel.jpg" width="70%" />
-<img src="./media/UI-SeeExample.jpg" width="70%" />
+Below is a screenshot of the working website with Use My Model 
+
+In "Use My Model" tab on the website, users can select multiple images and test their DNN model's API and see the visualization of the model's API.
+<img src="./media/UI-UseMyModel.jpg"  />
+
+In "See Example" tab on the website, users can click on example images and view the visualization of three DNN models (Image Classification, Object Detection, Image Similarity)
+<img src="./media/UI-SeeExample.jpg" />
 
 ### File List
 
