@@ -12,13 +12,6 @@ This directory contains a few helper notebooks that upload files and deploy mode
 | [30_deployment_to_azure_app_service.ipynb](30_deployment_to_azure_app_service.ipynb)| Deploys image classification model as an Azure app service |
 
 
-### File List
-
-├── 13_image_similarity_export.ipynb
-├── 20_upload_ui.ipynb
-├── 30_deployment_to_azure_app_service.ipynb
-└── readme.md
-
 
 ### Usage
 
