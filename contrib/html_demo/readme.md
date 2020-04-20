@@ -64,16 +64,6 @@ To view examples in the See Example tab:
 └── readme.md
 
 
-***THIS IS A WORK IN PROGRESS***
-
-### Missing or Incomplete as of April 9, 2020
-- UICode/index.html (still being revised)
-- UICode/script.js (still being revised)
-- UICode/style.css (still being revised)
-- JupyterCode/20_upload_ui.ipynb (needs additional context and instructions to help user create Azure Blob storage to host HTML files)
-- Images for this readme for the "Using the web page" section
-
-
 ### Authors
 
 This work was completed by a team of students from the Boston University College of Engineering as part of the EC528 Cloud Computing class. The project was completed in collaboration with three Microsoft engineers who proposed the project and acted as team mentors. 
