@@ -6,12 +6,14 @@
 This directory contains an html file with separate stylesheet and JavaScript functions. 
 
 
+
 ### File List
 | File name | Description |
 | --- | --- |
 | [index.html](index.html) | User interface components |
 | [style.css](style.css) | Styling of the components on the webpage |
 | [script.js](script.js) | JavaScript functions to drive the back-end of the webpage |
+
 
 
 
