@@ -22,8 +22,3 @@ If you want to use an image similarity model, you can run [13_image_similarity_e
 To upload the web page for sharing, notebook [20_upload_ui.ipynb](20_upload_ui.ipynb) outlines the process of uploading to Azure Blob storage.
 
 As the web page needs the API to allow CORS, we recommend uploading models as an Azure app service. Notebook [30_deployment_to_azure_app_service.ipynb](30_deployment_to_azure_app_service.ipynb) gives a tutorial on how to do so with an image classification model.
-
-***THIS IS A WORK IN PROGRESS***
-
-### Missing or Incomplete as of April 9, 2020
- - Possibly add more details or images further explaining the notebooks
