@@ -47,6 +47,11 @@ To view examples in the See Example tab:
 1. Click on an image you wish to view
 2. See results from image classification, object detection, and image similarity models below!
 
+###Photo
+Below is a screenshot of the working website with Use My Model tab and See Example Tab
+<img src="./media/UI-UseMyModel.jpg" width="70%" />
+<img src="./media/UI-SeeExample.jpg" width="70%" />
+
 ### File List
 
 ├── JupyterCode 		# Helper notebooks to deploy model and upload needed files							
@@ -76,7 +81,7 @@ To view examples in the See Example tab:
 
 ### Authors
 
-This work was completed by a team of students from the Boston University College of Engineering as part of the EC528 Cloud Computing class. The project was completed in collaboration with three Microsoft engineers who proposed the project and acted as team mentors. 
+This work was completed by a team of students from the Boston University College of Engineering as part of the EC528 Cloud Computing class. The project was completed in collaboration with three Microsoft engineers who proposed the project and acted as team mentors.
 
 **Student team:** Matthew Boyd, Charles Henneberger, Xushan "Mulla" Hu, SeungYeun "Kelly" Lee, Nuwapa "Prim" Promchotichai
 
