@@ -47,7 +47,7 @@ To view examples in the See Example tab:
 1. Click on an image you wish to view
 2. See results from image classification, object detection, and image similarity models below!
 
-###Photo
+### Photo
 Below is a screenshot of the working website with Use My Model tab and See Example Tab
 <img src="./media/UI-UseMyModel.jpg" width="70%" />
 <img src="./media/UI-SeeExample.jpg" width="70%" />
