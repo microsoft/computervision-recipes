@@ -13,9 +13,11 @@ This directory contains an html file with separate stylesheet and JavaScript fun
 
 
 ### File List
-| index.html | User interface components |
-| style.css | Styling of the components on the website |
-| script.js | JavaScript functions to drive the back-end of the website |
+| File name | Description |
+| --- | --- |
+| [index.html](index.html) | User interface components |
+| [style.css](style.css) | Styling of the components on the website |
+| [script.js](script.js) | JavaScript functions to drive the back-end of the website |
 
 
 ### Usage
