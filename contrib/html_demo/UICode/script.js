@@ -20,6 +20,26 @@ var video = document.getElementById('videoElement');
 var webCamCanvas = document.getElementById('webCamCanvas');
 var wCCcontext = webCamCanvas.getContext('2d');
 
+function aboutModal() {
+  // Display the modal
+  var modal = document.getElementById("aboutModal");
+  modal.style.display = "block";
+
+  // Get the <span> element that closes the modal
+  var span = document.getElementById("closeModal");
+  // Close the modal on click
+  span.onclick = function() {
+    modal.style.display = "none";
+  }
+  
+  // When the user clicks anywhere outside of the modal, close it
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+}
+
 function populateTable(i, tableData) {
   var cardBody = document.getElementById("resultsDiv"+i).getElementsByClassName('card-body')[0];
   cardBody.innerHTML = "<p class='card-text'>Image Similarity</p>";
