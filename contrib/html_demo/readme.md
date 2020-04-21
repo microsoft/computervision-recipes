@@ -90,7 +90,7 @@ A: Yes, you will just need to substitute your model where the other model is use
 
 Q: Why am I getting CORS issues when running a model/example?
 
-A: In order to run the website and call models, you must enable CORS for the location of the html file on the app service. See the end of section 3.F in [3_deployment_to_azure_app_service.ipynb](contrib/html_demo/JupyterCode/3_deployment_to_azure_app_service.ipynb).
+A: In order to run the website and call models, you must enable CORS for the location of the html file on the app service. See the end of section 3.F in [3_deployment_to_azure_app_service.ipynb](JupyterCode/3_deployment_to_azure_app_service.ipynb).
 
 Q: How do I enable CORS on items in my Blob storage account?
 
