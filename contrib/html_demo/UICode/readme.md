@@ -6,8 +6,6 @@
 This directory contains a html file with separate stylesheet and JavaScript functions. 
 
 
-
-### File List
 | File name | Description |
 | --- | --- |
 | [index.html](index.html) | User interface components |
