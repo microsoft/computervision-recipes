@@ -63,6 +63,9 @@ class Urls:
         base, "milk_bottle_action_test_split.txt"
     )
 
+    # test vid
+    drinking_path = urljoin(base, "drinking.mp4")
+
 
 KINETICS = _DatasetSpec(
     Urls.kinetics_label_map, 400, os.path.join("data", "kinetics400"),

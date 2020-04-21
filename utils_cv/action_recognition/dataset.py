@@ -51,6 +51,13 @@ class VideoRecord(object):
             row: a list where first element is the path and second element is
             the label, and the third element (optional) is the label name
         """
+        assert len(data) >= 2 and len(data) <= 3
+        assert isinstance(data[0], str)
+        assert isinstance(data[1], int)
+        if len(data) == 3:
+            assert isinstance(data[2], str)
+        assert Path(data[0]).exists()
+
         self._data = data
         self._num_frames = None
 

@@ -38,6 +38,7 @@ from utils_cv.detection.model import (
 )
 from utils_cv.similarity.data import Urls as is_urls
 from utils_cv.similarity.model import compute_features_learner
+from utils_cv.action_recognition.data import Urls as ar_urls
 
 
 def path_classification_notebooks():
@@ -156,7 +157,9 @@ def detection_notebooks():
         "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
         "02": os.path.join(folder_notebooks, "02_mask_rcnn.ipynb"),
         "03": os.path.join(folder_notebooks, "03_keypoint_rcnn.ipynb"),
-        "04": os.path.join(folder_notebooks, "04_coco_accuracy_vs_speed.ipynb"),
+        "04": os.path.join(
+            folder_notebooks, "04_coco_accuracy_vs_speed.ipynb"
+        ),
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters_on_azureml.ipynb"
         ),
@@ -711,17 +714,27 @@ def od_detections(od_detection_dataset):
 
 
 @pytest.fixture(scope="session")
-def ar_path(tmp_session) -> str:
+def ar_im_path(tmp_session) -> str:
     """ Returns the path to the downloaded cup image. """
-    VID_URL = "https://cvbp.blob.core.windows.net/public/datasets/action_recognition/drinking.mp4"
+    drinking_url = ar_urls.drinking_path
     vid_path = os.path.join(tmp_session, "drinking.mp4")
-    urllib.request.urlretrieve(VID_URL, vid_path)
+    urllib.request.urlretrieve(drinking_url, vid_path)
     return vid_path
 
 
-# TODO
+@pytest.fixture(scope="session")
+def ar_milk_bottle_path(tmp_session) -> str:
+    """ Returns the path of the milk bottle action dataset. """
+    return unzip_url(
+        ar_urls.milk_bottle_action_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
+
 
 # ----- AML Settings ----------------------------------------------------------
+
 
 @pytest.fixture(scope="session")
 def coco_sample_path(tmpdir_factory) -> str:
@@ -800,4 +813,3 @@ def tiny_ic_databunch_valid_features(tiny_ic_databunch):
         tiny_ic_databunch, DatasetType.Valid, learn, embedding_layer
     )
     return features
-

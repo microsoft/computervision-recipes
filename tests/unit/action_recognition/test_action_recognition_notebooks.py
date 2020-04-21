@@ -43,7 +43,7 @@ def test_01_notebook_run(action_recognition_notebooks):
             MODEL_INPUT_SIZE=4,
             EPOCHS=4,
             BATCH_SIZE=8,
-            LR=0.001
+            LR=0.001,
         ),
         kernel_name=KERNEL_NAME,
     )
