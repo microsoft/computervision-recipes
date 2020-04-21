@@ -38,3 +38,4 @@ Steps:
 2. Execute "2_upload_ui.ipynb" notebook to upload the HTML UI and all supporting files to your Azure Blob storage account
 3. Execute "3_deployment_to_azure_app_service.ipynb" notebook to upload your model for generating DNN features for your query image and create an API endpoint in Azure App service
 4. Open the index.html file from your Blob storage account in a browser, enter your API endpoint URL, upload a query image and see what you get back
+
