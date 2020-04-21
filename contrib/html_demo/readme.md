@@ -6,6 +6,15 @@
 This project provides an HTML web page that allows users to visualize the output of a deployed computer vision DNN model. Users can improve on and gain insights from their deployed model by uploading query/test images and examining the model's results for correctness through the user interface. The web page includes some sample query/test images from the Microsoft image set, as well as example output for 3 types of models: Image Classification, Object Detection, and Image Similarity.
 
 
+### Contents
+
+| Directory | Description |
+| --- | --- |
+| [JupyterCode](JupyterCode)| Contains helper notebooks that upload files and deploy models that allow the web page to work |
+| [UICode](UICode)| Contains HTML, CSS, and JavaScript files to implement the web page |
+| [media](media)| Image files embedded as screenshots in this and other readmes |
+
+
 ### Requirements
 
 This repo has the following requirements:
@@ -59,21 +68,6 @@ In "See Example" tab on the website, users can click on example images and view 
 
 <img src="./media/UI-SeeExample.jpg" />
 
-### File List
-
-├── JupyterCode 		# Helper notebooks to deploy model and upload needed files							
-│   ├── 13_image_similarity_export.ipynb
-│   ├── 20_upload_ui.ipynb
-│   ├── 30_deployment_to_azure_app_service.ipynb
-│   └── readme.md
-├── UICode 				# HTML, script, and CSS files for the web page
-│   ├── example_imgs.js
-│   ├── index.html
-│   ├── readme.md
-│   ├── references.txt
-│   ├── script.js
-│   └── style.css
-└── readme.md
 
 
 ### Authors
