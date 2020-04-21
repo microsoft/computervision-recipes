@@ -71,3 +71,11 @@ This work was completed by a team of students from the Boston University College
 **Student team:** Matthew Boyd, Charles Henneberger, Xushan "Mulla" Hu, SeungYeun "Kelly" Lee, Nuwapa "Prim" Promchotichai
 
 **Microsoft mentors:** Patrick Buehler, Young Park, JS Tan
+
+### FAQ
+
+Q: Is an Azure account required to run this code?
+A: No. Navigate the UICode folder and open the Index.html file in your browser. You will be able to view examples of model visualizations without having an Azure account.
+
+Q: Can I use my own model instead of the ones uploaded by the notebooks?
+A: Yes, you will just need to substitute your model where the other model is used.
