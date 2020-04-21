@@ -16,18 +16,18 @@ This directory contains a few helper notebooks that upload files and deploy mode
 To run the code in the [2_upload_ui.ipynb](2_upload_ui.ipynb) notebook, you must first: 
 1. Install the [https://pypi.org/project/azure-storage-blob/](Azure Storage Blobs client library for Python)
 2. Have (or create) an Azure account with a Blob storage container where you would like to store the UI files
-3. Note your Blob stoarge credentials to upload files programmatically; you will need: Azure Account Name, Azure Account Key, Blob Container Name
+3. Note your Blob stoarge credentials to upload files programmatically; you will need: 
+	a. Azure Account Name
+	b. Azure Account Key
+	c. Blob Container Name
 4. Update [2_upload_ui.ipynb](2_upload_ui.ipynb) to add your Blob storage credentials
 
 ### Usage
 
-These notebooks can be run in the [Microsoft Computer Vision conda environment](https://github.com/microsoft/computervision-recipes/blob/master/SETUP.md).
-
-If you want to use an image similarity model, you can run [1_image_similarity_export.ipynb](1_image_similarity_export.ipynb) to export your image features for the web page to use.
-
-To upload the web page for sharing, notebook [2_upload_ui.ipynb](2_upload_ui.ipynb) outlines the process of uploading to your Azure Blob storage.
-
-As the web page needs the API to allow CORS, we recommend uploading models as an Azure app service. Notebook [3_deployment_to_azure_app_service.ipynb](3_deployment_to_azure_app_service.ipynb) gives a tutorial on how to do so with an image classification model.
+* These notebooks can be run in the [Microsoft Computer Vision conda environment](https://github.com/microsoft/computervision-recipes/blob/master/SETUP.md).
+* If you want to use an image similarity model, you can run [1_image_similarity_export.ipynb](1_image_similarity_export.ipynb) to export your image features for the web page to use.
+* To upload the web page for sharing, notebook [2_upload_ui.ipynb](2_upload_ui.ipynb) outlines the process of uploading to your Azure Blob storage.
+* As the web page needs the API to allow CORS, we recommend uploading models as an Azure app service. Notebook [3_deployment_to_azure_app_service.ipynb](3_deployment_to_azure_app_service.ipynb) gives a tutorial on how to do so with an image classification model.
 
 ### Image Similarity
 
@@ -37,4 +37,4 @@ Steps:
 1. Execute "1_image_similarity_export.ipynb" notebook to generate your reference image features and export them to compressed ZIP files
 2. Execute "2_upload_ui.ipynb" notebook to upload the HTML UI and all supporting files to your Azure Blob storage account
 3. Execute "3_deployment_to_azure_app_service.ipynb" notebook to upload your model for generating DNN features for your query image and create an API endpoint in Azure App service
-4. Use ...so much more...in process...
+4. Open the index.html file from your Blob storage account in a browser, enter your API endpoint URL, upload a query image and see what you get back
