@@ -6,7 +6,6 @@
 
 import os
 import requests
-import papermill as pm
 import pytest
 import torchvision
 import torch
@@ -15,7 +14,6 @@ from utils_cv.common.misc import Config
 from utils_cv.action_recognition.dataset import (
     VideoRecord,
     get_transforms,
-    Trans,
     DEFAULT_MEAN,
     DEFAULT_STD,
     get_default_tfms_config,
@@ -60,7 +58,7 @@ def test_get_transforms() -> None:
     assert isinstance(train_tfms, torchvision.transforms.Compose)
 
     test_tfms = get_transforms(train=False)
-    assert isinstance(train_tfms, torchvision.transforms.Compose)
+    assert isinstance(test_tfms, torchvision.transforms.Compose)
 
     conf = Config(
         dict(
@@ -142,4 +140,3 @@ def test_VideoDataset_show_batch(ar_milk_bottle_dataset) -> None:
 
     # test with train_or_test == "test"
     ar_milk_bottle_dataset.show_batch(train_or_test="test")
-
