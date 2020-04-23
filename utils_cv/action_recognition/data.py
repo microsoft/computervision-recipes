@@ -57,10 +57,10 @@ class Urls:
 
     # milk bottle action split test files
     milk_bottle_action_train_split = urljoin(
-        base, "milk_bottle_action_train_split.txt"
+        base, "milk_bottle_actions_train_split.txt"
     )
     milk_bottle_action_test_split = urljoin(
-        base, "milk_bottle_action_test_split.txt"
+        base, "milk_bottle_actions_test_split.txt"
     )
 
     # test vid

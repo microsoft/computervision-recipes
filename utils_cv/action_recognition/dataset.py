@@ -53,10 +53,9 @@ class VideoRecord(object):
         """
         assert len(data) >= 2 and len(data) <= 3
         assert isinstance(data[0], str)
-        assert isinstance(data[1], int)
+        assert isinstance(int(data[1]), int)
         if len(data) == 3:
             assert isinstance(data[2], str)
-        assert Path(data[0]).exists()
 
         self._data = data
         self._num_frames = None
@@ -82,7 +81,7 @@ class VideoRecord(object):
         return None if len(self._data) <= 2 else self._data[2]
 
 
-def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
+def get_transforms(train: bool = True, tfms_config: Config = None) -> Trans:
     """ Get default transformations to apply depending on whether we're applying it to the training or the validation set. If no tfms configurations are passed in, use the defaults.
 
     Args:
@@ -93,11 +92,7 @@ def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
         A list of transforms to apply
     """
     if tfms_config is None:
-        tfms_config = (
-            get_default_tfms_config(train=True)
-            if train
-            else get_default_tfms_config(train=False)
-        )
+        tfms_config = get_default_tfms_config(train=train)
 
     # 1. resize
     tfms = [
@@ -583,7 +578,7 @@ class VideoDataset:
                         bbox=dict(facecolor="white", alpha=0.80),
                     )
 
-    def show_batch(self, train_or_test: str = "train", rows: int = 1) -> None:
+    def show_batch(self, train_or_test: str = "train", rows: int = 2) -> None:
         """Plot first few samples in the datasets"""
         if train_or_test == "train":
             batch = [self.train_ds[i] for i in range(rows)]
