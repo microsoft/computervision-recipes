@@ -39,6 +39,7 @@ from utils_cv.detection.model import (
 from utils_cv.similarity.data import Urls as is_urls
 from utils_cv.similarity.model import compute_features_learner
 from utils_cv.action_recognition.data import Urls as ar_urls
+from utils_cv.action_recognition.dataset import VideoDataset
 
 
 def path_classification_notebooks():
@@ -731,6 +732,12 @@ def ar_milk_bottle_path(tmp_session) -> str:
         dest=tmp_session,
         exist_ok=True,
     )
+
+
+@pytest.fixture(scope="session")
+def ar_milk_bottle_dataset(ar_milk_bottle_path) -> VideoDataset:
+    """ Returns an instance of a VideoDatset built using the milk bottle dataset. """
+    return VideoDataset(ar_milk_bottle_path)
 
 
 # ----- AML Settings ----------------------------------------------------------
