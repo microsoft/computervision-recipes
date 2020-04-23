@@ -110,13 +110,17 @@ def test_VideoDataset(ar_milk_bottle_path) -> None:
 def test_VideoDataset_split_file(tmp_session, ar_milk_bottle_path) -> None:
     """ Tests VideoDataset initializing using split file. """
     r = requests.get(Urls.milk_bottle_action_test_split)
-    test_split_file_path = os.path.join(tmp_session, "milk_bottle_action_test_split.txt")
-    with open(test_split_file_path, 'wb') as f:
+    test_split_file_path = os.path.join(
+        tmp_session, "milk_bottle_action_test_split.txt"
+    )
+    with open(test_split_file_path, "wb") as f:
         f.write(r.content)
 
     r = requests.get(Urls.milk_bottle_action_train_split)
-    train_split_file_path = os.path.join(tmp_session, "milk_bottle_action_train_split.txt")
-    with open(train_split_file_path, 'wb') as f:
+    train_split_file_path = os.path.join(
+        tmp_session, "milk_bottle_action_train_split.txt"
+    )
+    with open(train_split_file_path, "wb") as f:
         f.write(r.content)
 
     dataset = VideoDataset(
