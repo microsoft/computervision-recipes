@@ -13,6 +13,8 @@ import pytest
 import torch
 import urllib.request
 import random
+import requests
+
 from PIL import Image
 from torch import tensor
 from pathlib import Path
@@ -715,7 +717,7 @@ def od_detections(od_detection_dataset):
 
 
 @pytest.fixture(scope="session")
-def ar_im_path(tmp_session) -> str:
+def ar_vid_path(tmp_session) -> str:
     """ Returns the path to the downloaded cup image. """
     drinking_url = ar_urls.drinking_path
     vid_path = os.path.join(tmp_session, "drinking.mp4")
@@ -738,6 +740,41 @@ def ar_milk_bottle_path(tmp_session) -> str:
 def ar_milk_bottle_dataset(ar_milk_bottle_path) -> VideoDataset:
     """ Returns an instance of a VideoDatset built using the milk bottle dataset. """
     return VideoDataset(ar_milk_bottle_path)
+
+
+@pytest.fixture(scope="session")
+def ar_milk_bottle_split_files(tmp_session) -> VideoDataset:
+    """ Returns an instance of a VideoDatset built using the milk bottle dataset. """
+    r = requests.get(ar_urls.milk_bottle_action_test_split)
+    test_split_file_path = os.path.join(
+        tmp_session, "milk_bottle_action_test_split.txt"
+    )
+    with open(test_split_file_path, "wb") as f:
+        f.write(r.content)
+
+    r = requests.get(ar_urls.milk_bottle_action_train_split)
+    train_split_file_path = os.path.join(
+        tmp_session, "milk_bottle_action_train_split.txt"
+    )
+    with open(train_split_file_path, "wb") as f:
+        f.write(r.content)
+
+    return (train_split_file_path, test_split_file_path)
+
+
+@pytest.fixture(scope="session")
+def ar_milk_bottle_dataset_with_split_file(
+    ar_milk_bottle_path, ar_milk_bottle_split_files,
+) -> VideoDataset:
+    """ Returns an instance of a VideoDataset built using the milk bottle
+    dataset and custom split files. """
+    train_split_file_path = ar_milk_bottle_split_files[0]
+    test_split_file_path = ar_milk_bottle_split_files[1]
+    return VideoDataset(
+        ar_milk_bottle_path,
+        train_split_file=train_split_file_path,
+        test_split_file=test_split_file_path,
+    )
 
 
 # ----- AML Settings ----------------------------------------------------------

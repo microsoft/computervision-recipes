@@ -4,8 +4,6 @@
 # This test is based on the test suite implemented for Recommenders project
 # https://github.com/Microsoft/Recommenders/tree/master/tests
 
-import os
-import requests
 import pytest
 import torchvision
 import torch
@@ -19,33 +17,32 @@ from utils_cv.action_recognition.dataset import (
     get_default_tfms_config,
     VideoDataset,
 )
-from utils_cv.action_recognition.data import Urls
 
 
-def check_VideoRecord(record: VideoRecord, ar_im_path: str) -> None:
+def check_VideoRecord(record: VideoRecord, ar_vid_path: str) -> None:
     """ Checks that property methods work. """
-    assert record.path is ar_im_path
+    assert record.path is ar_vid_path
     assert record.label == 0
     assert record.label_name in ("cooking", None)
 
 
-def test_VideoRecord(ar_im_path) -> None:
+def test_VideoRecord(ar_vid_path) -> None:
     """ Test the video record initialization. """
-    correct_input_one = [ar_im_path, 0, "cooking"]
-    check_VideoRecord(VideoRecord(correct_input_one), ar_im_path)
+    correct_input_one = [ar_vid_path, 0, "cooking"]
+    check_VideoRecord(VideoRecord(correct_input_one), ar_vid_path)
 
-    correct_input_two = [ar_im_path, 0]
-    check_VideoRecord(VideoRecord(correct_input_two), ar_im_path)
+    correct_input_two = [ar_vid_path, 0]
+    check_VideoRecord(VideoRecord(correct_input_two), ar_vid_path)
 
 
-def test_VideoRecord_invalid(ar_im_path) -> None:
+def test_VideoRecord_invalid(ar_vid_path) -> None:
     """ Test the video record initialization failure. """
     incorrect_inputs = [
-        [ar_im_path, "0", "cooking", "extra"],
-        [ar_im_path],
-        [ar_im_path, "cooking", 0],
-        ["ar_im_path, 0, cooking"],
-        "ar_im_path, 0, cooking",
+        [ar_vid_path, "0", "cooking", "extra"],
+        [ar_vid_path],
+        [ar_vid_path, "cooking", 0],
+        ["ar_vid_path, 0, cooking"],
+        "ar_vid_path, 0, cooking",
     ]
     for inp in incorrect_inputs:
         with pytest.raises(Exception):
@@ -107,26 +104,14 @@ def test_VideoDataset(ar_milk_bottle_path) -> None:
     assert len(dataset.test_ds) == 30
 
 
-def test_VideoDataset_split_file(tmp_session, ar_milk_bottle_path) -> None:
+def test_VideoDataset_split_file(
+    ar_milk_bottle_path, ar_milk_bottle_split_files,
+) -> None:
     """ Tests VideoDataset initializing using split file. """
-    r = requests.get(Urls.milk_bottle_action_test_split)
-    test_split_file_path = os.path.join(
-        tmp_session, "milk_bottle_action_test_split.txt"
-    )
-    with open(test_split_file_path, "wb") as f:
-        f.write(r.content)
-
-    r = requests.get(Urls.milk_bottle_action_train_split)
-    train_split_file_path = os.path.join(
-        tmp_session, "milk_bottle_action_train_split.txt"
-    )
-    with open(train_split_file_path, "wb") as f:
-        f.write(r.content)
-
     dataset = VideoDataset(
         ar_milk_bottle_path,
-        train_split_file=train_split_file_path,
-        test_split_file=test_split_file_path,
+        train_split_file=ar_milk_bottle_split_files[0],
+        test_split_file=ar_milk_bottle_split_files[1],
     )
 
     assert len(dataset) == 60
