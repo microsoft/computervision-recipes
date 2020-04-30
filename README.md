@@ -69,7 +69,7 @@ The following Microsoft services offer simple solutions to address common comput
 - [Vision Services](https://docs.microsoft.com/en-us/azure/cognitive-services/computer-vision/)
 are a set of pre-trained REST APIs which can be called for image tagging, face recognition, OCR, video analytics, and more. These APIs work out of the box and require minimal expertise in machine learning, but have limited customization capabilities. See the various demos available to get a feel for the functionality (e.g. [Computer Vision](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/#analyze)). The service can be used through API calls or through SDKs (available in .NET, Python, Java, Node and Go languages) 
 
-- [Custom Vision]https://docs.microsoft.com/en-us/azure/cognitive-services/custom-vision-service/home)
+- [Custom Vision](https://docs.microsoft.com/en-us/azure/cognitive-services/custom-vision-service/home)
 is a SaaS service to train and deploy a model as a REST API given a user-provided training set. All steps including image upload, annotation, and model deployment can be performed using an intuitive UI or through SDKs (available in .NEt, Python, Java, Node and Go languages). Training image classification or object detection models can be achieved with minimal machine learning expertise. The Custom Vision offers more flexibility than using the pre-trained cognitive services APIs, but requires the user to bring and annotate their own data.
 
 If you need to train your own model, the following services and links provide additional information that is likely useful.
