@@ -62,15 +62,15 @@ We separate the supported CV scenarios into two locations: (i) **base**: code an
 
 ## Computer Vision on Azure
 
-Note that for certain computer vision problems, you may not need to build your own models. Instead, pre-built or easily customizable solutions exist which do not require any custom coding or machine learning expertise. We strongly recommend evaluating if these can sufficiently solve your problem. If these solutions are not applicable, or the accuracy of these solutions is not sufficient, then resorting to more complex and time-consuming custom approaches may be necessary.
+Note that for certain computer vision problems, you may not need to build your own models. Instead, pre-built or easily customizable solutions exist on Azure which do not require any custom coding or machine learning expertise. We strongly recommend evaluating if these can sufficiently solve your problem. If these solutions are not applicable, or the accuracy of these solutions is not sufficient, then resorting to more complex and time-consuming custom approaches may be necessary.
 
 The following Microsoft services offer simple solutions to address common computer vision tasks:
 
-- [Vision Services](https://docs.microsoft.com/azure/cognitive-services/computer-vision/?WT.mc_id=computervision-github-azureai)
-are a set of pre-trained REST APIs which can be called for image tagging, face recognition, OCR, video analytics, and more. These APIs work out of the box and require minimal expertise in machine learning, but have limited customization capabilities. See the various demos available to get a feel for the functionality (e.g. [Computer Vision](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/#analyze)).
+- [Vision Services](https://docs.microsoft.com/en-us/azure/cognitive-services/computer-vision/)
+are a set of pre-trained REST APIs which can be called for image tagging, face recognition, OCR, video analytics, and more. These APIs work out of the box and require minimal expertise in machine learning, but have limited customization capabilities. See the various demos available to get a feel for the functionality (e.g. [Computer Vision](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/#analyze)). The service can be used through API calls or through SDKs (available in .NET, Python, Java, Node and Go languages) 
 
-- [Custom Vision](https://docs.microsoft.com/azure/cognitive-services/custom-vision-service/?WT.mc_id=computervision-github-azureai)
-is a SaaS service to train and deploy a model as a REST API given a user-provided training set. All steps including image upload, annotation, and model deployment can be performed using either the UI or a Python SDK. Training image classification or object detection models can be achieved with minimal machine learning expertise. The Custom Vision offers more flexibility than using the pre-trained cognitive services APIs, but requires the user to bring and annotate their own data.
+- [Custom Vision]https://docs.microsoft.com/en-us/azure/cognitive-services/custom-vision-service/home)
+is a SaaS service to train and deploy a model as a REST API given a user-provided training set. All steps including image upload, annotation, and model deployment can be performed using an intuitive UI or through SDKs (available in .NEt, Python, Java, Node and Go languages). Training image classification or object detection models can be achieved with minimal machine learning expertise. The Custom Vision offers more flexibility than using the pre-trained cognitive services APIs, but requires the user to bring and annotate their own data.
 
 If you need to train your own model, the following services and links provide additional information that is likely useful.
 
