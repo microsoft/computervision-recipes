@@ -475,16 +475,16 @@ class VideoLearner(object):
 
         print(
             f"Avg. inference time per video ({len(ds)} clips) =",
-            np.array(ret["infer_times"]).mean() * 1000,
+            round(np.array(ret["infer_times"]).mean() * 1000, 2),
             "ms",
         )
         print(
             "Video prediction accuracy =",
-            accuracy_score(ret["video_trues"], ret["video_preds"]),
+            round(accuracy_score(ret["video_trues"], ret["video_preds"]), 2),
         )
         print(
             "Clip prediction accuracy =",
-            accuracy_score(ret["clip_trues"], ret["clip_preds"]),
+            round(accuracy_score(ret["clip_trues"], ret["clip_preds"]), 2),
         )
         return ret
 
