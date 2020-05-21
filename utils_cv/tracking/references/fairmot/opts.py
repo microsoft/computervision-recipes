@@ -235,6 +235,7 @@ class opts(object):
     class Struct:
       def __init__(self, entries):
         for k, v in entries.items():
+          print(k,v)
           self.__setattr__(k, v)
     opt = self.parse(args)
     dataset = Struct(default_dataset_info[opt.task])

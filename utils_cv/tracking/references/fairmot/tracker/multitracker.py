@@ -3,15 +3,15 @@ from collections import deque
 import numpy as np
 import torch
 import torch.nn.functional as F
-from models import *
-from models.decode import mot_decode
-from models.model import create_model, load_model
-from models.utils import _tranpose_and_gather_feat
-from tracker import matching
-from tracking_utils.kalman_filter import KalmanFilter
-from tracking_utils.log import logger
-from tracking_utils.utils import *
-from utils.post_process import ctdet_post_process
+from ..models import *
+from ..models.decode import mot_decode
+from ..models.model import create_model, load_model
+from ..models.utils import _tranpose_and_gather_feat
+from . import matching
+from ..tracking_utils.kalman_filter import KalmanFilter
+from ..tracking_utils.log import logger
+from ..tracking_utils.utils import *
+from ..utils.post_process import ctdet_post_process
 
 from .basetrack import BaseTrack, TrackState
 
