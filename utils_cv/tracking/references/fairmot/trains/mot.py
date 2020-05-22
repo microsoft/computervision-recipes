@@ -7,11 +7,11 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models.decode import mot_decode
-from models.losses import FocalLoss
-from models.losses import RegL1Loss, RegLoss, NormRegL1Loss, RegWeightedL1Loss
-from models.utils import _sigmoid, _tranpose_and_gather_feat
-from utils.post_process import ctdet_post_process
+from ..models.decode import mot_decode # EDITED
+from ..models.losses import FocalLoss # EDITED
+from ..models.losses import RegL1Loss, RegLoss, NormRegL1Loss, RegWeightedL1Loss # EDITED
+from ..models.utils import _sigmoid, _tranpose_and_gather_feat # EDITED
+from ..utils.post_process import ctdet_post_process # EDITED
 
 from .base_trainer import BaseTrainer
 

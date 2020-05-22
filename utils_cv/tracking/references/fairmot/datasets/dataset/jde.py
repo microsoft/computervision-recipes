@@ -14,9 +14,9 @@ import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import transforms as T
 from cython_bbox import bbox_overlaps as bbox_ious
-from ...opts import opts
-from ...utils.image import gaussian_radius, draw_umich_gaussian, draw_msra_gaussian
-from ...utils.utils import xyxy2xywh, generate_anchors, xywh2xyxy, encode_delta
+from ...opts import opts # EDITED
+from ...utils.image import gaussian_radius, draw_umich_gaussian, draw_msra_gaussian # EDITED
+from ...utils.utils import xyxy2xywh, generate_anchors, xywh2xyxy, encode_delta # EDITED
 
 
 class LoadImages:  # for inference
@@ -94,7 +94,7 @@ class LoadVideo:  # for inference
         self.height = img_size[1]
         self.count = 0
 
-        self.w, self.h = self.width, self.height
+        self.w, self.h = self.width, self.height # EDITED
         print('Lenth of the video: {:d} frames'.format(self.vn))
 
     def get_size(self, vw, vh, dw, dh):

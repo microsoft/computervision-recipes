@@ -5,8 +5,8 @@ from __future__ import print_function
 import time
 import torch
 from progress.bar import Bar
-from models.data_parallel import DataParallel
-from utils.utils import AverageMeter
+from ..models.data_parallel import DataParallel # EDITED
+from ..utils.utils import AverageMeter # EDITED
 
 
 class ModleWithLoss(torch.nn.Module):

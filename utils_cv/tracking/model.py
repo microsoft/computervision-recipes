@@ -25,6 +25,7 @@ class TrackingLearner(object):
     def __init__(
         self,
         root_dir: Path,
+        load_model: Path = "", # TODO wget or user-defined path?
         arch: str = "dla_34",
         head_conv: int = -1,
         down_ratio: int = 4,
@@ -34,6 +35,7 @@ class TrackingLearner(object):
         Defaults to FairMOT
         """
         self.opt = opts(root_dir).opt
+        self.load_model = load_model
         self.opt.arch = arch
         self.opt.head_conv = head_conv
         self.opt.down_ratio = down_ratio
@@ -63,7 +65,7 @@ class TrackingLearner(object):
         self.opt.device = torch_device()
 
         # initialize dataset
-        dataset = self._init_dataset(data_root, train_path, im_size)
+        dataset = self._init_dataset(data_root, train_path, im_size) # replaces the step of reading data_cfg
         self.opt.update_dataset_info_and_set_heads(dataset)
 
         train_loader = DataLoader(
@@ -160,7 +162,6 @@ class TrackingLearner(object):
     def predict(
         self,
         im_or_video_path: Path,
-        load_model: Path = "",  # TODO path to default - coco? baseline all_dla34?
         conf_thres: float = 0.6,
         det_thres: float = 0.3,
         nms_thres: float = 0.4,
@@ -171,7 +172,6 @@ class TrackingLearner(object):
         frame_rate: int = 30,
     ) -> Dict[int, List[TrackingBbox]]:
 
-        self.opt.load_model = load_model
         self.opt.conf_thres = conf_thres
         self.opt.det_thres = det_thres
         self.opt.nms_thres = nms_thres
