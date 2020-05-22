@@ -1,10 +1,11 @@
 import argparse
-import os
+import os.path as osp
 
 
 class opts(object):
     def __init__(
         self,
+        root_dir: str,
         task: str = "mot",
         dataset: str = "jde",
         exp_id: str = "default",
@@ -68,7 +69,7 @@ class opts(object):
         dense_wh: bool = True,
         cat_spec_wh: bool = True,
         not_reg_offset: bool = True,
-    ):
+    ) -> None:
         opt = argparse.Namespace()
 
         # basic experiment setting
@@ -165,23 +166,23 @@ class opts(object):
         opt.not_reg_offset = not_reg_offset
         opt.reg_offset = not opt.not_reg_offset
 
-        opt.root_dir = "." # os.path.join(os.path.dirname(__file__), "..", "..")
-        opt.exp_dir = os.path.join(opt.root_dir, "exp", opt.task)
-        opt.save_dir = os.path.join(opt.exp_dir, opt.exp_id)
-        opt.debug_dir = os.path.join(opt.save_dir, "debug")
+        opt.root_dir = root_dir
+        opt.exp_dir = osp.join(opt.root_dir, "exp", opt.task)
+        opt.save_dir = osp.join(opt.exp_dir, opt.exp_id)
+        opt.debug_dir = osp.join(opt.save_dir, "debug")
 
         if opt.resume and opt.load_model == "":
             model_path = (
-                opt.save_dir[:-4] 
+                opt.save_dir[:-4]
                 if opt.save_dir.endswith("TEST")
                 else opt.save_dir
             )
-            opt.load_model = os.path.join(model_path, "model_last.pth")
+            opt.load_model = osp.join(model_path, "model_last.pth")
 
         self.opt = opt
         self._init_dataset_info()
 
-    def _init_dataset_info(self):
+    def _init_dataset_info(self) -> None:
         default_dataset_info = {
             "mot": {
                 "default_resolution": [608, 1088],
@@ -202,7 +203,7 @@ class opts(object):
         self.opt.dataset = dataset.dataset
         self.update_dataset_info_and_set_heads(dataset)
 
-    def update_dataset_info_and_set_heads(self, dataset):
+    def update_dataset_info_and_set_heads(self, dataset) -> None:
         input_h, input_w = dataset.default_resolution
         self.opt.mean, self.opt.std = dataset.mean, dataset.std
         self.opt.num_classes = dataset.num_classes
@@ -213,7 +214,9 @@ class opts(object):
         self.opt.input_h = (
             self.opt.input_h if self.opt.input_h > 0 else input_h
         )
-        self.opt.input_w = self.opt.input_w if self.opt.input_w > 0 else input_w
+        self.opt.input_w = (
+            self.opt.input_w if self.opt.input_w > 0 else input_w
+        )
         self.opt.output_h = self.opt.input_h // self.opt.down_ratio
         self.opt.output_w = self.opt.input_w // self.opt.down_ratio
         self.opt.input_res = max(self.opt.input_h, self.opt.input_w)
@@ -230,6 +233,6 @@ class opts(object):
             if self.opt.reg_offset:
                 self.heads.update({"reg": 2})
             self.opt.nID = dataset.nID
-            self.opt.img_size = (3840, 800)
+            self.opt.img_size = (self.opt.input_w, self.opt.input_h)
         else:
             assert 0, "task not defined"
