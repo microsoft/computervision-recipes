@@ -831,7 +831,7 @@ class DetectionLearner:
         if mask:
             model = get_pretrained_maskrcnn(
             len(labels) + 1, min_size=im_size, max_size=im_size
-        )
+            )
         else:
             model = get_pretrained_fasterrcnn(
             len(labels) + 1, min_size=im_size, max_size=im_size
