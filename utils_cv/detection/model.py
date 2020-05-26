@@ -803,7 +803,7 @@ class DetectionLearner:
             self.labels = meta_data["labels"]
 
     @classmethod
-    def from_saved_model(cls, name: str, path: str) -> "DetectionLearner":
+    def from_saved_model(cls, name: str, path: str, mask: bool = False) -> "DetectionLearner":
         """ Create an instance of the DetectionLearner from a saved model.
 
         This function expects the format that is outputted in the `save`
@@ -812,6 +812,7 @@ class DetectionLearner:
         Args:
             name: the name of the model you wish to load
             path: the path to get your model from
+            mask: if the model is an instance of maskrcnn
 
         Returns:
             A DetectionLearner object that can inference.
@@ -827,9 +828,15 @@ class DetectionLearner:
             im_size = meta_data["im_size"]
             labels = meta_data["labels"]
 
-        model = get_pretrained_fasterrcnn(
-            len(labels) + 1, min_size=im_size, max_size=im_size
+        if mask:
+        model = get_pretrained_maskrcnn(
+        len(labels) + 1, min_size=im_size, max_size=im_size
         )
+        else:
+            model = get_pretrained_fasterrcnn(
+            len(labels) + 1, min_size=im_size, max_size=im_size
+            )
+            
         detection_learner = DetectionLearner(model=model, labels=labels)
         detection_learner.load(name=name, path=path)
         return detection_learner
