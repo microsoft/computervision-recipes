@@ -829,14 +829,14 @@ class DetectionLearner:
             labels = meta_data["labels"]
 
         if mask:
-        model = get_pretrained_maskrcnn(
-        len(labels) + 1, min_size=im_size, max_size=im_size
+            model = get_pretrained_maskrcnn(
+            len(labels) + 1, min_size=im_size, max_size=im_size
         )
         else:
             model = get_pretrained_fasterrcnn(
             len(labels) + 1, min_size=im_size, max_size=im_size
             )
-            
+
         detection_learner = DetectionLearner(model=model, labels=labels)
         detection_learner.load(name=name, path=path)
         return detection_learner
