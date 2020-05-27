@@ -6,18 +6,18 @@ import os
 import time
 import warnings
 import numpy as np
-from typing import Union, Dict, Tuple, Any, List
+from typing import Union, Dict, Tuple, Any, List, Callable
 from pathlib import Path
 import matplotlib.pyplot as plt
 import torch.cuda as cuda
 from sklearn.metrics import accuracy_score
-# 
-# try:
-#     from apex import amp
-# 
-#     AMP_AVAILABLE = True
-# except ModuleNotFoundError:
-#     AMP_AVAILABLE = False
+
+try:
+    from apex import amp
+
+    AMP_AVAILABLE = True
+except ModuleNotFoundError:
+    AMP_AVAILABLE = False
 
 import torch
 import torch.nn as nn
@@ -35,7 +35,7 @@ from PIL import Image
 from threading import Thread
 from torchvision.transforms import Compose
 from utils_cv.action_recognition.references import transforms_video as transforms
-from utils_cv.action_recognition.dataset import DEFAULT_MEAN, DEFAULT_STD
+from utils_cv.action_recognition.dataset import get_transforms
 
 from ..common.gpu import torch_device, num_devices
 from .dataset import VideoDataset
@@ -53,14 +53,6 @@ MODELS = {
     "r2plus1d_34_8_kinetics": 400,
 }
 
-# TRANSFORMS = Compose(
-#     [
-#         transforms.ToTensorVideo(),
-#         transforms.ResizeVideo(128),
-#         transforms.CenterCropVideo(112),
-#         transforms.NormalizeVideo(DEFAULT_MEAN, DEFAULT_STD),
-#     ]
-# )
 
 class VideoLearner(object):
     """ Video recognition learner object that handles training loop and evaluation. """
@@ -134,7 +126,6 @@ class VideoLearner(object):
 
         # Replace head
         if num_classes is not None:
-            print("head is replaced")
             model.fc = nn.Linear(model.fc.in_features, num_classes)
 
         return model, model_name
@@ -349,7 +340,7 @@ class VideoLearner(object):
             top1 = AverageMeter()
             top5 = AverageMeter()
 
-            end = time.time()
+            end = time()
             for step, (inputs, target) in enumerate(dl, start=1):
                 inputs = inputs.to(device, non_blocking=True)
                 target = target.to(device, non_blocking=True)
@@ -383,8 +374,8 @@ class VideoLearner(object):
                             optimizer.zero_grad()
 
                     # measure elapsed time
-                    batch_time.update(time.time() - end)
-                    end = time.time()
+                    batch_time.update(time() - end)
+                    end = time()
 
             print(f"{phase} took {batch_time.sum:.2f} sec ", end="| ")
             print(f"loss = {losses.avg:.4f} ", end="| ")
@@ -486,10 +477,10 @@ class VideoLearner(object):
                 inputs = inputs.to(device, non_blocking=True)
 
                 # Run inference
-                start_time = time.time()
+                start_time = time()
                 outputs = self.model(inputs)
                 outputs = outputs.cpu().numpy()
-                infer_time = time.time() - start_time
+                infer_time = time() - start_time
                 ret["infer_times"].append(infer_time)
 
                 # Store results
@@ -548,7 +539,7 @@ class VideoLearner(object):
 
         return result
 
-    def _predict_frames(
+    def predict_frames(
         self,
         window: deque,
         scores_cache: deque,
@@ -559,7 +550,7 @@ class VideoLearner(object):
         labels: List[str],
         target_labels: List[str],
         transforms: Compose,
-        d_caption: IPython.display
+        update_println: Callable,
     ) -> None:
         """ Predicts frames """
         t = time()
@@ -572,6 +563,7 @@ class VideoLearner(object):
 
         if len(scores_cache) == average_size:
             scores_avg = scores_sum / average_size
+
             top5_id_score_dict = {
                 i: scores_avg[i] for i in (-scores_avg).argpartition(4)[:5]
             }
@@ -583,22 +575,25 @@ class VideoLearner(object):
             )
             top5 = sorted(top5_label_score_dict.items(), key=lambda kv: -kv[1])
 
+            # fps and preds
+            println = f"{1 // dur} fps" +\
+            "<p style='font-size:20px'>" +\
+            "<br>".join([f"{k} ({v:.3f})" for k, v in top5]) +\
+            "</p>"
+
             # Plot final results nicely
-            d_caption.update(IPython.display.HTML(
-                "{} fps<p style='font-size:20px'>".format(1 // dur) + "<br>".join([
-                    "{} ({:.3f})".format(k, v) for k, v in top5
-                ]) + "</p>"
-            ))
+            update_println(println)
             scores_sum -= scores_cache.popleft()
 
         # Inference done. Ready to run on the next frames.
         window.popleft()
-        is_ready[0] = True
+        if is_ready:
+            is_ready[0] = True
 
     def predict(
         self,
         video_fpath: str,
-        labels: List[str],
+        labels: List[str] = None,
         average_size: int = 5,
         score_threshold: float = 0.025,
         target_labels: List[str] = None,
@@ -610,16 +605,34 @@ class VideoLearner(object):
         self.model.to(torch_device())
         self.model.eval()
 
+        # set up video reader
         video_reader = decord.VideoReader(video_fpath)
-        print("Total frames = {}".format(len(video_reader)))
+        print(f"Total frames = {len(video_reader)}")
 
+        # set up ipython jupyter display
         d_video = IPython.display.display("", display_id=1)
         d_caption = IPython.display.display("Preparing...", display_id=2)
 
+        # set vars
         is_ready = [True]
         window = deque()
         scores_cache = deque()
-        scores_sum = np.zeros(400) #self.num_classes)
+
+        # use labels if given, else see if we have labels from our dataset
+        if not labels:
+            if self.dataset.classes:
+                labels = self.dataset.classes
+            else:
+                raise("No labels found, add labels argument.")
+        scores_sum = np.zeros(len(labels))
+
+        # set up transforms
+        if not transforms:
+            transforms = get_transforms(train=False)
+
+        # set up print function
+        def update_println(println):
+            d_caption.update(IPython.display.HTML(println))
 
         while True:
             try:
@@ -630,10 +643,10 @@ class VideoLearner(object):
                 # Start an inference thread when ready
                 if is_ready[0]:
                     window.append(frame)
-                    if len(window) == 8: # TODO self.sample_length:
+                    if len(window) == self.sample_length:
                         is_ready[0] = False
                         Thread(
-                            target=self._predict_frames,
+                            target=self.predict_frames,
                             args=(
                                 window,
                                 scores_cache,
@@ -644,7 +657,7 @@ class VideoLearner(object):
                                 labels,
                                 target_labels,
                                 transforms,
-                                d_caption
+                                update_println,
                             )
                         ).start()
 

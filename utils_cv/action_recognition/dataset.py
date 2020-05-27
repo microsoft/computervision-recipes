@@ -101,6 +101,7 @@ def get_transforms(train: bool = True, tfms_config: Config = None) -> Trans:
             tfms_config.im_scale, tfms_config.resize_keep_ratio
         ),
     ]
+
     # 2. crop
     if tfms_config.random_crop:
         if tfms_config.random_crop_scales:
@@ -112,8 +113,10 @@ def get_transforms(train: bool = True, tfms_config: Config = None) -> Trans:
     else:
         crop = transforms.CenterCropVideo(tfms_config.input_size)
     tfms.append(crop)
+
     # 3. flip
     tfms.append(transforms.RandomHorizontalFlipVideo(tfms_config.flip_ratio))
+
     # 4. normalize
     tfms.append(transforms.NormalizeVideo(tfms_config.mean, tfms_config.std))
 
@@ -280,6 +283,7 @@ class VideoDataset:
 
         # add each video in each dir as a video record
         label = 0
+        self.classes = []
         for action in dirs:
             action = os.path.basename(os.path.normpath(action))
             self.video_records.extend(
@@ -295,6 +299,7 @@ class VideoDataset:
                 ]
             )
             label += 1
+            self.classes.append(action)
 
         # random split
         test_num = math.floor(len(self) * (1 - train_pct))
