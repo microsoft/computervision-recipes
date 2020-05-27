@@ -3,7 +3,6 @@
 
 from collections import OrderedDict
 import os
-import time
 import warnings
 import numpy as np
 from typing import Union, Dict, Tuple, Any, List, Callable
@@ -29,12 +28,10 @@ from collections import deque
 import io
 import decord
 import IPython.display
-import torch.cuda as cuda
 from time import sleep, time
 from PIL import Image
 from threading import Thread
 from torchvision.transforms import Compose
-from utils_cv.action_recognition.references import transforms_video as transforms
 from utils_cv.action_recognition.dataset import get_transforms
 
 from ..common.gpu import torch_device, num_devices
@@ -526,16 +523,18 @@ class VideoLearner(object):
         # Show only interested actions (target_labels) with a confidence score >= threshold
         result = {}
         for i, s in id_score_dict.items():
-            l = labels[i]
-            if (s < threshold) or\
-               (target_labels is not None and l not in target_labels) or\
-               (filter_labels is not None and l in filter_labels):
+            label = labels[i]
+            if (
+                (s < threshold)
+                or (target_labels is not None and label not in target_labels)
+                or (filter_labels is not None and label in filter_labels)
+            ):
                 continue
 
-            if l in result:
-                result[l] += s
+            if label in result:
+                result[label] += s
             else:
-                result[l] = s
+                result[label] = s
 
         return result
 
@@ -545,7 +544,7 @@ class VideoLearner(object):
         scores_cache: deque,
         scores_sum: np.ndarray,
         is_ready: list,
-        average_size: int,
+        averaging_size: int,
         score_threshold: float,
         labels: List[str],
         target_labels: List[str],
@@ -561,8 +560,8 @@ class VideoLearner(object):
         scores_cache.append(scores)
         scores_sum += scores
 
-        if len(scores_cache) == average_size:
-            scores_avg = scores_sum / average_size
+        if len(scores_cache) == averaging_size:
+            scores_avg = scores_sum / averaging_size
 
             top5_id_score_dict = {
                 i: scores_avg[i] for i in (-scores_avg).argpartition(4)[:5]
@@ -571,15 +570,17 @@ class VideoLearner(object):
                 top5_id_score_dict,
                 labels,
                 threshold=score_threshold,
-                target_labels=target_labels
+                target_labels=target_labels,
             )
             top5 = sorted(top5_label_score_dict.items(), key=lambda kv: -kv[1])
 
             # fps and preds
-            println = f"{1 // dur} fps" +\
-            "<p style='font-size:20px'>" +\
-            "<br>".join([f"{k} ({v:.3f})" for k, v in top5]) +\
-            "</p>"
+            println = (
+                f"{1 // dur} fps"
+                + "<p style='font-size:20px'>"
+                + "<br>".join([f"{k} ({v:.3f})" for k, v in top5])
+                + "</p>"
+            )
 
             # Plot final results nicely
             update_println(println)
@@ -594,7 +595,7 @@ class VideoLearner(object):
         self,
         video_fpath: str,
         labels: List[str] = None,
-        average_size: int = 5,
+        averaging_size: int = 5,
         score_threshold: float = 0.025,
         target_labels: List[str] = None,
         transforms: Compose = None,
@@ -623,7 +624,7 @@ class VideoLearner(object):
             if self.dataset.classes:
                 labels = self.dataset.classes
             else:
-                raise("No labels found, add labels argument.")
+                raise ("No labels found, add labels argument.")
         scores_sum = np.zeros(len(labels))
 
         # set up transforms
@@ -652,23 +653,23 @@ class VideoLearner(object):
                                 scores_cache,
                                 scores_sum,
                                 is_ready,
-                                average_size,
+                                averaging_size,
                                 score_threshold,
                                 labels,
                                 target_labels,
                                 transforms,
                                 update_println,
-                            )
+                            ),
                         ).start()
 
                 # Show video preview
                 f = io.BytesIO()
                 im = Image.fromarray(frame)
-                im.save(f, 'jpeg')
+                im.save(f, "jpeg")
 
                 d_video.update(IPython.display.Image(data=f.getvalue()))
                 sleep(0.03)
-            except:
+            except e:
                 break
 
     def save(self, model_path: Union[Path, str]) -> None:
