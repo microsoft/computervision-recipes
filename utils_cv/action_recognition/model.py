@@ -6,23 +6,36 @@ import os
 import time
 import warnings
 import numpy as np
-from typing import Union, Dict, Tuple, Any
+from typing import Union, Dict, Tuple, Any, List
 from pathlib import Path
 import matplotlib.pyplot as plt
 import torch.cuda as cuda
 from sklearn.metrics import accuracy_score
-
-try:
-    from apex import amp
-
-    AMP_AVAILABLE = True
-except ModuleNotFoundError:
-    AMP_AVAILABLE = False
+# 
+# try:
+#     from apex import amp
+# 
+#     AMP_AVAILABLE = True
+# except ModuleNotFoundError:
+#     AMP_AVAILABLE = False
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
+
+# this
+from collections import deque
+import io
+import decord
+import IPython.display
+import torch.cuda as cuda
+from time import sleep, time
+from PIL import Image
+from threading import Thread
+from torchvision.transforms import Compose
+from utils_cv.action_recognition.references import transforms_video as transforms
+from utils_cv.action_recognition.dataset import DEFAULT_MEAN, DEFAULT_STD
 
 from ..common.gpu import torch_device, num_devices
 from .dataset import VideoDataset
@@ -40,15 +53,24 @@ MODELS = {
     "r2plus1d_34_8_kinetics": 400,
 }
 
+# TRANSFORMS = Compose(
+#     [
+#         transforms.ToTensorVideo(),
+#         transforms.ResizeVideo(128),
+#         transforms.CenterCropVideo(112),
+#         transforms.NormalizeVideo(DEFAULT_MEAN, DEFAULT_STD),
+#     ]
+# )
 
 class VideoLearner(object):
     """ Video recognition learner object that handles training loop and evaluation. """
 
     def __init__(
         self,
-        dataset: VideoDataset,
-        num_classes: int,  # ie 51 for hmdb51
+        dataset: VideoDataset = None,
+        num_classes: int = None,  # ie 51 for hmdb51
         base_model: str = "ig65m",  # or "kinetics"
+        sample_length: int = None,
     ) -> None:
         """ By default, the Video Learner will use a R2plus1D model. Pass in
         a dataset of type Video Dataset and the Video Learner will intialize
@@ -61,16 +83,21 @@ class VideoLearner(object):
             kinetics. By default it will use the weights from ig65m since it
             tends attain higher results.
         """
-        self.dataset = dataset
-        self.model, self.model_name = self.init_model(
-            self.dataset.sample_length, base_model, num_classes,
-        )
+        # set empty - populated when fit is called
+        self.results = []
 
         # set num classes
         self.num_classes = num_classes
 
-        # set empty - populated when fit is called
-        self.results = []
+        if dataset:
+            self.dataset = dataset
+            self.sample_length = self.dataset.sample_length
+        else:
+            self.sample_length = 8 if sample_length <= 8 else 32
+
+        self.model, self.model_name = self.init_model(
+            self.sample_length, base_model, num_classes,
+        )
 
     @staticmethod
     def init_model(
@@ -94,12 +121,7 @@ class VideoLearner(object):
             )
 
         # Decide if to use pre-trained weights for DNN trained using 8 or for 32 frames
-        if sample_length <= 8:
-            model_sample_length = 8
-        else:
-            model_sample_length = 32
-
-        model_name = f"r2plus1d_34_{model_sample_length}_{base_model}"
+        model_name = f"r2plus1d_34_{sample_length}_{base_model}"
 
         print(f"Loading {model_name} model")
 
@@ -112,6 +134,7 @@ class VideoLearner(object):
 
         # Replace head
         if num_classes is not None:
+            print("head is replaced")
             model.fc = nn.Linear(model.fc.in_features, num_classes)
 
         return model, model_name
@@ -123,9 +146,11 @@ class VideoLearner(object):
             param.requires_grad = True
 
     def unfreeze(self) -> None:
+        """ todo """
         self._set_requires_grad(True)
 
     def _set_requires_grad(self, requires_grad=True) -> None:
+        """ sets requires grad """
         for param in self.model.parameters():
             param.requires_grad = requires_grad
 
@@ -487,6 +512,151 @@ class VideoLearner(object):
             round(accuracy_score(ret["clip_trues"], ret["clip_preds"]), 2),
         )
         return ret
+
+    def _predict(self, frames, transform):
+        """ Todo """
+        clip = torch.from_numpy(np.array(frames))
+        # Transform frames and append batch dim
+        sample = torch.unsqueeze(transform(clip), 0)
+        sample = sample.to(torch_device())
+        output = self.model(sample)
+        scores = nn.functional.softmax(output, dim=1).data.cpu().numpy()[0]
+        return scores
+
+    def _filter_labels(
+        self,
+        id_score_dict: dict,
+        labels: List[str],
+        threshold: float = 0.0,
+        target_labels: List[str] = None,
+        filter_labels: List[str] = None,
+    ) -> Dict[str, int]:
+        """ Todo """
+        # Show only interested actions (target_labels) with a confidence score >= threshold
+        result = {}
+        for i, s in id_score_dict.items():
+            l = labels[i]
+            if (s < threshold) or\
+               (target_labels is not None and l not in target_labels) or\
+               (filter_labels is not None and l in filter_labels):
+                continue
+
+            if l in result:
+                result[l] += s
+            else:
+                result[l] = s
+
+        return result
+
+    def _predict_frames(
+        self,
+        window: deque,
+        scores_cache: deque,
+        scores_sum: np.ndarray,
+        is_ready: list,
+        average_size: int,
+        score_threshold: float,
+        labels: List[str],
+        target_labels: List[str],
+        transforms: Compose,
+        d_caption: IPython.display
+    ) -> None:
+        """ Predicts frames """
+        t = time()
+        scores = self._predict(window, transforms)
+        dur = time() - t
+
+        # Averaging scores across clips (dense prediction)
+        scores_cache.append(scores)
+        scores_sum += scores
+
+        if len(scores_cache) == average_size:
+            scores_avg = scores_sum / average_size
+            top5_id_score_dict = {
+                i: scores_avg[i] for i in (-scores_avg).argpartition(4)[:5]
+            }
+            top5_label_score_dict = self._filter_labels(
+                top5_id_score_dict,
+                labels,
+                threshold=score_threshold,
+                target_labels=target_labels
+            )
+            top5 = sorted(top5_label_score_dict.items(), key=lambda kv: -kv[1])
+
+            # Plot final results nicely
+            d_caption.update(IPython.display.HTML(
+                "{} fps<p style='font-size:20px'>".format(1 // dur) + "<br>".join([
+                    "{} ({:.3f})".format(k, v) for k, v in top5
+                ]) + "</p>"
+            ))
+            scores_sum -= scores_cache.popleft()
+
+        # Inference done. Ready to run on the next frames.
+        window.popleft()
+        is_ready[0] = True
+
+    def predict(
+        self,
+        video_fpath: str,
+        labels: List[str],
+        average_size: int = 5,
+        score_threshold: float = 0.025,
+        target_labels: List[str] = None,
+        transforms: Compose = None,
+    ) -> None:
+        """Load video and show frames and inference results while displaying the results
+        """
+        # set model device and to eval mode
+        self.model.to(torch_device())
+        self.model.eval()
+
+        video_reader = decord.VideoReader(video_fpath)
+        print("Total frames = {}".format(len(video_reader)))
+
+        d_video = IPython.display.display("", display_id=1)
+        d_caption = IPython.display.display("Preparing...", display_id=2)
+
+        is_ready = [True]
+        window = deque()
+        scores_cache = deque()
+        scores_sum = np.zeros(400) #self.num_classes)
+
+        while True:
+            try:
+                frame = video_reader.next().asnumpy()
+                if len(frame.shape) != 3:
+                    break
+
+                # Start an inference thread when ready
+                if is_ready[0]:
+                    window.append(frame)
+                    if len(window) == 8: # TODO self.sample_length:
+                        is_ready[0] = False
+                        Thread(
+                            target=self._predict_frames,
+                            args=(
+                                window,
+                                scores_cache,
+                                scores_sum,
+                                is_ready,
+                                average_size,
+                                score_threshold,
+                                labels,
+                                target_labels,
+                                transforms,
+                                d_caption
+                            )
+                        ).start()
+
+                # Show video preview
+                f = io.BytesIO()
+                im = Image.fromarray(frame)
+                im.save(f, 'jpeg')
+
+                d_video.update(IPython.display.Image(data=f.getvalue()))
+                sleep(0.03)
+            except:
+                break
 
     def save(self, model_path: Union[Path, str]) -> None:
         """ Save the model to a path on disk. """
