@@ -1,12 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 from pathlib import Path
-from typing import Callable, List, Tuple, Union, Generator, Optional, Dict
+from typing import List, Union
 
-#import fastai
+# import fastai
 from fastai.basic_data import DeviceDataLoader
 from fastai.basic_train import Learner
-#from fastai.vision import * 
+
+# from fastai.vision import *
 import numpy as np
 import PIL
 from sklearn.metrics import confusion_matrix as sk_confusion_matrix
@@ -15,12 +16,12 @@ from .dataset import load_im
 
 
 def predict(
-    im_or_path: Union[np.ndarray, Union[str, Path]], 
+    im_or_path: Union[np.ndarray, Union[str, Path]],
     learn: Learner,
-    thres: float = None
+    thres: float = None,
 ) -> [np.ndarray, np.ndarray]:
-    """ Run model inference. 
-      
+    """ Run model inference.
+
     Args:
         im_or_path: image or path to image
         learn: trained model
@@ -44,15 +45,13 @@ def predict(
 
 
 def confusion_matrix(
-    learn: Learner,
-    dl: DeviceDataLoader, 
-    thres: float = None
+    learn: Learner, dl: DeviceDataLoader, thres: float = None
 ) -> [np.ndarray, np.ndarray]:
     """ Compute confusion matrix.
-    
+
     Args:
         learn: trained model
-        dl: dataloader with images and ground truth masks 
+        dl: dataloader with images and ground truth masks
         thres: threshold under which to reject predicted label and set to class-id 0 instead.
 
     Return:
@@ -67,7 +66,9 @@ def confusion_matrix(
 
         # load ground truth and resize to be same size as predited mask
         gt_mask = PIL.Image.open(gt_path)
-        gt_mask = gt_mask.resize(pred_mask.shape[::-1], resample=PIL.Image.NEAREST)
+        gt_mask = gt_mask.resize(
+            pred_mask.shape[::-1], resample=PIL.Image.NEAREST
+        )
         gt_mask = np.asarray(gt_mask)
 
         # Store predicted and ground truth labels

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 from pathlib import Path
-from typing import Callable, List, Tuple, Union, Generator, Optional, Dict
+from typing import List, Tuple, Union
 
 from fastai.vision import pil2tensor, show_image
 from fastai.vision.data import ImageDataBunch
@@ -103,7 +103,10 @@ def plot_mask_stats(
     # Right plot
     plt.subplot(1, 2, 2)
     plt.hist(
-        [i[1] for i in areas.items()], nr_bins, label=class_names, histtype="barstacked"
+        [i[1] for i in areas.items()],
+        nr_bins,
+        label=class_names,
+        histtype="barstacked",
     )
     plt.title("Distribution of segment sizes (stacked bar chart)")
     plt.legend()
@@ -124,7 +127,10 @@ def plot_confusion_matrix(
     """ Plot the confusion matrix. """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
     ConfusionMatrixDisplay(cmat, classes).plot(
-        ax=ax1, cmap=cm.get_cmap("Blues"), xticks_rotation="vertical", values_format="d"
+        ax=ax1,
+        cmap=cm.get_cmap("Blues"),
+        xticks_rotation="vertical",
+        values_format="d",
     )
     ConfusionMatrixDisplay(cmat_norm, classes).plot(
         ax=ax2, cmap=cm.get_cmap("Blues"), xticks_rotation="vertical"
