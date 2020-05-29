@@ -63,8 +63,6 @@ def read_classes(path) -> List[str]:
     """
     classes = list(loadtxt(path, dtype=str))
     classes = [s.lower() for s in classes]
-    if "void" not in classes:
-        classes += ["void"]
     return classes
 
 
@@ -84,11 +82,13 @@ def mask_area_sizes(data: ImageDataBunch) -> collections.defaultdict:
         mask = np.array(PIL.Image.open(mask_path))
 
         # For each class, find all segments and enumerate
-        for class_id in range(1, mask.max() + 1):
-            segments, _ = ndimage.label(mask == class_id)
+        for class_id in np.unique(mask):
+            segments, _ = ndimage.label(
+                mask == class_id, structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+            )
 
             # Loop over each segment of a given label
-            for segment_id in range(segments.max() + 1):
+            for segment_id in range(1, segments.max() + 1):
                 area = np.sum(segments == segment_id)
                 areas[class_id].append(area)
 

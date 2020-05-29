@@ -85,11 +85,23 @@ def plot_mask_stats(
     show: bool = True,
     figsize: Tuple[int, int] = (15, 3),
     nr_bins: int = 50,
+    exclude_classes: list = None,
 ) -> None:
     """ Plot statistics of the ground truth masks such as number or size of segments. """
     areas = mask_area_sizes(data)
-    counts = [len(i[1]) for i in areas.items()]
-    class_names = [classes[i[0]] for i in areas.items()]
+    class_names = [classes[k] for k in areas.keys()]
+    values_list = [v for v in areas.values()]
+    counts = [len(v) for v in values_list]
+    assert exclude_classes is None or type(exclude_classes) == list
+
+    # Remove specified classes
+    if exclude_classes:
+        keep_indices = np.where(
+            [c not in set(exclude_classes) for c in class_names]
+        )[0]
+        class_names = [class_names[i] for i in keep_indices]
+        values_list = [values_list[i] for i in keep_indices]
+        counts = [counts[i] for i in keep_indices]
 
     # Left plot
     plt.subplots(1, 2, figsize=figsize)
@@ -103,10 +115,7 @@ def plot_mask_stats(
     # Right plot
     plt.subplot(1, 2, 2)
     plt.hist(
-        [i[1] for i in areas.items()],
-        nr_bins,
-        label=class_names,
-        histtype="barstacked",
+        values_list, nr_bins, label=class_names, histtype="barstacked",
     )
     plt.title("Distribution of segment sizes (stacked bar chart)")
     plt.legend()

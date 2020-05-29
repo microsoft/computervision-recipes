@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+from functools import partial
 from pathlib import Path
 from typing import List, Union
 
@@ -13,6 +14,30 @@ import PIL
 from sklearn.metrics import confusion_matrix as sk_confusion_matrix
 
 from .dataset import load_im
+
+
+# Ignore pixels marked as void. That could be pixels which are hard to annotate and hence should not influence training.
+def _objective_fct_partial(void_id, input, target):
+    target = target.squeeze(1)
+    if void_id:
+        mask = target != void_id
+        ratio_correct = (
+            (input.argmax(dim=1)[mask] == target[mask]).float().mean()
+        )
+    else:
+        ratio_correct = (input.argmax(dim=1) == target).float().mean()
+
+    return ratio_correct
+
+
+def get_objective_fct(classes):
+    class2id = {v: k for k, v in enumerate(classes)}
+    if "void" in class2id:
+        void_id = class2id["void"]
+    else:
+        void_id = None
+
+    return partial(_objective_fct_partial, void_id)
 
 
 def predict(
