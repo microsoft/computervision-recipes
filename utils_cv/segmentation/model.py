@@ -4,11 +4,8 @@ from functools import partial
 from pathlib import Path
 from typing import List, Union
 
-# import fastai
 from fastai.basic_data import DeviceDataLoader
 from fastai.basic_train import Learner
-
-# from fastai.vision import *
 import numpy as np
 import PIL
 from sklearn.metrics import confusion_matrix as sk_confusion_matrix
@@ -31,7 +28,7 @@ def _objective_fct_partial(void_id, input, target):
     return ratio_correct
 
 
-def get_objective_fct(classes: List[str],):
+def get_objective_fct(classes: List[str]):
     """ Returns objective function for model training, defined as ratio of correctly classified pixels.
 
     Args:
@@ -79,7 +76,9 @@ def predict(
 
 
 def confusion_matrix(
-    learn: Learner, dl: DeviceDataLoader, thres: float = None
+    learn: Learner, 
+    dl: DeviceDataLoader, 
+    thres: float = None
 ) -> [np.ndarray, np.ndarray]:
     """ Compute confusion matrix.
 

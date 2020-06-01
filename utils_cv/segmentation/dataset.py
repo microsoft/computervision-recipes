@@ -5,9 +5,6 @@ from pathlib import Path
 from typing import List, Union
 
 import fastai
-
-# from fastai.vision import *
-# from fastai.vision import get_image_files
 from fastai.vision import open_image, open_mask
 from fastai.vision.data import ImageDataBunch
 import numpy as np
@@ -84,7 +81,8 @@ def mask_area_sizes(data: ImageDataBunch) -> collections.defaultdict:
         # For each class, find all segments and enumerate
         for class_id in np.unique(mask):
             segments, _ = ndimage.label(
-                mask == class_id, structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]]
+                mask == class_id, 
+                structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]]
             )
 
             # Loop over each segment of a given label

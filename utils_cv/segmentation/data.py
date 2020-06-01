@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 
 class Urls:
-    # for now hardcoding base url into Urls class
+    # base url
     base = "https://cvbp.blob.core.windows.net/public/datasets/image_segmentation/"
 
     # traditional datasets
