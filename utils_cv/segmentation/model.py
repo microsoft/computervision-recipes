@@ -18,6 +18,7 @@ from .dataset import load_im
 
 # Ignore pixels marked as void. That could be pixels which are hard to annotate and hence should not influence training.
 def _objective_fct_partial(void_id, input, target):
+    """ Helper function to compute the ratio of correctly classified pixels. """
     target = target.squeeze(1)
     if void_id:
         mask = target != void_id
@@ -30,7 +31,15 @@ def _objective_fct_partial(void_id, input, target):
     return ratio_correct
 
 
-def get_objective_fct(classes):
+def get_objective_fct(classes: List[str],):
+    """ Returns objective function for model training, defined as ratio of correctly classified pixels.
+
+    Args:
+        classes: list of class names
+
+    Return:
+        Objective function.
+    """
     class2id = {v: k for k, v in enumerate(classes)}
     if "void" in class2id:
         void_id = class2id["void"]
@@ -53,9 +62,9 @@ def predict(
         thres: threshold under which to reject predicted label and set to class-id 0 instead.
 
     Return:
-        The predicted mask with confidence scores.
+        The predicted mask with pixel-wise confidence scores.
     """
-    im = load_im(im_or_path)  # open_image(im_path, convert_mode='RGB')
+    im = load_im(im_or_path)
     _, mask, scores = learn.predict(im, thresh=thres)
     mask = np.array(mask).squeeze()
     scores = np.array(scores)
@@ -112,7 +121,16 @@ def confusion_matrix(
 def print_accuracies(
     cmat: np.ndarray, cmat_norm: np.ndarray, classes: List[str]
 ) -> [int, int]:
-    """ Print accuracies per class, and the overall class-averaged accuracy. """
+    """ Print accuracies per class, and the overall class-averaged accuracy.
+
+    Args:
+        cmat: confusion matrix (with raw pixel counts)
+        cmat_norm: normalized confusion matrix
+        classes: list of class names
+
+    Return:
+        Computed overall and per-class accuracies.
+    """
     class_accs = 100.0 * np.diag(cmat_norm)
     overall_acc = 100.0 * np.diag(cmat).sum() / cmat.sum()
     print(f"Overall accuracy: {overall_acc:3.2f}%")

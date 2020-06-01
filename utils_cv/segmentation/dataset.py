@@ -22,7 +22,7 @@ def load_im(
     """ Load image using "open_image" function from fast.ai.
 
     Args:
-        path: location of image to be loaded
+        im_or_path: image object or image location to be loaded
 
     Return:
         Image
@@ -40,7 +40,7 @@ def load_mask(
     """ Load mask using "open_mask" function from fast.ai.
 
     Args:
-        path: location of mask to be loaded
+        mask_or_path: mask object or mask location to be loaded
 
     Return:
         Mask
@@ -52,8 +52,8 @@ def load_mask(
     return mask
 
 
-def read_classes(path) -> List[str]:
-    """ Compute number of pixels in each connected segment of the full dataset.
+def read_classes(path: Union[str, Path]) -> List[str]:
+    """ Read text file with class names.
 
     Args:
         path: location of text file where each line is a class name
@@ -67,7 +67,7 @@ def read_classes(path) -> List[str]:
 
 
 def mask_area_sizes(data: ImageDataBunch) -> collections.defaultdict:
-    """ Compute number of pixels in each connected segment of the full dataset.
+    """ Compute number of pixels in each connected segment.
 
     Args:
         data: databunch with images and ground truth masks

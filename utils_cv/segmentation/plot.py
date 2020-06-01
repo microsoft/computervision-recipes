@@ -23,7 +23,16 @@ def plot_image_and_mask(
     alpha=0.50,
     cmap: ListedColormap = cm.get_cmap("Set3"),
 ) -> None:
-    """ Plot an image and its ground truth mask. """
+    """ Plot an image and its ground truth mask.
+
+    Args:
+        im_or_path: image or path to image
+        mask_or_path: mask or path to mask
+        show: set to true to call matplotlib's show()
+        figsize: figure size
+        alpha: strength of overlying image on mask.
+        cmap: mask color map.
+    """
     im = load_im(im_or_path)
     mask = load_mask(mask_or_path)
 
@@ -35,9 +44,6 @@ def plot_image_and_mask(
     ax1.set_title("Image")
     ax2.set_title("Mask")
     ax3.set_title("Mask (overlaid on Image)")
-
-    print(type(im))
-    print(type(mask))
 
     if show:
         plt.show()
@@ -52,7 +58,17 @@ def plot_segmentation(
     figsize: Tuple[int, int] = (16, 4),
     cmap: ListedColormap = cm.get_cmap("Set3"),
 ) -> None:
-    """ Plot an image, its predicted mask with associated scores, and optionally the ground truth mask. """
+    """ Plot an image, its predicted mask with associated scores, and optionally the ground truth mask.
+
+    Args:
+        im_or_path: image or path to image
+        pred_mask: predicted mask
+        pred_scores: pixel-wise confidence scores in the predictions
+        gt_mask_or_path: ground truth mask or path to mask
+        show: set to true to call matplotlib's show()
+        figsize: figure size
+        cmap: mask color map.
+    """
     im = load_im(im_or_path)
     pred_mask = pil2tensor(pred_mask, np.float32)
     max_scores = np.max(np.array(pred_scores[1:]), axis=0)
@@ -87,7 +103,16 @@ def plot_mask_stats(
     nr_bins: int = 50,
     exclude_classes: list = None,
 ) -> None:
-    """ Plot statistics of the ground truth masks such as number or size of segments. """
+    """ Plot statistics of the ground truth masks such as number or size of segments.
+
+    Args:
+        data: databunch with images and ground truth masks
+        classes: list of class names
+        show: set to true to call matplotlib's show()
+        figsize: figure size
+        nr_bins: number of bins for segment sizes histogram
+        exclude_classes: list of classes to ignore, e.g. ["background"]
+    """
     areas = mask_area_sizes(data)
     class_names = [classes[k] for k in areas.keys()]
     values_list = [v for v in areas.values()]
@@ -133,7 +158,15 @@ def plot_confusion_matrix(
     show: bool = True,
     figsize: Tuple[int, int] = (16, 4),
 ) -> None:
-    """ Plot the confusion matrix. """
+    """ Plot the confusion matrices.
+
+    Args:
+        cmat: confusion matrix (with raw pixel counts)
+        cmat_norm: normalized confusion matrix
+        classes: list of class names
+        show: set to true to call matplotlib's show()
+        figsize: figure size
+    """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
     ConfusionMatrixDisplay(cmat, classes).plot(
         ax=ax1,
