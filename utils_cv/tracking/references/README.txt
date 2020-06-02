@@ -1,4 +1,4 @@
-All files in this folder are copied from FairMOT:
+All files in the fairmot folder are copied from FairMOT:
 https://github.com/ifzhang/FairMOT/src/lib
 
 Our aim is to make as little edits to these files as possible, so that newer versions from FairMOT can be simply dropped into this folder.

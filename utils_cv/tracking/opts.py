@@ -1,11 +1,16 @@
 import argparse
+import os
 import os.path as osp
 
 
 class opts(object):
+    """
+    Defines options for experiment settings, system settings, logging, model params, 
+    input config, training config, testing config, and tracking params.
+    """ 
     def __init__(
         self,
-        root_dir: str,
+        root_dir: str = os.getcwd(),
         task: str = "mot",
         dataset: str = "jde",
         exp_id: str = "default",
@@ -202,6 +207,14 @@ class opts(object):
         dataset = Struct(default_dataset_info[self.opt.task])
         self.opt.dataset = dataset.dataset
         self.update_dataset_info_and_set_heads(dataset)
+
+    def update_dataset_res(self, input_h, input_w) -> None:
+        self.opt.input_h = input_h
+        self.opt.input_w = input_w
+        self.opt.output_h = self.opt.input_h // self.opt.down_ratio
+        self.opt.output_w = self.opt.input_w // self.opt.down_ratio
+        self.opt.input_res = max(self.opt.input_h, self.opt.input_w)
+        self.opt.output_res = max(self.opt.output_h, self.opt.output_w)
 
     def update_dataset_info_and_set_heads(self, dataset) -> None:
         input_h, input_w = dataset.default_resolution
