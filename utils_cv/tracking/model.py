@@ -73,7 +73,7 @@ class TrackingLearner(object):
         dataset: TrackingDataset = None,
         model: nn.Module = None,
         arch: str = "dla_34",
-        head_conv: int = -1,
+        head_conv: int = None,
     ) -> None:
         """
         Initialize learner object.
@@ -85,12 +85,12 @@ class TrackingLearner(object):
             model: the model
             arch: the model architecture
                 Supported architectures: resdcn_34, resdcn_50, resfpndcn_34, dla_34, hrnet_32
-            head_conv: conv layer channels for output head
-                0 for no conv layer, -1 for default setting, 256 for resnets and 256 for dla
+            head_conv: conv layer channels for output head. None maps to the default setting.
+                Set 0 for no conv layer, 256 for resnets, and 256 for dla
         """
         self.opt = opts().opt
         self.opt.arch = arch
-        self.opt.head_conv = head_conv
+        self.opt.head_conv = head_conv if head_conv else -1
 
         self.dataset = dataset
         self.model = model if model is not None else self.init_model()
@@ -136,7 +136,7 @@ class TrackingLearner(object):
         lr: float = 1e-4,
         lr_step: str = "20,27",
         num_epochs: int = 30,
-        num_iters: int = -1,
+        num_iters: int = None,
         val_intervals: int = 5,
     ) -> None:
         """
@@ -146,7 +146,7 @@ class TrackingLearner(object):
             lr: learning rate for batch size 32
             lr_step: when to drop learning rate by 10
             num_epochs: total training epochs
-            num_iters: default: #samples / batch_size
+            num_iters: Defaults to #samples / batch_size
             val_intervals: number of epochs to run validation
 
         Raise:
@@ -160,7 +160,7 @@ class TrackingLearner(object):
         self.opt.lr = lr
         self.opt.lr_step = lr_step
         self.opt.num_epochs = num_epochs
-        self.opt.num_iters = num_iters
+        self.opt.num_iters = num_iters if num_iters else -1
         self.opt.val_intervals = val_intervals
         self.opt.device = self.device
 
@@ -198,8 +198,8 @@ class TrackingLearner(object):
         nms_thres: float = 0.4,
         track_buffer: int = 30,
         min_box_area: float = 200,
-        input_h: float = -1,
-        input_w: float = -1,
+        input_h: float = None,
+        input_w: float = None,
         frame_rate: int = 30,
     ) -> Dict[int, List[TrackingBbox]]:
         """
@@ -213,8 +213,8 @@ class TrackingLearner(object):
             nms_thres: iou thresh for nms
             track_buffer: tracking buffer
             min_box_area: filter out tiny boxes
-            input_h: input height. -1 for default from dataset
-            input_w: input width. -1 for default from dataset
+            input_h: input height. Default from dataset
+            input_w: input width. Default from dataset
             frame_rate: frame rate
 
         Returns a list of TrackingBboxes
@@ -227,7 +227,9 @@ class TrackingLearner(object):
         self.opt.track_buffer = track_buffer
         self.opt.min_box_area = min_box_area
 
-        self.opt.update_dataset_res(input_h, input_w)
+        input_height = input_h if input_h else -1
+        input_width = input_w if input_w else -1
+        self.opt.update_dataset_res(input_height, input_width)
         self.opt.device = self.device
 
         # initialize tracker
