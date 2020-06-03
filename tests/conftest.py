@@ -16,7 +16,14 @@ import random
 from PIL import Image
 from torch import tensor
 from pathlib import Path
-from fastai.vision import cnn_learner, DatasetType, models
+from fastai.vision import (
+    cnn_learner,
+    DatasetType,
+    get_image_files,
+    models,
+    SegmentationItemList,
+    get_transforms,
+)
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List, Tuple
 from tempfile import TemporaryDirectory
@@ -36,6 +43,8 @@ from utils_cv.detection.model import (
     _extract_od_results,
     _apply_threshold,
 )
+from utils_cv.segmentation.data import Urls as seg_urls
+from utils_cv.segmentation.dataset import load_im, load_mask
 from utils_cv.similarity.data import Urls as is_urls
 from utils_cv.similarity.model import compute_features_learner
 
@@ -81,6 +90,18 @@ def path_action_recognition_notebooks():
             os.path.pardir,
             "scenarios",
             "action_recognition",
+        )
+    )
+
+
+def path_segmentation_notebooks():
+    """ Returns the path of the similarity notebooks folder. """
+    return os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            os.path.pardir,
+            "scenarios",
+            "segmentation",
         )
     )
 
@@ -156,7 +177,9 @@ def detection_notebooks():
         "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
         "02": os.path.join(folder_notebooks, "02_mask_rcnn.ipynb"),
         "03": os.path.join(folder_notebooks, "03_keypoint_rcnn.ipynb"),
-        "04": os.path.join(folder_notebooks, "04_coco_accuracy_vs_speed.ipynb"),
+        "04": os.path.join(
+            folder_notebooks, "04_coco_accuracy_vs_speed.ipynb"
+        ),
         "11": os.path.join(
             folder_notebooks, "11_exploring_hyperparameters_on_azureml.ipynb"
         ),
@@ -180,6 +203,17 @@ def action_recognition_notebooks():
         "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
         "02": os.path.join(folder_notebooks, "02_training_hmbd.ipynb"),
         "10": os.path.join(folder_notebooks, "10_video_transformation.ipynb"),
+    }
+    return paths
+
+
+@pytest.fixture(scope="module")
+def segmentation_notebooks():
+    folder_notebooks = path_segmentation_notebooks()
+
+    # Path for the notebooks
+    paths = {
+        "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
     }
     return paths
 
@@ -723,6 +757,7 @@ def ar_path(tmp_session) -> str:
 
 # ----- AML Settings ----------------------------------------------------------
 
+
 @pytest.fixture(scope="session")
 def coco_sample_path(tmpdir_factory) -> str:
     """ Returns the path to a coco-formatted annotation. """
@@ -794,6 +829,7 @@ def tiny_is_data_path(tmp_session) -> str:
 
 @pytest.fixture(scope="session")
 def tiny_ic_databunch_valid_features(tiny_ic_databunch):
+    """ Returns DNN features for the tiny fridge objects dataset. """
     learn = cnn_learner(tiny_ic_databunch, models.resnet18)
     embedding_layer = learn.model[1][6]
     features = compute_features_learner(
@@ -801,3 +837,67 @@ def tiny_ic_databunch_valid_features(tiny_ic_databunch):
     )
     return features
 
+
+# ------|-- Segmentation ---------------------------------------------
+
+
+@pytest.fixture(scope="session")
+def tiny_seg_data_path(tmp_session, seg_classes) -> str:
+    """ Returns the path to the segmentation tiny fridge objects dataset. """
+    path = unzip_url(
+        seg_urls.fridge_objects_tiny_path,
+        fpath=tmp_session,
+        dest=tmp_session,
+        exist_ok=True,
+    )
+    classes_path = Path(path) / "classes.txt"
+    with open(classes_path, "w") as f:
+        for c in seg_classes:
+            f.write(c + "\n")
+    return path
+
+
+@pytest.fixture(scope="session")
+def tiny_seg_databunch(tiny_seg_data_path, seg_classes):
+    """ Returns a databunch object for the segmentation tiny fridge objects dataset. """
+    get_gt_filename = (
+        lambda x: f"{tiny_seg_data_path}/segmentation-masks/{x.stem}.png"
+    )
+    return (
+        SegmentationItemList.from_folder(tiny_seg_data_path)
+        .split_by_rand_pct(valid_pct=0.1, seed=10)
+        .label_from_func(get_gt_filename, classes=seg_classes)
+        .transform(get_transforms(), tfm_y=True, size=50)
+        .databunch(bs=8, num_workers=db_num_workers())
+        .normalize(imagenet_stats)
+    )
+
+
+@pytest.fixture(scope="session")
+def seg_classes() -> List[str]:
+    """ Returns the segmentation class names. """
+    return ["background", "can", "carton", "milk_bottle", "water_bottle"]
+
+
+@pytest.fixture(scope="session")
+def seg_classes_path(tiny_seg_data_path) -> str:
+    """ Returns the path to file with class names. """
+    return Path(tiny_seg_data_path) / "classes.txt"
+
+
+@pytest.fixture(scope="session")
+def seg_im_mask_paths(tiny_seg_data_path) -> str:
+    """ Returns path to images and their corresponding masks. """
+    im_dir = Path(tiny_seg_data_path) / "images"
+    mask_dir = Path(tiny_seg_data_path) / "segmentation-masks"
+    im_paths = sorted(get_image_files(im_dir))
+    mask_paths = sorted(get_image_files(mask_dir))
+    return im_paths, mask_paths
+
+
+@pytest.fixture(scope="session")
+def seg_im_and_mask(seg_im_mask_paths) -> str:
+    """ Returns a single image with its mask. """
+    im = load_im(seg_im_mask_paths[0][0])
+    mask = load_mask(seg_im_mask_paths[1][0])
+    return im, mask

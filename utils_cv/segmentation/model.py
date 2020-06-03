@@ -105,8 +105,8 @@ def confusion_matrix(
         gt_mask = np.asarray(gt_mask)
 
         # Store predicted and ground truth labels
-        assert gt_mask.shape[0] == pred_mask.shape[0]
-        assert gt_mask.shape[1] == pred_mask.shape[1]
+        assert len(gt_mask.flatten()) == len(pred_mask.flatten())
+
         y_gts.extend(gt_mask.flatten())
         y_preds.extend(pred_mask.flatten())
 

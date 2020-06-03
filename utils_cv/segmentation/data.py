@@ -10,6 +10,7 @@ class Urls:
 
     # traditional datasets
     fridge_objects_path = urljoin(base, "segFridgeObjects.zip")
+    fridge_objects_tiny_path = urljoin(base, "segFridgeObjectsTiny.zip")
 
     @classmethod
     def all(cls) -> List[str]:
