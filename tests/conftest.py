@@ -18,11 +18,12 @@ from torch import tensor
 from pathlib import Path
 from fastai.vision import (
     cnn_learner,
+    unet_learner,
     DatasetType,
     get_image_files,
+    get_transforms,
     models,
     SegmentationItemList,
-    get_transforms,
 )
 from fastai.vision.data import ImageList, imagenet_stats
 from typing import List, Tuple
@@ -45,6 +46,11 @@ from utils_cv.detection.model import (
 )
 from utils_cv.segmentation.data import Urls as seg_urls
 from utils_cv.segmentation.dataset import load_im, load_mask
+from utils_cv.segmentation.model import (
+    confusion_matrix,
+    get_objective_fct,
+    predict,
+)
 from utils_cv.similarity.data import Urls as is_urls
 from utils_cv.similarity.model import compute_features_learner
 
@@ -901,3 +907,23 @@ def seg_im_and_mask(seg_im_mask_paths) -> str:
     im = load_im(seg_im_mask_paths[0][0])
     mask = load_mask(seg_im_mask_paths[1][0])
     return im, mask
+
+
+@pytest.fixture(scope="session")
+def seg_learner(tiny_seg_databunch, seg_classes):
+    return unet_learner(
+        tiny_seg_databunch,
+        models.resnet18,
+        wd=1e-2,
+        metrics=get_objective_fct(seg_classes),
+    )
+
+
+@pytest.fixture(scope="session")
+def seg_prediction(seg_learner, seg_im_and_mask):
+    return predict(seg_im_and_mask[0], seg_learner)
+
+
+@pytest.fixture(scope="session")
+def seg_confusion_matrices(seg_learner, tiny_seg_databunch):
+    return confusion_matrix(seg_learner, tiny_seg_databunch.valid_dl)
