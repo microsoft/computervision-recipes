@@ -283,12 +283,10 @@ class ParameterSweeper:
             ImageDataBunch
         """
         path = path if type(path) is Path else Path(path)
-        tfms = get_transforms() #if transform else None
+        tfms = get_transforms() if transform else None
+        im_path = path / "images"
+        anno_path = path / "segmentation-masks"
         get_gt_filename = lambda x: anno_path / f"{x.stem}.png"
-
-        im_path = os.path.join(path, "images")
-        anno_path = os.path.join(path, "segmentation-masks")
-        #classes = ["background", "can", "carton", "milk_bottle", "water_bottle"]
 
         # Load data
         return (
@@ -413,11 +411,13 @@ class ParameterSweeper:
         elif learner_type == "unet":
             classes = read_classes(os.path.join(data_path, "classes.txt"))
             data = self._get_data_bunch_segmentationitemlist(data_path, transform, im_size, batch_size, classes)
+            metric = get_objective_fct(classes)
+            metric.__name__ = "ratio_correct"
             learn = unet_learner(
                 data,
                 architecture.value,
-                #wd=1e-2,
-                metrics=get_objective_fct(classes),
+                wd=1e-2,
+                metrics=metric,
                 callback_fns=callbacks,
             )
 
@@ -531,9 +531,15 @@ class ParameterSweeper:
                         dataset, permutation, early_stopping, learner_type
                     )
 
-                    if metric_fct is None:
+                    if metric_fct is None and learner_type == "cnn":
                         _, metric = learn.validate(
-                            learn.data.valid_dl, metrics=[accuracy]
+                            learn.data.valid_dl,
+                            metrics=[accuracy]
+                        )
+
+                    elif learner_type == "unet":
+                        _, metric = learn.validate(
+                            learn.data.valid_dl
                         )
 
                     else:
