@@ -591,7 +591,7 @@ class VideoLearner(object):
         if is_ready:
             is_ready[0] = True
 
-    def predict(
+    def predict_video(
         self,
         video_fpath: str,
         labels: List[str] = None,
