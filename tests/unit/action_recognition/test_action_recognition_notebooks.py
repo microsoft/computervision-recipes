@@ -8,6 +8,8 @@ import papermill as pm
 import pytest
 import scrapbook as sb
 
+from utils_cv.action_recognition.data import Urls
+
 # Unless manually modified, python3 should be
 # the name of the current jupyter kernel
 # that runs on the activated conda environment
@@ -21,7 +23,10 @@ def test_00_notebook_run(action_recognition_notebooks):
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
-        parameters=dict(PM_VERSION=pm.__version__),
+        parameters=dict(
+            PM_VERSION=pm.__version__,
+            sample_video_url=Urls.webcam_vid_low_res
+        ),
         kernel_name=KERNEL_NAME,
     )
 
@@ -39,8 +44,8 @@ def test_01_notebook_run(action_recognition_notebooks):
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
-            MODEL_INPUT_SIZE=4,
-            EPOCHS=4,
+            MODEL_INPUT_SIZE=8,
+            EPOCHS=2,
             BATCH_SIZE=8,
             LR=0.001,
         ),

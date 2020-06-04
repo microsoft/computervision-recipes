@@ -66,6 +66,10 @@ class Urls:
     # test vid
     drinking_path = urljoin(base, "drinking.mp4")
 
+    # webcam sample vids
+    webcam_vid = urljoin(base, "action_sample.mp4")
+    webcam_vid_low_res = urljoin(base, "action_sample_lowRes.mp4")
+
 
 KINETICS = _DatasetSpec(
     Urls.kinetics_label_map, 400, os.path.join("data", "kinetics400"),

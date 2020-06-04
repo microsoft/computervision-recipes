@@ -669,7 +669,7 @@ class VideoLearner(object):
 
                 d_video.update(IPython.display.Image(data=f.getvalue()))
                 sleep(0.03)
-            except e:
+            except Exception:
                 break
 
     def save(self, model_path: Union[Path, str]) -> None:
