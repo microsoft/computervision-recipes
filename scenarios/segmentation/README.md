@@ -12,11 +12,13 @@ Our implementation uses fastai's [UNet](https://docs.fast.ai/vision.models.unet.
 
 ## Notebooks
 
-The following notebook is provided:
+The following notebooks are provided:
 
 | Notebook name | Description |
 | --- | --- |
 | [01_training_introduction.ipynb](./01_training_introduction.ipynb)| Notebook to train and evaluate an image segmentation model.|
+| [11_exploring_hyperparameters.ipynb](11_exploring_hyperparameters.ipynb)| Finds optimal model parameters using grid search. |
+
 
 ## Contribution guidelines
 
