@@ -1,10 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
+import os.path as osp
 from typing import Dict
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms as T
 from .references.fairmot.datasets.dataset.jde import JointDataset
+from .opts import opts
 from ..common.gpu import db_num_workers
 
 
@@ -12,28 +15,37 @@ class TrackingDataset:
     """A multi-object tracking dataset."""
 
     def __init__(
-        self, data_root: str, train_paths: Dict, batch_size: int = 12
+        self,
+        data_root: str,
+        name: str = "default",
+        batch_size: int = 12,
+        down_ratio: int = 4,
     ) -> None:
         """
         Args:
-            data_root: root data directory
-            train_paths: dictionary of paths defining training data
+            data_root: root data directory containing image and annotation subdirectories
+            name: user-friendly name for the dataset
             batch_size: batch size
-
-        Note: the path dictionaries map user-friendly dataset name to a filename, e.g. {"custom": "MyCustomDataset.train"}
-            The file is a raw text file listing the sequence of image paths. Multiple sequences (videos) can be listed,
-            and the sequences must be in order. 
+            down_ratio: downsampling ratio
         
         TODO: train-test split
         """
         transforms = T.Compose([T.ToTensor()])
         self.batch_size = batch_size
 
+        opt = opts()
+        opt.down_ratio = down_ratio
+
+        train_data_list = osp.join(data_root, "{}.train".format(name))
+        with open(train_data_list, "a") as f:
+            for im in sorted(os.listdir(osp.join(data_root, "images"))):
+                f.write(osp.join("images", im) + "\n")
+
         self.train_data = JointDataset(
-            opt,
+            opt.opt,
             data_root,
-            train_paths,
-            im_size,
+            {name: train_data_list},
+            (opt.input_w, opt.input_h),
             augment=True,
             transforms=transforms,
         )

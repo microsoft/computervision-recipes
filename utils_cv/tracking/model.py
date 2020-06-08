@@ -4,11 +4,13 @@
 import argparse
 import os
 import os.path as osp
-from typing import List, Dict
+from typing import List, Dict, Tuple
+import requests
 
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
 
 from .references.fairmot.datasets.dataset.jde import LoadImages, LoadVideo
 from .references.fairmot.models.model import (
@@ -16,11 +18,12 @@ from .references.fairmot.models.model import (
     load_model,
 )
 from .references.fairmot.tracker.multitracker import JDETracker
+from .references.fairmot.trains.train_factory import train_factory
 
 from .bbox import TrackingBbox
 from .dataset import TrackingDataset
 from .opts import opts
-from ..common.gpu import torch_device
+from ..common.gpu import torch_device, get_gpu_str
 
 BASELINE_URL = (
     "https://drive.google.com/open?id=1udpOPum8fJdoEQm6n0jsIgMMViOMFinu"
@@ -88,13 +91,14 @@ class TrackingLearner(object):
             head_conv: conv layer channels for output head. None maps to the default setting.
                 Set 0 for no conv layer, 256 for resnets, and 256 for dla
         """
-        self.opt = opts().opt
+        self.opt = opts()
         self.opt.arch = arch
         self.opt.head_conv = head_conv if head_conv else -1
+        self.opt.gpus = get_gpu_str()
+        self.opt.device = torch_device()
 
         self.dataset = dataset
         self.model = model if model is not None else self.init_model()
-        self.device = torch_device()
 
         # TODO setup logging
 
@@ -107,7 +111,7 @@ class TrackingLearner(object):
         _download_baseline(BASELINE_URL, osp.join(model_dir, "all_dla34.pth"))
         return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
 
-    def load(self, path: str = None, resume = False) -> None:
+    def load(self, path: str = None, resume=False) -> None:
         """
         Load a model from path. 
         """
@@ -132,12 +136,7 @@ class TrackingLearner(object):
             self.model = load_model(self.model, path)
 
     def fit(
-        self,
-        lr: float = 1e-4,
-        lr_step: str = "20,27",
-        num_epochs: int = 30,
-        num_iters: int = None,
-        val_intervals: int = 5,
+        self, lr: float = 1e-4, lr_step: str = "20,27", num_epochs: int = 30,
     ) -> None:
         """
         The main training loop.
@@ -146,8 +145,6 @@ class TrackingLearner(object):
             lr: learning rate for batch size 32
             lr_step: when to drop learning rate by 10
             num_epochs: total training epochs
-            num_iters: Defaults to #samples / batch_size
-            val_intervals: number of epochs to run validation
 
         Raise:
             Exception if dataset is undefined
@@ -160,9 +157,6 @@ class TrackingLearner(object):
         self.opt.lr = lr
         self.opt.lr_step = lr_step
         self.opt.num_epochs = num_epochs
-        self.opt.num_iters = num_iters if num_iters else -1
-        self.opt.val_intervals = val_intervals
-        self.opt.device = self.device
 
         # update dataset options
         self.opt.update_dataset_info_and_set_heads(self.dataset.train_data)
@@ -170,11 +164,11 @@ class TrackingLearner(object):
         # initialize dataloader
         train_loader = self.dataset.train_dl
 
-        self.optimizer = torch.optim.Adam(model.parameters(), self.opt.lr)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), self.opt.lr)
         self.start_epoch = 0
 
         Trainer = train_factory[self.opt.task]
-        trainer = Trainer(self.opt, self.model, self.optimizer)
+        trainer = Trainer(self.opt.opt, self.model, self.optimizer)
         trainer.set_device(
             self.opt.gpus, self.opt.chunk_sizes, self.opt.device
         )
@@ -185,7 +179,7 @@ class TrackingLearner(object):
             log_dict_train, _ = trainer.train(epoch, train_loader)
             ## TODO logging
             if epoch in self.opt.lr_step:
-                lr = self.opt.lr * (0.1 ** self.opt.lr_step.index(epoch) + 1)
+                lr = self.opt.lr * (0.1 ** (self.opt.lr_step.index(epoch) + 1))
                 ## TODO logging
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
@@ -230,10 +224,9 @@ class TrackingLearner(object):
         input_height = input_h if input_h else -1
         input_width = input_w if input_w else -1
         self.opt.update_dataset_res(input_height, input_width)
-        self.opt.device = self.device
 
         # initialize tracker
-        tracker = JDETracker(self.opt, frame_rate=frame_rate)
+        tracker = JDETracker(self.opt.opt, frame_rate=frame_rate)
 
         # initialize dataloader
         dataloader = self.get_dataloader(im_or_video_path)
