@@ -15,10 +15,7 @@ class TrackingDataset:
     """A multi-object tracking dataset."""
 
     def __init__(
-        self,
-        data_root: str,
-        name: str = "default",
-        batch_size: int = 12,
+        self, data_root: str, name: str = "default", batch_size: int = 12,
     ) -> None:
         """
         Args:

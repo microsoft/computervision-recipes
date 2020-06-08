@@ -2,21 +2,26 @@
 # Licensed under the MIT License.
 
 import argparse
+from copy import deepcopy
 import os
 import os.path as osp
 from typing import Dict, List
 import requests
+import glob
 
 import torch
 import torch.cuda as cuda
 import torch.nn as nn
 from torch.utils.data import DataLoader
+
+import pandas as pd
 import matplotlib.pyplot as plt
 
 from .references.fairmot.datasets.dataset.jde import LoadImages, LoadVideo
 from .references.fairmot.models.model import (
     create_model,
     load_model,
+    save_model,
 )
 from .references.fairmot.tracker.multitracker import JDETracker
 from .references.fairmot.trains.train_factory import train_factory
@@ -24,7 +29,7 @@ from .references.fairmot.trains.train_factory import train_factory
 from .bbox import TrackingBbox
 from .dataset import TrackingDataset
 from .opts import opts
-from ..common.gpu import torch_device, get_gpu_str
+from ..common.gpu import torch_device
 
 BASELINE_URL = (
     "https://drive.google.com/open?id=1udpOPum8fJdoEQm6n0jsIgMMViOMFinu"
@@ -68,6 +73,7 @@ def _download_baseline(url, destination) -> None:
 
     save_response_content(response, destination)
 
+
 def _get_gpu_str():
     if cuda.is_available():
         devices = [str(x) for x in range(cuda.device_count())]
@@ -75,12 +81,13 @@ def _get_gpu_str():
     else:
         return "-1"  # cpu
 
+
 class TrackingLearner(object):
     """Tracking Learner for Multi-Object Tracking"""
 
     def __init__(
         self,
-        dataset: TrackingDataset = None,
+        dataset: TrackingDataset,
         model: nn.Module = None,
         arch: str = "dla_34",
         head_conv: int = None,
@@ -101,7 +108,7 @@ class TrackingLearner(object):
         self.opt = opts()
         self.opt.arch = arch
         self.opt.head_conv = head_conv if head_conv else -1
-        self.opt.gpus = get_gpu_str()
+        self.opt.gpus = _get_gpu_str()
         self.opt.device = torch_device()
 
         self.dataset = dataset
@@ -112,33 +119,15 @@ class TrackingLearner(object):
         Download and initialize the baseline FairMOT model.
         """
         model_dir = osp.join(self.opt.root_dir, "models")
+        self.model_path = osp.join(model_dir, "all_dla34.pth")
+
         os.makedirs(model_dir, exist_ok=True)
-        _download_baseline(BASELINE_URL, osp.join(model_dir, "all_dla34.pth"))
+        _download_baseline(BASELINE_URL, self.model_path)
         return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
 
-    def load(self, path: str = None, resume=False) -> None:
-        """
-        Load a model from path. 
-        """
-        if resume:
-            # if resume, load optimizer and start_epoch as well as model state dict
-            # set path to model_last.pth if path is not provided
-            model_dir = (
-                self.opt.save_dir[:-4]
-                if self.opt.save_dir.endswith("TEST")
-                else self.opt.save_dir
-            )
-            self.model, self.optimizer, self.start_epoch = load_model(
-                self.model,
-                path if path else osp.join(model_dir, "model_last.pth"),
-                self.optimizer,
-                resume,
-                self.opt.lr,
-                self.opt.lr_step,
-            )
-        else:
-            # otherwise just load the model state dict
-            self.model = load_model(self.model, path)
+    def load(self, path, resume=False) -> None:
+        self.opt.load_model = path
+        self.opt.resume = resume
 
     def fit(
         self, lr: float = 1e-4, lr_step: str = "20,27", num_epochs: int = 30,
@@ -159,33 +148,62 @@ class TrackingLearner(object):
         if not self.dataset:
             raise Exception("No dataset provided")
 
-        self.opt.lr = lr
-        self.opt.lr_step = lr_step
-        self.opt.num_epochs = num_epochs
+        opt_fit = deepcopy(self.opt)
+        opt_fit.lr = lr
+        opt_fit.lr_step = lr_step
+        opt_fit.num_epochs = num_epochs
 
         # update dataset options
-        self.opt.update_dataset_info_and_set_heads(self.dataset.train_data)
+        opt_fit.update_dataset_info_and_set_heads(self.dataset.train_data)
 
         # initialize dataloader
         train_loader = self.dataset.train_dl
 
-        self.optimizer = torch.optim.Adam(self.model.parameters(), self.opt.lr)
-        self.start_epoch = 0
-
-        Trainer = train_factory[self.opt.task]
-        trainer = Trainer(self.opt.opt, self.model, self.optimizer)
-        trainer.set_device(
-            self.opt.gpus, self.opt.chunk_sizes, self.opt.device
+        self.optimizer = torch.optim.Adam(self.model.parameters(), opt_fit.lr)
+        start_epoch = 0
+        self.model, self.optimizer, start_epoch = load_model(
+            self.model,
+            opt_fit.load_model,
+            self.optimizer,
+            opt_fit.resume,
+            opt_fit.lr,
+            opt_fit.lr_step,
         )
 
+        Trainer = train_factory[opt_fit.task]
+        trainer = Trainer(opt_fit.opt, self.model, self.optimizer)
+        trainer.set_device(opt_fit.gpus, opt_fit.chunk_sizes, opt_fit.device)
+
         # training loop
-        for epoch in range(self.start_epoch + 1, self.opt.num_epochs + 1):
-            mark = epoch if self.opt.save_all else "last"
+        for epoch in range(
+            start_epoch + 1, start_epoch + opt_fit.num_epochs + 1
+        ):
+            print(
+                "=" * 5,
+                f" Epoch: {epoch}/{start_epoch + opt_fit.num_epochs} ",
+                "=" * 5,
+            )
+            self.epoch = epoch
             log_dict_train, _ = trainer.train(epoch, train_loader)
-            if epoch in self.opt.lr_step:
-                lr = self.opt.lr * (0.1 ** (self.opt.lr_step.index(epoch) + 1))
+            for k, v in log_dict_train.items():
+                print(f"{k}: {v}")
+            if epoch in opt_fit.lr_step:
+                lr = opt_fit.lr * (0.1 ** (opt_fit.lr_step.index(epoch) + 1))
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
+
+    def save(self, path) -> None:
+        """
+        Save the model to a specified path.
+        """
+        model_dir, _ = osp.split(path)
+        os.makedirs(model_dir, exist_ok=True)
+
+        save_model(path, self.epoch, self.model, self.optimizer)
+        print(f"Model saved to {path}")
+
+    def evaluate(self, results, gt) -> pd.DataFrame:
+        pass
 
     def predict(
         self,
@@ -218,35 +236,38 @@ class TrackingLearner(object):
 
         Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
         """
-        self.opt.conf_thres = conf_thres
-        self.opt.det_thres = det_thres
-        self.opt.nms_thres = nms_thres
-        self.opt.track_buffer = track_buffer
-        self.opt.min_box_area = min_box_area
+        opt_pred = deepcopy(self.opt)
+        opt_pred.conf_thres = conf_thres
+        opt_pred.det_thres = det_thres
+        opt_pred.nms_thres = nms_thres
+        opt_pred.track_buffer = track_buffer
+        opt_pred.min_box_area = min_box_area
 
         input_height = input_h if input_h else -1
         input_width = input_w if input_w else -1
-        self.opt.update_dataset_res(input_height, input_width)
+        opt_pred.update_dataset_res(input_height, input_width)
 
         # initialize tracker
-        tracker = JDETracker(self.opt.opt, frame_rate=frame_rate)
+        tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
 
         # initialize dataloader
-        dataloader = self.get_dataloader(im_or_video_path)
+        dataloader = self._get_dataloader(
+            im_or_video_path, opt_pred.input_h, opt_pred.input_w
+        )
 
         frame_id = 0
         out = {}
         results = []
         for path, img, img0 in dataloader:
             blob = torch.from_numpy(img).cuda().unsqueeze(0)
-            online_targets = self.tracker.update(blob, img0)
+            online_targets = tracker.update(blob, img0)
             online_bboxes = []
             for t in online_targets:
                 tlwh = t.tlwh
                 tlbr = t.tlbr
                 tid = t.track_id
                 vertical = tlwh[2] / tlwh[3] > 1.6
-                if tlwh[2] * tlwh[3] > self.opt.min_box_area and not vertical:
+                if tlwh[2] * tlwh[3] > opt_pred.min_box_area and not vertical:
                     bb = TrackingBbox(
                         tlbr[1], tlbr[0], tlbr[3], tlbr[2], frame_id, tid
                     )
@@ -256,7 +277,9 @@ class TrackingLearner(object):
 
         return out
 
-    def get_dataloader(self, im_or_video_path: str) -> DataLoader:
+    def _get_dataloader(
+        self, im_or_video_path: str, input_h, input_w
+    ) -> DataLoader:
         """
         Creates a dataloader from images or video in the given path.
 
@@ -275,10 +298,8 @@ class TrackingLearner(object):
         im_format = [".jpg", ".jpeg", ".png", ".tif"]
         video_format = [".mp4", ".avi"]
 
-        input_w = self.opt.input_w
-        input_h = self.opt.input_h
-
         # if path is to a root directory of images
+
         if (
             osp.isdir(im_or_video_path)
             and len(
