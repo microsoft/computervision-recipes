@@ -52,4 +52,4 @@ def test_11_notebook_integration_run(segmentation_notebooks):
     min_duration = nb_output.scraps["min_duration"].data
     assert nr_elements == 12
     assert min_duration <= 0.8 * max_duration
-    assert np.max(ratio_correct) > 0.85
+    assert np.max(ratio_correct) > 0.75
