@@ -166,7 +166,8 @@ def plot_sweeper_df(
 
     for col, ax in zip(cols, axes):
         top_val = df[col].max()
-        ax.set_ylim(top=top_val * 1.2)
+        min_val = df[col].min()
+        ax.set_ylim(bottom = min_val/1.01, top=top_val * 1.01)
         add_value_labels(ax)
 
         if col in ["accuracy"]:
@@ -507,21 +508,25 @@ class ParameterSweeper:
             pd.DataFrame: a multi-index dataframe with the results stored in it.
         """
 
+        count = 0
         res = dict()
         for rep in range(reps):
             res[rep] = dict()
 
             for i, permutation in enumerate(self.permutations):
-                print(
-                    f"Running {i+1} of {len(self.permutations)} permutations. "
-                    f"Repeat {rep+1} of {reps}."
-                )
-
                 stringified_permutation = self._serialize_permutations(
                     permutation
                 )
+
                 res[rep][stringified_permutation] = dict()
-                for dataset in datasets:
+                for ii, dataset in enumerate(datasets):
+                    percent_done = round(100.0 * count / (reps * len(self.permutations) * len(datasets)))
+                    print(
+                        f"Percentage done: {percent_done}%. "
+                        f"Currently processing repeat {rep+1} of {reps}, "
+                        f"running {i+1} of {len(self.permutations)} permutations, "
+                        f"dataset {ii+1} of {len(datasets)} ({os.path.basename(dataset)}). "
+                    )
 
                     data_name = os.path.basename(dataset)
 
@@ -554,5 +559,7 @@ class ParameterSweeper:
                     ] = float(metric)
 
                     learn.destroy()
+
+                    count+=1
 
         return self._make_df_from_dict(res)

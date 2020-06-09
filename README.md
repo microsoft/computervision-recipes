@@ -2,7 +2,7 @@
 
 ```diff
 + March 27: Released v1.1 with new and improved
-+   functionality for image retrieval, object detection, 
++   functionality for image retrieval, object detection,
 +   keypoint detection and action recognition.  
 +   For additional details, please refer to our releases page.
 ```
@@ -41,7 +41,7 @@ instructions on how to setup the compute environment and dependencies needed to 
 notebooks in this repo. Once your environment is setup, navigate to the
 [Scenarios](scenarios) folder and start exploring the notebooks.
 
-Alternatively, we support Binder 
+Alternatively, we support Binder
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/PatrickBue/computervision-recipes/master?filepath=scenarios%2Fclassification%2F01_training_introduction_BINDER.ipynb)
 which makes it easy to try one of our notebooks in a web-browser simply by following this link. However, Binder is free, and as as result only comes with limited CPU compute power and without GPU support. Expect the notebook to run very slowly (this is somewhat improved by reducing image resolution to e.g. 60 pixels but at the cost of low accuracies).
 
@@ -51,10 +51,11 @@ The following is a summary of commonly used Computer Vision scenarios that are c
 
 | Scenario | Support     | Description |
 | -------- | ----------- | ----------- |
-| [Classification](scenarios/classification) | Base | Image Classification is a supervised machine learning technique that allows you to learn and predict the category of a given image. |
+| [Classification](scenarios/classification) | Base | Image Classification is a supervised machine learning technique to learn and predict the category of a given image. |
 | [Similarity](scenarios/similarity)  | Base | Image Similarity is a way to compute a similarity score given a pair of images. Given an image, it allows you to identify the most similar image in a given dataset.  |
 | [Detection](scenarios/detection) | Base | Object Detection is a technique that allows you to detect the bounding box of an object within an image. |
 | [Keypoints](scenarios/keypoints) | Base | Keypoint detection can be used to detect specific points on an object. A pre-trained model is provided to detect body joints for human pose estimation. |
+| [Segmentation](contrib/segmentation) | Base | Image Segmentation assigns a category to each pixel in an image. |
 | [Action recognition](contrib/action_recognition) | Contrib | Action recognition to identify in video/webcam footage what actions are performed (e.g. "running", "opening a bottle") and at what respective start/end times.|
 | [Crowd counting](contrib/crowd_counting) | Contrib | Counting the number of people in low-crowd-density (e.g. less than 10 people) and high-crowd-density (e.g. thousands of people) scenarios.|
 
@@ -67,7 +68,7 @@ Note that for certain computer vision problems, you may not need to build your o
 The following Microsoft services offer simple solutions to address common computer vision tasks:
 
 - [Vision Services](https://docs.microsoft.com/en-us/azure/cognitive-services/computer-vision/)
-are a set of pre-trained REST APIs which can be called for image tagging, face recognition, OCR, video analytics, and more. These APIs work out of the box and require minimal expertise in machine learning, but have limited customization capabilities. See the various demos available to get a feel for the functionality (e.g. [Computer Vision](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/#analyze)). The service can be used through API calls or through SDKs (available in .NET, Python, Java, Node and Go languages) 
+are a set of pre-trained REST APIs which can be called for image tagging, face recognition, OCR, video analytics, and more. These APIs work out of the box and require minimal expertise in machine learning, but have limited customization capabilities. See the various demos available to get a feel for the functionality (e.g. [Computer Vision](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/#analyze)). The service can be used through API calls or through SDKs (available in .NET, Python, Java, Node and Go languages)
 
 - [Custom Vision](https://docs.microsoft.com/en-us/azure/cognitive-services/custom-vision-service/home)
 is a SaaS service to train and deploy a model as a REST API given a user-provided training set. All steps including image upload, annotation, and model deployment can be performed using an intuitive UI or through SDKs (available in .NEt, Python, Java, Node and Go languages). Training image classification or object detection models can be achieved with minimal machine learning expertise. The Custom Vision offers more flexibility than using the pre-trained cognitive services APIs, but requires the user to bring and annotate their own data.
