@@ -33,8 +33,6 @@ def test_confusion_matrix(seg_learner, tiny_seg_databunch):
     )
     assert type(cmat) == np.ndarray
     assert type(cmat_norm) == np.ndarray
-    assert cmat.shape == (5, 5)
-    assert cmat_norm.shape == (5, 5)
     assert cmat.max() > 1.0
     assert cmat_norm.max() <= 1.0
 
