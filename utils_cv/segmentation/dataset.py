@@ -72,7 +72,8 @@ def mask_area_sizes(data: ImageDataBunch) -> collections.defaultdict:
     Return:
         Sizes of all connected segments, in pixels, and for each class
     """
-    areas = collections.defaultdict(list)
+    seg_areas = collections.defaultdict(list)
+    pixel_counts = collections.defaultdict(list)
 
     # Loop over all class masks
     for mask_path in data.y.items:
@@ -80,6 +81,10 @@ def mask_area_sizes(data: ImageDataBunch) -> collections.defaultdict:
 
         # For each class, find all segments and enumerate
         for class_id in np.unique(mask):
+            num_pixels = np.sum(mask == class_id)
+            pixel_counts[class_id].append(num_pixels)
+
+            # Get all connected segments in image
             segments, _ = ndimage.label(
                 mask == class_id, 
                 structure=[[1, 1, 1], [1, 1, 1], [1, 1, 1]]
@@ -88,6 +93,6 @@ def mask_area_sizes(data: ImageDataBunch) -> collections.defaultdict:
             # Loop over each segment of a given label
             for segment_id in range(1, segments.max() + 1):
                 area = np.sum(segments == segment_id)
-                areas[class_id].append(area)
+                seg_areas[class_id].append(area)
 
-    return areas
+    return seg_areas, pixel_counts

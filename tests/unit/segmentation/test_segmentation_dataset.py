@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import fastai
+import numpy as np
 
 from utils_cv.segmentation.dataset import (
     load_im,
@@ -32,8 +33,10 @@ def test_read_classes(seg_classes_path, seg_classes):
 
 
 def test_mask_area_sizes(tiny_seg_databunch):
-    areas = mask_area_sizes(tiny_seg_databunch)
+    areas, pixel_counts = mask_area_sizes(tiny_seg_databunch)
     assert len(areas) == 5
+    assert len(pixel_counts) == 5
+    assert np.sum([np.sum(v) for v in pixel_counts.values()]) == (22 * 499 * 666)
     assert type(areas[0]) == list
     for i in range(len(areas)):
         for area in areas[i]:

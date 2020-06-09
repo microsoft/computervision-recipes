@@ -220,6 +220,7 @@ def segmentation_notebooks():
     # Path for the notebooks
     paths = {
         "01": os.path.join(folder_notebooks, "01_training_introduction.ipynb"),
+        "11": os.path.join(folder_notebooks, "11_exploring_hyperparameters.ipynb"),
     }
     return paths
 

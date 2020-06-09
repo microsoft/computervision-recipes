@@ -113,10 +113,11 @@ def plot_mask_stats(
         nr_bins: number of bins for segment sizes histogram
         exclude_classes: list of classes to ignore, e.g. ["background"]
     """
-    areas = mask_area_sizes(data)
-    class_names = [classes[k] for k in areas.keys()]
-    values_list = [v for v in areas.values()]
-    counts = [len(v) for v in values_list]
+    areas, pixel_counts = mask_area_sizes(data)
+    class_names = [classes[k] for k,v in areas.items()]
+    values_list = [v for k,v in areas.items()]
+    seg_counts = [len(v) for v in values_list]
+    pixel_counts = [np.sum(v) for v in pixel_counts.values()]
     assert exclude_classes is None or type(exclude_classes) == list
 
     # Remove specified classes
@@ -126,19 +127,28 @@ def plot_mask_stats(
         )[0]
         class_names = [class_names[i] for i in keep_indices]
         values_list = [values_list[i] for i in keep_indices]
-        counts = [counts[i] for i in keep_indices]
+        seg_counts = [seg_counts[i] for i in keep_indices]
+        pixel_counts = [pixel_counts[i] for i in keep_indices]
 
     # Left plot
-    plt.subplots(1, 2, figsize=figsize)
-    plt.subplot(1, 2, 1)
-    plt.barh(range(len(class_names)), counts)
+    plt.subplots(1, 3, figsize=figsize)
+    plt.subplot(1, 3, 1)
+    plt.barh(range(len(class_names)), pixel_counts)
+    plt.gca().set_yticks(range(len(class_names)))
+    plt.gca().set_yticklabels(class_names)
+    plt.xlabel("Number of pixels per class")
+    plt.title("Distribution of pixel labels")
+
+    # Middle plot
+    plt.subplot(1, 3, 2)
+    plt.barh(range(len(class_names)), seg_counts)
     plt.gca().set_yticks(range(len(class_names)))
     plt.gca().set_yticklabels(class_names)
     plt.xlabel("Number of segments per class")
     plt.title("Distribution of segment labels")
 
     # Right plot
-    plt.subplot(1, 2, 2)
+    plt.subplot(1, 3, 3)
     plt.hist(
         values_list, nr_bins, label=class_names, histtype="barstacked",
     )
