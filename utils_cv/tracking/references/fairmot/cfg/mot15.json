@@ -1,0 +1,15 @@
+{
+    "root":"/data/yfzhang/MOT/JDE",
+    "train":
+    {
+        "mot15":"./data/mot15.train"
+    },
+    "test_emb":
+    {
+        "mot15":"./data/mot15.train"
+    },
+    "test":
+    {
+        "mot15":"./data/mot15.train"
+    }
+}
