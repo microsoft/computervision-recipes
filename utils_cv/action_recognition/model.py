@@ -5,7 +5,7 @@ from collections import OrderedDict
 import os
 import warnings
 import numpy as np
-from typing import Union, Dict, Tuple, Any, List, Callable
+from typing import Any, Callable, Dict, List, Tuple, Union
 from pathlib import Path
 import matplotlib.pyplot as plt
 import torch.cuda as cuda
@@ -82,7 +82,8 @@ class VideoLearner(object):
             self.dataset = dataset
             self.sample_length = self.dataset.sample_length
         else:
-            self.sample_length = 8 if sample_length <= 8 else 32
+            assert sample_length == 8 or sample_length == 32
+            self.sample_length = sample_length
 
         self.model, self.model_name = self.init_model(
             self.sample_length, base_model, num_classes,
@@ -134,7 +135,7 @@ class VideoLearner(object):
             param.requires_grad = True
 
     def unfreeze(self) -> None:
-        """ todo """
+        """Unfreeze all layers in model"""
         self._set_requires_grad(True)
 
     def _set_requires_grad(self, requires_grad=True) -> None:
@@ -339,6 +340,8 @@ class VideoLearner(object):
 
             end = time()
             for step, (inputs, target) in enumerate(dl, start=1):
+                if step % 10 == 0:
+                    print(f" Phase {phase}: batch {step} of {len(dl)}")
                 inputs = inputs.to(device, non_blocking=True)
                 target = target.to(device, non_blocking=True)
 
@@ -502,7 +505,7 @@ class VideoLearner(object):
         return ret
 
     def _predict(self, frames, transform):
-        """ Todo """
+        """Runs prediction on frames applying transforms before predictions."""
         clip = torch.from_numpy(np.array(frames))
         # Transform frames and append batch dim
         sample = torch.unsqueeze(transform(clip), 0)
@@ -519,7 +522,19 @@ class VideoLearner(object):
         target_labels: List[str] = None,
         filter_labels: List[str] = None,
     ) -> Dict[str, int]:
-        """ Todo """
+        """ Given the predictions, filter out the noise based on threshold,
+        target labels and filter labels.
+
+        Arg:
+            id_score_dict: dictionary of predictions
+            labels: all labels
+            threshold: the min threshold to keep prediction
+            target_labels: exclude any labels not in target labels
+            filter_labels: exclude any labels in filter labels
+
+        Returns
+            A dictionary of labels and scores
+        """
         # Show only interested actions (target_labels) with a confidence score >= threshold
         result = {}
         for i, s in id_score_dict.items():
@@ -552,6 +567,10 @@ class VideoLearner(object):
         update_println: Callable,
     ) -> None:
         """ Predicts frames """
+        # set model device and to eval mode
+        self.model.to(torch_device())
+        self.model.eval()
+
         t = time()
         scores = self._predict(window, transforms)
         dur = time() - t
@@ -602,10 +621,6 @@ class VideoLearner(object):
     ) -> None:
         """Load video and show frames and inference results while displaying the results
         """
-        # set model device and to eval mode
-        self.model.to(torch_device())
-        self.model.eval()
-
         # set up video reader
         video_reader = decord.VideoReader(video_fpath)
         print(f"Total frames = {len(video_reader)}")
@@ -666,6 +681,13 @@ class VideoLearner(object):
                 f = io.BytesIO()
                 im = Image.fromarray(frame)
                 im.save(f, "jpeg")
+
+                # resize frames to avoid flicker for windows
+                w,h = frame.shape[0], frame.shape[1]
+                scale = 300.0/max(w,h)
+                w = round(w*scale)
+                h = round(h*scale)
+                im = im.resize((h,w))
 
                 d_video.update(IPython.display.Image(data=f.getvalue()))
                 sleep(0.03)
