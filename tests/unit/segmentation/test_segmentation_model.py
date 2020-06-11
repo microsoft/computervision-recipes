@@ -4,15 +4,15 @@ import functools
 import numpy as np
 
 from utils_cv.segmentation.model import (
-    get_objective_fct,
+    get_ratio_correct_metric,
     predict,
     confusion_matrix,
     print_accuracies,
 )
 
 
-def test_get_objective_fct(seg_classes):
-    fct = get_objective_fct(seg_classes)
+def test_get_ratio_correct_metric(seg_classes):
+    fct = get_ratio_correct_metric(seg_classes)
     assert type(fct) == functools.partial
 
 
