@@ -571,6 +571,7 @@ class VideoLearner(object):
         self.model.to(torch_device())
         self.model.eval()
 
+        # score
         t = time()
         scores = self._predict(window, transforms)
         dur = time() - t
@@ -582,8 +583,16 @@ class VideoLearner(object):
         if len(scores_cache) == averaging_size:
             scores_avg = scores_sum / averaging_size
 
+            if len(labels) >= 5:
+                num_labels = 5
+            else:
+                num_labels = len(labels) - 1
+
             top5_id_score_dict = {
-                i: scores_avg[i] for i in (-scores_avg).argpartition(4)[:5]
+                i: scores_avg[i]
+                for i in (-scores_avg).argpartition(num_labels - 1)[
+                    :num_labels
+                ]
             }
             top5_label_score_dict = self._filter_labels(
                 top5_id_score_dict,
@@ -683,11 +692,11 @@ class VideoLearner(object):
                 im.save(f, "jpeg")
 
                 # resize frames to avoid flicker for windows
-                w,h = frame.shape[0], frame.shape[1]
-                scale = 300.0/max(w,h)
-                w = round(w*scale)
-                h = round(h*scale)
-                im = im.resize((h,w))
+                w, h = frame.shape[0], frame.shape[1]
+                scale = 300.0 / max(w, h)
+                w = round(w * scale)
+                h = round(h * scale)
+                im = im.resize((h, w))
 
                 d_video.update(IPython.display.Image(data=f.getvalue()))
                 sleep(0.03)
