@@ -33,9 +33,11 @@ BASELINE_URL = (
 def _download_baseline(url, destination) -> None:
     """
     Download the baseline model .pth file to the destination.
+
     Args:
         url: a Google Drive url of the form "https://drive.google.com/open?id={id}"
         destination: path to save the model to
+
     Implementation based on https://stackoverflow.com/questions/38511444/python-download-files-from-google-drive-using-url
     """
 
@@ -78,7 +80,9 @@ class TrackingLearner(object):
     ) -> None:
         """
         Initialize learner object.
+
         Defaults to the FairMOT model.
+
         Args:
             dataset: the dataset
             model: the model
@@ -136,10 +140,12 @@ class TrackingLearner(object):
     ) -> None:
         """
         The main training loop.
+
         Args:
             lr: learning rate for batch size 32
             lr_step: when to drop learning rate by 10
             num_epochs: total training epochs
+
         Raise:
             Exception if dataset is undefined
         
@@ -166,9 +172,14 @@ class TrackingLearner(object):
         trainer.set_device(
             self.opt.gpus, self.opt.chunk_sizes, self.opt.device
         )
-
-        # training loop
+        self.losses_dict = {key: [] for key in ['loss', 'hm_loss', 'wh_loss', 'off_loss', 'id_loss']} #KIP
+        self.epochs = []#KIP
+        
+        # training loop        
         for epoch in range(self.start_epoch + 1, self.opt.num_epochs + 1):
+            
+            self.epochs.append(epoch)
+            print("epoch:", epoch)
             mark = epoch if self.opt.save_all else "last"
             log_dict_train, _ = trainer.train(epoch, train_loader)
             ## TODO logging
@@ -177,7 +188,35 @@ class TrackingLearner(object):
                 ## TODO logging
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
+                    
+            #KIP            
+            for k, v in log_dict_train.items():
+                if k in ['loss', 'hm_loss', 'wh_loss', 'off_loss', 'id_loss']:
+                    self.losses_dict[k].append(v)
+        print("self.losses_dict:", self.losses_dict)
+                
+                
 
+
+    def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5))->None: #inTrackingLearner class
+        '''Plots training loss from calling `fit`  '''
+        fig = plt.figure(figsize=figsize)
+        ax1 = fig.add_subplot(1, 1, 1)
+
+        #ax1.set_xlim([0, self.epochs - 1])
+        ax1.set_xticks(self.epochs)
+        ax1.set_xlabel("epochs")
+        ax1.set_ylabel("losses")
+        ax1.plot(self.losses_dict['loss'], c="r", label='loss')
+        ax1.plot(self.losses_dict['hm_loss'], c="y", label='hm_loss')
+        ax1.plot(self.losses_dict['wh_loss'], c="g", label='wh_loss')
+        ax1.plot(self.losses_dict['off_loss'], c="b", label='off_loss')
+        ax1.plot(self.losses_dict['id_loss'], c="m", label='id_loss')
+
+        plt.legend(loc='upper right')
+        fig.suptitle("Loss over epochs during training")
+        
+        
     def predict(
         self,
         im_or_video_path: str,
@@ -192,6 +231,7 @@ class TrackingLearner(object):
     ) -> Dict[int, List[TrackingBbox]]:
         """
         Performs inferencing on an image or video path.
+
         Args:
             im_or_video_path: path to image(s) or video. Supports jpg, jpeg, png, tif formats for images.
                 Supports mp4, avi formats for video. 
@@ -203,7 +243,9 @@ class TrackingLearner(object):
             input_h: input height. Default from dataset
             input_w: input width. Default from dataset
             frame_rate: frame rate
+
         Returns a list of TrackingBboxes
+
         Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
         """
         self.opt.conf_thres = conf_thres
@@ -249,13 +291,17 @@ class TrackingLearner(object):
     def get_dataloader(self, im_or_video_path: str) -> DataLoader:
         """
         Creates a dataloader from images or video in the given path.
+
         Args:
             im_or_video_path: path to a root directory of images, or single video or image file.
                 Supports jpg, jpeg, png, tif formats for images. Supports mp4, avi formats for video
+
         Return:
             Dataloader
+
         Raise:
             Exception if file format is not supported
+
         Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/lib/datasets/dataset/jde.py
         """
         im_format = [".jpg", ".jpeg", ".png", ".tif"]
