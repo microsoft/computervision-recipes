@@ -21,12 +21,16 @@ from fastai.vision import (
     imagenet_stats,
     Learner,
     models,
+    SegmentationItemList,
+    unet_learner,
 )
 from matplotlib.axes import Axes
 from matplotlib.text import Annotation
 import pandas as pd
 
 from utils_cv.common.gpu import db_num_workers
+from utils_cv.segmentation.dataset import read_classes
+from utils_cv.segmentation.model import get_objective_fct
 
 
 Time = float
@@ -162,7 +166,8 @@ def plot_sweeper_df(
 
     for col, ax in zip(cols, axes):
         top_val = df[col].max()
-        ax.set_ylim(top=top_val * 1.2)
+        min_val = df[col].min()
+        ax.set_ylim(bottom = min_val/1.01, top=top_val * 1.01)
         add_value_labels(ax)
 
         if col in ["accuracy"]:
@@ -234,7 +239,7 @@ class ParameterSweeper:
         return permutations
 
     @staticmethod
-    def _get_data_bunch(
+    def _get_data_bunch_imagelist(
         path: Union[Path, str], transform: bool, im_size: int, bs: int
     ) -> ImageDataBunch:
         """
@@ -260,6 +265,40 @@ class ParameterSweeper:
             .databunch(bs=bs, num_workers=db_num_workers())
             .normalize(imagenet_stats)
         )
+
+    @staticmethod
+    def _get_data_bunch_segmentationitemlist(
+        path: Union[Path, str], transform: bool, im_size: int, bs: int, classes:List[str]
+    ) -> ImageDataBunch:
+        """
+        Create ImageDataBunch and return it. TODO in future version is to allow
+        users to pass in their own image bunch or their own Transformation
+        objects (instead of using fastai's <get_transforms>)
+
+        Args:
+            path (Union[Path, str]): path to data to create databunch with
+            transform (bool): a flag to set fastai default transformations (get_transforms())
+            im_size (int): image size of databunch
+            bs (int): batch size of databunch
+        Returns:
+            ImageDataBunch
+        """
+        path = path if type(path) is Path else Path(path)
+        tfms = get_transforms() if transform else None
+        im_path = path / "images"
+        anno_path = path / "segmentation-masks"
+        get_gt_filename = lambda x: anno_path / f"{x.stem}.png"
+
+        # Load data
+        return (
+            SegmentationItemList.from_folder(im_path)
+            .split_by_rand_pct(valid_pct=0.33)
+            .label_from_func(get_gt_filename, classes=classes)
+            .transform(tfms=tfms, size=im_size, tfm_y=True)
+            .databunch(bs=bs, num_workers=db_num_workers())
+            .normalize(imagenet_stats)
+        )
+
 
     @staticmethod
     def _early_stopping_callback(
@@ -324,7 +363,7 @@ class ParameterSweeper:
         )
 
     def _learn(
-        self, data_path: Path, params: Tuple[Any], stop_early: bool
+        self, data_path: Path, params: Tuple[Any], stop_early: bool, learner_type = "cnn"
     ) -> Tuple[Learner, Time]:
         """
         Given a set of permutations, create a learner to train and validate on
@@ -353,19 +392,39 @@ class ParameterSweeper:
         one_cycle_policy = params["one_cycle_policy"]
         weight_decay = params["weight_decay"]
 
-        data = self._get_data_bunch(data_path, transform, im_size, batch_size)
 
         callbacks = list()
         if stop_early:
             callbacks.append(ParameterSweeper._early_stopping_callback())
 
-        learn = cnn_learner(
-            data,
-            architecture.value,
-            metrics=accuracy,
-            ps=dropout,
-            callback_fns=callbacks,
-        )
+        # Initialize CNN learner
+        if learner_type == "cnn":
+            data = self._get_data_bunch_imagelist(data_path, transform, im_size, batch_size)
+            learn = cnn_learner(
+                data,
+                architecture.value,
+                metrics=accuracy,
+                ps=dropout,
+                callback_fns=callbacks,
+            )
+
+        # Initialize UNet learner
+        elif learner_type == "unet":
+            classes = read_classes(os.path.join(data_path, "classes.txt"))
+            data = self._get_data_bunch_segmentationitemlist(data_path, transform, im_size, batch_size, classes)
+            metric = get_objective_fct(classes)
+            metric.__name__ = "ratio_correct"
+            learn = unet_learner(
+                data,
+                architecture.value,
+                wd=1e-2,
+                metrics=metric,
+                callback_fns=callbacks,
+            )
+
+        else:
+            print(f"Mode learner_type={learner_type} not supported.")
+
 
         head_learning_rate = learning_rate
         body_learning_rate = (
@@ -429,6 +488,7 @@ class ParameterSweeper:
         reps: int = 3,
         early_stopping: bool = False,
         metric_fct=None,
+        learner_type = "cnn"
     ) -> pd.DataFrame:
         """ Performs the experiment.
         Iterates through the number of specified <reps>, the list permutations
@@ -439,40 +499,52 @@ class ParameterSweeper:
         definition.
 
         Args:
-            datasets (List[Path]): A list of datasets to iterate over.
-            reps (int): The number of runs to loop over.
-            early_stopping (bool): Whether we want to perform early stopping.
+            datasets: A list of datasets to iterate over.
+            reps: The number of runs to loop over.
+            early_stopping: Whether we want to perform early stopping.
+            metric_fct: custom metric function
+            learner_type: choose between "cnn" and "unet" learners
         Returns:
             pd.DataFrame: a multi-index dataframe with the results stored in it.
         """
 
+        count = 0
         res = dict()
         for rep in range(reps):
             res[rep] = dict()
 
             for i, permutation in enumerate(self.permutations):
-                print(
-                    f"Running {i+1} of {len(self.permutations)} permutations. "
-                    f"Repeat {rep+1} of {reps}."
-                )
-
                 stringified_permutation = self._serialize_permutations(
                     permutation
                 )
+
                 res[rep][stringified_permutation] = dict()
-                for dataset in datasets:
+                for ii, dataset in enumerate(datasets):
+                    percent_done = round(100.0 * count / (reps * len(self.permutations) * len(datasets)))
+                    print(
+                        f"Percentage done: {percent_done}%. "
+                        f"Currently processing repeat {rep+1} of {reps}, "
+                        f"running {i+1} of {len(self.permutations)} permutations, "
+                        f"dataset {ii+1} of {len(datasets)} ({os.path.basename(dataset)}). "
+                    )
 
                     data_name = os.path.basename(dataset)
 
                     res[rep][stringified_permutation][data_name] = dict()
 
                     learn, duration = self._learn(
-                        dataset, permutation, early_stopping
+                        dataset, permutation, early_stopping, learner_type
                     )
 
-                    if metric_fct is None:
+                    if metric_fct is None and learner_type == "cnn":
                         _, metric = learn.validate(
-                            learn.data.valid_dl, metrics=[accuracy]
+                            learn.data.valid_dl,
+                            metrics=[accuracy]
+                        )
+
+                    elif learner_type == "unet":
+                        _, metric = learn.validate(
+                            learn.data.valid_dl
                         )
 
                     else:
@@ -487,5 +559,7 @@ class ParameterSweeper:
                     ] = float(metric)
 
                     learn.destroy()
+
+                    count+=1
 
         return self._make_df_from_dict(res)
