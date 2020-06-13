@@ -61,7 +61,7 @@ def read_classes_file(classes_filepath):
     Read file that maps class names to class IDs. The file should be in the format:
         ActionName1 0
         ActionName2 1
-    
+
     :param classes_filepath: str
         The filepath of the classes file
     :return: dict

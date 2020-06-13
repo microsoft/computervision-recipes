@@ -51,11 +51,7 @@ def torch_device():
 
 def num_devices():
     """ Gets the number of devices based on cpu/gpu """
-    return (
-        torch.cuda.device_count()
-        if torch.cuda.is_available()
-        else 1
-    )
+    return torch.cuda.device_count() if torch.cuda.is_available() else 1
 
 
 def db_num_workers(non_windows_num_workers: int = 16):
