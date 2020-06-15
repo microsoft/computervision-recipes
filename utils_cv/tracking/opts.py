@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import argparse
 import os
 import os.path as osp
@@ -7,185 +10,121 @@ class opts(object):
     """
     Defines options for experiment settings, system settings, logging, model params, 
     input config, training config, testing config, and tracking params.
-    """ 
+    """
+
     def __init__(
         self,
         root_dir: str = os.getcwd(),
-        task: str = "mot",
-        dataset: str = "jde",
-        exp_id: str = "default",
-        test: bool = True,
-        load_model: str = "",
-        resume: bool = True,
         gpus: str = "0, 1",
-        num_workers: int = 8,
-        not_cuda_benchmark: bool = True,
-        seed: int = 317,
-        print_iter: int = 0,
-        hide_data_time: bool = True,
-        save_all: bool = True,
-        metric: str = "loss",
-        vis_thresh: float = 0.5,
+        save_all: bool = False,
         arch: str = "dla_34",
         head_conv: int = -1,
-        down_ratio: int = 4,
-        input_res: int = -1,
         input_h: int = -1,
         input_w: int = -1,
         lr: float = 1e-4,
         lr_step: str = "20,27",
         num_epochs: int = 30,
-        batch_size: int = 12,
-        master_batch_size: int = -1,
         num_iters: int = -1,
         val_intervals: int = 5,
-        trainval: bool = True,
-        K: int = 128,
-        not_prefetch_test: bool = True,
-        fix_res: bool = True,
-        keep_res: bool = True,
-        test_mot16: bool = False,
-        val_mot15: bool = False,
-        test_mot15: bool = False,
-        val_mot16: bool = False,
-        test_mot17: bool = False,
-        val_mot17: bool = False,
-        val_mot20: bool = False,
-        test_mot20: bool = False,
         conf_thres: float = 0.6,
         det_thres: float = 0.3,
         nms_thres: float = 0.4,
         track_buffer: int = 30,
         min_box_area: float = 200,
-        input_video: str = "../videos/MOT16-03.mp4",
-        output_format: str = "video",
-        output_root: str = "../results",
-        data_cfg: str = "../src/lib/cfg/data.json",
-        data_dir: str = "/data/yfzhang/MOT/JDE",
-        mse_loss: bool = True,
-        reg_loss: str = "l1",
-        hm_weight: float = 1,
-        off_weight: float = 1,
-        wh_weight: float = 0.1,
-        id_loss: str = "ce",
-        id_weight: float = 1,
         reid_dim: int = 512,
-        norm_wh: bool = True,
-        dense_wh: bool = True,
-        cat_spec_wh: bool = True,
-        not_reg_offset: bool = True,
     ) -> None:
-        opt = argparse.Namespace()
+        self._init_opt()
 
-        # basic experiment setting
-        opt.task = task
-        opt.dataset = dataset
-        opt.exp_id = exp_id
-        opt.test = test
-        opt.load_model = load_model
-        opt.resume = resume
+        self.gpus = gpus
+        self.save_all = save_all
+        self.arch = arch
+        self.head_conv = head_conv if head_conv != -1 else 256  # init default
+        self.input_h = input_h
+        self.input_w = input_w
+        self.lr = lr
+        self.lr_step = lr_step
+        self.num_epochs = num_epochs
+        self.val_intervals = val_intervals
+        self.conf_thres = conf_thres
+        self.det_thres = det_thres
+        self.nms_thres = nms_thres
+        self.track_buffer = track_buffer
+        self.min_box_area = min_box_area
+        self.reid_dim = reid_dim
+        self.root_dir = root_dir
 
-        opt.gpus_str = gpus
-        opt.gpus = [int(gpu) for gpu in gpus.split(",")]
-        opt.gpus = (
-            [i for i in range(len(opt.gpus))] if opt.gpus[0] >= 0 else [-1]
-        )
-
-        opt.num_workers = num_workers
-        opt.not_cuda_benchmark = not_cuda_benchmark
-        opt.seed = seed
-        opt.print_iter = print_iter
-        opt.hide_data_time = hide_data_time
-        opt.save_all = save_all
-        opt.metric = metric
-        opt.vis_thresh = vis_thresh
-        opt.arch = arch
-
-        opt.head_conv = head_conv
-        if opt.head_conv == -1:  # init default
-            opt.head_conv = 256
-        opt.pad = 31
-        opt.num_stacks = 1
-
-        opt.down_ratio = down_ratio
-        opt.input_res = input_res
-        opt.input_h = input_h
-        opt.input_w = input_w
-        opt.lr = lr
-        opt.lr_step = [int(i) for i in lr_step.split(",")]
-        opt.num_epochs = num_epochs
-        opt.batch_size = batch_size
-
-        opt.master_batch_size = master_batch_size
-        if opt.master_batch_size == -1:
-            opt.master_batch_size = opt.batch_size // len(opt.gpus)
-        rest_batch_size = opt.batch_size - opt.master_batch_size
-        opt.chunk_sizes = [opt.master_batch_size]
-        for i in range(len(opt.gpus) - 1):
-            slave_chunk_size = rest_batch_size // (len(opt.gpus) - 1)
-            if i < rest_batch_size % (len(opt.gpus) - 1):
-                slave_chunk_size += 1
-            opt.chunk_sizes.append(slave_chunk_size)
-
-        opt.num_iters = num_iters
-        opt.val_intervals = val_intervals
-
-        opt.trainval = trainval
-        if opt.trainval:
-            opt.val_intervals = 100000000
-
-        opt.K = K
-        opt.not_prefetch_test = not_prefetch_test
-        opt.fix_res = fix_res
-        opt.keep_res = keep_res
-        opt.fix_res = not keep_res
-        opt.test_mot16 = test_mot16
-        opt.val_mot15 = val_mot15
-        opt.test_mot15 = test_mot15
-        opt.val_mot16 = val_mot16
-        opt.test_mot16 = test_mot16
-        opt.val_mot17 = val_mot17
-        opt.val_mot20 = val_mot20
-        opt.test_mot20 = test_mot20
-        opt.conf_thres = conf_thres
-        opt.det_thres = det_thres
-        opt.nms_thres = nms_thres
-        opt.track_buffer = track_buffer
-        opt.min_box_area = min_box_area
-        opt.input_video = input_video
-        opt.output_format = output_format
-        opt.output_root = output_root
-        opt.data_cfg = data_cfg
-        opt.data_dir = data_dir
-        opt.mse_loss = mse_loss
-        opt.reg_loss = reg_loss
-        opt.hm_weight = hm_weight
-        opt.off_weight = off_weight
-        opt.wh_weight = wh_weight
-        opt.id_loss = id_loss
-        opt.id_weight = id_weight
-        opt.reid_dim = reid_dim
-        opt.norm_wh = norm_wh
-        opt.dense_wh = dense_wh
-        opt.cat_spec_wh = cat_spec_wh
-        opt.not_reg_offset = not_reg_offset
-        opt.reg_offset = not opt.not_reg_offset
-
-        opt.root_dir = root_dir
-        opt.exp_dir = osp.join(opt.root_dir, "exp", opt.task)
-        opt.save_dir = osp.join(opt.exp_dir, opt.exp_id)
-        opt.debug_dir = osp.join(opt.save_dir, "debug")
-
-        if opt.resume and opt.load_model == "":
-            model_path = (
-                opt.save_dir[:-4]
-                if opt.save_dir.endswith("TEST")
-                else opt.save_dir
-            )
-            opt.load_model = osp.join(model_path, "model_last.pth")
-
-        self.opt = opt
+        self._init_batch_sizes(batch_size=12, master_batch_size=-1)
         self._init_dataset_info()
+
+    def _init_opt(self) -> None:
+        """ Default values for params that aren't exposed by TrackingLearner """
+        self._opt = argparse.Namespace()
+
+        self._opt.task = "mot"
+        self._opt.dataset = "jde"
+        self._opt.exp_id = "default"
+        self._opt.test = False
+        self._opt.load_model = ""
+        self._opt.resume = False
+        self._opt.num_workers = 8
+        self._opt.not_cuda_benchmark = False
+        self._opt.seed = 317
+        self._opt.print_iter = 0
+        self._opt.hide_data_time = False
+        self._opt.metric = "loss"
+        self._opt.vis_thresh = 0.5
+        self._opt.pad = 31
+        self._opt.num_stacks = 1
+        self._opt.down_ratio = 4
+        self._opt.input_res = -1
+        self._opt.num_iters = -1
+        self._opt.trainval = False
+        self._opt.K = 128
+        self._opt.not_prefetch_test = True
+        self._opt.keep_res = False
+        self._opt.fix_res = not self._opt.keep_res
+        self._opt.test_mot16 = False
+        self._opt.val_mot15 = False
+        self._opt.test_mot15 = False
+        self._opt.val_mot16 = False
+        self._opt.test_mot16 = False
+        self._opt.val_mot17 = False
+        self._opt.val_mot20 = False
+        self._opt.test_mot20 = False
+        self._opt.input_video = ""
+        self._opt.output_format = "video"
+        self._opt.output_root = ""
+        self._opt.data_cfg = ""
+        self._opt.data_dir = ""
+        self._opt.mse_loss = False
+        self._opt.hm_gauss = 8
+        self._opt.reg_loss = "l1"
+        self._opt.hm_weight = 1
+        self._opt.off_weight = 1
+        self._opt.wh_weight = 0.1
+        self._opt.id_loss = "ce"
+        self._opt.id_weight = 1
+        self._opt.norm_wh = False
+        self._opt.dense_wh = False
+        self._opt.cat_spec_wh = False
+        self._opt.not_reg_offset = False
+        self._opt.reg_offset = not self._opt.not_reg_offset
+
+    def _init_batch_sizes(self, batch_size, master_batch_size) -> None:
+        self._opt.batch_size = batch_size
+
+        self._opt.master_batch_size = (
+            master_batch_size
+            if master_batch_size != -1
+            else self._opt.batch_size // len(self._opt.gpus)
+        )
+        rest_batch_size = self._opt.batch_size - self._opt.master_batch_size
+        self._opt.chunk_sizes = [self._opt.master_batch_size]
+        for i in range(len(self.gpus) - 1):
+            chunk = rest_batch_size // (len(self._opt.gpus) - 1)
+            if i < rest_batch_size % (len(self._opt.gpus) - 1):
+                chunk += 1
+            self._opt.chunk_sizes.append(chunk)
 
     def _init_dataset_info(self) -> None:
         default_dataset_info = {
@@ -204,48 +143,247 @@ class opts(object):
                 for k, v in entries.items():
                     self.__setattr__(k, v)
 
-        dataset = Struct(default_dataset_info[self.opt.task])
-        self.opt.dataset = dataset.dataset
+        dataset = Struct(default_dataset_info[self._opt.task])
+        self._opt.dataset = dataset.dataset
         self.update_dataset_info_and_set_heads(dataset)
 
     def update_dataset_res(self, input_h, input_w) -> None:
-        self.opt.input_h = input_h
-        self.opt.input_w = input_w
-        self.opt.output_h = self.opt.input_h // self.opt.down_ratio
-        self.opt.output_w = self.opt.input_w // self.opt.down_ratio
-        self.opt.input_res = max(self.opt.input_h, self.opt.input_w)
-        self.opt.output_res = max(self.opt.output_h, self.opt.output_w)
+        self._opt.input_h = input_h
+        self._opt.input_w = input_w
+        self._opt.output_h = self._opt.input_h // self._opt.down_ratio
+        self._opt.output_w = self._opt.input_w // self._opt.down_ratio
+        self._opt.input_res = max(self._opt.input_h, self._opt.input_w)
+        self._opt.output_res = max(self._opt.output_h, self._opt.output_w)
 
     def update_dataset_info_and_set_heads(self, dataset) -> None:
         input_h, input_w = dataset.default_resolution
-        self.opt.mean, self.opt.std = dataset.mean, dataset.std
-        self.opt.num_classes = dataset.num_classes
+        self._opt.mean, self._opt.std = dataset.mean, dataset.std
+        self._opt.num_classes = dataset.num_classes
 
         # input_h(w): opt.input_h overrides opt.input_res overrides dataset default
-        input_h = self.opt.input_res if self.opt.input_res > 0 else input_h
-        input_w = self.opt.input_res if self.opt.input_res > 0 else input_w
-        self.opt.input_h = (
-            self.opt.input_h if self.opt.input_h > 0 else input_h
-        )
-        self.opt.input_w = (
-            self.opt.input_w if self.opt.input_w > 0 else input_w
-        )
-        self.opt.output_h = self.opt.input_h // self.opt.down_ratio
-        self.opt.output_w = self.opt.input_w // self.opt.down_ratio
-        self.opt.input_res = max(self.opt.input_h, self.opt.input_w)
-        self.opt.output_res = max(self.opt.output_h, self.opt.output_w)
+        input_h = self._opt.input_res if self._opt.input_res > 0 else input_h
+        input_w = self._opt.input_res if self._opt.input_res > 0 else input_w
+        self.input_h = self._opt.input_h if self._opt.input_h > 0 else input_h
+        self.input_w = self._opt.input_w if self._opt.input_w > 0 else input_w
+        self._opt.output_h = self._opt.input_h // self._opt.down_ratio
+        self._opt.output_w = self._opt.input_w // self._opt.down_ratio
+        self._opt.input_res = max(self._opt.input_h, self._opt.input_w)
+        self._opt.output_res = max(self._opt.output_h, self._opt.output_w)
 
-        if self.opt.task == "mot":
-            self.opt.heads = {
-                "hm": self.opt.num_classes,
+        if self._opt.task == "mot":
+            self.heads = {
+                "hm": self._opt.num_classes,
                 "wh": 2
-                if not self.opt.cat_spec_wh
-                else 2 * self.opt.num_classes,
-                "id": self.opt.reid_dim,
+                if not self._opt.cat_spec_wh
+                else 2 * self._opt.num_classes,
+                "id": self._opt.reid_dim,
             }
-            if self.opt.reg_offset:
+            if self._opt.reg_offset:
                 self.heads.update({"reg": 2})
-            self.opt.nID = dataset.nID
-            self.opt.img_size = (self.opt.input_w, self.opt.input_h)
+            self._opt.nID = dataset.nID
+            self._opt.img_size = (self._opt.input_w, self._opt.input_h)
         else:
             assert 0, "task not defined"
+
+    ### getters and setters ###
+    @property
+    def gpus(self):
+        return self._gpus
+
+    @gpus.setter
+    def gpus(self, value):
+        self._gpus_str = value
+        gpus_list = [int(gpu) for gpu in value.split(",")]
+        self._gpus = (
+            [i for i in range(len(gpus_list))] if gpus_list[0] >= 0 else [-1]
+        )
+        self._opt.gpus_str = self._gpus_str
+        self._opt.gpus = self._gpus
+
+    @property
+    def save_all(self):
+        return self._save_all
+
+    @save_all.setter
+    def save_all(self, value):
+        self._save_all = value
+        self._opt.save_all = self._save_all
+
+    @property
+    def arch(self):
+        return self._arch
+
+    @arch.setter
+    def arch(self, value):
+        self._arch = value
+        self._opt.arch = self._arch
+
+    @property
+    def head_conv(self):
+        return self._head_conv
+
+    @head_conv.setter
+    def head_conv(self, value):
+        self._head_conv = value
+        self._opt.head_conv = self._head_conv
+
+    @property
+    def input_h(self):
+        return self._input_h
+
+    @input_h.setter
+    def input_h(self, value):
+        self._input_h = value
+        self._opt.input_h = self._input_h
+
+    @property
+    def input_w(self):
+        return self._input_w
+
+    @input_w.setter
+    def input_w(self, value):
+        self._input_w = value
+        self._opt.input_w = self._input_w
+
+    @property
+    def lr(self):
+        return self._lr
+
+    @lr.setter
+    def lr(self, value):
+        self._lr = value
+        self._opt.lr = self._lr
+
+    @property
+    def lr_step(self):
+        return self._lr_step
+
+    @lr_step.setter
+    def lr_step(self, value):
+        self._lr_step = [int(i) for i in value.split(",")]
+        self._opt.lr_step = self._lr_step
+
+    @property
+    def num_epochs(self):
+        return self._num_epochs
+
+    @num_epochs.setter
+    def num_epochs(self, value):
+        self._num_epochs = value
+        self._opt.num_epochs = self._num_epochs
+
+    @property
+    def val_intervals(self):
+        return self._val_intervals
+
+    @val_intervals.setter
+    def val_intervals(self, value):
+        self._val_intervals = value
+        self._opt.val_intervals = self._val_intervals
+
+    @property
+    def conf_thres(self):
+        return self._conf_thres
+
+    @conf_thres.setter
+    def conf_thres(self, value):
+        self._conf_thres = value
+        self._opt.conf_thres = self._conf_thres
+
+    @property
+    def det_thres(self):
+        return self._det_thres
+
+    @det_thres.setter
+    def det_thres(self, value):
+        self._det_thres = value
+        self._opt.det_thres = self._det_thres
+
+    @property
+    def nms_thres(self):
+        return self._nms_thres
+
+    @nms_thres.setter
+    def nms_thres(self, value):
+        self._nms_thres = value
+        self._opt.nms_thres = self._nms_thres
+
+    @property
+    def track_buffer(self):
+        return self._track_buffer
+
+    @track_buffer.setter
+    def track_buffer(self, value):
+        self._track_buffer = value
+        self._opt.track_buffer = self._track_buffer
+
+    @property
+    def min_box_area(self):
+        return self._min_box_area
+
+    @min_box_area.setter
+    def min_box_area(self, value):
+        self._min_box_area = value
+        self._opt.min_box_area = self._min_box_area
+
+    @property
+    def reid_dim(self):
+        return self._reid_dim
+
+    @reid_dim.setter
+    def reid_dim(self, value):
+        self._reid_dim = value
+        self._opt.reid_dim = self._reid_dim
+
+    @property
+    def root_dir(self):
+        return self._root_dir
+
+    @root_dir.setter
+    def root_dir(self, value):
+        self._root_dir = value
+        self._opt.root_dir = self._root_dir
+
+        self._exp_dir = osp.join(self._root_dir, "exp", self._opt.task)
+        self._opt.exp_dir = self._exp_dir
+
+        self._save_dir = osp.join(self._exp_dir, self._opt.exp_id)
+        self._opt.save_dir = self._save_dir
+
+        self._debug_dir = osp.join(self._save_dir, "debug")
+        self._opt.debug_dir = self._debug_dir
+
+    @property
+    def device(self):
+        return self._device
+
+    @device.setter
+    def device(self, value):
+        self._device = value
+        self._opt.device = self._device
+
+    @property
+    def heads(self):
+        return self._heads
+
+    @heads.setter
+    def heads(self, value):
+        self._heads = value
+        self._opt.heads = self._heads
+
+    ### getters only ####
+    @property
+    def opt(self):
+        return self._opt
+
+    @property
+    def task(self):
+        return self._opt.task
+
+    @property
+    def save_dir(self):
+        return self.opt._save_dir
+
+    @property
+    def chunk_sizes(self):
+        return self._opt.chunk_sizes
