@@ -19,7 +19,6 @@ class opts(object):
         save_all: bool = False,
         arch: str = "dla_34",
         head_conv: int = -1,
-        down_ratio: int = 4,
         input_h: int = -1,
         input_w: int = -1,
         lr: float = 1e-4,
@@ -40,7 +39,6 @@ class opts(object):
         self.save_all = save_all
         self.arch = arch
         self.head_conv = head_conv if head_conv != -1 else 256  # init default
-        self.down_ratio = down_ratio
         self.input_h = input_h
         self.input_w = input_w
         self.lr = lr
@@ -77,6 +75,7 @@ class opts(object):
         self._opt.vis_thresh = 0.5
         self._opt.pad = 31
         self._opt.num_stacks = 1
+        self._opt.down_ratio = 4
         self._opt.input_res = -1
         self._opt.num_iters = -1
         self._opt.trainval = False
@@ -227,15 +226,6 @@ class opts(object):
     def head_conv(self, value):
         self._head_conv = value
         self._opt.head_conv = self._head_conv
-
-    @property
-    def down_ratio(self):
-        return self._down_ratio
-
-    @down_ratio.setter
-    def down_ratio(self, value):
-        self._down_ratio = value
-        self._opt.down_ratio = self._down_ratio
 
     @property
     def input_h(self):

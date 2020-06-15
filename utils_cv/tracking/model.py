@@ -4,10 +4,11 @@
 import argparse
 import os
 import os.path as osp
-from typing import List, Dict, Tuple
+from typing import Dict, List
 import requests
 
 import torch
+import torch.cuda as cuda
 import torch.nn as nn
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
@@ -67,6 +68,12 @@ def _download_baseline(url, destination) -> None:
 
     save_response_content(response, destination)
 
+def _get_gpu_str():
+    if cuda.is_available():
+        devices = [str(x) for x in range(cuda.device_count())]
+        return ",".join(devices)
+    else:
+        return "-1"  # cpu
 
 class TrackingLearner(object):
     """Tracking Learner for Multi-Object Tracking"""
@@ -99,8 +106,6 @@ class TrackingLearner(object):
 
         self.dataset = dataset
         self.model = model if model is not None else self.init_model()
-
-        # TODO setup logging
 
     def init_model(self) -> nn.Module:
         """
@@ -177,10 +182,8 @@ class TrackingLearner(object):
         for epoch in range(self.start_epoch + 1, self.opt.num_epochs + 1):
             mark = epoch if self.opt.save_all else "last"
             log_dict_train, _ = trainer.train(epoch, train_loader)
-            ## TODO logging
             if epoch in self.opt.lr_step:
                 lr = self.opt.lr * (0.1 ** (self.opt.lr_step.index(epoch) + 1))
-                ## TODO logging
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
 
@@ -235,7 +238,6 @@ class TrackingLearner(object):
         out = {}
         results = []
         for path, img, img0 in dataloader:
-            # TODO logging
             blob = torch.from_numpy(img).cuda().unsqueeze(0)
             online_targets = self.tracker.update(blob, img0)
             online_bboxes = []
@@ -252,7 +254,6 @@ class TrackingLearner(object):
             out[frame_id] = online_bboxes
             frame_id += 1
 
-        # TODO add some option to save - in tlbr (consistent with cvbp) or tlwh (consistent with fairmot)?
         return out
 
     def get_dataloader(self, im_or_video_path: str) -> DataLoader:

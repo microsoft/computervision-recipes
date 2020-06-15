@@ -78,10 +78,3 @@ def system_info():
     else:
         print("CPUs only, no GPUs found")
 
-
-def get_gpu_str():
-    if cuda.is_available():
-        devices = [str(x) for x in range(cuda.device_count())]
-        return ",".join(devices)
-    else:
-        return "-1"  # cpu

@@ -19,32 +19,27 @@ class TrackingDataset:
         data_root: str,
         name: str = "default",
         batch_size: int = 12,
-        down_ratio: int = 4,
     ) -> None:
         """
         Args:
             data_root: root data directory containing image and annotation subdirectories
             name: user-friendly name for the dataset
             batch_size: batch size
-            down_ratio: downsampling ratio
-        
-        TODO: train-test split
         """
         transforms = T.Compose([T.ToTensor()])
         self.batch_size = batch_size
 
         opt = opts()
-        opt.down_ratio = down_ratio
 
-        train_data_list = osp.join(data_root, "{}.train".format(name))
-        with open(train_data_list, "a") as f:
-            for im in sorted(os.listdir(osp.join(data_root, "images"))):
-                f.write(osp.join("images", im) + "\n")
+        train_list_path = osp.join(data_root, "{}.train".format(name))
+        with open(train_list_path, "a") as f:
+            for im_name in sorted(os.listdir(osp.join(data_root, "images"))):
+                f.write(osp.join("images", im_name) + "\n")
 
         self.train_data = JointDataset(
             opt.opt,
             data_root,
-            {name: train_data_list},
+            {name: train_list_path},
             (opt.input_w, opt.input_h),
             augment=True,
             transforms=transforms,
