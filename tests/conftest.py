@@ -50,7 +50,7 @@ from utils_cv.segmentation.data import Urls as seg_urls
 from utils_cv.segmentation.dataset import load_im, load_mask
 from utils_cv.segmentation.model import (
     confusion_matrix,
-    get_objective_fct,
+    get_ratio_correct_metric,
     predict,
 )
 from utils_cv.similarity.data import Urls as is_urls
@@ -970,7 +970,7 @@ def seg_learner(tiny_seg_databunch, seg_classes):
         tiny_seg_databunch,
         models.resnet18,
         wd=1e-2,
-        metrics=get_objective_fct(seg_classes),
+        metrics=get_ratio_correct_metric(seg_classes),
     )
 
 
