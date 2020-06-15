@@ -77,3 +77,4 @@ def system_info():
             print(f"{i}: {cuda.get_device_name(i)}")
     else:
         print("CPUs only, no GPUs found")
+
