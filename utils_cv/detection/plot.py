@@ -268,6 +268,9 @@ def plot_detections(
     idx: int = None,
     keypoint_meta: Dict = None,
     ax: plt.axes = None,
+    text_size: int = None,
+    rect_th: int = None,
+    keypoint_th = None,
 ) -> PIL.Image.Image:
     """ Put mask onto image.
 
@@ -278,16 +281,24 @@ def plot_detections(
         keypoint_meta: meta data of keypoints which should include at least
             "skeleton".
         ax: an optional ax to specify where you wish the figure to be drawn on
+        text_size: override text size
+        rect_th: override thickness of annotation rectangles
+        key
     """
     # Open image
     assert detection["im_path"], 'Detection["im_path"] should not be None.'
     im = Image.open(detection["im_path"])
 
+    default_plot_settings = PlotSettings()
+    if not text_size: text_size = default_plot_settings.text_size
+    if not rect_th: rect_th = default_plot_settings.rect_th
+    if not keypoint_th: keypoint_th = default_plot_settings.keypoint_th
+
     # Adjust the rectangle thickness etc. to the image resolution
     scale = max(im.size) / 500.0
-    rect_th = int(PlotSettings().rect_th * scale)
-    text_size = int(PlotSettings().text_size * scale)
-    keypoint_th = int(PlotSettings().keypoint_th * scale)
+    rect_th = int(rect_th * scale)
+    text_size = int(text_size * scale)
+    keypoint_th = int(keypoint_th * scale)
 
     # Get id of ground truth image/annotation
     if data and idx is None:
