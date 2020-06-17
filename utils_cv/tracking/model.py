@@ -4,7 +4,7 @@
 import argparse
 import os
 import os.path as osp
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import requests
 
 import torch
@@ -24,7 +24,7 @@ from .references.fairmot.trains.train_factory import train_factory
 from .bbox import TrackingBbox
 from .dataset import TrackingDataset
 from .opts import opts
-from ..common.gpu import torch_device, get_gpu_str
+from ..common.gpu import torch_device #, get_gpu_str
 
 BASELINE_URL = (
     "https://drive.google.com/open?id=1udpOPum8fJdoEQm6n0jsIgMMViOMFinu"
@@ -101,7 +101,7 @@ class TrackingLearner(object):
         self.opt = opts()
         self.opt.arch = arch
         self.opt.head_conv = head_conv if head_conv else -1
-        self.opt.gpus = get_gpu_str()
+        self.opt.gpus = _get_gpu_str() # self.opt.gpus = get_gpu_str()
         self.opt.device = torch_device()
 
         self.dataset = dataset
@@ -171,6 +171,9 @@ class TrackingLearner(object):
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), self.opt.lr)
         self.start_epoch = 0
+        
+        self.losses_dict = {key: [] for key in ['loss', 'hm_loss', 'wh_loss', 'off_loss', 'id_loss']}
+        self.epochs = []
 
         Trainer = train_factory[self.opt.task]
         trainer = Trainer(self.opt.opt, self.model, self.optimizer)
@@ -180,13 +183,36 @@ class TrackingLearner(object):
 
         # training loop
         for epoch in range(self.start_epoch + 1, self.opt.num_epochs + 1):
+            self.epochs.append(epoch)
+            print("Running epoch ", epoch,"...")
             mark = epoch if self.opt.save_all else "last"
             log_dict_train, _ = trainer.train(epoch, train_loader)
             if epoch in self.opt.lr_step:
                 lr = self.opt.lr * (0.1 ** (self.opt.lr_step.index(epoch) + 1))
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
+            # Saving losses        
+            for k, v in log_dict_train.items():
+                if k in ['loss', 'hm_loss', 'wh_loss', 'off_loss', 'id_loss']:
+                    self.losses_dict[k].append(v)
 
+    def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5))->None: 
+        '''Plots training loss from calling `fit`  '''
+        fig = plt.figure(figsize=figsize)
+        ax1 = fig.add_subplot(1, 1, 1)
+       
+        ax1.set_xticks(self.epochs)
+        ax1.set_xlabel("epochs")
+        ax1.set_ylabel("losses")
+        ax1.plot(self.losses_dict['loss'], c="r", label='loss')
+        ax1.plot(self.losses_dict['hm_loss'], c="y", label='hm_loss')
+        ax1.plot(self.losses_dict['wh_loss'], c="g", label='wh_loss')
+        ax1.plot(self.losses_dict['off_loss'], c="b", label='off_loss')
+        ax1.plot(self.losses_dict['id_loss'], c="m", label='id_loss')
+
+        plt.legend(loc='upper right')
+        fig.suptitle("Loss over epochs during training")
+    
     def predict(
         self,
         im_or_video_path: str,
