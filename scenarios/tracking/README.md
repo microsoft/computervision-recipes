@@ -16,7 +16,7 @@ As seen in the figure below ([Ciaparrone, 2019](https://arxiv.org/pdf/1907.12740
 * Association: Based on these scores/probabilities, a specific numerical ID is assigned to each detected object as it is tracked across successive image frames (step 5).
 
 <p align="center">
-<img src="./media/figure_MOTmodules.png" width="600" align="center"/>
+<img src="./media/figure_MOTmodules.jpg" width="600" align="center"/>
 </p> 
 
 
@@ -25,7 +25,7 @@ As seen in the figure below ([Ciaparrone, 2019](https://arxiv.org/pdf/1907.12740
 In general, MOT algorithms can be divided into online tracking and offline tracking, which differ at the data association step. In online tracking, only the observations up to the current frame are taken into consideration when processing a new frame: typically, the new detections in the new frame are associated with tracks generated previously from the previous frame (see figure below), thus existing tracks are extended or new tracks are created. In offline tracking, all observations in a batch of frames are considered globally (see figure below), in that they are linked together into tracks by obtaining a global optimal solution. In this way, offline tracking can perform better with tracking issues such as long-term occlusion, or similar targets that are spatially close. However, offline tracking is slow not suitable for online tasks, such as for autonomous driving. Recently, research has focused on online tracking algorithms, which have reached the performance of offline-tracking, while still maintaining high inference speed. 
 
 <p align="center">
-<img src="./media/fig_onlineBatch.png" width="400" align="center"/>
+<img src="./media/fig_onlineBatch.jpg" width="400" align="center"/>
 </p>
 
 
@@ -41,20 +41,20 @@ SoTA tracking algorithms differ in terms of the techniques used in the MOT modul
     * Newer algorithms have a deep-learning based feature representation, with optionally, a Kalman Filter for motion prediction. 
     * The most common deep-learning approaches use classical CNN to extract visual features, typically trained on re-id datasets, such as the [MARS dataset](http://www.liangzheng.com.cn/Project/project_mars.html). The following figure is an example of a CNN used for MOT by the [DeepSORT tracker](https://arxiv.org/pdf/1703.07402.pdf):
         <p align="center">
-        <img src="./media/figure_DeepSortCNN.png" width="600" align="center"/>
+        <img src="./media/figure_DeepSortCNN.jpg" width="600" align="center"/>
         </p>
     * Newer deep-learning approaches include Siamese CNN networks, LSTM networks, or CNN with correlation filters. 
         * In Siamese CNN networks, a pair of CNN networks is used to measure similarity between two objects, and the CNNs are trained with loss functions that learn features that best differentiates them. #TODO: @Liqun,source of images
              <p align="center">
-            <img src="./media/figure_SiameseNetwork.png" width="400" align="center"/>
+            <img src="./media/figure_SiameseNetwork.jpg" width="400" align="center"/>
             </p>
         * In LSTM network, extracted features from different detections in different time frames are used as inputs to a LSTM network, which predicts the bounding box for the next frame based on the input history.
              <p align="center">
-            <img src="./media/figure_LSTM.png" width="550" align="center"/>
+            <img src="./media/figure_LSTM.jpg" width="550" align="center"/>
             </p>
         * Correlation filters can also be convolved with feature maps from CNN network to generate a prediction of the target's location in the next time frame. This was done by [Ma et al](https://faculty.ucmerced.edu/mhyang/papers/iccv15_tracking.pdf) as follows:
             <p align="center">
-            <img src="./media/figure_CNNcorrFilters.png" width="500" align="center"/>
+            <img src="./media/figure_CNNcorrFilters.jpg" width="500" align="center"/>
             </p>
    
 * Affinity & association:
@@ -68,31 +68,31 @@ Typical tracking algorithms address the detection and feature extraction process
  While the JDE model does not improve tracking performance, the FairMOT model does: as seen in the table below, JDE has a much worse ID-switch number [(Zhang et al, 2020)](https://arxiv.org/pdf/1909.12605.pdf). This is because the FairMOT model uses a typical anchor-based object detector network for feature embedding with a downsampled feature map, leading to a mis-alignment between the anchors and object center, hence re-iding issues. FairMOT solves these issues by: (i) estimating the object center instead of the anchors and using a higher resolution feature map for object detection and feature embedding, (ii) aggregating high-level and low-level features to handle scale variations across different sizes of objects.
 
 <p align="center">
-<img src="./media/table_trackerPerformance.png" width="400" align="center"/>
+<img src="./media/table_trackerPerformance.jpg" width="400" align="center"/>
 </p>
 
 ### Evaluation metrics
 As multi-object-tracking is a complex CV task, there exists many different metrics to evaluate the tracking performance.  Based on how they are computed, metrics can be event-based [CLEARMOT metrics](https://link.springer.com/content/pdf/10.1155/2008/246309.pdf) or [id-based metrics](https://arxiv.org/pdf/1609.01775.pdf). The main metrics used to gauge performance in the [MOT benchmarking challenge](https://motchallenge.net/results/MOT16/) include MOTA, IDF1, and ID-switch.
 * MOTA (Multiple Object Tracking Accuracy): it gauges overall accuracy performance, with event-based computation of how often mismatch occurs between the tracking results and ground-truth. MOTA contains the counts of FP (false-positive), FN(false negative) and id-switches (IDSW), normalized over the total number of ground-truth (GT) tracks.
 <p align="center">
-<img src="./media/eqn_mota.png" width="200" align="center"/>
+<img src="./media/eqn_mota.jpg" width="200" align="center"/>
 </p>
 
 * IDF1: gauges overall performance, with id-based computation of how long the tracker correctly identifies the target. It is the harmonic mean of identification precision (IDP) and recall (IDR): 
 <p align="center">
-<img src="./media/eqn_idf1.png" width="200" align="center"/>
+<img src="./media/eqn_idf1.jpg" width="200" align="center"/>
 </p>
 
 * ID-switch: when the tracker incorrectly changes the ID of the trajectory. This is illustrated in the following figure: in the left box, person A and person B overlap and are not detected and tracked in frames 4-5, resulting in an id-switch in frame 6, where person A is attributed the ID_2, which previously tagged person B. In another example in the right box, the tracker lost track of person A (initially identified as ID_1) after frame 3, and eventually identified that person with a new ID (ID_2) in frame n, showing another instance of id-switch. 
 
 <p align="center">
-<img src="./media/fig_tracksEval.png" width="300" align="center"/>
+<img src="./media/fig_tracksEval.jpg" width="300" align="center"/>
 </p>
 
 
 ### Popular datasets
 <p align="center">
-<img src="./media/table_datasets.png" width="900" align="center"/>
+<img src="./media/table_datasets.jpg" width="900" align="center"/>
 </p>
 
 ### Popular publications
@@ -102,11 +102,11 @@ As multi-object-tracking is a complex CV task, there exists many different metri
 * Recent online & offline trackers, see table below #TODO: publication lists + deep-dive comments, check with @Liqun
 
 <p align="center">
-<img src="./media/table_onlinePub.png" width="900" align="center"/>
+<img src="./media/table_onlinePub.jpg" width="900" align="center"/>
 </p>
 
 <p align="center">
-<img src="./media/table_offlinePub.png" width="900" align="center"/>
+<img src="./media/table_offlinePub.jpg" width="900" align="center"/>
 </p>
 
 ## Notebooks
