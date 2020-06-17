@@ -36,7 +36,7 @@ This document tries to answer frequent questions related to multi-object trackin
 ## General
 
 ### Why FairMOT?
-FairMOT has shown the best performance in recent MOT benchmarking challenges, at fast inference speed. It is an online one-shot tracking algorithm. 
+FairMOT is an online one-shot tracking algorithm, that has shown the best performance in recent MOT benchmarking challenges, at fast inference speed.
 
 ### What are additional complexities that can be enhance the current multi-object tracking algorithm?
 * Multi-camera processing 

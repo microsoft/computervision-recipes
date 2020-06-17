@@ -7,13 +7,13 @@
 This directory provides examples and best practices for building multi-object tracking systems. Our goal is to enable the users to bring their own datasets and train a high-accuracy model easily. 
 
 ## Technology
-Multi-object-tracking (MOT) is one of the hot research topics in Computer Vision, due to its wide applications in autonomous driving, trffic surveillance, etc. It builds on object detection technology, in order to detect and track all objects in a dynamic scene over time, without any prior knowledge about the appearance and number of target objects. Inferring target trajectories correctly across successive image frames remains challenging: occlusion happens when objects overlap; the number of and appearance of objects. Compared to object detection algorithms, which aim to output rectangular bounding boxes around the objects, MOT algorithms additionally associated an ID number to each box to identify an object across the image frames. 
+Multi-object-tracking (MOT) is one of the hot research topics in Computer Vision, due to its wide applications in autonomous driving, traffic surveillance, etc. It builds on object detection technology, in order to detect and track all objects in a dynamic scene over time, without any prior knowledge about the appearance and number of target objects. Inferring target trajectories correctly across successive image frames remains challenging: occlusion happens when objects overlap; the number of and appearance of objects can change. Compared to object detection algorithms, which aim to output rectangular bounding boxes around the objects, MOT algorithms additionally associated an ID number to each box to identify that specific object across the image frames. 
 
 As seen in the figure below ([Ciaparrone, 2019](https://arxiv.org/pdf/1907.12740.pdf)), a typical multi-object-tracking algorithm performs part or all of the following steps:
-* Detection: Given the input raw image frames (step 1), the detector identifies object(s) on an image frame as bounding box(es) (step 2).
+* Detection: Given the input raw image frames (step 1), the detector identifies object(s) on each image frame as bounding box(es) (step 2).
 * Feature extraction/motion prediction: For every detected object, visual appearance and motion features are extracted (step 3). Sometimes, a motion predictor (e.g. Kalman Filter) is also added to predict the next position of each tracked target. 
 * Affinity: The feature and motion predictions are used to calculate similarity/distance scores between pairs of detections and/or tracklets, or the probabilities of detections belonging to a given target or tracklet (step 4). 
-* Association: Based on these scores/probabilities, a numerical ID is assigned to each detected object (step 5).
+* Association: Based on these scores/probabilities, a specific numerical ID is assigned to each detected object as it is tracked across successive image frames (step 5).
 
 <p align="center">
 <img src="./media/figure_MOTmodules.png" width="600" align="center"/>
@@ -73,20 +73,20 @@ Typical tracking algorithms address the detection and feature extraction process
 
 ### Evaluation metrics
 As multi-object-tracking is a complex CV task, there exists many different metrics to evaluate the tracking performance.  Based on how they are computed, metrics can be event-based [CLEARMOT metrics](https://link.springer.com/content/pdf/10.1155/2008/246309.pdf) or [id-based metrics](https://arxiv.org/pdf/1609.01775.pdf). The main metrics used to gauge performance in the [MOT benchmarking challenge](https://motchallenge.net/results/MOT16/) include MOTA, IDF1, and ID-switch.
-* MOTA (Multiple Object Tracking Accuracy): it gauges overall accuracy performance, with event-based computation of how often mismatch occurs between the tracking results and ground-truth. MOTA contains the counts of FP (false-positive), FN(false negative) and id-switches, normalized over the total number of ground-truth tracks.
+* MOTA (Multiple Object Tracking Accuracy): it gauges overall accuracy performance, with event-based computation of how often mismatch occurs between the tracking results and ground-truth. MOTA contains the counts of FP (false-positive), FN(false negative) and id-switches (IDSW), normalized over the total number of ground-truth (GT) tracks.
 <p align="center">
-<img src="./media/eqn_mota.png" width="100" align="center"/>
+<img src="./media/eqn_mota.png" width="200" align="center"/>
 </p>
 
 * IDF1: gauges overall performance, with id-based computation of how long the tracker correctly identifies the target. It is the harmonic mean of identification precision (IDP) and recall (IDR): 
 <p align="center">
-<img src="./media/eqn_idf1.png" width="100" align="center"/>
+<img src="./media/eqn_idf1.png" width="200" align="center"/>
 </p>
 
-* ID-switch: when the tracker incorrectly changes the ID of the trajectory. This is illustrated in the following figure: in the left box, person A and person B overlap and are not detected and tracked in frames 4-5, resulting in an id-switch in frame 6, where person A is attributed the ID 2, which previously tagged person B. In the right box, the tracker lost track of person A after frame 3, and eventually identified that person with a new ID in frame n, showing another instance of id-switch. 
+* ID-switch: when the tracker incorrectly changes the ID of the trajectory. This is illustrated in the following figure: in the left box, person A and person B overlap and are not detected and tracked in frames 4-5, resulting in an id-switch in frame 6, where person A is attributed the ID_2, which previously tagged person B. In another example in the right box, the tracker lost track of person A (initially identified as ID_1) after frame 3, and eventually identified that person with a new ID (ID_2) in frame n, showing another instance of id-switch. 
 
 <p align="center">
-<img src="./media/fig_tracksEval.png" width="400" align="center"/>
+<img src="./media/fig_tracksEval.png" width="300" align="center"/>
 </p>
 
 
