@@ -80,13 +80,13 @@ As multi-object-tracking is a complex CV task, there exists many different metri
 
 * IDF1: gauges overall performance, with id-based computation of how long the tracker correctly identifies the target. It is the harmonic mean of identification precision (IDP) and recall (IDR): 
 <p align="center">
-<img src="./media/eqn_idf1.jpg" width="300" align="center"/>
+<img src="./media/eqn_idf1.jpg" width="400" align="center"/>
 </p>
 
 * ID-switch: when the tracker incorrectly changes the ID of the trajectory. This is illustrated in the following figure: in the left box, person A and person B overlap and are not detected and tracked in frames 4-5, resulting in an id-switch in frame 6, where person A is attributed the ID_2, which previously tagged person B. In another example in the right box, the tracker lost track of person A (initially identified as ID_1) after frame 3, and eventually identified that person with a new ID (ID_2) in frame n, showing another instance of id-switch. 
 
 <p align="center">
-<img src="./media/fig_tracksEval.jpg" width="500" align="center"/>
+<img src="./media/fig_tracksEval.jpg" width="600" align="center"/>
 </p>
 
 
