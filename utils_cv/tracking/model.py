@@ -3,11 +3,11 @@
 
 import argparse
 from copy import deepcopy
+import glob
+import requests
 import os
 import os.path as osp
-from typing import Dict, List
-import requests
-import glob
+from typing import Dict, List, Tuple
 
 import torch
 import torch.cuda as cuda
@@ -213,8 +213,7 @@ class TrackingLearner(object):
         nms_thres: float = 0.4,
         track_buffer: int = 30,
         min_box_area: float = 200,
-        input_h: float = None,
-        input_w: float = None,
+        im_size: Tuple[float, float] = (None, None),
         frame_rate: int = 30,
     ) -> Dict[int, List[TrackingBbox]]:
         """
@@ -243,6 +242,7 @@ class TrackingLearner(object):
         opt_pred.track_buffer = track_buffer
         opt_pred.min_box_area = min_box_area
 
+        input_h, input_w = im_size
         input_height = input_h if input_h else -1
         input_width = input_w if input_w else -1
         opt_pred.update_dataset_res(input_height, input_width)

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 from collections import OrderedDict
 import os.path as osp
 from typing import Dict, List, Tuple
@@ -10,19 +13,18 @@ from .bbox import TrackingBbox
 
 def plot_results(
     results: Dict[int, List[TrackingBbox]],
-    video_path: str,
+    input_video: str,
+    output_video: str,
     frame_rate: int = 30,
-) -> str:
+) -> None:
     """ 
-    Plot the predicted tracks on the input video. Write the output to track_{input_name}.mp4.
+    Plot the predicted tracks on the input video. Write the output to {output_path}.
     
     Args:
         results: dictionary mapping frame id to a list of predicted TrackingBboxes
-        video_path: path to the input video
-        frame_rate: frame rate
-
-        Returns (str): 
-            path at which the txt file containing the bboxes and ids in MOT format has been saved.    
+        input_video: path to the input video
+        output_video: path to the output video
+        frame_rate: frame rate  
     """
     # convert results to dataframe in MOT challenge format
     preds = OrderedDict(sorted(results.items()))
@@ -43,23 +45,20 @@ def plot_results(
         bboxes, columns=["frame", "id", "left", "top", "width", "height",],
     )
 
-    data_dir, video_name = osp.split(video_path)
-    output_path = osp.join(data_dir, f"track_{video_name}")
-    _write_video(df, video_path, output_path, frame_rate)
+    _write_video(df, input_video, output_video, frame_rate)
     print(f"Output saved to {output_path}.")
 
     return output_path
 
 
 def _write_video(
-    df: pd.DataFrame, input_video: str, output_video: str, frame_rate: int
+    df: pd.DataFrame, input_video: str, output_video: str
 ) -> None:
     """     
     Args:
         df: DataFrame with columns [frame, id, left, top, width, height]
         input_video: path to the input video
         output_video: path to write out the output video
-        frame_rate: frame rate
     """
 
     # read video and initialize new tracking video
@@ -69,6 +68,7 @@ def _write_video(
     image_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
     image_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fourcc = cv2.VideoWriter_fourcc(*"MP4V")
+    frame_rate = int(video.get(cv2.FRAME_RATE))
     writer = cv2.VideoWriter(
         output_video, fourcc, frame_rate, (image_width, image_height)
     )
