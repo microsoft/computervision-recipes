@@ -1,0 +1,159 @@
+@media (max-width: 576px) { 
+  body {
+    padding-top:40px; 
+  }
+}
+canvas{
+  background-color: #F2F7F6;
+  width: 100%;
+}
+.icon {
+  display: inline-flex;
+  align-self: center;
+}
+
+.img-wrap {
+  position: relative;
+}
+
+.img-wrap-ph {
+  min-width: 150px;
+  min-height: 150px;
+  border-style: dashed;
+  border-color: grey;
+  border-width: thin;
+}
+
+.img-wrap .clearBtn {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  z-index: 100;
+}
+
+.hide{
+  display:none;
+}
+
+.show{
+  display:block;
+}
+
+.sImg {
+  cursor: pointer;
+  max-width: 150px;
+  max-height: 150px;
+}
+
+.eImg {
+  cursor: pointer;
+  max-width: 150px;
+  max-height: 150px;
+}
+
+#hidden {
+  display: none;
+}
+
+.thumbnails, #exampleImages {
+  width: 100%;
+  text-align: center;
+}
+
+.thumbnails > div {
+  display: inline-block;
+  vertical-align: top;
+  text-align:center;
+  /* margin:2%;   */
+}
+
+.item{
+  width:150px;
+  text-align:center;
+  display: inline-block;
+  background-color: transparent;
+  border: 1px solid transparent;
+}
+
+.card-body .imSim {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+} 
+
+.mainColor {
+  background-color: #1D7D72;
+}
+
+.nav-link-color {
+  color:#FFFFFF;
+}
+
+.font18 {
+ font-size:18px;
+}
+
+.tab-content {
+  border-top-left-radius: 0rem !important; 
+  border-top-right-radius: .25rem; 
+  border-top: 0px !important;
+}
+
+.tab-pane {
+  padding-left:0px !important;
+  padding-right:0px !important;
+}
+
+.span-font {
+  font-size: 1.3em;
+}
+
+.button-font {
+  color: #FFFFFF; 
+  font-size:18px;
+}
+
+.result-font {
+  color:#165A67;
+  font-size:24px;
+}
+
+
+.hide-overflow {
+  overflow:hidden;
+}
+
+/* The Modal (background) */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto; /* 5% from the top and centered */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button */
+.close {
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
