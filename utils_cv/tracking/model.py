@@ -177,15 +177,45 @@ class TrackingLearner(object):
         trainer.set_device(
             self.opt.gpus, self.opt.chunk_sizes, self.opt.device
         )
-
+        
+        # initialize loss vars
+        self.losses_dict = {key: [] for key in ['loss', 'hm_loss', 'wh_loss', 'off_loss', 'id_loss']} 
+        self.epochs = []
+        
         # training loop
         for epoch in range(self.start_epoch + 1, self.opt.num_epochs + 1):
+            print("Training in epoch ", epoch,"...")
             mark = epoch if self.opt.save_all else "last"
             log_dict_train, _ = trainer.train(epoch, train_loader)
             if epoch in self.opt.lr_step:
                 lr = self.opt.lr * (0.1 ** (self.opt.lr_step.index(epoch) + 1))
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
+                    
+            # store losses in each epoch            
+            self.epochs.append(epoch)
+            for k, v in log_dict_train.items():
+                if k in ['loss', 'hm_loss', 'wh_loss', 'off_loss', 'id_loss']:
+                    self.losses_dict[k].append(v)
+
+    def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5))->None: 
+        '''Plots training loss from calling `fit`  '''
+        fig = plt.figure(figsize=figsize)
+        ax1 = fig.add_subplot(1, 1, 1)
+
+        #ax1.set_xlim([0, self.epochs - 1])
+        ax1.set_xticks(self.epochs)
+        ax1.set_xlabel("epochs")
+        ax1.set_ylabel("losses")
+        ax1.plot(self.losses_dict['loss'], c="r", label='loss')
+        ax1.plot(self.losses_dict['hm_loss'], c="y", label='hm_loss')
+        ax1.plot(self.losses_dict['wh_loss'], c="g", label='wh_loss')
+        ax1.plot(self.losses_dict['off_loss'], c="b", label='off_loss')
+        ax1.plot(self.losses_dict['id_loss'], c="m", label='id_loss')
+
+        plt.legend(loc='upper right')
+        fig.suptitle("Loss over epochs during training")
+
 
     def predict(
         self,
