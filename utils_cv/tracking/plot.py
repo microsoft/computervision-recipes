@@ -6,7 +6,6 @@ import os.path as osp
 from typing import Dict, List, Tuple
 import cv2
 import numpy as np
-import pandas as pd
 
 from .bbox import TrackingBbox
 
@@ -26,37 +25,24 @@ def plot_results(
         output_video: path to the output video
         frame_rate: frame rate  
     """
-    # convert results to dataframe in MOT challenge format
-    preds = OrderedDict(sorted(results.items()))
-    bboxes = [
-        [
-            bb.frame_id,
-            bb.track_id,
-            bb.left,
-            bb.top,
-            bb.right - bb.left,
-            bb.bottom - bb.top,
-        ]
-        for _, v in preds.items()
-        for bb in v
-    ]
-
-    df = pd.DataFrame(
-        bboxes, columns=["frame", "id", "left", "top", "width", "height",],
+    _write_video(
+        OrderedDict(sorted(results.items())),
+        input_video,
+        output_video,
+        frame_rate,
     )
 
-    _write_video(df, input_video, output_video, frame_rate)
     print(f"Output saved to {output_path}.")
 
     return output_path
 
 
 def _write_video(
-    df: pd.DataFrame, input_video: str, output_video: str
+    results: Dict[int, List[TrackingBbox]], input_video: str, output_video: str
 ) -> None:
     """     
     Args:
-        df: DataFrame with columns [frame, id, left, top, width, height]
+        results: dictionary mapping frame id to a list of predicted TrackingBboxes
         input_video: path to the input video
         output_video: path to write out the output video
     """
@@ -80,41 +66,38 @@ def _write_video(
     frame_idx = 1
     while video.grab():
         _, cur_image = video.retrieve()
-        cur_frame = df[df.frame == frame_idx]
+        cur_tracks = results[frame_idx]
         if not cur_frame.empty:
-            cur_image = _draw_boxes(cur_image, cur_frame, id_color_dict)
+            cur_image = _draw_boxes(cur_image, cur_tracks, id_color_dict)
         writer.write(cur_image)
         frame_idx += 1
 
 
-def _xywh_to_xyxy(xywh: List[int]) -> List[int]:
-    """ Convert bbox of form (left,top,width,height) to (left,top,right,bottom) """
-    left, top, width, height = xywh
-    return [left, top, left + width, top + height]
-
-
 def _draw_boxes(
     im: np.ndarray,
-    cur_df: pd.DataFrame,
+    cur_tracks: List[TrackingBbox],
     id_color_dict: Dict[int, Tuple[int, int, int]],
 ) -> np.ndarray:
     """ 
     Overlay bbox and id labels onto the frame
     Args:
         im: raw frame
-        cur_df: dataframe of bboxes in the current frame
+        cur_tracks: list of bboxes in the current frame
         id_color_dict: dictionary mapping ids to bbox colors
     """
 
-    cur_ids = cur_df.id.tolist()
+    cur_ids = [bb.track_id for bb in cur_tracks]
+    tracks = dict(zip(cur_ids, cur_tracks))
 
-    for i, id in enumerate(cur_ids):
-        xywh = [round(x) for x in cur_df.loc[cur_df.id == id].values[0][2:]]
-        left, top, right, bottom = _xywh_to_xyxy(xywh)
+    for tid, bb in tracks.items():
+        left = round(bb.left)
+        top = round(bb.top)
+        right = round(bb.right)
+        bottom = round(bb.bottom)
 
         # box text and bar
-        color = id_color_dict.get(id)
-        label = str(cur_df.loc[cur_df.id == id].id.values[0])
+        color = id_color_dict[tid]
+        label = str(tid)
 
         # last two args of getTextSize() are font_scale and thickness
         t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 1, 1)[0]

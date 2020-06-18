@@ -148,7 +148,7 @@ class TrackingLearner(object):
         if not self.dataset:
             raise Exception("No dataset provided")
 
-        opt_fit = deepcopy(self.opt)
+        opt_fit = deepcopy(self.opt) #copy opt to avoid bug
         opt_fit.lr = lr
         opt_fit.lr_step = lr_step
         opt_fit.num_epochs = num_epochs
@@ -235,7 +235,7 @@ class TrackingLearner(object):
 
         Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
         """
-        opt_pred = deepcopy(self.opt)
+        opt_pred = deepcopy(self.opt) #copy opt to avoid bug
         opt_pred.conf_thres = conf_thres
         opt_pred.det_thres = det_thres
         opt_pred.nms_thres = nms_thres
