@@ -121,8 +121,8 @@ class TrackingLearner(object):
         """
         model_dir = osp.join(self.opt.root_dir, "models")
         baseline_path = osp.join(model_dir, "all_dla34.pth")
-        os.makedirs(model_dir, exist_ok=True)
-        _download_baseline(BASELINE_URL, baseline_path)
+#         os.makedirs(model_dir, exist_ok=True)
+#         _download_baseline(BASELINE_URL, baseline_path)
         self.opt.load_model = baseline_path
 
         return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
@@ -151,6 +151,7 @@ class TrackingLearner(object):
         opt_fit.lr = lr
         opt_fit.lr_step = lr_step
         opt_fit.num_epochs = num_epochs
+        opt_fit.resume = resume
 
         # update dataset options
         opt_fit.update_dataset_info_and_set_heads(self.dataset.train_data)
@@ -160,6 +161,7 @@ class TrackingLearner(object):
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), opt_fit.lr)
         start_epoch = 0
+        print(f"Loading {opt_fit.load_model}")
         self.model, self.optimizer, start_epoch = load_model(
             self.model,
             opt_fit.load_model,
@@ -228,8 +230,7 @@ class TrackingLearner(object):
             nms_thres: iou thresh for nms
             track_buffer: tracking buffer
             min_box_area: filter out tiny boxes
-            input_h: input height. Default from dataset
-            input_w: input width. Default from dataset
+            im_size: (input height, input_weight)
             frame_rate: frame rate
 
         Returns a list of TrackingBboxes
@@ -249,7 +250,7 @@ class TrackingLearner(object):
         opt_pred.update_dataset_res(input_height, input_width)
 
         # initialize tracker
-        opt.load_model = self.model_path
+        opt_pred.load_model = self.model_path
         tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
 
         # initialize dataloader

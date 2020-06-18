@@ -14,7 +14,6 @@ def plot_results(
     results: Dict[int, List[TrackingBbox]],
     input_video: str,
     output_video: str,
-    frame_rate: int = 30,
 ) -> None:
     """ 
     Plot the predicted tracks on the input video. Write the output to {output_path}.
@@ -23,18 +22,16 @@ def plot_results(
         results: dictionary mapping frame id to a list of predicted TrackingBboxes
         input_video: path to the input video
         output_video: path to the output video
-        frame_rate: frame rate  
     """
     _write_video(
         OrderedDict(sorted(results.items())),
         input_video,
         output_video,
-        frame_rate,
     )
 
-    print(f"Output saved to {output_path}.")
+    print(f"Output saved to {output_video}.")
 
-    return output_path
+    return output_video
 
 
 def _write_video(
@@ -54,21 +51,22 @@ def _write_video(
     image_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
     image_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fourcc = cv2.VideoWriter_fourcc(*"MP4V")
-    frame_rate = int(video.get(cv2.FRAME_RATE))
+    frame_rate = int(video.get(cv2.CAP_PROP_FPS))
     writer = cv2.VideoWriter(
         output_video, fourcc, frame_rate, (image_width, image_height)
     )
 
-    # assign bbox color per id:
-    id_color_dict = _compute_color_for_all_labels(df.id.unique().tolist())
+    # assign bbox color per id
+    unique_ids = list(set([bb.track_id for frame in results.values() for bb in frame]))
+    color_map = _compute_color_for_all_labels(unique_ids)
 
     # create images and add to video writer, adapted from https://github.com/ZQPei/deep_sort_pytorch
-    frame_idx = 1
+    frame_idx = 0
     while video.grab():
         _, cur_image = video.retrieve()
         cur_tracks = results[frame_idx]
-        if not cur_frame.empty:
-            cur_image = _draw_boxes(cur_image, cur_tracks, id_color_dict)
+        if len(cur_tracks) > 0:
+            cur_image = _draw_boxes(cur_image, cur_tracks, color_map)
         writer.write(cur_image)
         frame_idx += 1
 
@@ -76,14 +74,14 @@ def _write_video(
 def _draw_boxes(
     im: np.ndarray,
     cur_tracks: List[TrackingBbox],
-    id_color_dict: Dict[int, Tuple[int, int, int]],
+    color_map: Dict[int, Tuple[int, int, int]],
 ) -> np.ndarray:
     """ 
     Overlay bbox and id labels onto the frame
     Args:
         im: raw frame
         cur_tracks: list of bboxes in the current frame
-        id_color_dict: dictionary mapping ids to bbox colors
+        color_map: dictionary mapping ids to bbox colors
     """
 
     cur_ids = [bb.track_id for bb in cur_tracks]
@@ -96,7 +94,7 @@ def _draw_boxes(
         bottom = round(bb.bottom)
 
         # box text and bar
-        color = id_color_dict[tid]
+        color = color_map[tid]
         label = str(tid)
 
         # last two args of getTextSize() are font_scale and thickness
@@ -134,6 +132,6 @@ def _compute_color_for_all_labels(
         color = [int((p * ((i + 1) ** 5 - i + 1)) % 255) for p in palette]
         color_list.append(tuple(color))
 
-    id_color_dict = dict(zip(id_list, color_list))
+    color_map = dict(zip(id_list, color_list))
 
-    return id_color_dict
+    return color_map
