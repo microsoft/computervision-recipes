@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/> 
+  <title>Microsoft CVBP - HTML Demo</title>
+  <link rel = "icon" href ="https://cvbp.blob.core.windows.net/public/html_demo/img/logo_small.png" type = "image/x-icon"> 
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+   crossorigin="anonymous">
+  <link href="style.css" rel="stylesheet" type="text/css" />
+  
+</head>
+
+<body>
+  <!-- Nav Bar -->
+  <nav class="navbar navbar-toggleable-md navbar-dark fixed-top mainColor">
+    <a class="navbar-brand" href="https://github.com/mcboyd-bu/computervision-recipes/tree/contrib_html_demo/contrib/html_demo">Microsoft CVBP</a>
+    <a href="#home" class="navbar-brand" id="about" onClick="aboutModal()">About</a>
+    <!-- "About" Modal -->
+    <div id="aboutModal" class="modal">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <span id="closeModal" class="close">&times;</span>
+        <h1>About the project</h1>
+
+          <section>
+            <h2>Project Description</h2>
+            <p>This project provides an HTML web page that allows users to visualize the output of a deployed computer vision DNN model. Users can improve on and gain insights from their deployed model by uploading query/test images and examining the model's results for correctness through the user interface. The web page includes some sample query/test images from the Microsoft image set, as well as example output for 3 types of models: Image Classification, Object Detection, and Image Similarity.</p>
+          </section>
+
+          <section>
+            <h2>Usage</h2>
+            <p>To use a deployed model in the Use My Model tab:</p>
+            <ol type="1">
+              <li>Enter the model's API URL in the text field</li>
+              <li>Upload or select images to use:</li>
+              <ol type="a">
+                <li>Webcam:</li>
+                <ol type="i">
+                  <li>Allow the browser to use your web cam</li>
+                  <li>Select Snap Photo to take a picture</li>
+                  <li>Select Use Image to add the captured image</li>
+                </ol>
+                <li>Samples: Select an image by clicking on it</li>
+                <li>Choose Files: Select images to upload from your machine's file explorer</li>
+              </ol>
+              <li>Select Upload to send the images to the model's API</li>
+              <li>View results below!</li>
+            </ol>
+            <p>To view examples in the See Example tab:</p>
+            <ol type="1">
+              <li>Click on an image you wish to view</li>
+              <li>See results from image classification, object detection, and image similarity models below!</li>
+            </ol>
+          </section>
+
+          <section>
+            <h2>Authors</h2>
+            <p>This work was completed by a team of students from the Boston University College of Engineering as part of the EC528 Cloud Computing class. The project was completed in collaboration with three Microsoft engineers who proposed the project and acted as team mentors.</p>
+            <h3>Student team:</h3>
+            <p>Matthew Boyd, Charles Henneberger, Xushan "Mulla" Hu, SeungYeun "Kelly" Lee, Nuwapa "Prim" Promchotichai</p>
+            <h3>Microsoft Mentors:</h3>
+            <p>Patrick Buehler, Young Park, JS Tan</p>
+          </section>
+
+      </div> <!-- END Modal Content -->
+
+    </div> <!-- END Modal -->
+  </nav>
+
+<main role="main">
+  <div class="jumbotron">
+    <div class="container-xl">
+      <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item">
+          <a class="nav-link active font18" id="mymodel-tab" data-toggle="tab" href="#mymodel" role="tab" aria-controls="mymodel" aria-selected="true">Use My Model</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link font18" id="seeexample-tab" data-toggle="tab" href="#seeexample" role="tab" aria-controls="seeexample" aria-selected="false">See Example</a>
+        </li>
+      </ul>
+      <div class="tab-content card" id="myTabContent">
+        <!-- for use my model tab -->
+        <div class="tab-pane fade show active card-body" id="mymodel" role="tabpanel" aria-labelledby="mymodel-tab">
+          <!-- Image upload and thumbnail container -->
+          <div class="container-fluid mx-auto">
+            <form onsubmit="return false">
+              <div class="form-group">
+                <div class="text-muted mb-2"><span class="badge badge-primary">1</span> Enter your model's API URL:</div>
+                <input type="text" class="form-control form-control-lg" id="url" name="text2" required>
+              </div>
+            </form>  
+
+            <div id="alertdiv"></div>
+
+            <div class="row">
+              <!-- Image Upload Button and Thumnails - Outer Col1 -->
+              <div class="col">
+                <div class="text-muted mb-2"><span class="badge badge-primary">2</span> Choose up to 4 images from your webcam, sample images, or your own local images:</div>
+                <div class="row">
+                  <div class="thumbnails col text-center">
+
+                    <!--Webcam Feature-->
+                    <button id="btnWebcam" class="btn btn-secondary btn-block shadow rounded mb-2 mainColor" type="button" data-toggle="collapse" href="#multiCollapseWebcam" aria-expanded="false" aria-controls="multiCollapseWebcam">Webcam</button>
+
+                    <!-- Sample Images -->
+                    <button id="btnSample" class="btn btn-secondary btn-block shadow rounded mb-2 mainColor" type="button" data-toggle="collapse" href="#multiCollapseSample" aria-expanded="false" aria-controls="multiCollapseSample">Samples</button>
+
+                    <!-- Choose (Local) Files Button -->
+                    <label class="btn btn-secondary btn-block shadow rounded  mb-2 mainColor">
+                    Choose Files <input type="file" multiple class="custom-file-input mx-auto"  accept="image/*" id="inputGroupFile03" onchange="handleFiles(this.files)" hidden>
+                    </label>                                          
+                    
+                  </div> <!-- END Inner col 1 -->
+          
+                  <!-- img thumbnails - 4 columns -->
+                  <div class="col thumbnails mb-2">
+                    <div class="img-wrap img-wrap-ph rounded" id="b64imgwrap-0">
+                      <button id="clear-0" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(0)"> <div class="icon regular">X</div></button>
+                      <img id="b64img-0" class="rounded" src="">
+                    </div>
+                  </div>
+                  <div class="col thumbnails mb-2">
+                    <div class="img-wrap img-wrap-ph rounded" id="b64imgwrap-1">
+                      <button id="clear-1" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(1)"> <div class="icon regular">X</div></button>
+                      <img id="b64img-1" class="rounded" src="">
+                    </div>
+                    </div>
+                  <div class="col thumbnails mb-2">
+                    <div class="img-wrap img-wrap-ph rounded" id="b64imgwrap-2">
+                      <button id="clear-2" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(2)"> <div class="icon regular">X</div></button>
+                      <img id="b64img-2" class="rounded" src="">
+                    </div>
+                  </div>
+                  <div class="col thumbnails mb-2">
+                    <div class="img-wrap img-wrap-ph rounded" id="b64imgwrap-3">
+                      <button id="clear-3" type="button" class="clearBtn btn btn-danger btn-sm hide text-white" onclick="removeImg(3)"> <div class="icon regular">X</div></button>
+                      <img id="b64img-3" class="rounded" src="">
+                    </div>
+                  </div>
+                </div> <!-- Close Inner row -->
+              </div> <!-- Close Outer Col1 -->
+
+              <!-- Upload button - Outer Col2 -->
+              <div class="text-center col-md-auto">
+                <div class="text-muted mb-2"><span class="badge badge-primary">3</span> Test your model:</div>
+
+                <button class="btn btn-primary btn-block shadow rounded button-font" type="button" id="uploadbtn" data-target="#exampleModalCenter" onclick="APIRequest()"> Upload</button>
+                
+                <!-- spinners -->
+                <div id="uploadstatus" class="mt-1">
+                </div> <!-- END spinners  -->
+
+              </div> <!-- END upload button - Close Outer Col2   -->
+
+            </div> <!-- END main row  -->
+            
+            <!-- New Row For Hidden Display Element: Webcam -->
+            <div class="row collapse multi-collapse mt-2" id="multiCollapseWebcam">
+              <div class="col-12">
+                <div class="row">
+                  <div class="col-sm-6">
+                    <div class="card text-white bg-secondary">
+                      <div class="card-header d-flex align-items-center">
+                        <span>LIVE Webcam</span>
+                        <button id="snap" type="button" class="btn btn-light ml-auto">Snap Photo</button>
+                      </div>
+                      <div class="card-body">
+                        <div class="embed-responsive embed-responsive-4by3">
+                          <video id="videoElement" class="embed-responsive-item" autoplay></video>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="card text-white bg-secondary">
+                      <div class="card-header d-flex align-items-center">
+                        <span>Captured Image</span>
+                        <button id="useImage" class="btn btn-light ml-auto">Use Image</button>
+                      </div>
+                      <div class="card-body">
+                        <canvas id="webCamCanvas" class="hide" width="30" height="30"></canvas>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div> <!-- END Hidden Row: Webcam -->
+
+            <!-- New Row For Hidden Display Element: Sample Images -->
+            <div class="row collapse multi-collapse mt-2" id="multiCollapseSample">
+              <div class="col-12">
+                <div class="row">
+                  <div class="col-sm-12">
+                    <div class="card text-white bg-secondary">
+                      <div class="card-header d-flex align-items-center">
+                        <span>Select Sample Images to Test your Model</span>
+                        <button id="sampleClose" type="button" class="btn btn-light ml-auto" onclick="sampleClose()">Hide Samples</button>
+                      </div>
+                      <div class="card-body">
+                        <div class="row text-center">
+                          <div class="col-xs">
+                            <img id="sample1" data-eid="1" class="rounded m-2 sImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/can_1.jpg">
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample2" data-eid="2" class="rounded m-2 sImg"  src="https://cvbp.blob.core.windows.net/public/html_demo/img/can_15.jpg">
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample3" data-eid="3" class="rounded m-2 sImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/can_28.jpg"> 
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample4" data-eid="4" class="rounded m-2 sImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/carton_33.jpg">
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample5" data-eid="5" class="rounded m-2 sImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/carton_40.jpg">
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample6" data-eid="6" class="rounded m-2 sImg"  src="https://cvbp.blob.core.windows.net/public/html_demo/img/carton_50.jpg"> 
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample7" data-eid="7" class="rounded m-2 sImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/milk_bottle_66.jpg">
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample8" data-eid="8" class="rounded m-2 sImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/milk_bottle_77.jpg"> 
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample9" data-eid="9" class="rounded m-2 sImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/water_bottle_111.jpg"> 
+                          </div>
+                          <div class="col-xs">
+                            <img id="sample10" data-eid="10" class="rounded m-2 sImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/water_bottle_115.jpg">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div> <!-- END Hidden Row: Sample Images -->
+
+          </div> <!-- END container -->
+
+          <!-- Results Container -->
+          <div class="container-xl">
+            <p class="text-center font-weight-bold pt-4 result-font">RESULTS</p>
+            <!--displays result images-->
+            <div class="row">
+              <div class="col-md-6 mx-auto" id="resultsDiv0">
+                <div class="card mb-4 shadow-sm">
+                  <div id="resultsDiv0-content" class="card-img-top hide-overflow" >
+                    <canvas id="resultsCanvas0" width="30" height="30"></canvas>
+                    <img id="resultsImg0">
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text"></p>
+                  </div>
+                </div>
+              </div>  <!-- END Col -->
+              <div class="col-md-6 mx-auto" id="resultsDiv1">
+                <div class="card mb-4 shadow-sm">
+                  <div id="resultsDiv1-content"  class="card-img-top" >
+                    <canvas id="resultsCanvas1" width="30" height="30"></canvas>
+                    <img id="resultsImg1">
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text"></p>
+                  </div>
+                </div>
+              </div>  <!-- END Col -->
+              <div class="col-md-6 mx-auto" id="resultsDiv2">
+                <div class="card mb-4 shadow-sm">
+                  <div id="resultsDiv2-content" class="card-img-top hide-overflow" >
+                    <canvas id="resultsCanvas2" width="30" height="30"></canvas>
+                    <img id="resultsImg2">
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text"></p>
+                  </div>
+                </div>
+              </div>  <!-- END Col -->
+              <div class="col-md-6 mx-auto" id="resultsDiv3">
+                <div class="card mb-4 shadow-sm">
+                  <div id="resultsDiv3-content" class="card-img-top hide-overflow">
+                    <canvas id="resultsCanvas3" width="30" height="30"></canvas>
+                    <img id="resultsImg3">
+                  </div>
+                  <!-- </div> --> <div class="card-body">
+                    <p class="card-text"></p>
+                  </div>
+                </div>
+              </div>  <!-- END Col -->
+
+            </div>  <!-- END main Row -->
+
+          </div>  <!-- END Results Container -->
+          
+        </div> <!--  END Tab-Pane Use My Model -->
+
+        <!-- for see example tab  -->
+        <div class="tab-pane fade card-body mt-3" id="seeexample" role="tabpanel" aria-labelledby="seeexample-tab">
+          <!-- img thumbnails and checkbox -->
+          <div id="exampleImages" class="container mx-auto" >
+            <img id="example0" data-eid="0" class="rounded mr-2 mb-2 eImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/can_8.jpg">
+            <img id="example1" data-eid="1" class="rounded mr-2 mb-2 eImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/can_31.jpg">
+            <img id="example2" data-eid="2" class="rounded mr-2 mb-2 eImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/carton_47.jpg">
+            <img id="example3" data-eid="3" class="rounded mr-2 mb-2 eImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/carton_59.jpg">
+            <img id="example4" data-eid="4" class="rounded mr-2 mb-2 eImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/milk_bottle_76.jpg">
+            <img id="example5" data-eid="5" class="rounded mr-2 mb-2 eImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/milk_bottle_97.jpg">
+            <img id="example6" data-eid="6" class="rounded mr-2 mb-2 eImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/water_bottle_105.jpg">
+            <img id="example7" data-eid="7" class="rounded mr-2 mb-2 eImg" src="https://cvbp.blob.core.windows.net/public/html_demo/img/water_bottle_123.jpg">
+
+            <div class="mt-3 text-center">
+              <div class="form-check-inline">
+                <label class="form-check-label">
+                  <input type="checkbox" class="form-check-input" id="odCheck" onclick='exampleModels()' checked>Object Detection
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <label class="form-check-label">
+                  <input type="checkbox" class="form-check-input" id="icCheck" onclick='exampleModels()' checked>Image Classification
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <label class="form-check-label">
+                  <input type="checkbox" class="form-check-input" id="isCheck" onclick='exampleModels()' checked>Image Similarity
+                </label>
+              </div>
+            </div>
+          </div>  <!-- END img thumbnails and checkbox -->
+
+          <!-- results container -->
+          <div class="container mx-auto mt-4">
+            <p class="text-center font-weight-bold result-font">RESULTS</p>
+            <div class="row">
+              <div class="col-md-4 mx-auto" id="resultsDiv8">
+                <div class="card mb-4 shadow-sm">
+                  <div id="resultsDiv8-content" class="card-img-top hide-overflow" >
+                    <canvas id="resultsCanvas8" width="30" height="30"></canvas>
+                    <img id="resultsImg8">
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text">Object Detection</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mx-auto" id="resultsDiv7">
+                <div class="card mb-4 shadow-sm">
+                  <div id="resultsDiv7-content" class="card-img-top hide-overflow" >
+                    <canvas id="resultsCanvas7" width="30" height="30"></canvas>
+                    <img id="resultsImg7">
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text">Image Classification</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 mx-auto" id="resultsDiv9">
+                <div class="card mb-4 shadow-sm">
+                  <div id="resultsDiv9-content" class="card-img-top hide-overflow" >
+                    <canvas id="resultsCanvas9" width="30" height="30"></canvas>
+                    <img id="resultsImg9">
+                  </div>
+                  <div class="card-body imSim text-center">
+                    <p class="card-text">Image Similarity</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> <!-- END results container -->
+        </div>  <!-- END Tab-Pane See Example -->
+      </div>  <!-- END Tab-Content -->
+    </div>  <!-- END Jumbotron Container -->
+  </div>  <!-- END Jumbotron -->
+
+</main>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.3.0/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip-utils/0.1.0/jszip-utils.min.js"></script>
+
+<script src="script.js"></script>
+<script src="example_imgs.js"></script>
+
+</body>
+</html>
