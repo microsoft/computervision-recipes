@@ -7,6 +7,7 @@ import random
 import shutil
 from typing import List, Union
 from PIL import ImageFont
+from typing import Any
 
 import numpy as np
 
@@ -112,5 +113,8 @@ class Config(object):
         for k, v in extras.items():
             setattr(self, k, v)
 
-    def get(self, key, default):
+    def get(self, key: str, default: Any) -> Any:
         return getattr(self, key, default)
+
+    def set(self, key: str, value: Any) -> None:
+        setattr(self, key, value)

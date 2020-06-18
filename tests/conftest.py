@@ -56,8 +56,11 @@ from utils_cv.segmentation.model import (
 from utils_cv.similarity.data import Urls as is_urls
 from utils_cv.similarity.model import compute_features_learner
 from utils_cv.action_recognition.data import Urls as ar_urls
-from utils_cv.action_recognition.dataset import VideoDataset
-
+from utils_cv.action_recognition.dataset import (
+    VideoDataset,
+    get_transforms,
+    get_default_tfms_config
+)
 
 def path_classification_notebooks():
     """ Returns the path of the classification notebooks folder. """
@@ -778,7 +781,11 @@ def ar_milk_bottle_path(tmp_session) -> str:
 @pytest.fixture(scope="session")
 def ar_milk_bottle_dataset(ar_milk_bottle_path) -> VideoDataset:
     """ Returns an instance of a VideoDatset built using the milk bottle dataset. """
-    return VideoDataset(ar_milk_bottle_path)
+    conf = get_default_tfms_config(train=True)
+    conf.set("input_size", 28)
+    conf.set("im_scale", 32)
+    train_tfms = get_transforms(tfms_config=conf)
+    return VideoDataset(ar_milk_bottle_path, train_transforms=train_tfms)
 
 
 @pytest.fixture(scope="session")
@@ -809,10 +816,15 @@ def ar_milk_bottle_dataset_with_split_file(
     dataset and custom split files. """
     train_split_file_path = ar_milk_bottle_split_files[0]
     test_split_file_path = ar_milk_bottle_split_files[1]
+    conf = get_default_tfms_config(train=True)
+    conf.set("input_size", 28)
+    conf.set("im_scale", 32)
+    train_tfms = get_transforms(tfms_config=conf)
     return VideoDataset(
         ar_milk_bottle_path,
         train_split_file=train_split_file_path,
         test_split_file=test_split_file_path,
+        train_transforms=train_tfms
     )
 
 
