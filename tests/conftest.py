@@ -58,7 +58,7 @@ from utils_cv.similarity.model import compute_features_learner
 from utils_cv.action_recognition.data import Urls as ar_urls
 from utils_cv.action_recognition.dataset import (
     VideoDataset,
-    get_transforms,
+    get_transforms as ar_get_transforms,
     get_default_tfms_config
 )
 
@@ -784,7 +784,7 @@ def ar_milk_bottle_dataset(ar_milk_bottle_path) -> VideoDataset:
     conf = get_default_tfms_config(train=True)
     conf.set("input_size", 28)
     conf.set("im_scale", 32)
-    train_tfms = get_transforms(tfms_config=conf)
+    train_tfms = ar_get_transforms(tfms_config=conf)
     return VideoDataset(ar_milk_bottle_path, train_transforms=train_tfms)
 
 
@@ -819,7 +819,7 @@ def ar_milk_bottle_dataset_with_split_file(
     conf = get_default_tfms_config(train=True)
     conf.set("input_size", 28)
     conf.set("im_scale", 32)
-    train_tfms = get_transforms(tfms_config=conf)
+    train_tfms = ar_get_transforms(tfms_config=conf)
     return VideoDataset(
         ar_milk_bottle_path,
         train_split_file=train_split_file_path,
