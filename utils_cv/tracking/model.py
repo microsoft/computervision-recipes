@@ -88,7 +88,7 @@ class TrackingLearner(object):
     def __init__(
         self,
         dataset: TrackingDataset,
-        model: nn.Module = None,
+        model: str,
         arch: str = "dla_34",
         head_conv: int = None,
     ) -> None:
@@ -99,7 +99,7 @@ class TrackingLearner(object):
 
         Args:
             dataset: the dataset
-            model: the model
+            model: path to save model
             arch: the model architecture
                 Supported architectures: resdcn_34, resdcn_50, resfpndcn_34, dla_34, hrnet_32
             head_conv: conv layer channels for output head. None maps to the default setting.
@@ -112,25 +112,23 @@ class TrackingLearner(object):
         self.opt.device = torch_device()
 
         self.dataset = dataset
-        self.model = model if model is not None else self.init_model()
+        self.model = self.init_model()
+        self.model_path = model
 
     def init_model(self) -> nn.Module:
         """
         Download and initialize the baseline FairMOT model.
         """
         model_dir = osp.join(self.opt.root_dir, "models")
-        self.model_path = osp.join(model_dir, "all_dla34.pth")
-
+        baseline_path = osp.join(model_dir, "all_dla34.pth")
         os.makedirs(model_dir, exist_ok=True)
-        _download_baseline(BASELINE_URL, self.model_path)
+        _download_baseline(BASELINE_URL, baseline_path)
+        self.opt.load_model = baseline_path
+
         return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
 
-    def load(self, path, resume=False) -> None:
-        self.opt.load_model = path
-        self.opt.resume = resume
-
     def fit(
-        self, lr: float = 1e-4, lr_step: str = "20,27", num_epochs: int = 30,
+        self, lr: float = 1e-4, lr_step: str = "20,27", num_epochs: int = 30, resume: bool = False
     ) -> None:
         """
         The main training loop.
@@ -139,6 +137,7 @@ class TrackingLearner(object):
             lr: learning rate for batch size 32
             lr_step: when to drop learning rate by 10
             num_epochs: total training epochs
+            resume: true if resuming training
 
         Raise:
             Exception if dataset is undefined
@@ -191,6 +190,8 @@ class TrackingLearner(object):
                 lr = opt_fit.lr * (0.1 ** (opt_fit.lr_step.index(epoch) + 1))
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
+
+        self.save(self.model_path)
 
     def save(self, path) -> None:
         """
@@ -248,6 +249,7 @@ class TrackingLearner(object):
         opt_pred.update_dataset_res(input_height, input_width)
 
         # initialize tracker
+        opt.load_model = self.model_path
         tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
 
         # initialize dataloader
