@@ -10,6 +10,7 @@ This directory contains a few helper notebooks that upload files and deploy mode
 | [1_image_similarity_export.ipynb](1_image_similarity_export.ipynb)| Exports computed reference image features for use in visualizng results (see details in "Image Similarity" section below) |
 | [2_upload_ui.ipynb](2_upload_ui.ipynb)| Uploads web page files to Azure Blob storage |
 | [3_deployment_to_azure_app_service.ipynb](3_deployment_to_azure_app_service.ipynb)| Deploys image classification model as an Azure app service |
+| [4_finetune_on_textile_pattern_dataset.ipynb](4_finetune_on_textile_pattern_dataset.ipynb) | Deploys fin-tuned ResNet18 CNN model using AzureML |
 
 ### Requirements
 
