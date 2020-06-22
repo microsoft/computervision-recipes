@@ -130,7 +130,7 @@ class TrackingLearner(object):
     def __init__(
         self,
         dataset: TrackingDataset,
-        model: str,
+        model_path: str,
         arch: str = "dla_34",
         head_conv: int = None,
     ) -> None:
@@ -141,7 +141,7 @@ class TrackingLearner(object):
 
         Args:
             dataset: the dataset
-            model: path to save model
+            model_path: path to save model
             arch: the model architecture
                 Supported architectures: resdcn_34, resdcn_50, resfpndcn_34, dla_34, hrnet_32
             head_conv: conv layer channels for output head. None maps to the default setting.
@@ -155,7 +155,7 @@ class TrackingLearner(object):
 
         self.dataset = dataset
         self.model = self.init_model()
-        self.model_path = model
+        self.model_path = model_path
 
     def init_model(self) -> nn.Module:
         """
