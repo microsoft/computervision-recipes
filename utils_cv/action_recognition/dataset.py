@@ -199,7 +199,6 @@ class VideoDataset:
             test_transforms: transforms for testing
         """
 
-        # TODO check wrong arguments early to prevent failure
         assert sample_step > 0
         assert num_samples > 0
 

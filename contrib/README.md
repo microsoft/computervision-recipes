@@ -8,7 +8,6 @@ Each project should live in its own subdirectory ```/contrib/<project>``` and co
 ## Scenarios
 | Directory | Project description | Build status (optional) |
 |---|---|---|
-| [Action recognition](action_recognition) | Action recognition to identify in video/webcam footage what actions are performed (e.g. "running", "opening a bottle") and at what respective start/end times.| |
 | [Crowd counting](crowd_counting) | Counting the number of people in low-crowd-density (e.g. less than 10 people) and high-crowd-density (e.g. thousands of people) scenarios. | [![Build Status](https://dev.azure.com/team-sharat/crowd-counting/_apis/build/status/lixzhang.cnt?branchName=lixzhang%2Fsubmodule-rev3)](https://dev.azure.com/team-sharat/crowd-counting/_build/latest?definitionId=49&branchName=lixzhang%2Fsubmodule-rev3)|
 
 ## Tools
