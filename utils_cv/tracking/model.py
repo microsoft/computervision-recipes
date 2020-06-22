@@ -84,6 +84,7 @@ def _get_gpu_str():
     else:
         return "-1"  # cpu
 
+
 def write_video(
     results: Dict[int, List[TrackingBbox]], input_video: str, output_video: str
 ) -> None:
@@ -109,7 +110,9 @@ def write_video(
     )
 
     # assign bbox color per id
-    unique_ids = list(set([bb.track_id for frame in results.values() for bb in frame]))
+    unique_ids = list(
+        set([bb.track_id for frame in results.values() for bb in frame])
+    )
     color_map = assign_colors(unique_ids)
 
     # create images and add to video writer, adapted from https://github.com/ZQPei/deep_sort_pytorch
@@ -123,6 +126,7 @@ def write_video(
         frame_idx += 1
 
     print(f"Output saved to {output_video}.")
+
 
 class TrackingLearner(object):
     """Tracking Learner for Multi-Object Tracking"""
@@ -163,14 +167,14 @@ class TrackingLearner(object):
         """
         model_dir = osp.join(self.opt.root_dir, "models")
         baseline_path = osp.join(model_dir, "all_dla34.pth")
-#         os.makedirs(model_dir, exist_ok=True)
-#         _download_baseline(BASELINE_URL, baseline_path)
+        #         os.makedirs(model_dir, exist_ok=True)
+        #         _download_baseline(BASELINE_URL, baseline_path)
         self.opt.load_model = baseline_path
 
         return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
 
     def fit(
-        self, lr: float = 1e-4, lr_step: str = "20,27", num_epochs: int = 30, resume: bool = False
+        self, lr: float = 1e-4, lr_step: str = "20,27", num_epochs: int = 30
     ) -> None:
         """
         The main training loop.
@@ -179,7 +183,6 @@ class TrackingLearner(object):
             lr: learning rate for batch size 32
             lr_step: when to drop learning rate by 10
             num_epochs: total training epochs
-            resume: true if resuming training
 
         Raise:
             Exception if dataset is undefined
@@ -189,11 +192,10 @@ class TrackingLearner(object):
         if not self.dataset:
             raise Exception("No dataset provided")
 
-        opt_fit = deepcopy(self.opt) #copy opt to avoid bug
+        opt_fit = deepcopy(self.opt)  # copy opt to avoid bug
         opt_fit.lr = lr
         opt_fit.lr_step = lr_step
         opt_fit.num_epochs = num_epochs
-        opt_fit.resume = resume
 
         # update dataset options
         opt_fit.update_dataset_info_and_set_heads(self.dataset.train_data)
@@ -204,14 +206,7 @@ class TrackingLearner(object):
         self.optimizer = torch.optim.Adam(self.model.parameters(), opt_fit.lr)
         start_epoch = 0
         print(f"Loading {opt_fit.load_model}")
-        self.model, self.optimizer, start_epoch = load_model(
-            self.model,
-            opt_fit.load_model,
-            self.optimizer,
-            opt_fit.resume,
-            opt_fit.lr,
-            opt_fit.lr_step,
-        )
+        self.model = load_model(self.model, opt_fit.load_model)
 
         Trainer = train_factory[opt_fit.task]
         trainer = Trainer(opt_fit.opt, self.model, self.optimizer)
@@ -235,8 +230,8 @@ class TrackingLearner(object):
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
 
-        # save after training because at inference-time FairMOT src reads model weights from disk 
-        self.save(self.model_path) 
+        # save after training because at inference-time FairMOT src reads model weights from disk
+        self.save(self.model_path)
 
     def save(self, path) -> None:
         """
@@ -280,7 +275,7 @@ class TrackingLearner(object):
 
         Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
         """
-        opt_pred = deepcopy(self.opt) #copy opt to avoid bug
+        opt_pred = deepcopy(self.opt)  # copy opt to avoid bug
         opt_pred.conf_thres = conf_thres
         opt_pred.det_thres = det_thres
         opt_pred.nms_thres = nms_thres

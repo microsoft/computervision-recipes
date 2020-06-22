@@ -15,7 +15,6 @@ class opts(object):
     def __init__(
         self,
         load_model: str = "",
-        resume: bool = False,
         gpus: str = "0, 1",
         save_all: bool = False,
         arch: str = "dla_34",
@@ -38,7 +37,6 @@ class opts(object):
         self._init_opt()
 
         self.load_model = load_model
-        self.resume = resume
         self.gpus = gpus
         self.save_all = save_all
         self.arch = arch
@@ -66,6 +64,7 @@ class opts(object):
 
         self._opt.task = "mot"
         self._opt.dataset = "jde"
+        self._opt.resume = False
         self._opt.exp_id = "default"
         self._opt.test = False
         self._opt.num_workers = 8
@@ -196,15 +195,6 @@ class opts(object):
     def load_model(self, value):
         self._load_model = value
         self._opt.load_model = self._load_model
-
-    @property
-    def resume(self):
-        return self._resume
-
-    @resume.setter
-    def resume(self, value):
-        self._resume = value
-        self._opt.resume = self._resume
 
     @property
     def gpus(self):
@@ -381,6 +371,10 @@ class opts(object):
     @property
     def opt(self):
         return self._opt
+
+    @property
+    def resume(self):
+        return self._resume
 
     @property
     def task(self):

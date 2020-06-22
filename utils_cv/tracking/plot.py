@@ -8,6 +8,7 @@ import numpy as np
 
 from .bbox import TrackingBbox
 
+
 def draw_boxes(
     im: np.ndarray,
     cur_tracks: List[TrackingBbox],
@@ -51,9 +52,7 @@ def draw_boxes(
     return im
 
 
-def assign_colors(
-    id_list: List[int],
-) -> Dict[int, Tuple[int, int, int]]:
+def assign_colors(id_list: List[int],) -> Dict[int, Tuple[int, int, int]]:
     """ 
     Produce corresponding unique color palettes for unique ids
     
