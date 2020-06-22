@@ -22,4 +22,5 @@ We recommend to use the **R(2+1)D** model for its competitive accuracy, fast inf
 
 | Directory |  Description |
 | -------- |  ----------- |
-| [r2p1d](r2p1d)  | Scripts for fine-tuning a pre-trained R(2+1)D model on HMDB-51 dataset
+| [i3d](i3d) | Scripts for fine-tuning a pre-trained I3D model on HMDB-51
+dataset. |
