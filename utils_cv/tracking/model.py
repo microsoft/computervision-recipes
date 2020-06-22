@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import argparse
+from collections import OrderedDict
 from copy import deepcopy
 import glob
 import requests
@@ -14,6 +15,7 @@ import torch.cuda as cuda
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
+import cv2
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -29,6 +31,7 @@ from .references.fairmot.trains.train_factory import train_factory
 from .bbox import TrackingBbox
 from .dataset import TrackingDataset
 from .opts import opts
+from .plot import draw_boxes, assign_colors
 from ..common.gpu import torch_device
 
 BASELINE_URL = (
@@ -81,6 +84,45 @@ def _get_gpu_str():
     else:
         return "-1"  # cpu
 
+def write_video(
+    results: Dict[int, List[TrackingBbox]], input_video: str, output_video: str
+) -> None:
+    """ 
+    Plot the predicted tracks on the input video. Write the output to {output_path}.
+
+    Args:
+        results: dictionary mapping frame id to a list of predicted TrackingBboxes
+        input_video: path to the input video
+        output_video: path to write out the output video
+    """
+    results = OrderedDict(sorted(results.items()))
+    # read video and initialize new tracking video
+    video = cv2.VideoCapture()
+    video.open(input_video)
+
+    image_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+    image_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*"MP4V")
+    frame_rate = int(video.get(cv2.CAP_PROP_FPS))
+    writer = cv2.VideoWriter(
+        output_video, fourcc, frame_rate, (image_width, image_height)
+    )
+
+    # assign bbox color per id
+    unique_ids = list(set([bb.track_id for frame in results.values() for bb in frame]))
+    color_map = assign_colors(unique_ids)
+
+    # create images and add to video writer, adapted from https://github.com/ZQPei/deep_sort_pytorch
+    frame_idx = 0
+    while video.grab():
+        _, cur_image = video.retrieve()
+        cur_tracks = results[frame_idx]
+        if len(cur_tracks) > 0:
+            cur_image = draw_boxes(cur_image, cur_tracks, color_map)
+        writer.write(cur_image)
+        frame_idx += 1
+
+    print(f"Output saved to {output_video}.")
 
 class TrackingLearner(object):
     """Tracking Learner for Multi-Object Tracking"""
@@ -193,7 +235,8 @@ class TrackingLearner(object):
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
 
-        self.save(self.model_path)
+        # save after training because at inference-time FairMOT src reads model weights from disk 
+        self.save(self.model_path) 
 
     def save(self, path) -> None:
         """
