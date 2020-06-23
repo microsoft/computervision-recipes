@@ -33,4 +33,4 @@ This sub-module includes helper functions for action recognition.
 
 ### [tracking](./tracking)
 
-This sub-module includes helper functions for multi-object tracking.
+This sub-module includes helper functions for multi-object tracking. 
