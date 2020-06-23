@@ -180,7 +180,7 @@ class TrackingLearner(object):
         )
         
         # initialize loss vars
-        self.losses_dict = defaultdict()
+        self.losses_dict = defaultdict(list)
         self.epochs = []
         
         # training loop
