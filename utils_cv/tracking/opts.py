@@ -14,7 +14,7 @@ class opts(object):
 
     def __init__(
         self,
-        root_dir: str = os.getcwd(),
+        load_model: str = "",
         gpus: str = "0, 1",
         save_all: bool = False,
         arch: str = "dla_34",
@@ -32,13 +32,15 @@ class opts(object):
         track_buffer: int = 30,
         min_box_area: float = 200,
         reid_dim: int = 512,
+        root_dir: str = os.getcwd(),
     ) -> None:
         self._init_opt()
 
+        self.load_model = load_model
         self.gpus = gpus
         self.save_all = save_all
         self.arch = arch
-        self.head_conv = head_conv if head_conv != -1 else 256  # init default
+        self.head_conv = head_conv
         self.input_h = input_h
         self.input_w = input_w
         self.lr = lr
@@ -62,10 +64,9 @@ class opts(object):
 
         self._opt.task = "mot"
         self._opt.dataset = "jde"
+        self._opt.resume = False
         self._opt.exp_id = "default"
         self._opt.test = False
-        self._opt.load_model = ""
-        self._opt.resume = False
         self._opt.num_workers = 8
         self._opt.not_cuda_benchmark = False
         self._opt.seed = 317
@@ -171,7 +172,7 @@ class opts(object):
         self._opt.output_res = max(self._opt.output_h, self._opt.output_w)
 
         if self._opt.task == "mot":
-            self.heads = {
+            self._opt.heads = {
                 "hm": self._opt.num_classes,
                 "wh": 2
                 if not self._opt.cat_spec_wh
@@ -179,13 +180,22 @@ class opts(object):
                 "id": self._opt.reid_dim,
             }
             if self._opt.reg_offset:
-                self.heads.update({"reg": 2})
+                self._opt.heads.update({"reg": 2})
             self._opt.nID = dataset.nID
             self._opt.img_size = (self._opt.input_w, self._opt.input_h)
         else:
             assert 0, "task not defined"
 
     ### getters and setters ###
+    @property
+    def load_model(self):
+        return self._load_model
+
+    @load_model.setter
+    def load_model(self, value):
+        self._load_model = value
+        self._opt.load_model = self._load_model
+
     @property
     def gpus(self):
         return self._gpus
@@ -224,7 +234,7 @@ class opts(object):
 
     @head_conv.setter
     def head_conv(self, value):
-        self._head_conv = value
+        self._head_conv = value if value != -1 else 256
         self._opt.head_conv = self._head_conv
 
     @property
@@ -344,14 +354,9 @@ class opts(object):
         self._root_dir = value
         self._opt.root_dir = self._root_dir
 
-        self._exp_dir = osp.join(self._root_dir, "exp", self._opt.task)
-        self._opt.exp_dir = self._exp_dir
-
-        self._save_dir = osp.join(self._exp_dir, self._opt.exp_id)
-        self._opt.save_dir = self._save_dir
-
-        self._debug_dir = osp.join(self._save_dir, "debug")
-        self._opt.debug_dir = self._debug_dir
+        self._opt.exp_dir = osp.join(self._root_dir, "exp", self._opt.task)
+        self._opt.save_dir = osp.join(self._opt.exp_dir, self._opt.exp_id)
+        self._opt.debug_dir = osp.join(self._opt.save_dir, "debug")
 
     @property
     def device(self):
@@ -362,19 +367,14 @@ class opts(object):
         self._device = value
         self._opt.device = self._device
 
-    @property
-    def heads(self):
-        return self._heads
-
-    @heads.setter
-    def heads(self, value):
-        self._heads = value
-        self._opt.heads = self._heads
-
     ### getters only ####
     @property
     def opt(self):
         return self._opt
+
+    @property
+    def resume(self):
+        return self._resume
 
     @property
     def task(self):
@@ -382,8 +382,12 @@ class opts(object):
 
     @property
     def save_dir(self):
-        return self.opt._save_dir
+        return self._opt.save_dir
 
     @property
     def chunk_sizes(self):
         return self._opt.chunk_sizes
+
+    @property
+    def heads(self):
+        return self._opt.heads
