@@ -2,9 +2,10 @@
 # Licensed under the MIT License.
 
 import argparse
+from collections import defaultdict
 import os
 import os.path as osp
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import requests
 
 import torch
@@ -24,7 +25,7 @@ from .references.fairmot.trains.train_factory import train_factory
 from .bbox import TrackingBbox
 from .dataset import TrackingDataset
 from .opts import opts
-from ..common.gpu import torch_device, get_gpu_str
+from ..common.gpu import torch_device #, get_gpu_str
 
 BASELINE_URL = (
     "https://drive.google.com/open?id=1udpOPum8fJdoEQm6n0jsIgMMViOMFinu"
@@ -101,7 +102,7 @@ class TrackingLearner(object):
         self.opt = opts()
         self.opt.arch = arch
         self.opt.head_conv = head_conv if head_conv else -1
-        self.opt.gpus = get_gpu_str()
+        self.opt.gpus = _get_gpu_str()
         self.opt.device = torch_device()
 
         self.dataset = dataset
@@ -179,7 +180,7 @@ class TrackingLearner(object):
         )
         
         # initialize loss vars
-        self.losses_dict = {key: [] for key in ['loss', 'hm_loss', 'wh_loss', 'off_loss', 'id_loss']} 
+        self.losses_dict = defaultdict()
         self.epochs = []
         
         # training loop
@@ -199,7 +200,13 @@ class TrackingLearner(object):
                     self.losses_dict[k].append(v)
 
     def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5))->None: 
-        '''Plots training loss from calling `fit`  '''
+        '''
+        Plots training loss from calling `fit`  
+        
+        Args:
+            figsize (optional): width and height wanted for figure of training-loss plot
+        
+        '''
         fig = plt.figure(figsize=figsize)
         ax1 = fig.add_subplot(1, 1, 1)
 
