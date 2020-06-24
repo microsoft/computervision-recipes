@@ -1,8 +1,8 @@
 <img src="scenarios/media/logo_cvbp.png" align="right" alt="" width="300"/>
 
 ```diff
-+ June 24: Added action recognition as new core scenario. 
-+          Object tracking coming soon (in 2-4 weeks).
++ Update June 24: Added action recognition as new core scenario. 
++                 Object tracking coming soon (in 2-4 weeks).
 ```
 
 # Computer Vision
