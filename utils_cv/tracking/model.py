@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import argparse
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from copy import deepcopy
 import glob
 import requests
@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader
 import cv2
 import pandas as pd
 import matplotlib.pyplot as plt
+import motmetrics as mm
 
 from .references.fairmot.datasets.dataset.jde import LoadImages, LoadVideo
 from .references.fairmot.models.model import (
@@ -26,12 +27,13 @@ from .references.fairmot.models.model import (
     save_model,
 )
 from .references.fairmot.tracker.multitracker import JDETracker
+from .references.fairmot.tracking_utils.evaluation import Evaluator
 from .references.fairmot.trains.train_factory import train_factory
 
 from .bbox import TrackingBbox
 from .dataset import TrackingDataset
 from .opts import opts
-from .plot import draw_boxes, assign_colors
+from .plot import draw_boxes, assign_colors, save_results_txt
 from ..common.gpu import torch_device
 
 BASELINE_URL = (
@@ -211,7 +213,10 @@ class TrackingLearner(object):
         Trainer = train_factory[opt_fit.task]
         trainer = Trainer(opt_fit.opt, self.model, self.optimizer)
         trainer.set_device(opt_fit.gpus, opt_fit.chunk_sizes, opt_fit.device)
-
+        
+        # initialize loss vars
+        self.losses_dict = defaultdict(list)
+        
         # training loop
         for epoch in range(
             start_epoch + 1, start_epoch + opt_fit.num_epochs + 1
@@ -229,10 +234,41 @@ class TrackingLearner(object):
                 lr = opt_fit.lr * (0.1 ** (opt_fit.lr_step.index(epoch) + 1))
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
+                    
+            # store losses in each epoch                   
+            for k, v in log_dict_train.items():
+                if k in ['loss', 'hm_loss', 'wh_loss', 'off_loss', 'id_loss']:
+                    self.losses_dict[k].append(v)
 
         # save after training because at inference-time FairMOT src reads model weights from disk
         self.save(self.model_path)
 
+    def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5))->None: 
+        '''
+        Plots training loss from calling `fit`  
+        
+        Args:
+            figsize (optional): width and height wanted for figure of training-loss plot
+        
+        '''
+        fig = plt.figure(figsize=figsize)
+        ax1 = fig.add_subplot(1, 1, 1)
+        
+        ax1.set_xlim([0, len(self.losses_dict['loss']) - 1])
+        ax1.set_xticks(range(0, len(self.losses_dict['loss'])))        
+        ax1.set_xlabel("epochs")
+        ax1.set_ylabel("losses")
+        
+        ax1.plot(self.losses_dict['loss'], c="r", label='loss')
+        ax1.plot(self.losses_dict['hm_loss'], c="y", label='hm_loss')
+        ax1.plot(self.losses_dict['wh_loss'], c="g", label='wh_loss')
+        ax1.plot(self.losses_dict['off_loss'], c="b", label='off_loss')
+        ax1.plot(self.losses_dict['id_loss'], c="m", label='id_loss')
+
+        plt.legend(loc='upper right')
+        fig.suptitle("Training losses over epochs")
+        
+    
     def save(self, path) -> None:
         """
         Save the model to a specified path.
@@ -243,9 +279,48 @@ class TrackingLearner(object):
         save_model(path, self.epoch, self.model, self.optimizer)
         print(f"Model saved to {path}")
 
-    def evaluate(self, results, gt) -> pd.DataFrame:
-        pass
+    def evaluate(self,
+                 results: Dict[int, List[TrackingBbox]],
+                 gt_root_path: str) -> pd.DataFrame:
+        
+        """ eval code that calls on 'motmetrics' package in referenced FairMOT script, to produce MOT metrics on inference, given ground-truth.
+        Args:
+            results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]] 
+            gt_root_path: path of dataset containing GT annotations in MOTchallenge format (xywh)
+        Returns:
+            strsummary: pandas.DataFrame output by method in 'motmetrics', containing metrics scores
+        Raises:
+            Exception: if both `results` and `self.stored_predictions` are None.
+        """
+        if results is None:
+            if not self.stored_predictions: #TODO: add stored_predictions in predict() 
+                raise Exception("No predict() function run on dataset for for evaluation")
+            results = self.stored_predictions     
+        
+        result_filename = osp.join(gt_root_path,'results', 'results.txt')
+        if not osp.exists(osp.join(gt_root_path,'results')):
+            os.makedirs(osp.join(gt_root_path,'results'))
+        save_results_txt(results, result_filename)
 
+        #Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
+        evaluator = Evaluator(gt_root_path, "single_vid", "mot")
+        accs=[evaluator.eval_file(result_filename)]    
+
+        # get summary
+        metrics = mm.metrics.motchallenge_metrics
+        mh = mm.metrics.create()
+       
+        summary = Evaluator.get_summary(accs, ("single_vid",), metrics)
+        strsummary = mm.io.render_summary(
+            summary,
+            formatters=mh.formatters,
+            namemap=mm.io.motchallenge_metric_names
+        )
+        print(strsummary)
+        Evaluator.save_summary(summary, osp.join(gt_root_path,'results', 'summary_metrics.xlsx'))
+
+        return strsummary
+    
     def predict(
         self,
         im_or_video_path: str,
