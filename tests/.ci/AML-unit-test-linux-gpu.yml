@@ -58,6 +58,7 @@ steps:
   displayName: 'submit_azureml_pytest'
 
 - task: PublishTestResults@2
+  timeoutInMinutes: 360
   displayName: 'Publish Test Results **/test-*.xml'
   condition: always()
   inputs:
