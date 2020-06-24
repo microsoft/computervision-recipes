@@ -396,7 +396,8 @@ class VideoDataset:
             self.train_ds,
             batch_size=self.batch_size * devices,
             shuffle=True,
-            num_workers=db_num_workers(),
+            num_workers=0,
+            # num_workers=db_num_workers(),
             pin_memory=True,
         )
 
@@ -404,7 +405,8 @@ class VideoDataset:
             self.test_ds,
             batch_size=self.batch_size * devices,
             shuffle=False,
-            num_workers=db_num_workers(),
+            num_workers=0,
+            # num_workers=db_num_workers(),
             pin_memory=True,
         )
 
