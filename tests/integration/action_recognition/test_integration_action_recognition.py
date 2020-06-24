@@ -29,6 +29,3 @@ def test_01_notebook_run(action_recognition_notebooks):
 
     assert vid_pred_accuracy > 0.3
     assert clip_pred_accuracy > 0.3
-
-
-
