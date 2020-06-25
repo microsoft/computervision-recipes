@@ -138,8 +138,8 @@ class TrackingLearner(object):
 
     def __init__(
         self,
-        dataset: TrackingDataset,
         model_path: str,
+        dataset: Optional[TrackingDataset] = None,
         arch: str = "dla_34",
         head_conv: int = None,
     ) -> None:
@@ -366,7 +366,6 @@ class TrackingLearner(object):
         # initialize tracker
         opt_pred.load_model = self.model_path
         tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
-
         # initialize dataloader
         dataloader = self._get_dataloader(
             im_or_video_path, opt_pred.input_h, opt_pred.input_w
@@ -381,7 +380,7 @@ class TrackingLearner(object):
             online_bboxes = []
             for t in online_targets:
                 tlwh = t.tlwh
-                tlbr = t.tlbr
+                tlbr = t.tlbr 
                 tid = t.track_id
                 vertical = tlwh[2] / tlwh[3] > 1.6
                 if tlwh[2] * tlwh[3] > opt_pred.min_box_area and not vertical:
