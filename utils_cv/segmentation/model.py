@@ -14,7 +14,7 @@ from .dataset import load_im
 
 
 # Ignore pixels marked as void. That could be pixels which are hard to annotate and hence should not influence training.
-def _objective_fct_partial(void_id, input, target):
+def ratio_correct(void_id, input, target):
     """ Helper function to compute the ratio of correctly classified pixels. """
     target = target.squeeze(1)
     if void_id:
@@ -28,8 +28,8 @@ def _objective_fct_partial(void_id, input, target):
     return ratio_correct
 
 
-def get_objective_fct(classes: List[str]):
-    """ Returns objective function for model training, defined as ratio of correctly classified pixels.
+def get_ratio_correct_metric(classes: List[str]):
+    """ Returns metric which computes the ratio of correctly classified pixels.
 
     Args:
         classes: list of class names
@@ -43,7 +43,7 @@ def get_objective_fct(classes: List[str]):
     else:
         void_id = None
 
-    return partial(_objective_fct_partial, void_id)
+    return partial(ratio_correct, void_id)
 
 
 def predict(

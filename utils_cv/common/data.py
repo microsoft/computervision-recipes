@@ -22,6 +22,14 @@ def data_path() -> Path:
     return data_dir
 
 
+def download(url: str, loc: str):
+    """ Download contents of a url into 'loc'"""
+    r = requests.get(url)
+    with open(loc, 'wb') as f:
+        f.write(r.content)
+    return loc
+
+
 def get_files_in_directory(
     directory: str, suffixes: List[str] = None
 ) -> List[str]:

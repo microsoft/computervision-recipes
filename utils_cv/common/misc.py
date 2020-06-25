@@ -7,6 +7,7 @@ import random
 import shutil
 from typing import List, Union
 from PIL import ImageFont
+from typing import Any
 
 import numpy as np
 
@@ -69,7 +70,9 @@ def get_font(size: int = 12) -> ImageFont:
         Tries different fonts and lower/upper case to be compatible with both Linux and Windows.
     """
     font = None
-    for font_name in "Tahoma tahoma Verdana verdana Arial arial Helvetica helvetica DejaVuSans dejavusans".split():
+    for (
+        font_name
+    ) in "Tahoma tahoma Verdana verdana Arial arial Helvetica helvetica DejaVuSans dejavusans".split():
         try:
             font = ImageFont.truetype(f"{font_name}.ttf", size)
         except (AttributeError, IOError):
@@ -88,11 +91,9 @@ def get_font(size: int = 12) -> ImageFont:
 class Config(object):
     def __init__(self, config=None, **extras):
         """Dictionary wrapper to access keys as attributes.
-
         Args:
             config (dict or Config): Configurations
             extras (kwargs): Extra configurations
-
         Examples:
             >>> cfg = Config({'lr': 0.01}, momentum=0.95)
             or
@@ -112,5 +113,8 @@ class Config(object):
         for k, v in extras.items():
             setattr(self, k, v)
 
-    def get(self, key, default):
+    def get(self, key: str, default: Any) -> Any:
         return getattr(self, key, default)
+
+    def set(self, key: str, value: Any) -> None:
+        setattr(self, key, value)

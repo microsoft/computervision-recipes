@@ -1,9 +1,4 @@
-# Human Action Recognition
-
-```diff
-+ Feb 2020: We are working on moving all code from contrib\action_recognition to this folder.
-+           While this work is ongoing, please visit both locations for implementations and documentation.
-```
+# Action Recognition
 
 This directory contains resources for building video-based action recognition systems. Our goal is to enable users to easily and quickly train highly accurate and fast models on their own custom datasets.
 
@@ -13,13 +8,15 @@ Action recognition (also known as activity recognition) consists of classifying 
 
 
 ## Notebooks
+
 The following example notebooks are provided:
 
 | Notebook | Description |
 | --- | --- |
 | [00_webcam](00_webcam.ipynb) | Real-time inference example on Webcam input. |
-| [01_training_introduction](01_training_introduction.ipynb) | Fine-tuning on the HMDB-51 dataset. |
-| [02_video_transformation](02_video_transformation.ipynb) | Examples of video transformations. |
+| [01_training_introduction](01_training_introduction.ipynb) | Introduction to action recognition: training, evaluating, predicting |
+| [01_training_introduction](02_training_hmdb.ipynb) | Fine-tuning on the HMDB-51 dataset. |
+| [02_video_transformation](10_video_transformation.ipynb) | Examples of video transformations. |
 
 Furthermore, tools for data annotation are located in the [video_annotation](./video_annotation) subfolder.
 
@@ -100,12 +97,6 @@ We recommend the following reading to familiarize oneself with the field:
 Most publications focus on accuracy rather than inference speed. The figure below from the paper "[Representation Flow for Action Recognition](https://arxiv.org/abs/1810.01455)" is a noteworthy exception. Note how fast R(2+1)D is with 471ms, compared especially to approaches which require optical flow fields as input to the DNN ("Flow" or "Two-stream").
 
 <img align="center" src="./media/inference_speeds.png" width = "500" />  
-
-
-
-
-
-
 
 ## Coding guidelines
 

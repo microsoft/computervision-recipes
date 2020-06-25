@@ -21,6 +21,7 @@ from fastai.vision import (
     imagenet_stats,
     Learner,
     models,
+    ResizeMethod,
     SegmentationItemList,
     unet_learner,
 )
@@ -30,7 +31,7 @@ import pandas as pd
 
 from utils_cv.common.gpu import db_num_workers
 from utils_cv.segmentation.dataset import read_classes
-from utils_cv.segmentation.model import get_objective_fct
+from utils_cv.segmentation.model import get_ratio_correct_metric
 
 
 Time = float
@@ -294,7 +295,7 @@ class ParameterSweeper:
             SegmentationItemList.from_folder(im_path)
             .split_by_rand_pct(valid_pct=0.33)
             .label_from_func(get_gt_filename, classes=classes)
-            .transform(tfms=tfms, size=im_size, tfm_y=True)
+            .transform(tfms=tfms, resize_method = ResizeMethod.CROP, size=im_size, tfm_y=True)
             .databunch(bs=bs, num_workers=db_num_workers())
             .normalize(imagenet_stats)
         )
@@ -412,7 +413,7 @@ class ParameterSweeper:
         elif learner_type == "unet":
             classes = read_classes(os.path.join(data_path, "classes.txt"))
             data = self._get_data_bunch_segmentationitemlist(data_path, transform, im_size, batch_size, classes)
-            metric = get_objective_fct(classes)
+            metric = get_ratio_correct_metric(classes)
             metric.__name__ = "ratio_correct"
             learn = unet_learner(
                 data,
