@@ -2,7 +2,7 @@ import os
 from typing import Dict
 import numpy as np
 
-from tracking_utils.log import logger
+from .log import logger #EDITED
 
 
 def write_results(filename, results_dict: Dict, data_type: str):
@@ -61,16 +61,18 @@ labels={'ped', ...			% 1
 
 
 def read_mot_results(filename, is_gt, is_ignore):
+   
     valid_labels = {1}
     ignore_labels = {2, 7, 8, 12}
     results_dict = dict()
-    if os.path.isfile(filename):
-        with open(filename, 'r') as f:
-            for line in f.readlines():
-                linelist = line.split(',')
-                if len(linelist) < 7:
+    if os.path.isfile(filename):        
+        with open(filename, 'r') as f:            
+            for line in f.readlines():                
+                linelist = line.split(',')                
+                if len(linelist) < 7:                   
                     continue
                 fid = int(linelist[0])
+                
                 if fid < 1:
                     continue
                 results_dict.setdefault(fid, list())
@@ -82,6 +84,7 @@ def read_mot_results(filename, is_gt, is_ignore):
                         if mark == 0 or label not in valid_labels:
                             continue
                     score = 1
+                    
                 elif is_ignore:
                     if 'MOT16-' in filename or 'MOT17-' in filename:
                         label = int(float(linelist[7]))
@@ -91,14 +94,15 @@ def read_mot_results(filename, is_gt, is_ignore):
                     else:
                         continue
                     score = 1
+                    
                 else:
                     score = float(linelist[6])
-
+                    
+                
                 tlwh = tuple(map(float, linelist[2:6]))
-                target_id = int(linelist[1])
-
+                target_id = int(linelist[1])                
                 results_dict[fid].append((tlwh, target_id, score))
-
+                
     return results_dict
 
 
