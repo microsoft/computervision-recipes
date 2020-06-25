@@ -68,7 +68,6 @@ class STrack(BaseTrack):
         self.kalman_filter = kalman_filter
         self.track_id = self.next_id()
         self.mean, self.covariance = self.kalman_filter.initiate(self.tlwh_to_xyah(self._tlwh))
-
         self.tracklet_len = 0
         self.state = TrackState.Tracked
         #self.is_activated = True
@@ -171,7 +170,7 @@ class JDETracker(object):
             opt.device = torch.device('cuda')
         else:
             opt.device = torch.device('cpu')
-        print('Creating model...')
+#         print('Creating model...')
         self.model = create_model(opt.arch, opt.heads, opt.head_conv)
         self.model = load_model(self.model, opt.load_model)
         self.model = self.model.to(opt.device)
@@ -190,6 +189,7 @@ class JDETracker(object):
         self.std = np.array(opt.std, dtype=np.float32).reshape(1, 1, 3)
 
         self.kalman_filter = KalmanFilter()
+        BaseTrack._count = 0 # EDITED
 
     def post_process(self, dets, meta):
         dets = dets.detach().cpu().numpy()
