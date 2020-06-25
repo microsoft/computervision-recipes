@@ -294,6 +294,9 @@ class TrackingLearner(object):
             strsummary: str output by method in 'motmetrics' package, containing metrics scores        
         """
        
+        #Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
+        evaluator = Evaluator(gt_root_path, "single_vid", "mot")
+        
         with tempfile.TemporaryDirectory() as tmpdir1:
             os.makedirs(osp.join(tmpdir1,'results'))
             result_filename = osp.join(tmpdir1,'results', 'results.txt')
@@ -302,10 +305,9 @@ class TrackingLearner(object):
             bboxes_mot = boxes_to_mot(results)            
             np.savetxt(result_filename, bboxes_mot, delimiter=",", fmt="%s")
 
-            #Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
-            evaluator = Evaluator(gt_root_path, "single_vid", "mot")
-            accs=[evaluator.eval_file(result_filename)]    
-
+            # Run evaluation using pymotmetrics package
+            accs=[evaluator.eval_file(result_filename)]
+                           
         # get summary
         metrics = mm.metrics.motchallenge_metrics
         mh = mm.metrics.create()
