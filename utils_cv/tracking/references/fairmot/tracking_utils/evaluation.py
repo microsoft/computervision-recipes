@@ -76,7 +76,7 @@ class Evaluator(object):
         return events
 
     def eval_file(self, filename):
-        self.reset_accumulator        
+        self.reset_accumulator()        
         result_frame_dict = read_results(filename, self.data_type, is_gt=False)
         frames = sorted(list(set(self.gt_frame_dict.keys()) | set(result_frame_dict.keys())))
         

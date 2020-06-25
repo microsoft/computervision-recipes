@@ -8,7 +8,9 @@ import glob
 import requests
 import os
 import os.path as osp
+import tempfile #KIP
 from typing import Dict, List, Tuple
+
 
 import torch
 import torch.cuda as cuda
@@ -16,6 +18,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 import cv2
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import motmetrics as mm
@@ -31,9 +34,9 @@ from .references.fairmot.tracking_utils.evaluation import Evaluator
 from .references.fairmot.trains.train_factory import train_factory
 
 from .bbox import TrackingBbox
-from .dataset import TrackingDataset
+from .dataset import TrackingDataset, boxes_to_mot
 from .opts import opts
-from .plot import draw_boxes, assign_colors, save_results_txt
+from .plot import draw_boxes, assign_colors
 from ..common.gpu import torch_device
 
 BASELINE_URL = (
@@ -281,30 +284,27 @@ class TrackingLearner(object):
 
     def evaluate(self,
                  results: Dict[int, List[TrackingBbox]],
-                 gt_root_path: str) -> pd.DataFrame:
+                 gt_root_path: str) -> str:
         
         """ eval code that calls on 'motmetrics' package in referenced FairMOT script, to produce MOT metrics on inference, given ground-truth.
         Args:
             results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]] 
             gt_root_path: path of dataset containing GT annotations in MOTchallenge format (xywh)
         Returns:
-            strsummary: pandas.DataFrame output by method in 'motmetrics', containing metrics scores
-        Raises:
-            Exception: if both `results` and `self.stored_predictions` are None.
+            strsummary: str output by method in 'motmetrics' package, containing metrics scores        
         """
-        if results is None:
-            if not self.stored_predictions: #TODO: add stored_predictions in predict() 
-                raise Exception("No predict() function run on dataset for for evaluation")
-            results = self.stored_predictions     
-        
-        result_filename = osp.join(gt_root_path,'results', 'results.txt')
-        if not osp.exists(osp.join(gt_root_path,'results')):
-            os.makedirs(osp.join(gt_root_path,'results'))
-        save_results_txt(results, result_filename)
+       
+        with tempfile.TemporaryDirectory() as tmpdir1:
+            os.makedirs(osp.join(tmpdir1,'results'))
+            result_filename = osp.join(tmpdir1,'results', 'results.txt')
+          
+            # Save results im MOT format for evaluation            
+            bboxes_mot = boxes_to_mot(results)            
+            np.savetxt(result_filename, bboxes_mot, delimiter=",", fmt="%s")
 
-        #Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
-        evaluator = Evaluator(gt_root_path, "single_vid", "mot")
-        accs=[evaluator.eval_file(result_filename)]    
+            #Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
+            evaluator = Evaluator(gt_root_path, "single_vid", "mot")
+            accs=[evaluator.eval_file(result_filename)]    
 
         # get summary
         metrics = mm.metrics.motchallenge_metrics
@@ -316,9 +316,8 @@ class TrackingLearner(object):
             formatters=mh.formatters,
             namemap=mm.io.motchallenge_metric_names
         )
-        print(strsummary)
-        Evaluator.save_summary(summary, osp.join(gt_root_path,'results', 'summary_metrics.xlsx'))
-
+        print(strsummary)        
+        
         return strsummary
     
     def predict(
