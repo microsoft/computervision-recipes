@@ -23,7 +23,7 @@ def test_plot_mask_stats(tiny_seg_databunch, seg_classes):
         tiny_seg_databunch, seg_classes, exclude_classes=["background"]
     )
 
-
-def test_plot_confusion_matrix(seg_confusion_matrices, seg_classes):
-    cmat, cmat_norm = seg_confusion_matrices
-    plot_confusion_matrix(cmat, cmat_norm, seg_classes)
+   
+#def test_plot_confusion_matrix(seg_confusion_matrices, seg_classes):
+#    cmat, cmat_norm = seg_confusion_matrices
+#    plot_confusion_matrix(cmat, cmat_norm, seg_classes)

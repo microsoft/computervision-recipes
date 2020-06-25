@@ -3,7 +3,7 @@ from collections import deque
 import numpy as np
 import torch
 import torch.nn.functional as F
-from ..models import # EDITED
+from ..models import * # EDITED
 from ..models.decode import mot_decode # EDITED
 from ..models.model import create_model, load_model # EDITED
 from ..models.utils import _tranpose_and_gather_feat # EDITED

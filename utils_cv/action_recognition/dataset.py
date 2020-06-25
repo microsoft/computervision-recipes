@@ -3,6 +3,7 @@
 
 import os
 import copy
+import math
 from pathlib import Path
 import warnings
 from typing import Callable, Tuple, Union, List
@@ -20,7 +21,7 @@ from .references import transforms_video as transforms
 from .references.functional_video import denormalize
 
 from ..common.misc import Config
-from ..common.gpu import num_devices
+from ..common.gpu import num_devices, db_num_workers
 
 Trans = Callable[[object, dict], Tuple[object, dict]]
 
@@ -35,18 +36,27 @@ class VideoRecord(object):
 
     Ex:
     ```
-    path/to/my/clip.mp4 3
-    path/to/another/clip.mp4 32
+    path/to/my/clip_1 3
+    path/to/another/clip_2 32
     ```
     """
 
     def __init__(self, data: List[str]):
         """ Initialized a VideoRecord
 
+        Ex.
+        data = ["path/to/video.mp4", 2, "cooking"]
+
         Args:
             row: a list where first element is the path and second element is
-            the label
+            the label, and the third element (optional) is the label name
         """
+        assert len(data) >= 2 and len(data) <= 3
+        assert isinstance(data[0], str)
+        assert isinstance(int(data[1]), int)
+        if len(data) == 3:
+            assert isinstance(data[2], str)
+
         self._data = data
         self._num_frames = None
 
@@ -66,8 +76,12 @@ class VideoRecord(object):
     def label(self) -> int:
         return int(self._data[1])
 
+    @property
+    def label_name(self) -> str:
+        return None if len(self._data) <= 2 else self._data[2]
 
-def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
+
+def get_transforms(train: bool = True, tfms_config: Config = None) -> Trans:
     """ Get default transformations to apply depending on whether we're applying it to the training or the validation set. If no tfms configurations are passed in, use the defaults.
 
     Args:
@@ -78,11 +92,7 @@ def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
         A list of transforms to apply
     """
     if tfms_config is None:
-        tfms_config = (
-            get_default_tfms_config(train=True)
-            if train
-            else get_default_tfms_config(train=False)
-        )
+        tfms_config = get_default_tfms_config(train=train)
 
     # 1. resize
     tfms = [
@@ -91,6 +101,7 @@ def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
             tfms_config.im_scale, tfms_config.resize_keep_ratio
         ),
     ]
+
     # 2. crop
     if tfms_config.random_crop:
         if tfms_config.random_crop_scales:
@@ -102,8 +113,10 @@ def get_transforms(train: bool, tfms_config: Config = None) -> Trans:
     else:
         crop = transforms.CenterCropVideo(tfms_config.input_size)
     tfms.append(crop)
+
     # 3. flip
     tfms.append(transforms.RandomHorizontalFlipVideo(tfms_config.flip_ratio))
+
     # 4. normalize
     tfms.append(transforms.NormalizeVideo(tfms_config.mean, tfms_config.std))
 
@@ -150,6 +163,7 @@ class VideoDataset:
     def __init__(
         self,
         root: str,
+        seed: int = None,
         train_pct: float = 0.75,
         num_samples: int = 1,
         sample_length: int = 8,
@@ -169,6 +183,7 @@ class VideoDataset:
 
         Arg:
             root: Videos directory.
+            seed: random seed
             train_pct: percentage of dataset to use for training
             num_samples: Number of clips to sample from each video.
             sample_length: Number of consecutive frames to sample from a video (i.e. clip length).
@@ -184,7 +199,6 @@ class VideoDataset:
             test_transforms: transforms for testing
         """
 
-        # TODO check wrong arguments early to prevent failure
         assert sample_step > 0
         assert num_samples > 0
 
@@ -205,6 +219,7 @@ class VideoDataset:
             )
 
         self.root = root
+        self.seed = seed
         self.num_samples = num_samples
         self.sample_length = sample_length
         self.sample_step = sample_step
@@ -225,16 +240,30 @@ class VideoDataset:
                 test_split_file=test_split_file,
             )
             if train_split_file
-            else self.split_train_test(train_pct=train_pct)
+            else self.split_by_folder(train_pct=train_pct)
         )
 
         # initialize dataloaders
         self.init_data_loaders()
 
-    def split_train_test(
+    def split_by_folder(
         self, train_pct: float = 0.8
     ) -> Tuple[Dataset, Dataset]:
-        """ Split this dataset into a training and testing set
+        """ Split this dataset into a training and testing set based on the
+        folders that the videos are in.
+
+        ```
+        /data
+        +-- action_class_1
+        |   +-- video_01.mp4
+        |   +-- video_02.mp4
+        |   +-- ...
+        +-- action_class_2
+        |   +-- video_11.mp4
+        |   +-- video_12.mp4
+        |   +-- ...
+        +-- ...
+        ```
 
         Args:
             train_pct: the ratio of images to use for training vs
@@ -243,7 +272,45 @@ class VideoDataset:
         Return
             A training and testing dataset in that order
         """
-        pass
+        self.video_records = []
+
+        # get all dirs in root (and make sure they are dirs)
+        dirs = []
+        for entry in os.listdir(self.root):
+            if os.path.isdir(os.path.join(self.root, entry)):
+                dirs.append(os.path.join(self.root, entry))
+
+        # add each video in each dir as a video record
+        label = 0
+        self.classes = []
+        for action in dirs:
+            action = os.path.basename(os.path.normpath(action))
+            self.video_records.extend(
+                [
+                    VideoRecord(
+                        [
+                            os.path.join(self.root, action, vid.split(".")[0]),
+                            label,
+                            action,
+                        ]
+                    )
+                    for vid in os.listdir(os.path.join(self.root, action))
+                ]
+            )
+            label += 1
+            self.classes.append(action)
+
+        # random split
+        test_num = math.floor(len(self) * (1 - train_pct))
+        if self.seed:
+            torch.manual_seed(self.seed)
+
+        # set indices
+        indices = torch.randperm(len(self)).tolist()
+        train_range = indices[test_num:]
+        test_range = indices[:test_num]
+
+        return self.split_train_test(train_range, test_range)
 
     def split_with_file(
         self,
@@ -254,9 +321,9 @@ class VideoDataset:
 
         Each line in the split file must use the form:
         ```
-        path/to/jumping/video.mp4 3
-        path/to/swimming/video.mp4 5
-        path/to/another/jumping/video.mp4 3
+        path/to/jumping/video_name_1 3
+        path/to/swimming/video_name_2 5
+        path/to/another/jumping/video_name_3 3
         ```
 
         Args:
@@ -289,6 +356,20 @@ class VideoDataset:
         train_range = indices[:train_len]
         test_range = indices[train_len:]
 
+        return self.split_train_test(train_range, test_range)
+
+    def split_train_test(
+        self, train_range: torch.Tensor, test_range: torch.Tensor,
+    ) -> Tuple[Dataset, Dataset]:
+        """ Split this dataset into a training and testing set
+
+        Args:
+            train_range: range of indices for training set
+            test_range: range of indices for testing set
+
+        Return
+            A training and testing dataset in that order
+        """
         # create train subset
         train = copy.deepcopy(Subset(self, train_range))
         train.dataset.transforms = self.train_transforms
@@ -315,7 +396,7 @@ class VideoDataset:
             self.train_ds,
             batch_size=self.batch_size * devices,
             shuffle=True,
-            num_workers=0,  # Torch 1.2 has a bug when num-workers > 0 (0 means run a main-processor worker)
+            num_workers=db_num_workers(),
             pin_memory=True,
         )
 
@@ -323,7 +404,7 @@ class VideoDataset:
             self.test_ds,
             batch_size=self.batch_size * devices,
             shuffle=False,
-            num_workers=0,
+            num_workers=db_num_workers(),
             pin_memory=True,
         )
 
@@ -421,7 +502,7 @@ class VideoDataset:
     def __getitem__(self, idx: int) -> Tuple[torch.tensor, int]:
         """
         Return:
-            clips (torch.tensor), label (int)
+            (clips (torch.tensor), label (int))
         """
         record = self.video_records[idx]
         video_reader = decord.VideoReader(
@@ -436,11 +517,15 @@ class VideoDataset:
         clips = np.array([self._get_frames(video_reader, o) for o in offsets])
 
         if self.num_samples == 1:
-            # [T, H, W, C] -> [C, T, H, W]
-            return self.transforms(torch.from_numpy(clips[0])), record.label
-        else:
-            # [S, T, H, W, C] -> [S, C, T, H, W]
             return (
+                # [T, H, W, C] -> [C, T, H, W]
+                self.transforms(torch.from_numpy(clips[0])),
+                record.label,
+            )
+
+        else:
+            return (
+                # [S, T, H, W, C] -> [S, C, T, H, W]
                 torch.stack(
                     [self.transforms(torch.from_numpy(c)) for c in clips]
                 ),
@@ -449,7 +534,8 @@ class VideoDataset:
 
     def _show_batch(
         self,
-        batch: List[torch.tensor],
+        images: List[torch.tensor],
+        labels: List[int],
         sample_length: int,
         mean: Tuple[int, int, int] = DEFAULT_MEAN,
         std: Tuple[int, int, int] = DEFAULT_STD,
@@ -458,12 +544,13 @@ class VideoDataset:
         Display a batch of images.
 
         Args:
-            batch: List of sample (clip) tensors
+            images: List of sample (clip) tensors
+            labels: List of labels
             sample_length: Number of frames to show for each sample
             mean: Normalization mean
             std: Normalization std-dev
         """
-        batch_size = len(batch)
+        batch_size = len(images)
         plt.tight_layout()
         fig, axs = plt.subplots(
             batch_size,
@@ -473,9 +560,9 @@ class VideoDataset:
 
         for i, ax in enumerate(axs):
             if batch_size == 1:
-                clip = batch[0]
+                clip = images[0]
             else:
-                clip = batch[i]
+                clip = images[i]
             clip = Rearrange("c t h w -> t c h w")(clip)
             if not isinstance(ax, np.ndarray):
                 ax = [ax]
@@ -484,15 +571,27 @@ class VideoDataset:
                 a.imshow(
                     np.moveaxis(denormalize(clip[j], mean, std).numpy(), 0, -1)
                 )
-            pass
 
-    def show_batch(self, train_or_test: str = "train", rows: int = 1) -> None:
+                # display label/label_name on the first image
+                if j == 0:
+                    a.text(
+                        x=3,
+                        y=15,
+                        s=f"{labels[i]}",
+                        fontsize=20,
+                        bbox=dict(facecolor="white", alpha=0.80),
+                    )
+
+    def show_batch(self, train_or_test: str = "train", rows: int = 2) -> None:
         """Plot first few samples in the datasets"""
         if train_or_test == "train":
-            batch = [self.train_ds.dataset[i][0] for i in range(rows)]
-        elif train_or_test == "valid":
-            batch = [self.test_ds.dataset[i][0] for i in range(rows)]
+            batch = [self.train_ds[i] for i in range(rows)]
+        elif train_or_test == "test":
+            batch = [self.test_ds[i] for i in range(rows)]
         else:
             raise ValueError("Unknown data type {}".format(which_data))
 
-        self._show_batch(batch, self.sample_length)
+        images = [im[0] for im in batch]
+        labels = [im[1] for im in batch]
+
+        self._show_batch(images, labels, self.sample_length)
