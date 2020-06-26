@@ -8,8 +8,8 @@ import glob
 import requests
 import os
 import os.path as osp
-import tempfile #KIP
-from typing import Dict, List, Tuple
+import tempfile
+from typing import Dict, List, Optional, Tuple
 
 
 import torch
@@ -38,49 +38,6 @@ from .dataset import TrackingDataset, boxes_to_mot
 from .opts import opts
 from .plot import draw_boxes, assign_colors
 from ..common.gpu import torch_device
-
-BASELINE_URL = (
-    "https://drive.google.com/open?id=1udpOPum8fJdoEQm6n0jsIgMMViOMFinu"
-)
-
-
-def _download_baseline(url, destination) -> None:
-    """
-    Download the baseline model .pth file to the destination.
-
-    Args:
-        url: a Google Drive url of the form "https://drive.google.com/open?id={id}"
-        destination: path to save the model to
-
-    Implementation based on https://stackoverflow.com/questions/38511444/python-download-files-from-google-drive-using-url
-    """
-
-    def get_confirm_token(response):
-        for key, value in response.cookies.items():
-            if key.startswith("download_warning"):
-                return value
-
-        return None
-
-    def save_response_content(response, destination):
-        CHUNK_SIZE = 32768
-
-        with open(destination, "wb") as f:
-            for chunk in response.iter_content(CHUNK_SIZE):
-                if chunk:  # filter out keep-alive new chunks
-                    f.write(chunk)
-
-    session = requests.Session()
-    id = url.split("id=")[-1]
-    response = session.get(url, params={"id": id}, stream=True)
-    token = get_confirm_token(response)
-    if token:
-        response = session.get(
-            url, params={"id": id, "confirm": token}, stream=True
-        )
-
-    save_response_content(response, destination)
-
 
 def _get_gpu_str():
     if cuda.is_available():
@@ -149,8 +106,8 @@ class TrackingLearner(object):
         Defaults to the FairMOT model.
 
         Args:
+            model_path: the path to your pretrained model, or the path to save your finetuned model
             dataset: the dataset
-            model_path: path to save model
             arch: the model architecture
                 Supported architectures: resdcn_34, resdcn_50, resfpndcn_34, dla_34, hrnet_32
             head_conv: conv layer channels for output head. None maps to the default setting.
@@ -163,18 +120,19 @@ class TrackingLearner(object):
         self.opt.device = torch_device()
 
         self.dataset = dataset
-        self.model = self.init_model()
         self.model_path = model_path
+        self.model = self.init_model()
 
     def init_model(self) -> nn.Module:
         """
         Download and initialize the baseline FairMOT model.
         """
-        model_dir = osp.join(self.opt.root_dir, "models")
-        baseline_path = osp.join(model_dir, "all_dla34.pth")
-        #         os.makedirs(model_dir, exist_ok=True)
-        #         _download_baseline(BASELINE_URL, baseline_path)
-        self.opt.load_model = baseline_path
+        if osp.isfile(self.model_path):
+            self.opt.load_model = self.model_path
+        else:
+            baseline_path = osp.join(self.opt.root_dir, "models", "all_dla34.pth")
+            assert osp.isfile(baseline_path), f"Baseline model weights must be downloaded to {baseline_path}"
+            self.opt.load_model = baseline_path
 
         return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
 
@@ -330,7 +288,7 @@ class TrackingLearner(object):
         nms_thres: float = 0.4,
         track_buffer: int = 30,
         min_box_area: float = 200,
-        im_size: Tuple[float, float] = (None, None),
+        # im_size: Tuple[float, float] = (None, None),
         frame_rate: int = 30,
     ) -> Dict[int, List[TrackingBbox]]:
         """
