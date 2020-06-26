@@ -121,9 +121,9 @@ class TrackingLearner(object):
 
         self.dataset = dataset
         self.model_path = model_path
-        self.model = self.init_model()
+        self.model = self._init_model()
 
-    def init_model(self) -> nn.Module:
+    def _init_model(self) -> nn.Module:
         """
         Download and initialize the baseline FairMOT model.
         """
@@ -278,8 +278,6 @@ class TrackingLearner(object):
             formatters=mh.formatters,
             namemap=mm.io.motchallenge_metric_names,
         )
-        print(strsummary)
-
         return strsummary
 
     def predict(
