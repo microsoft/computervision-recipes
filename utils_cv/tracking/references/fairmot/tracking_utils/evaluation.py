@@ -4,7 +4,7 @@ import copy
 import motmetrics as mm
 mm.lap.default_solver = 'lap'
 
-from tracking_utils.io import read_results, unzip_objs
+from .io import read_results, unzip_objs #EDITED
 
 
 class Evaluator(object):
@@ -76,10 +76,10 @@ class Evaluator(object):
         return events
 
     def eval_file(self, filename):
-        self.reset_accumulator()
-
+        self.reset_accumulator()        
         result_frame_dict = read_results(filename, self.data_type, is_gt=False)
         frames = sorted(list(set(self.gt_frame_dict.keys()) | set(result_frame_dict.keys())))
+        
         for frame_id in frames:
             trk_objs = result_frame_dict.get(frame_id, [])
             trk_tlwhs, trk_ids = unzip_objs(trk_objs)[:2]
