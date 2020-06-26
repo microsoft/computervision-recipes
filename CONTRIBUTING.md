@@ -1,7 +1,8 @@
 # Contribution Guidelines
 
-Contribution are welcome! Here's a few things to know:
+We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us.
 
+Here are a few more things to know:
 - [Microsoft Contributor License Agreement](#microsoft-contributor-license-agreement)
 - [Steps to Contributing](#steps-to-contributing)
 - [Working with Notebooks](#working-with-notebooks)
