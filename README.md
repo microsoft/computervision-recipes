@@ -1,7 +1,7 @@
 <img src="scenarios/media/logo_cvbp.png" align="right" alt="" width="300"/>
 
 ```diff
-+ Update June 24: Added action recognition as new core scenario. 
++ Update June 24: Added action recognition as new core scenario.
 +                 Object tracking coming soon (in 2-4 weeks).
 ```
 
@@ -37,7 +37,7 @@ Our target audience for this repository includes data scientists and machine lea
 To get started, navigate to the [Setup Guide](SETUP.md), which lists
 instructions on how to setup the compute environment and dependencies needed to run the
 notebooks in this repo. Once your environment is setup, navigate to the
-[Scenarios](scenarios) folder and start exploring the notebooks.
+[Scenarios](scenarios) folder and start exploring the notebooks. We recommend to start with the *image classification* notebooks, since this introduces concepts which are also used by the other scenarios (e.g. pre-training on ImageNet).
 
 Alternatively, we support Binder
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/PatrickBue/computervision-recipes/master?filepath=scenarios%2Fclassification%2F01_training_introduction_BINDER.ipynb)
