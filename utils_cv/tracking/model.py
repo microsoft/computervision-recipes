@@ -287,7 +287,7 @@ class TrackingLearner(object):
                         root_path: str = None,
                         result_filename: str = 'results.txt',
                         if_tmp: bool = True) -> str:
-        """Save tracking results to txt in tmp directory.
+        """Save tracking results to txt in tmp directory or provided path.
         
         Args:
             results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]]
