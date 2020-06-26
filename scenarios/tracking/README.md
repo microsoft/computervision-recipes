@@ -78,7 +78,7 @@ We provide several notebooks to show how multi-object-tracking algorithms can be
 | --- | --- |
 | [00_webcam.ipynb](./00_webcam.ipynb)| Quick-start notebook which demonstrates how to build an object tracking system using a single video or webcam as input.
 | [01_training_introduction.ipynb](./01_training_introduction.ipynb)| Notebook which explains the basic concepts around model training, inferencing, and evaluation using typical tracking performance metrics.|
-| [02_mot_challenge.ipynb](./02_mot_challenge.ipynb) | Notebook which runs inference on a large dataset, the MOT challenge dataset. |
+| [02_evaluating_mot_challenge.ipynb](./02_evaluating_mot_challenge.ipynb) | Notebook which runs inference on a large dataset, the MOT challenge dataset. |
 
 
 
