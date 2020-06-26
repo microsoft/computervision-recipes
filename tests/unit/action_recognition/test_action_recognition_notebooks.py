@@ -8,6 +8,7 @@ import papermill as pm
 import pytest
 import scrapbook as sb
 
+from utils_cv.common.data import unzip_url
 from utils_cv.action_recognition.data import Urls
 
 # Unless manually modified, python3 should be
@@ -33,15 +34,19 @@ def test_00_notebook_run(action_recognition_notebooks):
 
 
 @pytest.mark.notebooks
-def test_01_notebook_run(action_recognition_notebooks):
+def test_01_notebook_run(
+    action_recognition_notebooks,
+    ar_milk_bottle_path
+):
     notebook_path = action_recognition_notebooks["01"]
     pm.execute_notebook(
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
             PM_VERSION=pm.__version__,
+            DATA_PATH=ar_milk_bottle_path,
             MODEL_INPUT_SIZE=8,
-            EPOCHS=2,
+            EPOCHS=1,
             BATCH_SIZE=8,
             LR=0.001,
         ),

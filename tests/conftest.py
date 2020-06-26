@@ -771,7 +771,7 @@ def ar_vid_path(tmp_session) -> str:
 def ar_milk_bottle_path(tmp_session) -> str:
     """ Returns the path of the milk bottle action dataset. """
     return unzip_url(
-        ar_urls.milk_bottle_action_path,
+        ar_urls.milk_bottle_action_minified_path,
         fpath=tmp_session,
         dest=tmp_session,
         exist_ok=True,
