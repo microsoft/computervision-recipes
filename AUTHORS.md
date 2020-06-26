@@ -7,16 +7,18 @@ Maintainers (sorted alphabetically)
 Maintainers are actively supporting the project and have made substantial contributions to the repository.<br>
 They have admin access to the repo and provide support reviewing issues and pull requests.
 
-* **[Anupam Sharma](https://github.com/AnupamMicrosoft)**
-   * PM support
+* **[Patrick Buehler](https://github.com/PatrickBue)**
+   * Tech lead
 * **[JS Tan](https://github.com/jiata)**
+   * Main contributor
+* **[Young Park](https://github.com/youngpark/)**
    * Main contributor
 * **[Jun Ki Min](https://github.com/loomlike)**
    * Main contributor
+* **[Anupam Sharma](https://github.com/AnupamMicrosoft)**
+   * PM support
 * **[Miguel González-Fierro](https://github.com/miguelgfierro)**
    * DevOps
-* **[Patrick Buehler](https://github.com/PatrickBue)**
-   * Main contributor
 * **[Richin Jain](https://github.com/jainr)**
    * DevOps
 * **[Simon Zhao](https://github.com/simonzhaoms)**
