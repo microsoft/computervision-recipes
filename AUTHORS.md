@@ -11,6 +11,8 @@ They have admin access to the repo and provide support reviewing issues and pull
    * PM support
 * **[JS Tan](https://github.com/jiata)**
    * Main contributor
+* **[Young Park](https://github.com/youngpark/)**
+   * Main contributor
 * **[Jun Ki Min](https://github.com/loomlike)**
    * Main contributor
 * **[Miguel González-Fierro](https://github.com/miguelgfierro)**
