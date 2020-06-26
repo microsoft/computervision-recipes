@@ -8,6 +8,7 @@ import glob
 import requests
 import os
 import os.path as osp
+import tempfile
 from typing import Dict, List, Optional, Tuple
 
 import torch
@@ -171,7 +172,6 @@ class TrackingLearner(object):
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), opt_fit.lr)
         start_epoch = 0
-        print(f"Loading {opt_fit.load_model}")
         self.model = load_model(self.model, opt_fit.load_model)
 
         Trainer = train_factory[opt_fit.task]
