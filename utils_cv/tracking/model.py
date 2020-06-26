@@ -292,7 +292,6 @@ class TrackingLearner(object):
         nms_thres: float = 0.4,
         track_buffer: int = 30,
         min_box_area: float = 200,
-        # im_size: Tuple[float, float] = (None, None),
         frame_rate: int = 30,
     ) -> Dict[int, List[TrackingBbox]]:
         """
@@ -306,7 +305,6 @@ class TrackingLearner(object):
             nms_thres: iou thresh for nms
             track_buffer: tracking buffer
             min_box_area: filter out tiny boxes
-            im_size: (input height, input_weight)
             frame_rate: frame rate
 
         Returns a list of TrackingBboxes
@@ -320,18 +318,11 @@ class TrackingLearner(object):
         opt_pred.track_buffer = track_buffer
         opt_pred.min_box_area = min_box_area
 
-        input_h, input_w = im_size
-        input_height = input_h if input_h else -1
-        input_width = input_w if input_w else -1
-        opt_pred.update_dataset_res(input_height, input_width)
-
         # initialize tracker
         opt_pred.load_model = self.model_path
         tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
         # initialize dataloader
-        dataloader = self._get_dataloader(
-            im_or_video_path, opt_pred.input_h, opt_pred.input_w
-        )
+        dataloader = self._get_dataloader(im_or_video_path)
 
         frame_id = 0
         out = {}
@@ -355,9 +346,7 @@ class TrackingLearner(object):
 
         return out
 
-    def _get_dataloader(
-        self, im_or_video_path: str, input_h, input_w
-    ) -> DataLoader:
+    def _get_dataloader(self, im_or_video_path: str) -> DataLoader:
         """
         Creates a dataloader from images or video in the given path.
 
@@ -390,18 +379,18 @@ class TrackingLearner(object):
             )
             > 0
         ):
-            return LoadImages(im_or_video_path, img_size=(input_w, input_h))
+            return LoadImages(im_or_video_path)
         # if path is to a single video file
         elif (
             osp.isfile(im_or_video_path)
             and osp.splitext(im_or_video_path)[1] in video_format
         ):
-            return LoadVideo(im_or_video_path, img_size=(input_w, input_h))
+            return LoadVideo(im_or_video_path)
         # if path is to a single image file
         elif (
             osp.isfile(im_or_video_path)
             and osp.splitext(im_or_video_path)[1] in im_format
         ):
-            return LoadImages(im_or_video_path, img_size=(input_w, input_h))
+            return LoadImages(im_or_video_path)
         else:
             raise Exception("Image or video format not supported")
