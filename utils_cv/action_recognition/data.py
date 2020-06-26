@@ -54,6 +54,9 @@ class Urls:
 
     # testing datasets
     milk_bottle_action_path = urljoin(base, "milkBottleActions.zip")
+    milk_bottle_action_minified_path = urljoin(
+        base, "milkBottleActions_minified.zip"
+    )
 
     # milk bottle action split test files
     milk_bottle_action_train_split = urljoin(
