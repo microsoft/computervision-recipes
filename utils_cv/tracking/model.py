@@ -39,6 +39,7 @@ from .opts import opts
 from .plot import draw_boxes, assign_colors
 from ..common.gpu import torch_device
 
+
 def _get_gpu_str():
     if cuda.is_available():
         devices = [str(x) for x in range(cuda.device_count())]
@@ -130,8 +131,12 @@ class TrackingLearner(object):
         if osp.isfile(self.model_path):
             self.opt.load_model = self.model_path
         else:
-            baseline_path = osp.join(self.opt.root_dir, "models", "all_dla34.pth")
-            assert osp.isfile(baseline_path), f"Baseline model weights must be downloaded to {baseline_path}"
+            baseline_path = osp.join(
+                self.opt.root_dir, "models", "all_dla34.pth"
+            )
+            assert osp.isfile(
+                baseline_path
+            ), f"Baseline model weights must be downloaded to {baseline_path}"
             self.opt.load_model = baseline_path
 
         return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
@@ -174,10 +179,10 @@ class TrackingLearner(object):
         Trainer = train_factory[opt_fit.task]
         trainer = Trainer(opt_fit.opt, self.model, self.optimizer)
         trainer.set_device(opt_fit.gpus, opt_fit.chunk_sizes, opt_fit.device)
-        
+
         # initialize loss vars
         self.losses_dict = defaultdict(list)
-        
+
         # training loop
         for epoch in range(
             start_epoch + 1, start_epoch + opt_fit.num_epochs + 1
@@ -195,41 +200,40 @@ class TrackingLearner(object):
                 lr = opt_fit.lr * (0.1 ** (opt_fit.lr_step.index(epoch) + 1))
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
-                    
-            # store losses in each epoch                   
+
+            # store losses in each epoch
             for k, v in log_dict_train.items():
-                if k in ['loss', 'hm_loss', 'wh_loss', 'off_loss', 'id_loss']:
+                if k in ["loss", "hm_loss", "wh_loss", "off_loss", "id_loss"]:
                     self.losses_dict[k].append(v)
 
         # save after training because at inference-time FairMOT src reads model weights from disk
         self.save(self.model_path)
 
-    def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5))->None: 
-        '''
+    def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5)) -> None:
+        """
         Plots training loss from calling `fit`  
         
         Args:
             figsize (optional): width and height wanted for figure of training-loss plot
         
-        '''
+        """
         fig = plt.figure(figsize=figsize)
         ax1 = fig.add_subplot(1, 1, 1)
-        
-        ax1.set_xlim([0, len(self.losses_dict['loss']) - 1])
-        ax1.set_xticks(range(0, len(self.losses_dict['loss'])))        
+
+        ax1.set_xlim([0, len(self.losses_dict["loss"]) - 1])
+        ax1.set_xticks(range(0, len(self.losses_dict["loss"])))
         ax1.set_xlabel("epochs")
         ax1.set_ylabel("losses")
-        
-        ax1.plot(self.losses_dict['loss'], c="r", label='loss')
-        ax1.plot(self.losses_dict['hm_loss'], c="y", label='hm_loss')
-        ax1.plot(self.losses_dict['wh_loss'], c="g", label='wh_loss')
-        ax1.plot(self.losses_dict['off_loss'], c="b", label='off_loss')
-        ax1.plot(self.losses_dict['id_loss'], c="m", label='id_loss')
 
-        plt.legend(loc='upper right')
+        ax1.plot(self.losses_dict["loss"], c="r", label="loss")
+        ax1.plot(self.losses_dict["hm_loss"], c="y", label="hm_loss")
+        ax1.plot(self.losses_dict["wh_loss"], c="g", label="wh_loss")
+        ax1.plot(self.losses_dict["off_loss"], c="b", label="off_loss")
+        ax1.plot(self.losses_dict["id_loss"], c="m", label="id_loss")
+
+        plt.legend(loc="upper right")
         fig.suptitle("Training losses over epochs")
-        
-    
+
     def save(self, path) -> None:
         """
         Save the model to a specified path.
@@ -240,10 +244,10 @@ class TrackingLearner(object):
         save_model(path, self.epoch, self.model, self.optimizer)
         print(f"Model saved to {path}")
 
-    def evaluate(self,
-                 results: Dict[int, List[TrackingBbox]],
-                 gt_root_path: str) -> str:
-        
+    def evaluate(
+        self, results: Dict[int, List[TrackingBbox]], gt_root_path: str
+    ) -> str:
+
         """ eval code that calls on 'motmetrics' package in referenced FairMOT script, to produce MOT metrics on inference, given ground-truth.
         Args:
             results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]] 
@@ -251,35 +255,35 @@ class TrackingLearner(object):
         Returns:
             strsummary: str output by method in 'motmetrics' package, containing metrics scores        
         """
-       
-        #Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
+
+        # Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
         evaluator = Evaluator(gt_root_path, "single_vid", "mot")
-        
+
         with tempfile.TemporaryDirectory() as tmpdir1:
-            os.makedirs(osp.join(tmpdir1,'results'))
-            result_filename = osp.join(tmpdir1,'results', 'results.txt')
-          
-            # Save results im MOT format for evaluation            
-            bboxes_mot = boxes_to_mot(results)            
+            os.makedirs(osp.join(tmpdir1, "results"))
+            result_filename = osp.join(tmpdir1, "results", "results.txt")
+
+            # Save results im MOT format for evaluation
+            bboxes_mot = boxes_to_mot(results)
             np.savetxt(result_filename, bboxes_mot, delimiter=",", fmt="%s")
 
             # Run evaluation using pymotmetrics package
-            accs=[evaluator.eval_file(result_filename)]
-                           
+            accs = [evaluator.eval_file(result_filename)]
+
         # get summary
         metrics = mm.metrics.motchallenge_metrics
         mh = mm.metrics.create()
-       
+
         summary = Evaluator.get_summary(accs, ("single_vid",), metrics)
         strsummary = mm.io.render_summary(
             summary,
             formatters=mh.formatters,
-            namemap=mm.io.motchallenge_metric_names
+            namemap=mm.io.motchallenge_metric_names,
         )
-        print(strsummary)        
-        
+        print(strsummary)
+
         return strsummary
-    
+
     def predict(
         self,
         im_or_video_path: str,
@@ -338,7 +342,7 @@ class TrackingLearner(object):
             online_bboxes = []
             for t in online_targets:
                 tlwh = t.tlwh
-                tlbr = t.tlbr 
+                tlbr = t.tlbr
                 tid = t.track_id
                 vertical = tlwh[2] / tlwh[3] > 1.6
                 if tlwh[2] * tlwh[3] > opt_pred.min_box_area and not vertical:
