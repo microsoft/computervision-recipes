@@ -1,11 +1,14 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+from collections import OrderedDict
+import numpy as np
 import os
 import os.path as osp
-from typing import Dict
+from typing import Dict, List
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms as T
+from .bbox import TrackingBbox
 from .references.fairmot.datasets.dataset.jde import JointDataset
 from .opts import opts
 from ..common.gpu import db_num_workers
@@ -54,3 +57,35 @@ class TrackingDataset:
             pin_memory=True,
             drop_last=True,
         )
+
+
+def boxes_to_mot(results: Dict[int, List[TrackingBbox]]) -> None:
+    """
+    Save the predicted tracks to csv file in MOT challenge format ["frame", "id", "left", "top", "width", "height",]
+    
+    Args:
+        results: dictionary mapping frame id to a list of predicted TrackingBboxes
+        txt_path: path to which results are saved in csv file
+    
+    """
+    # convert results to dataframe in MOT challenge format
+    preds = OrderedDict(sorted(results.items()))
+    bboxes = [
+        [
+            bb.frame_id,
+            bb.track_id,
+            bb.top,
+            bb.left,
+            bb.bottom - bb.top,
+            bb.right - bb.left,
+            1,
+            -1,
+            -1,
+            -1,
+        ]
+        for _, v in preds.items()
+        for bb in v
+    ]
+    bboxes_formatted = np.array(bboxes)
+
+    return bboxes_formatted

@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import argparse
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from copy import deepcopy
 import glob
 import requests
@@ -16,8 +16,10 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 import cv2
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import motmetrics as mm
 
 from .references.fairmot.datasets.dataset.jde import LoadImages, LoadVideo
 from .references.fairmot.models.model import (
@@ -26,55 +28,14 @@ from .references.fairmot.models.model import (
     save_model,
 )
 from .references.fairmot.tracker.multitracker import JDETracker
+from .references.fairmot.tracking_utils.evaluation import Evaluator
 from .references.fairmot.trains.train_factory import train_factory
 
 from .bbox import TrackingBbox
-from .dataset import TrackingDataset
+from .dataset import TrackingDataset, boxes_to_mot
 from .opts import opts
 from .plot import draw_boxes, assign_colors
 from ..common.gpu import torch_device
-
-BASELINE_URL = (
-    "https://drive.google.com/open?id=1udpOPum8fJdoEQm6n0jsIgMMViOMFinu"
-)
-
-
-def _download_baseline(url, destination) -> None:
-    """
-    Download the baseline model .pth file to the destination.
-
-    Args:
-        url: a Google Drive url of the form "https://drive.google.com/open?id={id}"
-        destination: path to save the model to
-
-    Implementation based on https://stackoverflow.com/questions/38511444/python-download-files-from-google-drive-using-url
-    """
-
-    def get_confirm_token(response):
-        for key, value in response.cookies.items():
-            if key.startswith("download_warning"):
-                return value
-
-        return None
-
-    def save_response_content(response, destination):
-        CHUNK_SIZE = 32768
-
-        with open(destination, "wb") as f:
-            for chunk in response.iter_content(CHUNK_SIZE):
-                if chunk:  # filter out keep-alive new chunks
-                    f.write(chunk)
-
-    session = requests.Session()
-    id = url.split("id=")[-1]
-    response = session.get(url, params={"id": id}, stream=True)
-    token = get_confirm_token(response)
-    if token:
-        response = session.get(
-            url, params={"id": id, "confirm": token}, stream=True
-        )
-
-    save_response_content(response, destination)
 
 
 def _get_gpu_str():
@@ -144,8 +105,8 @@ class TrackingLearner(object):
         Defaults to the FairMOT model.
 
         Args:
+            model_path: the path to your pretrained model, or the path to save your finetuned model
             dataset: the dataset
-            model_path: path to save model
             arch: the model architecture
                 Supported architectures: resdcn_34, resdcn_50, resfpndcn_34, dla_34, hrnet_32
             head_conv: conv layer channels for output head. None maps to the default setting.
@@ -158,18 +119,23 @@ class TrackingLearner(object):
         self.opt.device = torch_device()
 
         self.dataset = dataset
-        self.model = self.init_model()
         self.model_path = model_path
+        self.model = self.init_model()
 
     def init_model(self) -> nn.Module:
         """
         Download and initialize the baseline FairMOT model.
         """
-        model_dir = osp.join(self.opt.root_dir, "models")
-        baseline_path = osp.join(model_dir, "all_dla34.pth")
-        #         os.makedirs(model_dir, exist_ok=True)
-        #         _download_baseline(BASELINE_URL, baseline_path)
-        self.opt.load_model = baseline_path
+        if osp.isfile(self.model_path):
+            self.opt.load_model = self.model_path
+        else:
+            baseline_path = osp.join(
+                self.opt.root_dir, "models", "all_dla34.pth"
+            )
+            assert osp.isfile(
+                baseline_path
+            ), f"Baseline model weights must be downloaded to {baseline_path}"
+            self.opt.load_model = baseline_path
 
         return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
 
@@ -212,6 +178,9 @@ class TrackingLearner(object):
         trainer = Trainer(opt_fit.opt, self.model, self.optimizer)
         trainer.set_device(opt_fit.gpus, opt_fit.chunk_sizes, opt_fit.device)
 
+        # initialize loss vars
+        self.losses_dict = defaultdict(list)
+
         # training loop
         for epoch in range(
             start_epoch + 1, start_epoch + opt_fit.num_epochs + 1
@@ -230,8 +199,38 @@ class TrackingLearner(object):
                 for param_group in optimizer.param_groups:
                     param_group["lr"] = lr
 
+            # store losses in each epoch
+            for k, v in log_dict_train.items():
+                if k in ["loss", "hm_loss", "wh_loss", "off_loss", "id_loss"]:
+                    self.losses_dict[k].append(v)
+
         # save after training because at inference-time FairMOT src reads model weights from disk
         self.save(self.model_path)
+
+    def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5)) -> None:
+        """
+        Plots training loss from calling `fit`  
+        
+        Args:
+            figsize (optional): width and height wanted for figure of training-loss plot
+        
+        """
+        fig = plt.figure(figsize=figsize)
+        ax1 = fig.add_subplot(1, 1, 1)
+
+        ax1.set_xlim([0, len(self.losses_dict["loss"]) - 1])
+        ax1.set_xticks(range(0, len(self.losses_dict["loss"])))
+        ax1.set_xlabel("epochs")
+        ax1.set_ylabel("losses")
+
+        ax1.plot(self.losses_dict["loss"], c="r", label="loss")
+        ax1.plot(self.losses_dict["hm_loss"], c="y", label="hm_loss")
+        ax1.plot(self.losses_dict["wh_loss"], c="g", label="wh_loss")
+        ax1.plot(self.losses_dict["off_loss"], c="b", label="off_loss")
+        ax1.plot(self.losses_dict["id_loss"], c="m", label="id_loss")
+
+        plt.legend(loc="upper right")
+        fig.suptitle("Training losses over epochs")
 
     def save(self, path) -> None:
         """
@@ -243,8 +242,45 @@ class TrackingLearner(object):
         save_model(path, self.epoch, self.model, self.optimizer)
         print(f"Model saved to {path}")
 
-    def evaluate(self, results, gt) -> pd.DataFrame:
-        pass
+    def evaluate(
+        self, results: Dict[int, List[TrackingBbox]], gt_root_path: str
+    ) -> str:
+
+        """ eval code that calls on 'motmetrics' package in referenced FairMOT script, to produce MOT metrics on inference, given ground-truth.
+        Args:
+            results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]] 
+            gt_root_path: path of dataset containing GT annotations in MOTchallenge format (xywh)
+        Returns:
+            strsummary: str output by method in 'motmetrics' package, containing metrics scores        
+        """
+
+        # Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
+        evaluator = Evaluator(gt_root_path, "single_vid", "mot")
+
+        with tempfile.TemporaryDirectory() as tmpdir1:
+            os.makedirs(osp.join(tmpdir1, "results"))
+            result_filename = osp.join(tmpdir1, "results", "results.txt")
+
+            # Save results im MOT format for evaluation
+            bboxes_mot = boxes_to_mot(results)
+            np.savetxt(result_filename, bboxes_mot, delimiter=",", fmt="%s")
+
+            # Run evaluation using pymotmetrics package
+            accs = [evaluator.eval_file(result_filename)]
+
+        # get summary
+        metrics = mm.metrics.motchallenge_metrics
+        mh = mm.metrics.create()
+
+        summary = Evaluator.get_summary(accs, ("single_vid",), metrics)
+        strsummary = mm.io.render_summary(
+            summary,
+            formatters=mh.formatters,
+            namemap=mm.io.motchallenge_metric_names,
+        )
+        print(strsummary)
+
+        return strsummary
 
     def predict(
         self,
@@ -254,7 +290,6 @@ class TrackingLearner(object):
         nms_thres: float = 0.4,
         track_buffer: int = 30,
         min_box_area: float = 200,
-        im_size: Tuple[float, float] = (None, None),
         frame_rate: int = 30,
     ) -> Dict[int, List[TrackingBbox]]:
         """
@@ -268,7 +303,6 @@ class TrackingLearner(object):
             nms_thres: iou thresh for nms
             track_buffer: tracking buffer
             min_box_area: filter out tiny boxes
-            im_size: (input height, input_weight)
             frame_rate: frame rate
 
         Returns a list of TrackingBboxes
@@ -282,18 +316,11 @@ class TrackingLearner(object):
         opt_pred.track_buffer = track_buffer
         opt_pred.min_box_area = min_box_area
 
-        input_h, input_w = im_size
-        input_height = input_h if input_h else -1
-        input_width = input_w if input_w else -1
-        opt_pred.update_dataset_res(input_height, input_width)
-
         # initialize tracker
         opt_pred.load_model = self.model_path
         tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
         # initialize dataloader
-        dataloader = self._get_dataloader(
-            im_or_video_path, opt_pred.input_h, opt_pred.input_w
-        )
+        dataloader = self._get_dataloader(im_or_video_path)
 
         frame_id = 0
         out = {}
@@ -317,9 +344,7 @@ class TrackingLearner(object):
 
         return out
 
-    def _get_dataloader(
-        self, im_or_video_path: str, input_h, input_w
-    ) -> DataLoader:
+    def _get_dataloader(self, im_or_video_path: str) -> DataLoader:
         """
         Creates a dataloader from images or video in the given path.
 
@@ -352,18 +377,18 @@ class TrackingLearner(object):
             )
             > 0
         ):
-            return LoadImages(im_or_video_path, img_size=(input_w, input_h))
+            return LoadImages(im_or_video_path)
         # if path is to a single video file
         elif (
             osp.isfile(im_or_video_path)
             and osp.splitext(im_or_video_path)[1] in video_format
         ):
-            return LoadVideo(im_or_video_path, img_size=(input_w, input_h))
+            return LoadVideo(im_or_video_path)
         # if path is to a single image file
         elif (
             osp.isfile(im_or_video_path)
             and osp.splitext(im_or_video_path)[1] in im_format
         ):
-            return LoadImages(im_or_video_path, img_size=(input_w, input_h))
+            return LoadImages(im_or_video_path)
         else:
             raise Exception("Image or video format not supported")

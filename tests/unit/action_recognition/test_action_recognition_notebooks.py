@@ -24,8 +24,7 @@ def test_00_notebook_run(action_recognition_notebooks):
         notebook_path,
         OUTPUT_NOTEBOOK,
         parameters=dict(
-            PM_VERSION=pm.__version__,
-            sample_video_url=Urls.webcam_vid_low_res
+            PM_VERSION=pm.__version__, sample_video_url=Urls.webcam_vid_low_res
         ),
         kernel_name=KERNEL_NAME,
     )
