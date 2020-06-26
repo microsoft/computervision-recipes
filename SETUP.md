@@ -7,8 +7,8 @@ to run the notebooks in this repository.
 ## Table of Contents
 
 1. [Installation](#installation)
-1. [Compute Environment](#compute-environments)
 1. [System Requirements](#system-requirements)
+1. [Compute Environment](#compute-environments)
 1. [Tunneling](#tunneling)
 
 ## Installation
