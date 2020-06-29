@@ -25,7 +25,6 @@ def draw_boxes(
 
     cur_ids = [bb.track_id for bb in cur_tracks]
     tracks = dict(zip(cur_ids, cur_tracks))
-
     for label, bb in tracks.items():
         left = round(bb.left)
         top = round(bb.top)
