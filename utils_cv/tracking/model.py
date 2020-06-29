@@ -131,7 +131,9 @@ class TrackingLearner(object):
         """
         if not model_path:
             model_path = osp.join(self.opt.root_dir, "models", "all_dla34.pth")
-        assert osp.isfile(model_path), f"Model weights not found at {model_path}"
+        assert osp.isfile(
+            model_path
+        ), f"Model weights not found at {model_path}"
 
         self.opt.load_model = model_path
         return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
@@ -311,7 +313,9 @@ class TrackingLearner(object):
         opt_pred.min_box_area = min_box_area
 
         # initialize tracker
-        tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate, self.model)
+        tracker = JDETracker(
+            opt_pred.opt, frame_rate=frame_rate, model=self.model
+        )
         # initialize dataloader
         dataloader = self._get_dataloader(im_or_video_path)
 
@@ -324,7 +328,7 @@ class TrackingLearner(object):
             online_bboxes = []
             for t in online_targets:
                 tlwh = t.tlwh
-                tlbr = t.tlbr 
+                tlbr = t.tlbr
                 tid = t.track_id
                 vertical = tlwh[2] / tlwh[3] > 1.6
                 if tlwh[2] * tlwh[3] > opt_pred.min_box_area and not vertical:
