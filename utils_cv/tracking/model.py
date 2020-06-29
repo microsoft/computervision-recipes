@@ -95,8 +95,8 @@ class TrackingLearner(object):
 
     def __init__(
         self,
-        model_path: str,
         dataset: Optional[TrackingDataset] = None,
+        model_path: Optional[str] = None,
         arch: str = "dla_34",
         head_conv: int = None,
     ) -> None:
@@ -106,8 +106,8 @@ class TrackingLearner(object):
         Defaults to the FairMOT model.
 
         Args:
-            model_path: the path to your pretrained model, or the path to save your finetuned model
-            dataset: the dataset
+            dataset: optional dataset (required for training)
+            model_path: optional path to pretrained model (defaults to all_dla34.pth)
             arch: the model architecture
                 Supported architectures: resdcn_34, resdcn_50, resfpndcn_34, dla_34, hrnet_32
             head_conv: conv layer channels for output head. None maps to the default setting.
@@ -120,24 +120,20 @@ class TrackingLearner(object):
         self.opt.device = torch_device()
 
         self.dataset = dataset
-        self.model_path = model_path
-        self.model = self._init_model()
+        self.model = self._init_model(model_path)
 
-    def _init_model(self) -> nn.Module:
+    def _init_model(self, model_path) -> nn.Module:
         """
-        Download and initialize the baseline FairMOT model.
-        """
-        if osp.isfile(self.model_path):
-            self.opt.load_model = self.model_path
-        else:
-            baseline_path = osp.join(
-                self.opt.root_dir, "models", "all_dla34.pth"
-            )
-            assert osp.isfile(
-                baseline_path
-            ), f"Baseline model weights must be downloaded to {baseline_path}"
-            self.opt.load_model = baseline_path
+        Initialize the model.
 
+        Args:
+            model_path: optional path to pretrained model (defaults to all_dla34.pth)
+        """
+        if not model_path:
+            model_path = osp.join(self.opt.root_dir, "models", "all_dla34.pth")
+        assert osp.isfile(model_path), f"Model weights not found at {model_path}"
+
+        self.opt.load_model = model_path
         return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
 
     def fit(
@@ -204,12 +200,9 @@ class TrackingLearner(object):
                 if k in ["loss", "hm_loss", "wh_loss", "off_loss", "id_loss"]:
                     self.losses_dict[k].append(v)
 
-        # save after training because at inference-time FairMOT src reads model weights from disk
-        self.save(self.model_path)
-
     def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5)) -> None:
         """
-        Plots training loss from calling `fit`  
+        Plot training loss.  
         
         Args:
             figsize (optional): width and height wanted for figure of training-loss plot
@@ -246,7 +239,10 @@ class TrackingLearner(object):
         self, results: Dict[int, List[TrackingBbox]], gt_root_path: str
     ) -> str:
 
-        """ eval code that calls on 'motmetrics' package in referenced FairMOT script, to produce MOT metrics on inference, given ground-truth.
+        """ 
+        Evaluate performance wrt MOTA, MOTP, track quality measures, global ID measures, and more,
+        as computed by py-motmetrics.
+
         Args:
             results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]] 
             gt_root_path: path of dataset containing GT annotations in MOTchallenge format (xywh)
@@ -291,7 +287,7 @@ class TrackingLearner(object):
         frame_rate: int = 30,
     ) -> Dict[int, List[TrackingBbox]]:
         """
-        Performs inferencing on an image or video path.
+        Run inference on an image or video path.
 
         Args:
             im_or_video_path: path to image(s) or video. Supports jpg, jpeg, png, tif formats for images.
@@ -315,8 +311,7 @@ class TrackingLearner(object):
         opt_pred.min_box_area = min_box_area
 
         # initialize tracker
-        opt_pred.load_model = self.model_path
-        tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
+        tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate, self.model)
         # initialize dataloader
         dataloader = self._get_dataloader(im_or_video_path)
 
@@ -344,7 +339,7 @@ class TrackingLearner(object):
 
     def _get_dataloader(self, im_or_video_path: str) -> DataLoader:
         """
-        Creates a dataloader from images or video in the given path.
+        Create a dataloader from images or video in the given path.
 
         Args:
             im_or_video_path: path to a root directory of images, or single video or image file.
