@@ -1,7 +1,8 @@
 # Contribution Guidelines
 
-Contribution are welcome! Here's a few things to know:
+We appreciate all contributions. If you are planning to contribute back bug-fixes, please do so without any further discussion. If you plan to contribute new features, utility functions or extensions, please first open an issue and discuss the feature with us.
 
+Here are a few more things to know:
 - [Microsoft Contributor License Agreement](#microsoft-contributor-license-agreement)
 - [Steps to Contributing](#steps-to-contributing)
 - [Working with Notebooks](#working-with-notebooks)
@@ -52,17 +53,7 @@ Note: We use the staging branch to land all new features, so please remember to 
 
 ## Working with Notebooks
 
-It's challenging to do code review for notebooks in GitHub. [reviewnb](https://www.reviewnb.com/) makes it easy to review notebooks in GitHub but only works with public repository. Since we are still in private mode, [jupytext](https://github.com/mwouts/jupytext) is another option that provides conversion of ipython notebooks to multiple formats and also work with pre-commit. However, it falls short of adding the converted files automatically as part of the git commit. An [issue](https://github.com/mwouts/jupytext/issues/200) has been opened with jupytext for this. In the interim, a more reliable way is to manually convert the notebooks to python script using [nbconvert](https://github.com/jupyter/nbconvert) and manually add and commit them to your branch along with the notebook. nbconvert comes pre-installed as part of jupyter installation, run the following command to convert a notebook to python script and save it in python folder under image_classification folder.
-```
-$ jupyter nbconvert --output-dir=./image_classification/python --to python ./image_classification/notebooks/mnist.ipynb
-```
-As you check these converted files in, we don't want to enforce black formatting and flake8 linting on them since they also contain markdown and metadata that does not play well with these tools and after all that's not the main goal for converting these notebooks to python script, main goal is to make diffing easier. You can commit the python script generated from nbconvert by using following option with *git commit* command
-```
-SKIP=black,flake8 git commit -m "commit message"
-```
-**Note:** We only want to skip black and flake8 hooks for the nbconvert py files, for everything else these hooks should not be skipped.
-
-When you pull updates from remote there might be merge conflicts at times, use [nbdime](https://nbdime.readthedocs.io/en/latest/) to fix them.
+When you pull updates from remote there might be merge conflicts with jupyter notebooks. The tool [nbdime](https://nbdime.readthedocs.io/en/latest/) can help fix such problems.
 * To install nbdime
 ```
 pip install ndime

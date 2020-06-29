@@ -57,7 +57,8 @@ class TrackingDataset:
             pin_memory=True,
             drop_last=True,
         )
-        
+
+
 def boxes_to_mot(results: Dict[int, List[TrackingBbox]]) -> None:
     """
     Save the predicted tracks to csv file in MOT challenge format ["frame", "id", "left", "top", "width", "height",]
@@ -66,7 +67,7 @@ def boxes_to_mot(results: Dict[int, List[TrackingBbox]]) -> None:
         results: dictionary mapping frame id to a list of predicted TrackingBboxes
         txt_path: path to which results are saved in csv file
     
-    """   
+    """
     # convert results to dataframe in MOT challenge format
     preds = OrderedDict(sorted(results.items()))
     bboxes = [
@@ -77,11 +78,14 @@ def boxes_to_mot(results: Dict[int, List[TrackingBbox]]) -> None:
             bb.left,
             bb.bottom - bb.top,
             bb.right - bb.left,
-            1, -1, -1, -1,
+            1,
+            -1,
+            -1,
+            -1,
         ]
         for _, v in preds.items()
         for bb in v
     ]
     bboxes_formatted = np.array(bboxes)
-    
+
     return bboxes_formatted
