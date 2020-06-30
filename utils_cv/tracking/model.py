@@ -88,7 +88,76 @@ def write_video(
         frame_idx += 1
 
     print(f"Output saved to {output_video}.")
+                        
+    def savetxt_results(results: Dict[int, List[TrackingBbox]],
+                        exp_name: str = 'results',
+                        root_path: str = None,
+                        result_filename: str = 'results.txt',
+                        if_tmp: bool = True) -> str:
+        """Save tracking results to txt in tmp directory or provided path.
+        
+        Args:
+            results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]]
+            exp_name: subfolder for each experiment
+            root_path: results saved root path. Default: None
+            result_filename: saved prediction results txt file; End with '.txt'
+            if_tmp: if saved in tmp directory. If set it False, root_path has to be provided.
+        Returns:
+            result_file_path: saved prediction results txt file path
+        """
+        if if_tmp or not root_path:
+            with tempfile.TemporaryDirectory() as tmpdir1:
+                os.makedirs(osp.join(tmpdir1, exp_name))
+                result_file_path = osp.join(tmpdir1, exp_name, result_filename)
+        else:
+            result_file_path = osp.join(root_path, exp_name, result_filename)
 
+        # Save results in MOT format for evaluation            
+        bboxes_mot = boxes_to_mot(results)
+        np.savetxt(result_file_path, bboxes_mot, delimiter=",", fmt="%s")
+        return result_file_path
+
+    def evaluate_mot(gt_root_path: str,
+                     exp_name: str,
+                     result_file_path: str) -> MOTAccumulator:
+
+        """ eval code that calls on 'motmetrics' package in referenced FairMOT script, to produce MOT metrics on inference, given ground-truth.
+        Args:
+            gt_root_path: path of dataset containing GT annotations in MOTchallenge format (xywh)
+            exp_name: subfolder for each experiment
+            result_file_path: saved prediction results txt file path
+        Returns:
+            mot_accumulator: MOTAccumulator object from pymotmetrics package
+        """
+        #Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
+        evaluator = Evaluator(gt_root_path, exp_name, "mot")
+
+        # Run evaluation using pymotmetrics package
+        mot_accumulator = evaluator.eval_file(result_file_path)
+
+        return mot_accumulator
+    
+    def mot_summary(accumulators: list,
+                    exp_names: list) -> str:
+        """Given a list of MOTAccumulators, get total summary by method in 'motmetrics', containing metrics scores
+        
+        Args:
+            accumulators: list of MOTAccumulators
+            exp_names: list of experiment names (str)
+        Returns:
+            strsummary: pandas.DataFrame output by method in 'motmetrics', containing metrics scores
+        """
+        metrics = mm.metrics.motchallenge_metrics
+        mh = mm.metrics.create()
+       
+        summary = Evaluator.get_summary(accumulators, exp_names, metrics)
+        strsummary = mm.io.render_summary(
+            summary,
+            formatters=mh.formatters,
+            namemap=mm.io.motchallenge_metric_names
+        )
+
+        return strsummary
 
 class TrackingLearner(object):
     """Tracking Learner for Multi-Object Tracking"""
@@ -236,87 +305,14 @@ class TrackingLearner(object):
 
         save_model(path, self.epoch, self.model, self.optimizer)
         print(f"Model saved to {path}")
-                        
-    def savetxt_results(self,
-                        results: Dict[int, List[TrackingBbox]],
-                        exp_name: str = 'results',
-                        root_path: str = None,
-                        result_filename: str = 'results.txt',
-                        if_tmp: bool = True) -> str:
-        """Save tracking results to txt in tmp directory or provided path.
-        
-        Args:
-            results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]]
-            exp_name: subfolder for each experiment
-            root_path: results saved root path. Default: None
-            result_filename: saved prediction results txt file; End with '.txt'
-            if_tmp: if saved in tmp directory. If set it False, root_path has to be provided.
-        Returns:
-            result_file_path: saved prediction results txt file path
-        """
-        if if_tmp or not root_path:
-            with tempfile.TemporaryDirectory() as tmpdir1:
-                os.makedirs(osp.join(tmpdir1, exp_name))
-                result_file_path = osp.join(tmpdir1, exp_name, result_filename)
-        else:
-            result_file_path = osp.join(root_path, exp_name, result_filename)
 
-        # Save results in MOT format for evaluation            
-        bboxes_mot = boxes_to_mot(results)
-        np.savetxt(result_file_path, bboxes_mot, delimiter=",", fmt="%s")
-        return result_file_path
-
-    def evaluate_mot(self,
-                gt_root_path: str,
-                exp_name: str,
-                result_file_path: str) -> 'MOTAccumulator':
-
-        """ eval code that calls on 'motmetrics' package in referenced FairMOT script, to produce MOT metrics on inference, given ground-truth.
-        Args:
-            gt_root_path: path of dataset containing GT annotations in MOTchallenge format (xywh)
-            exp_name: subfolder for each experiment
-            result_file_path: saved prediction results txt file path
-        Returns:
-            mot_accumulator: MOTAccumulator object from pymotmetrics package
-        """
-        #Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
-        evaluator = Evaluator(gt_root_path, exp_name, "mot")
-
-        # Run evaluation using pymotmetrics package
-        mot_accumulator = evaluator.eval_file(result_file_path)
-
-        return mot_accumulator
-    
-    def mot_summary(self,
-                    accumulators: list,
-                    exp_names: list) -> str:
-        """Given a list of MOTAccumulators, get total summary by method in 'motmetrics', containing metrics scores
-        
-        Args:
-            accumulators: list of MOTAccumulators
-            exp_names: list of experiment names
-        Returns:
-            strsummary: pandas.DataFrame output by method in 'motmetrics', containing metrics scores
-        """
-        metrics = mm.metrics.motchallenge_metrics
-        mh = mm.metrics.create()
-       
-        summary = Evaluator.get_summary(accumulators, exp_names, metrics)
-        strsummary = mm.io.render_summary(
-            summary,
-            formatters=mh.formatters,
-            namemap=mm.io.motchallenge_metric_names
-        )
-
-        return strsummary
-    
     def evaluate(
         self, results: Dict[int, List[TrackingBbox]], gt_root_path: str
     ) -> str:
 
         """ 
         Evaluate performance wrt MOTA, MOTP, track quality measures, global ID measures, and more,
-        as computed by py-motmetrics.
+        as computed by py-motmetrics on a single experiment. By default, use 'single_vid' as exp_name.
 
         Args:
             results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]] 
@@ -326,12 +322,10 @@ class TrackingLearner(object):
         """
         
         # Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
-        accs = []
-        result_file_path = self.savetxt_results(results, exp_name="single_vid")
+        result_file_path = savetxt_results(results, exp_name="single_vid")
         # Save tracking results in tmp
-        mot_accumulator = self.evaluate_mot(gt_root_path, "single_vid", result_file_path)
-        accs.append(mot_accumulator)
-        strsummary = self.mot_summary(accs, ("single_vid",))
+        mot_accumulator = evaluate_mot(gt_root_path, "single_vid", result_file_path)
+        strsummary = mot_summary([mot_accumulator], ("single_vid",))
         return strsummary
     
     def predict(
