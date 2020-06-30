@@ -189,9 +189,10 @@ class TrackingLearner(object):
         self.opt.device = torch_device()
 
         self.dataset = dataset
-        self.model = self._init_model(model_path)
+        self.model = None
+        self._init_model(model_path)
 
-    def _init_model(self, model_path) -> nn.Module:
+    def _init_model(self, model_path) -> None:
         """
         Initialize the model.
 
@@ -205,7 +206,6 @@ class TrackingLearner(object):
         ), f"Model weights not found at {model_path}"
 
         self.opt.load_model = model_path
-        return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
 
     def fit(
         self, lr: float = 1e-4, lr_step: str = "20,27", num_epochs: int = 30
@@ -239,6 +239,7 @@ class TrackingLearner(object):
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), opt_fit.lr)
         start_epoch = 0
+        self.model = create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
         self.model = load_model(self.model, opt_fit.load_model)
 
         Trainer = train_factory[opt_fit.task]
@@ -361,11 +362,15 @@ class TrackingLearner(object):
         opt_pred.nms_thres = nms_thres
         opt_pred.track_buffer = track_buffer
         opt_pred.min_box_area = min_box_area
-
+        
         # initialize tracker
-        tracker = JDETracker(
-            opt_pred.opt, frame_rate=frame_rate, model=self.model
-        )
+        if self.model:
+            tracker = JDETracker(
+                opt_pred.opt, frame_rate=frame_rate, model=self.model
+            )
+        else:
+            tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
+
         # initialize dataloader
         dataloader = self._get_dataloader(im_or_video_path)
 
