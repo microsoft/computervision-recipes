@@ -47,9 +47,9 @@ def _get_gpu_str():
         return "-1"  # cpu
 
 
-def write_video(
-    results: Dict[int, List[TrackingBbox]], input_video: str, output_video: str
-) -> None:
+def write_video(results: Dict[int, List[TrackingBbox]], 
+                input_video: str, 
+                output_video: str) -> None:
     """ 
     Plot the predicted tracks on the input video. Write the output to {output_path}.
 
@@ -90,15 +90,85 @@ def write_video(
     print(f"Output saved to {output_video}.")
 
 
+def savetxt_results(results: Dict[int, List[TrackingBbox]],
+                    exp_name: str = 'results',
+                    root_path: str = None,
+                    result_filename: str = 'results.txt') -> str:
+    """Save tracking results to txt in tmp directory or provided path.
+
+    Args:
+        results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]]
+        exp_name: subfolder for each experiment
+        root_path: results saved root path. Default: None
+        result_filename: saved prediction results txt file; End with '.txt'
+    Returns:
+        result_path: saved prediction results txt file path
+    """
+    if not root_path:
+        with tempfile.TemporaryDirectory() as tmpdir1:
+            os.makedirs(osp.join(tmpdir1, exp_name))
+            result_path = osp.join(tmpdir1, exp_name, result_filename)
+    else:
+        result_path = osp.join(root_path, exp_name, result_filename)
+
+    # Save results in MOT format for evaluation            
+    bboxes_mot = boxes_to_mot(results)
+    np.savetxt(result_path, bboxes_mot, delimiter=",", fmt="%s")
+    return result_path
+
+
+def evaluate_mot(gt_root_path: str,
+                 exp_name: str,
+                 result_path: str) -> object:
+    """ eval code that calls on 'motmetrics' package in referenced FairMOT script, to produce MOT metrics on inference, given ground-truth.
+    Args:
+        gt_root_path: path of dataset containing GT annotations in MOTchallenge format (xywh)
+        exp_name: subfolder for each experiment
+        result_path: saved prediction results txt file path
+    Returns:
+        mot_accumulator: MOTAccumulator object from pymotmetrics package
+    """
+    # Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
+    evaluator = Evaluator(gt_root_path, exp_name, "mot")
+
+    # Run evaluation using pymotmetrics package
+    mot_accumulator = evaluator.eval_file(result_path)
+
+    return mot_accumulator
+
+
+def mot_summary(accumulators: list,
+                exp_names: list) -> str:
+    """Given a list of MOTAccumulators, get total summary by method in 'motmetrics', containing metrics scores
+
+    Args:
+        accumulators: list of MOTAccumulators
+        exp_names: list of experiment names (str) corresponds to MOTAccumulators
+    Returns:
+        strsummary: pandas.DataFrame output by method in 'motmetrics', containing metrics scores
+    """
+    metrics = mm.metrics.motchallenge_metrics
+    mh = mm.metrics.create()
+
+    summary = Evaluator.get_summary(accumulators, exp_names, metrics)
+    strsummary = mm.io.render_summary(
+        summary,
+        formatters=mh.formatters,
+        namemap=mm.io.motchallenge_metric_names
+    )
+
+    return strsummary
+
+
 class TrackingLearner(object):
     """Tracking Learner for Multi-Object Tracking"""
 
     def __init__(
-        self,
-        dataset: Optional[TrackingDataset] = None,
-        model_path: Optional[str] = None,
-        arch: str = "dla_34",
-        head_conv: int = None,
+            self,
+            dataset: Optional[TrackingDataset] = None,
+            model_path: Optional[str] = None,
+            arch: str = "dla_34",
+            head_conv: int = None,
     ) -> None:
         """
         Initialize learner object.
@@ -120,9 +190,10 @@ class TrackingLearner(object):
         self.opt.device = torch_device()
 
         self.dataset = dataset
-        self.model = self._init_model(model_path)
+        self.model = None
+        self._init_model(model_path)
 
-    def _init_model(self, model_path) -> nn.Module:
+    def _init_model(self, model_path) -> None:
         """
         Initialize the model.
 
@@ -136,10 +207,9 @@ class TrackingLearner(object):
         ), f"Model weights not found at {model_path}"
 
         self.opt.load_model = model_path
-        return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
 
     def fit(
-        self, lr: float = 1e-4, lr_step: str = "20,27", num_epochs: int = 30
+            self, lr: float = 1e-4, lr_step: str = "20,27", num_epochs: int = 30
     ) -> None:
         """
         The main training loop.
@@ -170,6 +240,7 @@ class TrackingLearner(object):
 
         self.optimizer = torch.optim.Adam(self.model.parameters(), opt_fit.lr)
         start_epoch = 0
+        self.model = create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
         self.model = load_model(self.model, opt_fit.load_model)
 
         Trainer = train_factory[opt_fit.task]
@@ -181,7 +252,7 @@ class TrackingLearner(object):
 
         # training loop
         for epoch in range(
-            start_epoch + 1, start_epoch + opt_fit.num_epochs + 1
+                start_epoch + 1, start_epoch + opt_fit.num_epochs + 1
         ):
             print(
                 "=" * 5,
@@ -238,12 +309,12 @@ class TrackingLearner(object):
         print(f"Model saved to {path}")
 
     def evaluate(
-        self, results: Dict[int, List[TrackingBbox]], gt_root_path: str
+            self, results: Dict[int, List[TrackingBbox]], gt_root_path: str
     ) -> str:
 
         """ 
         Evaluate performance wrt MOTA, MOTP, track quality measures, global ID measures, and more,
-        as computed by py-motmetrics.
+        as computed by py-motmetrics on a single experiment. By default, use 'single_vid' as exp_name.
 
         Args:
             results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]] 
@@ -253,40 +324,72 @@ class TrackingLearner(object):
         """
 
         # Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
-        evaluator = Evaluator(gt_root_path, "single_vid", "mot")
+        result_path = savetxt_results(results, exp_name="single_vid")
+        # Save tracking results in tmp
+        mot_accumulator = evaluate_mot(gt_root_path, "single_vid", result_path)
+        strsummary = mot_summary([mot_accumulator], ("single_vid",))
+        return strsummary
 
-        with tempfile.TemporaryDirectory() as tmpdir1:
-            os.makedirs(osp.join(tmpdir1, "results"))
-            result_filename = osp.join(tmpdir1, "results", "results.txt")
-
-            # Save results im MOT format for evaluation
-            bboxes_mot = boxes_to_mot(results)
-            np.savetxt(result_filename, bboxes_mot, delimiter=",", fmt="%s")
-
-            # Run evaluation using pymotmetrics package
-            accs = [evaluator.eval_file(result_filename)]
-
-        # get summary
-        metrics = mm.metrics.motchallenge_metrics
-        mh = mm.metrics.create()
-
-        summary = Evaluator.get_summary(accs, ("single_vid",), metrics)
-        strsummary = mm.io.render_summary(
-            summary,
-            formatters=mh.formatters,
-            namemap=mm.io.motchallenge_metric_names,
-        )
+    def eval_mot(self, conf_thres: float, track_buffer: int, im_size: Tuple[int, int], data_root: str,
+                 seqs: list, result_root: str, exp_name: str, run_eval: bool = True) -> str:
+        """
+        Call the prediction function, saves the tracking results to txt file and provides the evaluation results with motmetrics format.
+        Args:
+            conf_thres: confidence thresh for tracking
+            track_buffer: tracking buffer
+            im_size: image resolution
+            data_root: data root path
+            seqs: list of video sequences subfolder names under MOT challenge data
+            result_root: tracking result path
+            exp_name: experiment name
+            run_eval: if we evaluate on provided data
+        Returns:
+            strsummary: str output by method in 'motmetrics' package, containing metrics scores
+        """
+        eval_path = osp.join(result_root, exp_name)
+        if not osp.exists(eval_path):
+            os.makedirs(eval_path)
+        accumulators = []
+        for seq in seqs:
+            im_path = osp.join(data_root, seq, 'img1')
+            result_filename = '{}.txt'.format(seq)
+            result_path = osp.join(result_root, exp_name, result_filename)
+            with open(osp.join(data_root, seq, 'seqinfo.ini')) as seqinfo_file:
+                meta_info = seqinfo_file.read()
+            # frame_rate is set from seqinfo.ini by frameRate
+            frame_rate = int(
+                meta_info[meta_info.find('frameRate') + 10:meta_info.find('\nseqLength')])
+            if not osp.exists(result_path):
+                # Run tracking.
+                eval_results = self.predict(
+                    im_path,
+                    conf_thres,
+                    track_buffer,
+                    im_size,
+                    frame_rate)
+                result_path = savetxt_results(eval_results, exp_name, result_root,
+                                                   result_filename)
+            print(f"Saved tracking results to {result_path}")
+            if run_eval:
+                # eval
+                print(f"Evaluate seq: {seq}")
+                mot_accumulator = evaluate_mot(data_root, seq, result_path)
+                accumulators.append(mot_accumulator)
+        if run_eval:
+            return None
+        else:
+            strsummary = mot_summary(accumulators, seqs)
         return strsummary
 
     def predict(
-        self,
-        im_or_video_path: str,
-        conf_thres: float = 0.6,
-        det_thres: float = 0.3,
-        nms_thres: float = 0.4,
-        track_buffer: int = 30,
-        min_box_area: float = 200,
-        frame_rate: int = 30,
+            self,
+            im_or_video_path: str,
+            conf_thres: float = 0.6,
+            det_thres: float = 0.3,
+            nms_thres: float = 0.4,
+            track_buffer: int = 30,
+            min_box_area: float = 200,
+            frame_rate: int = 30,
     ) -> Dict[int, List[TrackingBbox]]:
         """
         Run inference on an image or video path.
@@ -313,9 +416,13 @@ class TrackingLearner(object):
         opt_pred.min_box_area = min_box_area
 
         # initialize tracker
-        tracker = JDETracker(
-            opt_pred.opt, frame_rate=frame_rate, model=self.model
-        )
+        if self.model:
+            tracker = JDETracker(
+                opt_pred.opt, frame_rate=frame_rate, model=self.model
+            )
+        else:
+            tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
+
         # initialize dataloader
         dataloader = self._get_dataloader(im_or_video_path)
 
@@ -363,28 +470,28 @@ class TrackingLearner(object):
         # if path is to a root directory of images
 
         if (
-            osp.isdir(im_or_video_path)
-            and len(
-                list(
-                    filter(
-                        lambda x: osp.splitext(x)[1].lower() in im_format,
-                        sorted(glob.glob("%s/*.*" % im_or_video_path)),
-                    )
+                osp.isdir(im_or_video_path)
+                and len(
+            list(
+                filter(
+                    lambda x: osp.splitext(x)[1].lower() in im_format,
+                    sorted(glob.glob("%s/*.*" % im_or_video_path)),
                 )
             )
-            > 0
+        )
+                > 0
         ):
             return LoadImages(im_or_video_path)
         # if path is to a single video file
         elif (
-            osp.isfile(im_or_video_path)
-            and osp.splitext(im_or_video_path)[1] in video_format
+                osp.isfile(im_or_video_path)
+                and osp.splitext(im_or_video_path)[1] in video_format
         ):
             return LoadVideo(im_or_video_path)
         # if path is to a single image file
         elif (
-            osp.isfile(im_or_video_path)
-            and osp.splitext(im_or_video_path)[1] in im_format
+                osp.isfile(im_or_video_path)
+                and osp.splitext(im_or_video_path)[1] in im_format
         ):
             return LoadImages(im_or_video_path)
         else:
