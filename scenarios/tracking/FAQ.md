@@ -9,7 +9,7 @@
 This document includes answers and information relating to common questions and topics regarding multi-object tracking. For more general Machine Learning questions, such as "How many training examples do I need?" or "How to monitor GPU usage during training?", see also the image classification [FAQ](https://github.com/microsoft/ComputerVision/blob/master/classification/FAQ.md).
 
 * General
-  * [Why FairMOT repository for the tracking algorithm?](#why-FAIRMOT)
+  * [Why FairMOT for the tracking algorithm?](#why-FAIRMOT)
   * [What are the main evaluation metrics for tracking performance?](##What-are-the-commonly-used-evaluation-metrics)
 
 * Data  
