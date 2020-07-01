@@ -74,10 +74,10 @@ def boxes_to_mot(results: Dict[int, List[TrackingBbox]]) -> None:
         [
             bb.frame_id,
             bb.track_id,
-            bb.top,
             bb.left,
-            bb.bottom - bb.top,
+            bb.top,
             bb.right - bb.left,
+            bb.bottom - bb.top,
             1,
             -1,
             -1,
