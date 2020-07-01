@@ -47,9 +47,9 @@ def _get_gpu_str():
         return "-1"  # cpu
 
 
-def write_video(
-        results: Dict[int, List[TrackingBbox]], input_video: str, output_video: str
-) -> None:
+def write_video(results: Dict[int, List[TrackingBbox]], 
+                input_video: str, 
+                output_video: str) -> None:
     """ 
     Plot the predicted tracks on the input video. Write the output to {output_path}.
 
@@ -93,8 +93,7 @@ def write_video(
 def savetxt_results(results: Dict[int, List[TrackingBbox]],
                     exp_name: str = 'results',
                     root_path: str = None,
-                    result_filename: str = 'results.txt',
-                    if_tmp: bool = True) -> str:
+                    result_filename: str = 'results.txt') -> str:
     """Save tracking results to txt in tmp directory or provided path.
 
     Args:
@@ -102,11 +101,10 @@ def savetxt_results(results: Dict[int, List[TrackingBbox]],
         exp_name: subfolder for each experiment
         root_path: results saved root path. Default: None
         result_filename: saved prediction results txt file; End with '.txt'
-        if_tmp: if saved in tmp directory. If set it False, root_path has to be provided.
     Returns:
         result_path: saved prediction results txt file path
     """
-    if if_tmp or not root_path:
+    if not root_path:
         with tempfile.TemporaryDirectory() as tmpdir1:
             os.makedirs(osp.join(tmpdir1, exp_name))
             result_path = osp.join(tmpdir1, exp_name, result_filename)
@@ -145,7 +143,7 @@ def mot_summary(accumulators: list,
 
     Args:
         accumulators: list of MOTAccumulators
-        exp_names: list of experiment names (str)
+        exp_names: list of experiment names (str) corresponds to MOTAccumulators
     Returns:
         strsummary: pandas.DataFrame output by method in 'motmetrics', containing metrics scores
     """
@@ -333,7 +331,7 @@ class TrackingLearner(object):
         return strsummary
 
     def eval_mot(self, conf_thres: float, track_buffer: int, im_size: Tuple[int, int], data_root: str,
-                 seqs: list, result_root: str, exp_name: str, if_test_data: bool = False) -> str:
+                 seqs: list, result_root: str, exp_name: str, run_eval: bool = True) -> str:
         """
         Call the prediction function, saves the tracking results to txt file and provides the evaluation results with motmetrics format.
         Args:
@@ -344,7 +342,7 @@ class TrackingLearner(object):
             seqs: list of video sequences subfolder names under MOT challenge data
             result_root: tracking result path
             exp_name: experiment name
-            if_test_data: if we evaluate on test set, set True will ignore evaluation
+            run_eval: if we evaluate on provided data
         Returns:
             strsummary: str output by method in 'motmetrics' package, containing metrics scores
         """
@@ -352,34 +350,34 @@ class TrackingLearner(object):
         if not osp.exists(eval_path):
             os.makedirs(eval_path)
         accumulators = []
-        strsummary = None
         for seq in seqs:
-            image_path = osp.join(data_root, seq, 'img1')
+            im_path = osp.join(data_root, seq, 'img1')
             result_filename = '{}.txt'.format(seq)
             result_path = osp.join(result_root, exp_name, result_filename)
             with open(osp.join(data_root, seq, 'seqinfo.ini')) as seqinfo_file:
                 meta_info = seqinfo_file.read()
-            # framte_rate is set from seqinfo.ini by frameRate
+            # frame_rate is set from seqinfo.ini by frameRate
             frame_rate = int(
                 meta_info[meta_info.find('frameRate') + 10:meta_info.find('\nseqLength')])
-            # If prediction results file exsits, don't have to re-run the prediction
             if not osp.exists(result_path):
                 # Run tracking.
                 eval_results = self.predict(
-                    image_path,
+                    im_path,
                     conf_thres,
                     track_buffer,
                     im_size,
                     frame_rate)
                 result_path = savetxt_results(eval_results, exp_name, result_root,
-                                                   result_filename, if_tmp=False)
+                                                   result_filename)
             print(f"Saved tracking results to {result_path}")
-            if not if_test_data:
+            if run_eval:
                 # eval
                 print(f"Evaluate seq: {seq}")
                 mot_accumulator = evaluate_mot(data_root, seq, result_path)
                 accumulators.append(mot_accumulator)
-        if accumulators:
+        if run_eval:
+            return None
+        else:
             strsummary = mot_summary(accumulators, seqs)
         return strsummary
 
