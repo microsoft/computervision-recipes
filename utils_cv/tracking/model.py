@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import argparse
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from copy import deepcopy
 import glob
 import requests
@@ -17,15 +17,10 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 import cv2
-import decord
-import io
-import IPython.display
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import motmetrics as mm
-from PIL import Image
-from time import sleep
 
 from .references.fairmot.datasets.dataset.jde import LoadImages, LoadVideo
 from .references.fairmot.models.model import (
@@ -40,7 +35,6 @@ from .references.fairmot.trains.train_factory import train_factory
 from .bbox import TrackingBbox
 from .dataset import TrackingDataset, boxes_to_mot
 from .opts import opts
-from .plot import draw_boxes, assign_colors
 from ..common.gpu import torch_device
 
 
@@ -51,145 +45,14 @@ def _get_gpu_str():
     else:
         return "-1"  # cpu
 
-
-def write_video(
-    results: Dict[int, List[TrackingBbox]], input_video: str, output_video: str
-) -> None:
-    """ 
-    Plot the predicted tracks on the input video. Write the output to {output_path}.
-
-    Args:
-        results: dictionary mapping frame id to a list of predicted TrackingBboxes
-        input_video: path to the input video
-        output_video: path to write out the output video
-    """
-    results = OrderedDict(sorted(results.items()))
-    # read video and initialize new tracking video
+def _get_frame(input_video: str, frame_id: int):
     video = cv2.VideoCapture()
     video.open(input_video)
-
-    image_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-    image_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fourcc = cv2.VideoWriter_fourcc(*"MP4V")
-    frame_rate = int(video.get(cv2.CAP_PROP_FPS))
-    writer = cv2.VideoWriter(
-        output_video, fourcc, frame_rate, (image_width, image_height)
-    )
-
-    # assign bbox color per id
-    unique_ids = list(
-        set([bb.track_id for frame in results.values() for bb in frame])
-    )
-    color_map = assign_colors(unique_ids)
-
-    # create images and add to video writer, adapted from https://github.com/ZQPei/deep_sort_pytorch
-    frame_idx = 0
-    while video.grab():
-        _, cur_image = video.retrieve()
-        cur_tracks = results[frame_idx]
-        if len(cur_tracks) > 0:
-            cur_image = draw_boxes(cur_image, cur_tracks, color_map)
-        writer.write(cur_image)
-        frame_idx += 1
-
-    print(f"Output saved to {output_video}.")
-
-
-def plot_single_frame(
-    results: Dict[int, List[TrackingBbox]], input_video: str, frame_id: int
-) -> None:
-    """ 
-    Plot the bounding box and id on a wanted frame. Display as image to front end. 
-
-    Args:
-        results: dictionary mapping frame id to a list of predicted TrackingBboxes
-        input_video: path to the input video
-        frame_id: frame_id for frame to show tracking result
-    """
-    results = OrderedDict(sorted(results.items()))
-
-    # read video and initialize new tracking video
-    video = cv2.VideoCapture()
-    video.open(input_video)
-
-    image_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-    image_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fourcc = cv2.VideoWriter_fourcc(*"MP4V")
-    frame_rate = int(video.get(cv2.CAP_PROP_FPS))
-
-    # assign bbox color per id
-    unique_ids = list(
-        set([bb.track_id for frame in results.values() for bb in frame])
-    )
-    color_map = assign_colors(unique_ids)
-
-    # Extract wanted frame:
     video.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
-    _, cur_image = video.read()
+    _, im = video.read()
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)    
+    return im
 
-    # Extract tracking results for wanted frame, and draw bboxes
-    cur_tracks = results[frame_id]
-    if len(cur_tracks) > 0:
-        cur_image = draw_boxes(cur_image, cur_tracks, color_map)
-
-    im = Image.fromarray(cur_image, "RGB")
-    b, g, r = im.split()
-    im = Image.merge("RGB", (r, g, b))
-    im.save("test_" + str(frame_id) + ".png")
-
-    IPython.display.display(im)
-
-
-def display_video(
-    results: Dict[int, List[TrackingBbox]], input_video: str
-) -> None:
-    """ 
-     Plot the predicted tracks on the input video. Displays to front-end as sequence of images stringed together in a video.
-
-    Args:
-        results: dictionary mapping frame id to a list of predicted TrackingBboxes
-        input_video: path to the input video        
-    """
-
-    results = OrderedDict(sorted(results.items()))
-
-    # assign bbox color per id
-    unique_ids = list(
-        set([bb.track_id for frame in results.values() for bb in frame])
-    )
-    color_map = assign_colors(unique_ids)
-
-    # read video and initialize new tracking video
-    video_reader = decord.VideoReader(input_video)
-
-    # set up ipython jupyter display
-    d_video = IPython.display.display("", display_id=1)
-
-    # Read each frame
-    frame_idx = 0
-    while True:
-        try:
-            cur_image = video_reader.next().asnumpy()
-
-            if len(cur_image.shape) != 3:
-                break
-            cur_tracks = results[frame_idx]
-            if len(cur_tracks) > 0:
-                cur_image = draw_boxes(cur_image, cur_tracks, color_map)
-
-            f = io.BytesIO()
-            im = Image.fromarray(cur_image)
-            im.save(f, "jpeg")
-
-            d_video.update(IPython.display.Image(data=f.getvalue()))
-            sleep(0.000001)
-            frame_idx += 1
-
-        except Exception:
-            break
-
-
-# result_path = savetxt_results(results, exp_name="single_vid")
 def savetxt_results(
     results: Dict[int, List[TrackingBbox]],
     exp_name: str = "results",
