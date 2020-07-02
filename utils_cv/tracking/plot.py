@@ -16,6 +16,7 @@ from time import sleep
 from .bbox import TrackingBbox
 from .model import _get_frame
 
+
 def plot_single_frame(
     results: Dict[int, List[TrackingBbox]], input_video: str, frame_id: int
 ) -> None:
@@ -28,7 +29,7 @@ def plot_single_frame(
         frame_id: frame_id for frame to show tracking result
     """
     results = OrderedDict(sorted(results.items()))
-    
+
     # Assign bbox color per id
     unique_ids = list(
         set([bb.track_id for frame in results.values() for bb in frame])
@@ -36,14 +37,15 @@ def plot_single_frame(
     color_map = assign_colors(unique_ids)
 
     # Get frame from video
-    im = _get_frame(input_video, frame_id) 
+    im = _get_frame(input_video, frame_id)
 
     # Extract tracking results for wanted frame, and draw bboxes+tracking id, display frame
     cur_tracks = results[frame_id]
     if len(cur_tracks) > 0:
-        im = draw_boxes(im, cur_tracks, color_map)    
-    im = Image.fromarray(im)    
+        im = draw_boxes(im, cur_tracks, color_map)
+    im = Image.fromarray(im)
     IPython.display.display(im)
+
 
 def play_video(
     results: Dict[int, List[TrackingBbox]], input_video: str
@@ -70,9 +72,9 @@ def play_video(
     # set up ipython jupyter display
     d_video = IPython.display.display("", display_id=1)
 
-    # Read each frame, add bbox+track id, display frame    
-    for frame_idx in range(len(results)):         
-        im = video_reader.next().asnumpy()        
+    # Read each frame, add bbox+track id, display frame
+    for frame_idx in range(len(results)):
+        im = video_reader.next().asnumpy()
         cur_tracks = results[frame_idx]
         if len(cur_tracks) > 0:
             cur_image = draw_boxes(im, cur_tracks, color_map)
@@ -81,7 +83,8 @@ def play_video(
         im = Image.fromarray(im)
         im.save(f, "jpeg")
         d_video.update(IPython.display.Image(data=f.getvalue()))
-        sleep(0.000001)        
+        sleep(0.000001)
+
 
 def write_video(
     results: Dict[int, List[TrackingBbox]], input_video: str, output_video: str
@@ -149,7 +152,7 @@ def draw_boxes(
         bottom = round(bb.bottom)
 
         # box text and bar
-        color = color_map[label]        
+        color = color_map[label]
         label = str(label)
 
         # last two args of getTextSize() are font_scale and thickness

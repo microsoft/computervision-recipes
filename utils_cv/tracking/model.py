@@ -45,13 +45,15 @@ def _get_gpu_str():
     else:
         return "-1"  # cpu
 
+
 def _get_frame(input_video: str, frame_id: int):
     video = cv2.VideoCapture()
     video.open(input_video)
     video.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
     _, im = video.read()
-    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)    
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
     return im
+
 
 def savetxt_results(
     results: Dict[int, List[TrackingBbox]],
@@ -224,7 +226,7 @@ class TrackingLearner(object):
             self.epoch = epoch
             log_dict_train, _ = trainer.train(epoch, train_loader)
             for k, v in log_dict_train.items():
-                if k=="time":
+                if k == "time":
                     print(f"{k}:{v} min")
                 else:
                     print(f"{k}: {v}")
