@@ -9,7 +9,6 @@
 This document includes answers and information relating to common questions and topics regarding multi-object tracking. For more general Machine Learning questions, such as "How many training examples do I need?" or "How to monitor GPU usage during training?", see also the image classification [FAQ](https://github.com/microsoft/ComputerVision/blob/master/classification/FAQ.md).
 
 * General
-  * [Why FairMOT for the tracking algorithm?](#why-FAIRMOT)
   * [What are the main evaluation metrics for tracking performance?](##What-are-the-commonly-used-evaluation-metrics)
 
 * Data  
@@ -38,24 +37,6 @@ This document includes answers and information relating to common questions and 
 
 
 ## General
-
-### Why FairMOT?
-FairMOT is an [open-source](https://github.com/ifzhang/FairMOT), one-shot online tracking algorithm that has shown [competitive performance in recent MOT benchmarking challenges](https://motchallenge.net/method/MOT=3015&chl=5) at fast inferencing speeds.
-
-Typical tracking algorithms address the detection and feature extraction processes in distinct successive steps. Recent research -[(Voigtlaender et al, 2019)](http://openaccess.thecvf.com/content_CVPR_2019/papers/Voigtlaender_MOTS_Multi-Object_Tracking_and_Segmentation_CVPR_2019_paper.pdf), [(Wang et al, 2019)](https://arxiv.org/pdf/1909.12605.pdf), [(Zhang et al, 2020)](https://arxiv.org/pdf/1909.12605.pdf)- has moved onto combining the detection and feature embedding processes such that they are learned in a shared model (single network), particularly when both steps involving deep learning models. This framework is called single-shot or one-shot, and has become popular in recent, high-performing models, such as FairMOT [(Zhang et al, 2020)](https://arxiv.org/pdf/1909.12605.pdf), JDE [(Wang et al, 2019)](https://arxiv.org/pdf/1909.12605.pdf) and TrackRCNN [(Voigtlaender et al, 2019)](http://openaccess.thecvf.com/content_CVPR_2019/papers/Voigtlaender_MOTS_Multi-Object_Tracking_and_Segmentation_CVPR_2019_paper.pdf). Such single-shot models are more efficient than typical tracking-by-detection models and have shown faster inference speeds due to the shared computation of the single network representation of the detection and feature embedding. On the [MOT16 Challenge dataset](https://motchallenge.net/results/MOT16/), FAIRMOT and JDE achieve 25.8 frames per seconds (fps) and 18.5 fps respectively, while DeepSORT_2, a tracking-by-detection tracker, achieves 17.4 fps.
-
-As seen in the table below, the FairMOT model has improved tracking performance when compared to standard MOT trackers (please see the [below](#What-are-the-commonly-used-evaluation-metrics) for more details on performance metrics). The JDE model, which FairMOT builds off, has a much worse ID-switch number [(Zhang et al, 2020)](https://arxiv.org/pdf/1909.12605.pdf). The JDE model uses a typical anchor-based object detector network for feature embedding with a down sampled feature map. This leads to a misalignment between the anchors and the object center, therefore causing re-iding issues. FairMOT solves these issues by estimating the object center instead of the anchors, using a higher resolution feature map for object detection and feature embedding, and by aggregating high-level and low-level features to handle scale variations across different sizes of objects.
-
-<center>
-
-| Tracker  | MOTA | IDF1 |	ID-Switch | fps |
-| -------- | ---- | ---- | ---------  | --- |
-|DeepSORT_2| 61.4 | 62.2 | 781 | 17.4 |
-|JDE| 64.4 | 55.8 | 1544 | 18.5 |
-|FairMOT| 68.7 | 70.4 | 953 | 25.8 |
-
-</center>
-
 
 ### What are the commonly used evaluation metrics?
 As multi-object-tracking is a complex CV task, there exists many different metrics to evaluate the tracking performance. Based on how they are computed, metrics can be event-based [CLEARMOT metrics](https://link.springer.com/content/pdf/10.1155/2008/246309.pdf) or [id-based metrics](https://arxiv.org/pdf/1609.01775.pdf). The main metrics used to gauge performance in the [MOT benchmarking challenge](https://motchallenge.net/results/MOT16/) include MOTA, IDF1, and ID-switch.
