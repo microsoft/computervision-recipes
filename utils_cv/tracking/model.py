@@ -55,11 +55,11 @@ def _get_frame(input_video: str, frame_id: int):
 
 def savetxt_results(
     results: Dict[int, List[TrackingBbox]],
-    exp_name: str = "results",
-    root_path: str = None,
-    result_filename: str = "results.txt",
+    exp_name: str,
+    root_path: str,
+    result_filename: str,
 ) -> str:
-    """Save tracking results to txt in tmp directory or provided path.
+    """Save tracking results to txt in provided path.
 
     Args:
         results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]]
@@ -224,7 +224,10 @@ class TrackingLearner(object):
             self.epoch = epoch
             log_dict_train, _ = trainer.train(epoch, train_loader)
             for k, v in log_dict_train.items():
-                print(f"{k}: {v}")
+                if k=="time":
+                    print(f"{k}:{v} min")
+                else:
+                    print(f"{k}: {v}")
             if epoch in opt_fit.lr_step:
                 lr = opt_fit.lr * (0.1 ** (opt_fit.lr_step.index(epoch) + 1))
                 for param_group in optimizer.param_groups:
