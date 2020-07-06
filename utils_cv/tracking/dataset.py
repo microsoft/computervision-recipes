@@ -2,16 +2,19 @@
 # Licensed under the MIT License.
 
 from collections import OrderedDict
-import numpy as np
-import os
 import os.path as osp
 from typing import Dict, List
+
+import numpy as np
+
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms as T
+
 from .bbox import TrackingBbox
-from .references.fairmot.datasets.dataset.jde import JointDataset
-from .opts import opts
 from ..common.gpu import db_num_workers
+from .opts import opts
+from .references.fairmot.datasets.dataset.jde import JointDataset
+
 
 
 class TrackingDataset:
@@ -74,10 +77,10 @@ def boxes_to_mot(results: Dict[int, List[TrackingBbox]]) -> None:
         [
             bb.frame_id,
             bb.track_id,
-            bb.top,
             bb.left,
-            bb.bottom - bb.top,
+            bb.top,
             bb.right - bb.left,
+            bb.bottom - bb.top,
             1,
             -1,
             -1,
