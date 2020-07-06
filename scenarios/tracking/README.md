@@ -4,18 +4,27 @@
 + July 2020: Functionality in this directory is work-in-progress; some notebooks may be incomplete.
 ```
 
-This directory provides examples and best practices for building and inferencing multi-object tracking systems. Our goal is to enable users to bring their own datasets and to train a high-accuracy tracking model with ease. While there are many open-source trackers available, we have integrated the [FairMOT tracker](https://github.com/ifzhang/FairMOT) to this repository. The FairMOT algorithm has shown competitive tracking performance in recent MOT benchmarking challenges, while also having respectable inference speeds.
+This directory provides examples and best practices for building and inferencing multi-object tracking systems. Our goal is to enable users to bring their own datasets and to train a high-accuracy tracking model with ease. While there are many open-source trackers available, we have integrated the [FairMOT](https://github.com/ifzhang/FairMOT) tracker to this repository. The FairMOT algorithm has shown competitive tracking performance in recent MOT benchmarking challenges, while also having respectable inference speeds.
 
 
-## Notebooks
+## Setup
 
-We provide several notebooks to show how multi-object-tracking algorithms can be designed and evaluated:
+The tracking examples in this folder only run on Linux compute targets due to constraints introduced by the [FairMOT](https://github.com/ifzhang/FairMOT) repository.
 
-| Notebook name | Description |
-| --- | --- |
-| [00_webcam.ipynb](./00_webcam.ipynb)| Quick-start notebook that demonstrates how to build an object tracking system using a single video or webcam as input.
-| [01_training_introduction.ipynb](./01_training_introduction.ipynb)| Notebook that explains the basic concepts around model training, inferencing, and evaluation using typical tracking performance metrics.|
-| [02_mot_challenge.ipynb](./02_mot_challenge.ipynb) | Notebook that runs model inference on the commonly used MOT Challenge dataset. |
+The following libraries need to be installed in the `cv` conda environment before being able to run the provided notebooks:
+```
+activate cv
+conda install -c conda-forge opencv yacs lap progress
+pip install cython_bbox motmetrics
+```
+
+In addition, FairMOT's DCNv2 library needs to be compiled using this step:
+```
+cd utils_cv/tracking/references/fairmot/models/networks/DCNv2  
+sh make.sh
+```
+
+
 
 ## Why FairMOT?
 FairMOT is an [open-source](https://github.com/ifzhang/FairMOT), one-shot online tracking algorithm that has shown [competitive performance in recent MOT benchmarking challenges](https://motchallenge.net/method/MOT=3015&chl=5) at fast inferencing speeds.
@@ -47,6 +56,18 @@ As seen in the figure below ([Ciaparrone, 2019](https://arxiv.org/pdf/1907.12740
 <p align="center">
 <img src="./media/figure_motmodules2.jpg" width="700" align="center"/>
 </p>
+
+
+## Notebooks
+
+We provide several notebooks to show how multi-object-tracking algorithms can be designed and evaluated:
+
+| Notebook name | Description |
+| --- | --- |
+| [00_webcam.ipynb](./00_webcam.ipynb)| Quick-start notebook that demonstrates how to build an object tracking system using a single video or webcam as input.
+| [01_training_introduction.ipynb](./01_training_introduction.ipynb)| Notebook that explains the basic concepts around model training, inferencing, and evaluation using typical tracking performance metrics.|
+| [02_mot_challenge.ipynb](./02_mot_challenge.ipynb) | Notebook that runs model inference on the commonly used MOT Challenge dataset. |
+
 
 ## Frequently Asked Questions
 
