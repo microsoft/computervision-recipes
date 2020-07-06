@@ -9,18 +9,18 @@ import os.path as osp
 from typing import Dict, List, Optional, Tuple
 
 import cv2
-import numpy as np
 import matplotlib.pyplot as plt
 import motmetrics as mm
+import numpy as np
 
 import torch
 import torch.cuda as cuda
 from torch.utils.data import DataLoader
 
 from .bbox import TrackingBbox
+from ..common.gpu import torch_device
 from .dataset import TrackingDataset, boxes_to_mot
 from .opts import opts
-from ..common.gpu import torch_device
 
 from .references.fairmot.datasets.dataset.jde import LoadImages, LoadVideo
 from .references.fairmot.models.model import (

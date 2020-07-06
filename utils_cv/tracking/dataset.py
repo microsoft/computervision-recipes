@@ -11,9 +11,10 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import transforms as T
 
 from .bbox import TrackingBbox
+from ..common.gpu import db_num_workers
 from .opts import opts
 from .references.fairmot.datasets.dataset.jde import JointDataset
-from ..common.gpu import db_num_workers
+
 
 
 class TrackingDataset:
