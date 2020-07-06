@@ -2,14 +2,13 @@
 # Licensed under the MIT License.
 
 from collections import OrderedDict
-import os.path as osp
 from typing import Dict, List, Tuple
-import numpy as np
 
 import cv2
 import decord
 import io
 import IPython.display
+import numpy as np
 from PIL import Image
 from time import sleep
 
@@ -102,12 +101,12 @@ def write_video(
     video = cv2.VideoCapture()
     video.open(input_video)
 
-    image_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-    image_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    im_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+    im_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fourcc = cv2.VideoWriter_fourcc(*"MP4V")
     frame_rate = int(video.get(cv2.CAP_PROP_FPS))
     writer = cv2.VideoWriter(
-        output_video, fourcc, frame_rate, (image_width, image_height)
+        output_video, fourcc, frame_rate, (im_width, im_height)
     )
 
     # assign bbox color per id

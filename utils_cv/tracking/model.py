@@ -1,26 +1,26 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import argparse
 from collections import defaultdict
 from copy import deepcopy
 import glob
-import requests
 import os
 import os.path as osp
-import tempfile
 from typing import Dict, List, Optional, Tuple
-
-import torch
-import torch.cuda as cuda
-import torch.nn as nn
-from torch.utils.data import DataLoader
 
 import cv2
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import motmetrics as mm
+
+import torch
+import torch.cuda as cuda
+from torch.utils.data import DataLoader
+
+from .bbox import TrackingBbox
+from .dataset import TrackingDataset, boxes_to_mot
+from .opts import opts
+from ..common.gpu import torch_device
 
 from .references.fairmot.datasets.dataset.jde import LoadImages, LoadVideo
 from .references.fairmot.models.model import (
@@ -31,11 +31,6 @@ from .references.fairmot.models.model import (
 from .references.fairmot.tracker.multitracker import JDETracker
 from .references.fairmot.tracking_utils.evaluation import Evaluator
 from .references.fairmot.trains.train_factory import train_factory
-
-from .bbox import TrackingBbox
-from .dataset import TrackingDataset, boxes_to_mot
-from .opts import opts
-from ..common.gpu import torch_device
 
 
 def _get_gpu_str():
@@ -66,8 +61,8 @@ def savetxt_results(
     Args:
         results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]]
         exp_name: subfolder for each experiment
-        root_path: results saved root path. Default: None
-        result_filename: saved prediction results txt file; End with '.txt'
+        root_path: root path for results saved
+        result_filename: saved prediction results txt file; end with '.txt'
     Returns:
         result_path: saved prediction results txt file path
     """
@@ -107,7 +102,7 @@ def mot_summary(accumulators: list, exp_names: list) -> str:
         accumulators: list of MOTAccumulators
         exp_names: list of experiment names (str) corresponds to MOTAccumulators
     Returns:
-        strsummary: pandas.DataFrame output by method in 'motmetrics', containing metrics scores
+        strsummary: str output by method in 'motmetrics', containing metrics scores
     """
     metrics = mm.metrics.motchallenge_metrics
     mh = mm.metrics.create()

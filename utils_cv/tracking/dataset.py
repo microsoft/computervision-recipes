@@ -2,15 +2,17 @@
 # Licensed under the MIT License.
 
 from collections import OrderedDict
-import numpy as np
-import os
 import os.path as osp
 from typing import Dict, List
+
+import numpy as np
+
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms as T
+
 from .bbox import TrackingBbox
-from .references.fairmot.datasets.dataset.jde import JointDataset
 from .opts import opts
+from .references.fairmot.datasets.dataset.jde import JointDataset
 from ..common.gpu import db_num_workers
 
 
