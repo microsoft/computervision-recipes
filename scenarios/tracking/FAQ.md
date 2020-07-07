@@ -1,42 +1,84 @@
 # Multi-Object Tracking
 
-```diff
-+ July 2020: This work is ongoing.
-```
-
 ## Frequently asked questions
 
 This document includes answers and information relating to common questions and topics regarding multi-object tracking. For more general Machine Learning questions, such as "How many training examples do I need?" or "How to monitor GPU usage during training?", see also the image classification [FAQ](https://github.com/microsoft/ComputerVision/blob/master/classification/FAQ.md).
 
-* General
-  * [What are the main evaluation metrics for tracking performance?](##What-are-the-commonly-used-evaluation-metrics)
-
 * Data  
-  * [How to annotate a video for evaluation?](#how-to-annotate-a-video-for-evaluation)
-  * [What is the MOT Challenge format used by the evaluation package?](#What-is-the-MOT-Challenge-format-used-by-the-evaluation-package)
-  * [List of popular MOT datasets](#Popular-MOT-Datasets)
+  * [How to annotate images?](#how-to-annotate-images)
 
 * Training and Inference
-  * [What are the main training parameters in FairMOT?](#what-are-the-main-training-parameters-in-FairMOT)
-  * [How to improve training accuracy?](#how-to-improve-training-accuracy)
-  * [What are the training losses for MOT using FairMOT?](#What-are-the-training-losses-for-MOT-using-FairMOT? )
-  * [What are the main inference parameters in FairMOT?](#What-are-the-main-inference-parameters-in-FairMOT])
+  * [What are the training losses in FairMOT?](#what-are-the-training-losses-in-fairmot)
+  * [What are the main inference parameters in FairMOT?](#what-are-the-main-inference-parameters-in-fairmot)
 
-* MOT Challenge
-  * [What is the MOT Challenge?](#What-is-the-MOT-Challenge)
+* Evaluation
+  * [What is the MOT Challenge?](#what-is-the-mot-challenge)
+  * [What are the commonly used evaluation metrics?](#what-are-the-commonly-used-evaluation-metrics)
 
 * State-of-the-Art(SoTA) Technology
-  * [What is the architecture of the FairMOT tracking algorithm?](#What-is-the-architecture-of-the-FairMOT-tracking-algorithm)
-  * [What SoTA object detectors are used in tracking-by-detection trackers?](#What-SoTA-object-detectors-are-used-in-tracking-by-detection-trackers) 
-  * [What SoTA feature extraction techniques are used in tracking-by-detection trackers?](#What-SoTA-feature-extraction-techniques-are-used-in-tracking-by-detection-trackers)
-  * [What SoTA affinity and association techniques are used in tracking-by-detection trackers?](#What-SoTA-affinity-and-association-techniques-are-used-in-tracking-by-detection-trackers)
-  * [What is the difference between online and offline (batch) tracking algorithms?](#What-is-the-difference-between-online-and-offline-tracking-algorithms)
+  * [Popular MOT datasets](#popular-mot-datasets)
+  * [What is the architecture of the FairMOT tracking algorithm?](#what-is-the-architecture-of-the-fairmot-tracking-algorithm)
+  * [What object detectors are used in tracking-by-detection trackers?](#what-object-detectors-are-used-in-tracking-by-detection-trackers)
+  * [What feature extraction techniques are used in tracking-by-detection trackers?](#what-feature-extraction-techniques-are-used-in-tracking-by-detection-trackers)
+  * [What affinity and association techniques are used in tracking-by-detection trackers?](#what-affinity-and-association-techniques-are-used-in-tracking-by-detection-trackers)
+  * [What is the difference between online and offline (batch) tracking algorithms?](#what-is-the-difference-between-online-and-offline-tracking-algorithms)
 
-* [Popular MOT Publications](#Popular-publications)
+* [Popular Publications and Datasets]
+  * [Popular Datasets](#popular-datasets)
+  * [Popular Publications](#popular-publications)
 
 
 
-## General
+## Data
+
+### How to annotate images?
+
+For training we use the exact same annotation format as for object detection (see this [FAQ](https://github.com/microsoft/computervision-recipes/blob/master/scenarios/detection/FAQ.md#how-to-annotate-images)). This also means that we train from individual frames, without taking temporal location of these frames into account.
+
+For evaluation, we follow the [py-motmetrics](https://github.com/cheind/py-motmetrics) repository which requires the ground-truth data to be in [MOT challenge](https://motchallenge.net/) format. The last 3 columns can be set to -1 by default, for the purpose of ground-truth annotation:
+```
+[frame number] [id number] [bbox left] [bbox top] [bbox width] [bbox height][confidence score][class][visibility]
+```
+
+
+See below an example where we use [VOTT](#https://github.com/microsoft/VoTT) to annotate the two cans in the image as `can_1` and `can_2` where `can_1` refers to the white/yellow can and `can_2` refers to the red can. Before annotating, it is important to correctly set the extraction rate to match that of the video. After annotation, you can export the annotation results into several forms, such as PASCAL VOC or .csv form. For the .csv format, VOTT would return the extracted frames, as well as a csv file containing the bounding box and id info:
+```
+[image] [xmin] [y_min] [x_max] [y_max] [label]
+```
+
+<p align="center">
+<img src="./media/carcans_vott_ui.jpg" width="800" align="center"/>
+</p>
+
+Under the hood (not exposed to the user) the FairMOT repository uses this annotation format for training where each line describes a bounding box as follows, as described in the [Towards-Realtime-MOT](https://github.com/Zhongdao/Towards-Realtime-MOT) repository:
+```
+[class] [identity] [x_center] [y_center] [width] [height]
+```
+
+The `class` field is set to 0, for all, as only single-class multi-object tracking is currently supported by the FairMOT repo (e.g. cans). The field identity is an integer from 0 to num_identities - 1 which maps class names to integers (e.g. coke can, coffee can, etc). The values of [x_center] [y_center] [width] [height] are normalized by the width/height of the image, and range from 0 to 1.
+
+
+
+## Training and inference
+
+### What are the training losses in FairMOT?
+
+Losses generated by FairMOT include detection-specific losses (e.g. hm_loss, wh_loss, off_loss) and id-specific losses (id_loss). The overall loss (loss) is a weighted average of the detection-specific and id-specific losses, see the [FairMOT paper](https://arxiv.org/pdf/2004.01888v2.pdf).
+
+### What are the main inference parameters in FairMOT?
+
+- input_w and input_h: image resolution of the dataset video frames
+- conf_thres, nms_thres, min_box_area: these thresholds used to filter out detections that do not meet the confidence level, nms level and size as per the user requirement;
+- track_buffer: if a lost track is not matched for some number of frames as determined by this threshold, it is deleted, i.e. the id is not reused.
+
+
+
+
+## Evaluation
+
+### What is the MOT Challenge?
+The [MOT Challenge](#https://motchallenge.net/) website hosts the most common benchmarking datasets for pedestrian MOT. Different datasets exist: MOT15, MOT16/17, MOT 19/20. These datasets contain many video sequences, with different tracking difficulty levels, with annotated ground-truth. Detections are also provided for optional use by the participating tracking algorithms.
+
 
 ### What are the commonly used evaluation metrics?
 As multi-object-tracking is a complex CV task, there exists many different metrics to evaluate the tracking performance. Based on how they are computed, metrics can be event-based [CLEARMOT metrics](https://link.springer.com/content/pdf/10.1155/2008/246309.pdf) or [id-based metrics](https://arxiv.org/pdf/1609.01775.pdf). The main metrics used to gauge performance in the [MOT benchmarking challenge](https://motchallenge.net/results/MOT16/) include MOTA, IDF1, and ID-switch.
@@ -61,72 +103,11 @@ As multi-object-tracking is a complex CV task, there exists many different metri
 
 
 
-## Data
 
-### How to annotate a video for evaluation?
-Using an annotation tool, such as [VOTT](#https://github.com/microsoft/VoTT), one can create annotated ground truth data for a video. In the example below, annotating bounding boxes for each can, and then tagging each as `can_1` and `can_2` would create labeled data appropriate for use in a scenario of tracking the cans.
-<p align="center">
-<img src="./media/carcans_vott_ui.jpg" width="800" align="center"/>
-</p>
-
-Before annotating, it is important to correctly set the extraction rate to match that of the video. After annotation, you can export the annotation results into several forms, such as PASCAL VOC or .csv form. For the .csv format, VOTT would return the extracted frames, as well as a csv file containing the bounding box and id info: ``` [image] [xmin] [y_min] [x_max] [y_max] [label]```
-
-### What is the MOT Challenge format used by the evaluation package?
-The evaluation package, from  the [py-motmetrics](https://github.com/cheind/py-motmetrics) repository, requires the ground-truth data to be in [MOT challenge](https://motchallenge.net/) format, i.e.: 
-```
-[frame number] [id number] [bbox left] [bbox top] [bbox width] [bbox height][confidence score][class][visibility]
-```
-The last 3 columns can be set to -1 by default, for the purpose of ground-truth annotation.
-
-### Popular MOT Datasets
-
-<center>
-
-| Name  | Year  | Duration |	# tracks/ids | Scene | Object type |
-| ----- | ----- | -------- | --------------  | ----- |  ---------- |
-| [MOT15](https://arxiv.org/pdf/1504.01942.pdf)| 2015 | 16 min | 1221 | Outdoor | Pedestrians |
-| [MOT16/17](https://arxiv.org/pdf/1603.00831.pdf)| 2016 | 9 min | 1276 | Outdoor & indoor | Pedestrians & vehicles |
-| [CVPR19/MOT20](https://arxiv.org/pdf/1906.04567.pdf)| 2019 | 26 min | 3833 | Crowded scenes | Pedestrians & vehicles |
-| [PathTrack](http://openaccess.thecvf.com/content_ICCV_2017/papers/Manen_PathTrack_Fast_Trajectory_ICCV_2017_paper.pdf)| 2017 | 172 min | 16287 | YouTube people scenes | Persons |
-| [Visdrone](https://arxiv.org/pdf/1804.07437.pdf)| 2019 | - | - | Outdoor view from drone camera | Pedestrians & vehicles |
-| [KITTI](http://www.jimmyren.com/papers/rrc_kitti.pdf)| 2012 | 32 min | - | Traffic scenes from car camera | Pedestrians & vehicles |
-| [UA-DETRAC](https://arxiv.org/pdf/1511.04136.pdf) | 2015 | 10h | 8200 | Traffic scenes | Vehicles |
-| [CamNeT](https://vcg.ece.ucr.edu/sites/g/files/rcwecm2661/files/2019-02/egpaper_final.pdf) | 2015 | 30 min | 30 | Outdoor & indoor | Persons |
-
-</center>
-
-## Training and inference
-
-
-### What are the main training parameters in FairMOT?
-
-The main training parameters include batch size, learning rate and number of epochs. Additionally, FairMOT uses Torch's Adam algorithm as the default optimizer.
-
-
-### How to improve training accuracy?
-
-One can improve the training procedure by modifying the learning rate and number of epochs. As with most AI/ML training problems, this task is often specific to every learning scenario, but the general rules regarding under-training vs over-fitting apply.
-
-### What are the training losses for MOT using FairMOT?
-
-Losses generated by FairMOT include detection-specific losses (e.g. hm_loss, wh_loss, off_loss) and id-specific losses (id_loss). The overall loss (loss) is a weighted average of the detection-specific and id-specific losses, see the [FairMOT paper](https://arxiv.org/pdf/2004.01888v2.pdf).
-
-### What are the main inference parameters in FairMOT?
-
-- input_w and input_h: image resolution of the dataset video frames
-- conf_thres, nms_thres, min_box_area: these thresholds used to filter out detections that do not meet the confidence level, nms level and size as per the user requirement;
-- track_buffer: if a lost track is not matched for some number of frames as determined by this threshold, it is deleted, i.e. the id is not reused.
-
-## MOT Challenge
-
-### What is the MOT Challenge?
-The [MOT Challenge](#https://motchallenge.net/) website hosts the most common benchmarking datasets for pedestrian MOT. Different datasets exist: MOT15, MOT16/17, MOT 19/20. These datasets contain many video sequences, with different tracking difficulty levels, with annotated ground-truth. Detections are also provided for optional use by the participating tracking algorithms.
-
-
-## State-of-the-Art(SoTA) Technology
+## State-of-the-Art
 
 ### What is the architecture of the FairMOT tracking algorithm?
-It consists of a single encoder-decoder neural network that extracts high resolution feature maps of the image frame. As a one-shot tracker, it feeds into two parallel heads for predicting bounding boxes and re-id features respectively, see [source](https://arxiv.org/pdf/2004.01888v2.pdf): 
+It consists of a single encoder-decoder neural network that extracts high resolution feature maps of the image frame. As a one-shot tracker, it feeds into two parallel heads for predicting bounding boxes and re-id features respectively, see [source](https://arxiv.org/pdf/2004.01888v2.pdf):
 <p align="center">
 <img src="./media/figure_fairMOTarc.jpg" width="800" align="center"/>
 </p>
@@ -138,16 +119,16 @@ Source: [Zhang, 2020](https://arxiv.org/pdf/2004.01888v2.pdf)
 </center>
 
 
-### What SoTA object detectors are used in tracking-by-detection trackers?
+### What object detectors are used in tracking-by-detection trackers?
 The most popular object detectors used by SoTA tacking algorithms include: [Faster R-CNN](https://arxiv.org/pdf/1506.01497.pdf), [SSD](https://arxiv.org/pdf/1512.02325.pdf) and [YOLOv3](https://arxiv.org/pdf/1804.02767.pdf). Please see our [object detection FAQ page](../detection/faq.md) for more details.  
 
 
-### What SoTA feature extraction techniques are used in tracking-by-detection trackers?
+### What feature extraction techniques are used in tracking-by-detection trackers?
 While older algorithms used local features, such as optical flow or regional features (e.g. color histograms, gradient-based features or covariance matrix), newer algorithms have deep-learning based feature representations. The most common deep-learning approaches, typically trained on re-id datasets, use classical CNNs to extract visual features. One such dataset is the [MARS dataset](http://www.liangzheng.com.cn/Project/project_mars.html). The following figure is an example of a CNN used for MOT by the [DeepSORT tracker](https://arxiv.org/pdf/1703.07402.pdf):
         <p align="center">
         <img src="./media/figure_DeepSortCNN.jpg" width="600" align="center"/>
         </p>
-Newer deep-learning approaches include Siamese CNN networks, LSTM networks, or CNN with correlation filters. In Siamese CNN networks, a pair of CNN networks are used to measure similarity between two objects, and the CNNs are trained with loss functions that learn features that best differentiate them. 
+Newer deep-learning approaches include Siamese CNN networks, LSTM networks, or CNN with correlation filters. In Siamese CNN networks, a pair of identical CNN networks are used to measure similarity between two objects, and the CNNs are trained with loss functions that learn features that best differentiate them.
              <p align="center">
             <img src="./media/figure_SiameseNetwork.jpg" width="400" align="center"/>
             </p>
@@ -173,22 +154,45 @@ Correlation filters can also be convolved with feature maps from CNN network to 
             </p>
 
 
-### What SoTA affinity and association techniques are used in tracking-by-detection trackers? 
-Simple approaches use similarity/affinity scores calculated from distance measures over features extracted by the CNN to optimally match object detections/tracklets with established object tracks across successive frames. To do this matching, Hungarian (Huhn-Munkres) algorithm is often used for online data association, while K-partite graph global optimization techniques are used for offline data association. 
+### What affinity and association techniques are used in tracking-by-detection trackers?
+Simple approaches use similarity/affinity scores calculated from distance measures over features extracted by the CNN to optimally match object detections/tracklets with established object tracks across successive frames. To do this matching, Hungarian (Huhn-Munkres) algorithm is often used for online data association, while K-partite graph global optimization techniques are used for offline data association.
 
 In more complex deep-learning approaches, the affinity computation is often merged with feature extraction. For instance, [Siamese CNNs](https://arxiv.org/pdf/1907.12740.pdf) and [Siamese LSTMs](http://openaccess.thecvf.com/content_cvpr_2018_workshops/papers/w21/Wan_An_Online_and_CVPR_2018_paper.pdf) directly output the affinity score.
 
 
-
-### What is the difference between online and offline tracking algorithms? 
-Online and offline algorithms differ at their data association step. In online tracking, the detections in a new frame are associated with tracks generated previously from previous frames. Thus, existing tracks are extended or new tracks are created. In offline (batch) tracking, all observations in a batch of frames are considered globally (see figure below), i.e. they are linked together into tracks by obtaining a global optimal solution. Offline tracking can perform better with tracking issues such as long-term occlusion, or similar targets that are spatially close. However, offline tracking is slow, hence not suitable for online tasks such as for autonomous driving. Recently, research has focused on online tracking algorithms, which have reached the performance of offlinetracking while still maintaining high inference speed.
+### What is the difference between online and offline tracking algorithms?
+Online and offline algorithms differ at their data association step. In online tracking, the detections in a new frame are associated with tracks generated previously from previous frames. Thus, existing tracks are extended or new tracks are created. In offline (batch) tracking, all observations in a batch of frames can be considered globally (see figure below), i.e. they are linked together into tracks by obtaining a global optimal solution. Offline tracking can perform better with tracking issues such as long-term occlusion, or similar targets that are spatially close. However, offline tracking tends to be slower and hence not suitable for tasks which require real-time processing such as autonomous driving.
 
 <p align="center">
 <img src="./media/fig_onlineBatch.jpg" width="400" align="center"/>
 </p>
 
 
-## Popular publications
+
+
+## Popular publications and datasets
+
+### Popular Datasets
+
+<center>
+
+| Name  | Year  | Duration |	# tracks/ids | Scene | Object type |
+| ----- | ----- | -------- | --------------  | ----- |  ---------- |
+| [MOT15](https://arxiv.org/pdf/1504.01942.pdf)| 2015 | 16 min | 1221 | Outdoor | Pedestrians |
+| [MOT16/17](https://arxiv.org/pdf/1603.00831.pdf)| 2016 | 9 min | 1276 | Outdoor & indoor | Pedestrians & vehicles |
+| [CVPR19/MOT20](https://arxiv.org/pdf/1906.04567.pdf)| 2019 | 26 min | 3833 | Crowded scenes | Pedestrians & vehicles |
+| [PathTrack](http://openaccess.thecvf.com/content_ICCV_2017/papers/Manen_PathTrack_Fast_Trajectory_ICCV_2017_paper.pdf)| 2017 | 172 min | 16287 | YouTube people scenes | Persons |
+| [Visdrone](https://arxiv.org/pdf/1804.07437.pdf)| 2019 | - | - | Outdoor view from drone camera | Pedestrians & vehicles |
+| [KITTI](http://www.jimmyren.com/papers/rrc_kitti.pdf)| 2012 | 32 min | - | Traffic scenes from car camera | Pedestrians & vehicles |
+| [UA-DETRAC](https://arxiv.org/pdf/1511.04136.pdf) | 2015 | 10h | 8200 | Traffic scenes | Vehicles |
+| [CamNeT](https://vcg.ece.ucr.edu/sites/g/files/rcwecm2661/files/2019-02/egpaper_final.pdf) | 2015 | 30 min | 30 | Outdoor & indoor | Persons |
+
+</center>
+
+
+### Popular publications
+
+<center>
 
 | Name | Year | MOT16 IDF1 | MOT16 MOTA | Inference Speed(fps) | Online/ Batch | Detector |  Feature extraction/ motion model | Affinity & Association Approach |
 | ---- | ---- | ---------- | ---------- | -------------------- | ------------- | -------- | -------------------------------- | -------------------- |
@@ -200,3 +204,5 @@ Online and offline algorithms differ at their data association step. In online t
 |[Extending IOU based Multi-Object Tracking by Visual Information -VIOU](http://elvera.nue.tu-berlin.de/typo3/files/1547Bochinski2018.pdf)|2018|56.1(VisDrone)|40.2(VisDrone)|20(VisDrone)|Batch|Mask R-CNN, CompACT|IOU|KCF to merge tracklets using greedy IOU heuristics|
 |[Simple Online and Realtime Tracking with a Deep Association Metric -DeepSORT](https://arxiv.org/pdf/1703.07402v1.pdf)|2017|62.2| 61.4|17.4|Online|Modified Faster R-CNN|CNN re-id module, IOU, Kalman Filter|Hungarian Algorithm, cascaded approach using Mahalanobis distance (motion), embedding distance |
 |[Multiple people tracking by lifted multicut and person re-identification -LMP](http://openaccess.thecvf.com/content_cvpr_2017/papers/Tang_Multiple_People_Tracking_CVPR_2017_paper.pdf)|2017|51.3|48.8|0.5|Batch|[Public detections](https://arxiv.org/pdf/1610.06136.pdf)|StackeNetPose CNN re-id module|Spatio-temporal relations, deep-matching, re-id confidence; detection-based graph lifted-multicut optimization|
+
+</center>
