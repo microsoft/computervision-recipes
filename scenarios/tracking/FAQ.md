@@ -23,8 +23,9 @@ This document includes answers and information relating to common questions and 
   * [What affinity and association techniques are used in tracking-by-detection trackers?](#what-affinity-and-association-techniques-are-used-in-tracking-by-detection-trackers)
   * [What is the difference between online and offline (batch) tracking algorithms?](#what-is-the-difference-between-online-and-offline-tracking-algorithms)
 
-* [Popular Publications and Datasets](#popular-publications-and-datasets)
-
+* [Popular Publications and Datasets]
+  * [Popular Datasets](#popular-datasets)
+  * [Popular Publications](#popular-publications)
 
 
 
