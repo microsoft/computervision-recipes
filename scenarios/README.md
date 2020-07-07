@@ -8,6 +8,7 @@
 | [Keypoints](keypoints) | Keypoint Detection can be used to detect specific points on an object. A pre-trained model is provided to detect body joints for human pose estimation. |
 | [Segmentation](segmentation) | Image Segmentation assigns a category to each pixel in an image. |
 | [Action Recognition](action_recognition) | Action Recognition (also known as activity recognition) consists of classifying various actions from a sequence of frames, such as "reading" or "drinking". |
+| [Tracking](tracking) | Tracking allows to detect and track multiple objects in a video sequence over time. |
 
 
 # Scenarios
