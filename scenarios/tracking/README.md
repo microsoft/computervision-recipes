@@ -1,9 +1,5 @@
 # Multi-Object Tracking
 
-```diff
-+ July 2020: Functionality in this directory is work-in-progress; some notebooks may be incomplete.
-```
-
 This directory provides examples and best practices for building and inferencing multi-object tracking systems. Our goal is to enable users to bring their own datasets and to train a high-accuracy tracking model with ease. While there are many open-source trackers available, we have integrated the [FairMOT](https://github.com/ifzhang/FairMOT) tracker to this repository. The FairMOT algorithm has shown competitive tracking performance in recent MOT benchmarking challenges, while also having respectable inference speeds.
 
 
