@@ -23,7 +23,7 @@ This document includes answers and information relating to common questions and 
   * [What affinity and association techniques are used in tracking-by-detection trackers?](#what-affinity-and-association-techniques-are-used-in-tracking-by-detection-trackers)
   * [What is the difference between online and offline (batch) tracking algorithms?](#what-is-the-difference-between-online-and-offline-tracking-algorithms)
 
-* [Popular MOT Publications](#popular-publications)
+* [Popular Publications and Datasets](#popular-publications-and-datasets)
 
 
 
@@ -105,24 +105,6 @@ As multi-object-tracking is a complex CV task, there exists many different metri
 
 ## State-of-the-Art
 
-### Popular MOT Datasets
-
-<center>
-
-| Name  | Year  | Duration |	# tracks/ids | Scene | Object type |
-| ----- | ----- | -------- | --------------  | ----- |  ---------- |
-| [MOT15](https://arxiv.org/pdf/1504.01942.pdf)| 2015 | 16 min | 1221 | Outdoor | Pedestrians |
-| [MOT16/17](https://arxiv.org/pdf/1603.00831.pdf)| 2016 | 9 min | 1276 | Outdoor & indoor | Pedestrians & vehicles |
-| [CVPR19/MOT20](https://arxiv.org/pdf/1906.04567.pdf)| 2019 | 26 min | 3833 | Crowded scenes | Pedestrians & vehicles |
-| [PathTrack](http://openaccess.thecvf.com/content_ICCV_2017/papers/Manen_PathTrack_Fast_Trajectory_ICCV_2017_paper.pdf)| 2017 | 172 min | 16287 | YouTube people scenes | Persons |
-| [Visdrone](https://arxiv.org/pdf/1804.07437.pdf)| 2019 | - | - | Outdoor view from drone camera | Pedestrians & vehicles |
-| [KITTI](http://www.jimmyren.com/papers/rrc_kitti.pdf)| 2012 | 32 min | - | Traffic scenes from car camera | Pedestrians & vehicles |
-| [UA-DETRAC](https://arxiv.org/pdf/1511.04136.pdf) | 2015 | 10h | 8200 | Traffic scenes | Vehicles |
-| [CamNeT](https://vcg.ece.ucr.edu/sites/g/files/rcwecm2661/files/2019-02/egpaper_final.pdf) | 2015 | 30 min | 30 | Outdoor & indoor | Persons |
-
-</center>
-
-
 ### What is the architecture of the FairMOT tracking algorithm?
 It consists of a single encoder-decoder neural network that extracts high resolution feature maps of the image frame. As a one-shot tracker, it feeds into two parallel heads for predicting bounding boxes and re-id features respectively, see [source](https://arxiv.org/pdf/2004.01888v2.pdf):
 <p align="center">
@@ -187,8 +169,29 @@ Online and offline algorithms differ at their data association step. In online t
 
 
 
-## Popular publications
+## Popular publications and datasets
 
+### Popular Datasets
+
+<center>
+
+| Name  | Year  | Duration |	# tracks/ids | Scene | Object type |
+| ----- | ----- | -------- | --------------  | ----- |  ---------- |
+| [MOT15](https://arxiv.org/pdf/1504.01942.pdf)| 2015 | 16 min | 1221 | Outdoor | Pedestrians |
+| [MOT16/17](https://arxiv.org/pdf/1603.00831.pdf)| 2016 | 9 min | 1276 | Outdoor & indoor | Pedestrians & vehicles |
+| [CVPR19/MOT20](https://arxiv.org/pdf/1906.04567.pdf)| 2019 | 26 min | 3833 | Crowded scenes | Pedestrians & vehicles |
+| [PathTrack](http://openaccess.thecvf.com/content_ICCV_2017/papers/Manen_PathTrack_Fast_Trajectory_ICCV_2017_paper.pdf)| 2017 | 172 min | 16287 | YouTube people scenes | Persons |
+| [Visdrone](https://arxiv.org/pdf/1804.07437.pdf)| 2019 | - | - | Outdoor view from drone camera | Pedestrians & vehicles |
+| [KITTI](http://www.jimmyren.com/papers/rrc_kitti.pdf)| 2012 | 32 min | - | Traffic scenes from car camera | Pedestrians & vehicles |
+| [UA-DETRAC](https://arxiv.org/pdf/1511.04136.pdf) | 2015 | 10h | 8200 | Traffic scenes | Vehicles |
+| [CamNeT](https://vcg.ece.ucr.edu/sites/g/files/rcwecm2661/files/2019-02/egpaper_final.pdf) | 2015 | 30 min | 30 | Outdoor & indoor | Persons |
+
+</center>
+
+
+### Popular publications
+
+<center>
 
 | Name | Year | MOT16 IDF1 | MOT16 MOTA | Inference Speed(fps) | Online/ Batch | Detector |  Feature extraction/ motion model | Affinity & Association Approach |
 | ---- | ---- | ---------- | ---------- | -------------------- | ------------- | -------- | -------------------------------- | -------------------- |
@@ -200,3 +203,5 @@ Online and offline algorithms differ at their data association step. In online t
 |[Extending IOU based Multi-Object Tracking by Visual Information -VIOU](http://elvera.nue.tu-berlin.de/typo3/files/1547Bochinski2018.pdf)|2018|56.1(VisDrone)|40.2(VisDrone)|20(VisDrone)|Batch|Mask R-CNN, CompACT|IOU|KCF to merge tracklets using greedy IOU heuristics|
 |[Simple Online and Realtime Tracking with a Deep Association Metric -DeepSORT](https://arxiv.org/pdf/1703.07402v1.pdf)|2017|62.2| 61.4|17.4|Online|Modified Faster R-CNN|CNN re-id module, IOU, Kalman Filter|Hungarian Algorithm, cascaded approach using Mahalanobis distance (motion), embedding distance |
 |[Multiple people tracking by lifted multicut and person re-identification -LMP](http://openaccess.thecvf.com/content_cvpr_2017/papers/Tang_Multiple_People_Tracking_CVPR_2017_paper.pdf)|2017|51.3|48.8|0.5|Batch|[Public detections](https://arxiv.org/pdf/1610.06136.pdf)|StackeNetPose CNN re-id module|Spatio-temporal relations, deep-matching, re-id confidence; detection-based graph lifted-multicut optimization|
+
+</center>
