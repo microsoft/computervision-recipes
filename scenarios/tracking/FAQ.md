@@ -49,6 +49,14 @@ See below an example where we use [VOTT](#https://github.com/microsoft/VoTT) to 
 <img src="./media/carcans_vott_ui.jpg" width="800" align="center"/>
 </p>
 
+Under the hood (not exposed to the user) the FairMOT repository uses this annotation format for training where each line describes a bounding box as follows, as described in the [Towards-Realtime-MOT](https://github.com/Zhongdao/Towards-Realtime-MOT) repository:
+```
+[class] [identity] [x_center] [y_center] [width] [height]
+```
+
+The `class` field is set to 0, for all, as only single-class multi-object tracking is currently supported by the FairMOT repo (e.g. cans). The field identity is an integer from 0 to num_identities - 1 which maps class names to integers (e.g. coke can, coffee can, etc). The values of [x_center] [y_center] [width] [height] are normalized by the width/height of the image, and range from 0 to 1.
+
+
 
 ## Training and inference
 
