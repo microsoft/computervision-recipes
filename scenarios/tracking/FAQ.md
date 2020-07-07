@@ -1,16 +1,11 @@
 # Multi-Object Tracking
 
-```diff
-+ July 2020: This work is ongoing.
-```
-
 ## Frequently asked questions
 
 This document includes answers and information relating to common questions and topics regarding multi-object tracking. For more general Machine Learning questions, such as "How many training examples do I need?" or "How to monitor GPU usage during training?", see also the image classification [FAQ](https://github.com/microsoft/ComputerVision/blob/master/classification/FAQ.md).
 
 * Data  
-  * [How to annotate a video for evaluation?](#how-to-annotate-a-video-for-evaluation)
-  * [What is the MOT Challenge format used by the evaluation package?](#what-is-the-mot-challenge-format-used-by-the-evaluation-package)
+  * [How to annotate images?](#how-to-annotate-images)
 
 * Training and Inference
   * [What are the training losses in FairMOT?](#what-are-the-training-losses-in-fairmot)
@@ -35,22 +30,24 @@ This document includes answers and information relating to common questions and 
 
 ## Data
 
-### How to annotate a video for evaluation?
-Using an annotation tool, such as [VOTT](#https://github.com/microsoft/VoTT), one can create annotated ground truth data for a video. In the example below, annotating bounding boxes for each can, and then tagging each as `can_1` and `can_2` would create labeled data appropriate for use in a scenario of tracking the cans.
-<p align="center">
-<img src="./media/carcans_vott_ui.jpg" width="800" align="center"/>
-</p>
+### How to annotate images?
 
-Before annotating, it is important to correctly set the extraction rate to match that of the video. After annotation, you can export the annotation results into several forms, such as PASCAL VOC or .csv form. For the .csv format, VOTT would return the extracted frames, as well as a csv file containing the bounding box and id info: ``` [image] [xmin] [y_min] [x_max] [y_max] [label]```
+For training we use the exact same annotation format as for object detection (see this [FAQ](https://github.com/microsoft/computervision-recipes/blob/master/scenarios/detection/FAQ.md#how-to-annotate-images)). This also means that we train from individual frames, without taking temporal location of these frames into account.
 
-### What is the MOT Challenge format used by the evaluation package?
-The evaluation package, from  the [py-motmetrics](https://github.com/cheind/py-motmetrics) repository, requires the ground-truth data to be in [MOT challenge](https://motchallenge.net/) format, i.e.:
+For evaluation, we follow the [py-motmetrics](https://github.com/cheind/py-motmetrics) repository which requires the ground-truth data to be in [MOT challenge](https://motchallenge.net/) format. The last 3 columns can be set to -1 by default, for the purpose of ground-truth annotation:
 ```
 [frame number] [id number] [bbox left] [bbox top] [bbox width] [bbox height][confidence score][class][visibility]
 ```
-The last 3 columns can be set to -1 by default, for the purpose of ground-truth annotation.
 
 
+See below an example where we use [VOTT](#https://github.com/microsoft/VoTT) to annotate the two cans in the image as `can_1` and `can_2` where `can_1` refers to the white/yellow can and `can_2` refers to the red can. Before annotating, it is important to correctly set the extraction rate to match that of the video. After annotation, you can export the annotation results into several forms, such as PASCAL VOC or .csv form. For the .csv format, VOTT would return the extracted frames, as well as a csv file containing the bounding box and id info:
+```
+[image] [xmin] [y_min] [x_max] [y_max] [label]
+```
+
+<p align="center">
+<img src="./media/carcans_vott_ui.jpg" width="800" align="center"/>
+</p>
 
 
 ## Training and inference
