@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 class Urls:
     base = "https://cvbp.blob.core.windows.net/public/datasets/tracking/"
 
+    cans_path = urljoin(base, "cans.zip")
     fridge_objects_path = urljoin(base, "odFridgeObjects_FairMOT-Format.zip")
     carcans_annotations_path = urljoin(base, "carcans_vott-csv-export.zip")
 
