@@ -15,14 +15,14 @@ class opts(object):
     def __init__(
         self,
         load_model: str = "",
-        gpus = [0, 1],
+        gpus=[0, 1],
         save_all: bool = False,
         arch: str = "dla_34",
         head_conv: int = -1,
         input_h: int = -1,
         input_w: int = -1,
         lr: float = 1e-4,
-        lr_step = [20,27],
+        lr_step=[20, 27],
         num_epochs: int = 30,
         num_iters: int = -1,
         val_intervals: int = 5,
@@ -108,13 +108,11 @@ class opts(object):
         self._init_batch_sizes(batch_size=12, master_batch_size=-1)
         self._init_dataset_info()
 
-
     def _init_root_dir(self, value):
         self.root_dir = value
         self.exp_dir = osp.join(self.root_dir, "exp", self.task)
         self.save_dir = osp.join(self.exp_dir, self.exp_id)
         self.debug_dir = osp.join(self.save_dir, "debug")
-
 
     def _init_batch_sizes(self, batch_size, master_batch_size) -> None:
         self.batch_size = batch_size
@@ -131,7 +129,6 @@ class opts(object):
             if i < rest_batch_size % (len(self.gpus) - 1):
                 chunk += 1
             self.chunk_sizes.append(chunk)
-
 
     def _init_dataset_info(self) -> None:
         default_dataset_info = {
@@ -154,7 +151,6 @@ class opts(object):
         self.dataset = dataset.dataset
         self.update_dataset_info_and_set_heads(dataset)
 
-
     def update_dataset_res(self, input_h, input_w) -> None:
         self.input_h = input_h
         self.input_w = input_w
@@ -162,7 +158,6 @@ class opts(object):
         self.output_w = self.input_w // self.down_ratio
         self.input_res = max(self.input_h, self.input_w)
         self.output_res = max(self.output_h, self.output_w)
-
 
     def update_dataset_info_and_set_heads(self, dataset) -> None:
         input_h, input_w = dataset.default_resolution
@@ -182,9 +177,7 @@ class opts(object):
         if self.task == "mot":
             self.heads = {
                 "hm": self.num_classes,
-                "wh": 2
-                if not self.cat_spec_wh
-                else 2 * self.num_classes,
+                "wh": 2 if not self.cat_spec_wh else 2 * self.num_classes,
                 "id": self.reid_dim,
             }
             if self.reg_offset:
@@ -194,14 +187,12 @@ class opts(object):
         else:
             assert 0, "task not defined"
 
-
-    def set_gpus(self,value):
+    def set_gpus(self, value):
         gpus_list = [int(gpu) for gpu in value.split(",")]
         self.gpus = (
             [i for i in range(len(gpus_list))] if gpus_list[0] >= 0 else [-1]
         )
         self.gpus_str = value
-
 
     def set_head_conv(self, value):
         h = value if value != -1 else 256
