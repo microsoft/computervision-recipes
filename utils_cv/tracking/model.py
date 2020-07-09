@@ -125,7 +125,7 @@ class TrackingLearner(object):
         dataset: Optional[TrackingDataset] = None,
         model_path: Optional[str] = None,
         arch: str = "dla_34",
-        head_conv: int = None,
+        head_conv: int = -1,
     ) -> None:
         """
         Initialize learner object.
@@ -142,10 +142,9 @@ class TrackingLearner(object):
         """
         self.opt = opts()
         self.opt.arch = arch
-        self.opt.head_conv = head_conv if head_conv else -1
-        self.opt.gpus = _get_gpu_str()
+        self.opt.set_head_conv(head_conv)
+        self.opt.set_gpus(_get_gpu_str())
         self.opt.device = torch_device()
-
         self.dataset = dataset
         self.model = None
         self._init_model(model_path)
@@ -183,9 +182,12 @@ class TrackingLearner(object):
         """
         if not self.dataset:
             raise Exception("No dataset provided")
-        lr_step = str(lr_step)
+        if type(lr_step) is not list:
+            lr_step = [lr_step]
+        lr_step = [int(x) for x in lr_step]
 
         opt_fit = deepcopy(self.opt)  # copy opt to avoid bug
+        #opt_fit = self.opt
         opt_fit.lr = lr
         opt_fit.lr_step = lr_step
         opt_fit.num_epochs = num_epochs
@@ -195,7 +197,6 @@ class TrackingLearner(object):
 
         # initialize dataloader
         train_loader = self.dataset.train_dl
-
         self.model = create_model(
             self.opt.arch, self.opt.heads, self.opt.head_conv
         )
@@ -204,7 +205,7 @@ class TrackingLearner(object):
         start_epoch = 0
 
         Trainer = train_factory[opt_fit.task]
-        trainer = Trainer(opt_fit.opt, self.model, self.optimizer)
+        trainer = Trainer(opt_fit, self.model, self.optimizer)
         trainer.set_device(opt_fit.gpus, opt_fit.chunk_sizes, opt_fit.device)
 
         # initialize loss vars
@@ -393,6 +394,7 @@ class TrackingLearner(object):
         Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
         """
         opt_pred = deepcopy(self.opt)  # copy opt to avoid bug
+        #opt_pred = self.opt
         opt_pred.conf_thres = conf_thres
         opt_pred.det_thres = det_thres
         opt_pred.nms_thres = nms_thres
@@ -402,10 +404,10 @@ class TrackingLearner(object):
         # initialize tracker
         if self.model:
             tracker = JDETracker(
-                opt_pred.opt, frame_rate=frame_rate, model=self.model
+                opt_pred, frame_rate=frame_rate, model=self.model
             )
         else:
-            tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
+            tracker = JDETracker(opt_pred, frame_rate=frame_rate)
 
         # initialize dataloader
         dataloader = self._get_dataloader(im_or_video_path)

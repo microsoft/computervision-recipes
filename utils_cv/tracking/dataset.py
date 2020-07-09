@@ -64,7 +64,7 @@ class TrackingDataset:
         # Create FairMOT dataset object
         transforms = T.Compose([T.ToTensor()])
         self.train_data = JointDataset(
-            opt.opt,
+            opt,
             self.root,
             {name: self.fairmot_imlist_path},
             (opt.input_w, opt.input_h),
