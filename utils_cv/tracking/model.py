@@ -43,7 +43,7 @@ def _get_gpu_str():
 
 def _get_frame(input_video: str, frame_id: int):
     video = cv2.VideoCapture()
-    video.open(input_video)    
+    video.open(input_video)
     video.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
     _, im = video.read()
     im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
@@ -178,7 +178,7 @@ class TrackingLearner(object):
 
         Raise:
             Exception if dataset is undefined
-        
+
         Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/train.py
         """
         if not self.dataset:
@@ -227,7 +227,7 @@ class TrackingLearner(object):
                     print(f"{k}: {v}")
             if epoch in opt_fit.lr_step:
                 lr = opt_fit.lr * (0.1 ** (opt_fit.lr_step.index(epoch) + 1))
-                for param_group in optimizer.param_groups:
+                for param_group in self.optimizer.param_groups:
                     param_group["lr"] = lr
 
             # store losses in each epoch
@@ -237,11 +237,11 @@ class TrackingLearner(object):
 
     def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5)) -> None:
         """
-        Plot training loss.  
-        
+        Plot training loss.
+
         Args:
             figsize (optional): width and height wanted for figure of training-loss plot
-        
+
         """
         fig = plt.figure(figsize=figsize)
         ax1 = fig.add_subplot(1, 1, 1)
@@ -274,15 +274,15 @@ class TrackingLearner(object):
         self, results: Dict[int, List[TrackingBbox]], gt_root_path: str
     ) -> str:
 
-        """ 
+        """
         Evaluate performance wrt MOTA, MOTP, track quality measures, global ID measures, and more,
         as computed by py-motmetrics on a single experiment. By default, use 'single_vid' as exp_name.
 
         Args:
-            results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]] 
+            results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]]
             gt_root_path: path of dataset containing GT annotations in MOTchallenge format (xywh)
         Returns:
-            strsummary: str output by method in 'motmetrics' package, containing metrics scores        
+            strsummary: str output by method in 'motmetrics' package, containing metrics scores
         """
 
         # Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
@@ -371,7 +371,7 @@ class TrackingLearner(object):
 
         Args:
             im_or_video_path: path to image(s) or video. Supports jpg, jpeg, png, tif formats for images.
-                Supports mp4, avi formats for video. 
+                Supports mp4, avi formats for video.
             conf_thres: confidence thresh for tracking
             det_thres: confidence thresh for detection
             nms_thres: iou thresh for nms
