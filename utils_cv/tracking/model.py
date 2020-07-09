@@ -183,6 +183,7 @@ class TrackingLearner(object):
         """
         if not self.dataset:
             raise Exception("No dataset provided")
+        lr_step = str(lr_step)
 
         opt_fit = deepcopy(self.opt)  # copy opt to avoid bug
         opt_fit.lr = lr
