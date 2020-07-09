@@ -183,6 +183,7 @@ class TrackingLearner(object):
         """
         if not self.dataset:
             raise Exception("No dataset provided")
+        lr_step = str(lr_step)
 
         opt_fit = deepcopy(self.opt)  # copy opt to avoid bug
         opt_fit.lr = lr
@@ -319,16 +320,19 @@ class TrackingLearner(object):
         Returns:
             strsummary: str output by method in 'motmetrics' package, containing metrics scores
         """
+        accumulators = []
         eval_path = osp.join(result_root, exp_name)
         if not osp.exists(eval_path):
             os.makedirs(eval_path)
-        accumulators = []
+
+        #Loop over all video sequences
         for seq in seqs:
-            im_path = osp.join(data_root, seq, "img1")
             result_filename = "{}.txt".format(seq)
+            im_path = osp.join(data_root, seq, "img1")
             result_path = osp.join(result_root, exp_name, result_filename)
             with open(osp.join(data_root, seq, "seqinfo.ini")) as seqinfo_file:
                 meta_info = seqinfo_file.read()
+
             # frame_rate is set from seqinfo.ini by frameRate
             frame_rate = int(
                 meta_info[
@@ -336,25 +340,30 @@ class TrackingLearner(object):
                     + 10 : meta_info.find("\nseqLength")
                 ]
             )
+
+            # Run model inference
             if not osp.exists(result_path):
-                # Run tracking.
                 eval_results = self.predict(
                     im_path, conf_thres, track_buffer, im_size, frame_rate
                 )
                 result_path = savetxt_results(
                     eval_results, exp_name, result_root, result_filename
                 )
-            print(f"Saved tracking results to {result_path}")
+                print(f"Saved tracking results to {result_path}")
+            else:
+                print(f"Loaded tracking results from {result_path}")
+
+            # Run evaluation
             if run_eval:
-                # eval
                 print(f"Evaluate seq: {seq}")
                 mot_accumulator = evaluate_mot(data_root, seq, result_path)
                 accumulators.append(mot_accumulator)
+
         if run_eval:
-            return None
-        else:
             strsummary = mot_summary(accumulators, seqs)
-        return strsummary
+            return strsummary
+        else:
+            return None
 
     def predict(
         self,
