@@ -17,24 +17,24 @@ from .model import _get_frame
 
 
 def plot_single_frame(
-    results: Dict[int, List[TrackingBbox]], input_video: str, frame_id: int
+    input_video: str,
+    frame_id: int,
+    results: Dict[int, List[TrackingBbox]] = None
 ) -> None:
-    """ 
-    Plot the bounding box and id on a wanted frame. Display as image to front end. 
+    """
+    Plot the bounding box and id on a wanted frame. Display as image to front end.
 
     Args:
-        results: dictionary mapping frame id to a list of predicted TrackingBboxes
         input_video: path to the input video
         frame_id: frame_id for frame to show tracking result
+        results: dictionary mapping frame id to a list of predicted TrackingBboxes
     """
 
-    if results is None:  # if no tracking bboxes, only plot image
-        # Get frame from video
-        im = Image.fromarray(_get_frame(input_video, frame_id))
-        # Display image
-        IPython.display.display(im)
+    # Extract frame
+    im = _get_frame(input_video, frame_id)
 
-    else:
+    # Overlay results
+    if results:
         results = OrderedDict(sorted(results.items()))
 
         # Assign bbox color per id
@@ -43,27 +43,26 @@ def plot_single_frame(
         )
         color_map = assign_colors(unique_ids)
 
-        # Get frame from video
-        im = _get_frame(input_video, frame_id)
-
         # Extract tracking results for wanted frame, and draw bboxes+tracking id, display frame
         cur_tracks = results[frame_id]
 
         if len(cur_tracks) > 0:
             im = draw_boxes(im, cur_tracks, color_map)
-        im = Image.fromarray(im)
-        IPython.display.display(im)
+
+    # Display image
+    im = Image.fromarray(im)
+    IPython.display.display(im)
 
 
 def play_video(
     results: Dict[int, List[TrackingBbox]], input_video: str
 ) -> None:
-    """ 
+    """
      Plot the predicted tracks on the input video. Displays to front-end as sequence of images stringed together in a video.
 
     Args:
         results: dictionary mapping frame id to a list of predicted TrackingBboxes
-        input_video: path to the input video        
+        input_video: path to the input video
     """
 
     results = OrderedDict(sorted(results.items()))
@@ -98,7 +97,7 @@ def play_video(
 def write_video(
     results: Dict[int, List[TrackingBbox]], input_video: str, output_video: str
 ) -> None:
-    """ 
+    """
     Plot the predicted tracks on the input video. Write the output to {output_path}.
 
     Args:
@@ -143,7 +142,7 @@ def draw_boxes(
     cur_tracks: List[TrackingBbox],
     color_map: Dict[int, Tuple[int, int, int]],
 ) -> np.ndarray:
-    """ 
+    """
     Overlay bbox and id labels onto the frame
 
     Args:
@@ -181,11 +180,11 @@ def draw_boxes(
 
 
 def assign_colors(id_list: List[int],) -> Dict[int, Tuple[int, int, int]]:
-    """ 
+    """
     Produce corresponding unique color palettes for unique ids
-    
+
     Args:
-        id_list: list of track ids 
+        id_list: list of track ids
     """
     palette = (2 ** 11 - 1, 2 ** 15 - 1, 2 ** 20 - 1)
 
