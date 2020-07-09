@@ -52,7 +52,7 @@ class TrackingDataset:
         self.keypoints = None
         self.mask_paths = None
 
-        # Init FairMOT opt object
+        # Init FairMOT opt object with all parameter settings
         opt = opts()
 
         # Read annotations
