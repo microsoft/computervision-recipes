@@ -172,7 +172,7 @@ class TrackingDataset:
         self.fairmot_imlist_path = osp.join(
             self.root, "{}.train".format(self.name)
         )
-        with open(self.fairmot_imlist_path, "a") as f:
+        with open(self.fairmot_imlist_path, "w") as f:
             for im_filename in sorted(self.im_filenames):
                 f.write(osp.join(self.im_dir, im_filename) + "\n")
 
