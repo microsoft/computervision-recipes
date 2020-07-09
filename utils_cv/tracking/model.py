@@ -43,7 +43,7 @@ def _get_gpu_str():
 
 def _get_frame(input_video: str, frame_id: int):
     video = cv2.VideoCapture()
-    video.open(input_video)
+    video.open(input_video)    
     video.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
     _, im = video.read()
     im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)

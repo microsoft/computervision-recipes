@@ -27,23 +27,32 @@ def plot_single_frame(
         input_video: path to the input video
         frame_id: frame_id for frame to show tracking result
     """
-    results = OrderedDict(sorted(results.items()))
 
-    # Assign bbox color per id
-    unique_ids = list(
-        set([bb.track_id for frame in results.values() for bb in frame])
-    )
-    color_map = assign_colors(unique_ids)
+    if results is None:  # if no tracking bboxes, only plot image
+        # Get frame from video
+        im = Image.fromarray(_get_frame(input_video, frame_id))
+        # Display image
+        IPython.display.display(im)
 
-    # Get frame from video
-    im = _get_frame(input_video, frame_id)
+    else:
+        results = OrderedDict(sorted(results.items()))
 
-    # Extract tracking results for wanted frame, and draw bboxes+tracking id, display frame
-    cur_tracks = results[frame_id]
-    if len(cur_tracks) > 0:
-        im = draw_boxes(im, cur_tracks, color_map)
-    im = Image.fromarray(im)
-    IPython.display.display(im)
+        # Assign bbox color per id
+        unique_ids = list(
+            set([bb.track_id for frame in results.values() for bb in frame])
+        )
+        color_map = assign_colors(unique_ids)
+
+        # Get frame from video
+        im = _get_frame(input_video, frame_id)
+
+        # Extract tracking results for wanted frame, and draw bboxes+tracking id, display frame
+        cur_tracks = results[frame_id]
+
+        if len(cur_tracks) > 0:
+            im = draw_boxes(im, cur_tracks, color_map)
+        im = Image.fromarray(im)
+        IPython.display.display(im)
 
 
 def play_video(
@@ -72,9 +81,10 @@ def play_video(
     d_video = IPython.display.display("", display_id=1)
 
     # Read each frame, add bbox+track id, display frame
-    for frame_idx in range(len(results)):
-        im = video_reader.next().asnumpy()
+    for frame_idx in range(len(results) - 1):
         cur_tracks = results[frame_idx]
+        im = video_reader.next().asnumpy()
+
         if len(cur_tracks) > 0:
             cur_image = draw_boxes(im, cur_tracks, color_map)
 

@@ -48,7 +48,7 @@ class TrackingDataset:
         self.im_dir = Path(im_dir)
         self.anno_dir = Path(anno_dir)
 
-        #set these to None so taht can use the 'plot_detections' function
+        # set these to None so taht can use the 'plot_detections' function
         self.keypoints = None
         self.mask_paths = None
 
@@ -74,7 +74,6 @@ class TrackingDataset:
 
         self._init_dataloaders()
 
-
     def _init_dataloaders(self) -> None:
         """ Create training dataloader """
         self.train_dl = DataLoader(
@@ -85,7 +84,6 @@ class TrackingDataset:
             pin_memory=True,
             drop_last=True,
         )
-
 
     def _read_annos(self) -> None:
         """ Parses all Pascal VOC formatted annotation files to extract all
@@ -132,23 +130,26 @@ class TrackingDataset:
                     anno_bbox.label_idx = 0
                 else:
                     label = self.labels.index(anno_bbox.label_name) + 1
-                    anno_bbox.label_idx = (label)
+                    anno_bbox.label_idx = label
 
         # Get image sizes. Note that Image.open() only loads the image header,
         # not the full images and is hence fast.
         self.im_sizes = np.array([Image.open(p).size for p in self.im_paths])
 
-
     def _write_fairMOT_format(self) -> None:
         """ Write bounding box information in the format FairMOT expects for training."""
         fairmot_annos_dir = os.path.join(self.root, "labels_with_ids")
-        os.makedirs(fairmot_annos_dir, exist_ok = True)
+        os.makedirs(fairmot_annos_dir, exist_ok=True)
 
         # Create for each image a annotation .txt file in FairMOT format
-        for filename, bboxes, im_size in zip(self.im_filenames, self.anno_bboxes, self.im_sizes):
+        for filename, bboxes, im_size in zip(
+            self.im_filenames, self.anno_bboxes, self.im_sizes
+        ):
             im_width = float(im_size[0])
             im_height = float(im_size[1])
-            fairmot_anno_path = os.path.join(fairmot_annos_dir, filename[:-4] + ".txt")
+            fairmot_anno_path = os.path.join(
+                fairmot_annos_dir, filename[:-4] + ".txt"
+            )
 
             with open(fairmot_anno_path, "w") as f:
                 for bbox in bboxes:
@@ -158,16 +159,22 @@ class TrackingDataset:
                     w = bbox.width()
                     h = bbox.height()
 
-                    label_str = '0 {:d} {:.6f} {:.6f} {:.6f} {:.6f}\n'.format(
-                        tid_curr, x / im_width, y / im_height, w / im_width, h / im_height)
+                    label_str = "0 {:d} {:.6f} {:.6f} {:.6f} {:.6f}\n".format(
+                        tid_curr,
+                        x / im_width,
+                        y / im_height,
+                        w / im_width,
+                        h / im_height,
+                    )
                     f.write(label_str)
 
         # write all image filenames into a <name>.train file required by FairMOT
-        self.fairmot_imlist_path = osp.join(self.root, "{}.train".format(self.name))
+        self.fairmot_imlist_path = osp.join(
+            self.root, "{}.train".format(self.name)
+        )
         with open(self.fairmot_imlist_path, "a") as f:
             for im_filename in sorted(self.im_filenames):
                 f.write(osp.join(self.im_dir, im_filename) + "\n")
-
 
     def show_ims(self, rows: int = 1, cols: int = 3, seed: int = None) -> None:
         """ Show a set of images.
@@ -212,7 +219,7 @@ def boxes_to_mot(results: Dict[int, List[TrackingBbox]]) -> None:
     preds = OrderedDict(sorted(results.items()))
     bboxes = [
         [
-            bb.frame_id,
+            bb.frame_id + 1,
             bb.track_id,
             bb.left,
             bb.top,
