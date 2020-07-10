@@ -299,7 +299,6 @@ class TrackingLearner(object):
         self,
         conf_thres: float,
         track_buffer: int,
-        im_size: Tuple[int, int],
         data_root: str,
         seqs: list,
         result_root: str,
@@ -311,7 +310,6 @@ class TrackingLearner(object):
         Args:
             conf_thres: confidence thresh for tracking
             track_buffer: tracking buffer
-            im_size: image resolution
             data_root: data root path
             seqs: list of video sequences subfolder names under MOT challenge data
             result_root: tracking result path
@@ -325,7 +323,7 @@ class TrackingLearner(object):
         if not osp.exists(eval_path):
             os.makedirs(eval_path)
 
-        #Loop over all video sequences
+        # Loop over all video sequences
         for seq in seqs:
             result_filename = "{}.txt".format(seq)
             im_path = osp.join(data_root, seq, "img1")
@@ -344,7 +342,10 @@ class TrackingLearner(object):
             # Run model inference
             if not osp.exists(result_path):
                 eval_results = self.predict(
-                    im_path, conf_thres, track_buffer, im_size, frame_rate
+                    im_or_video_path=im_path,
+                    conf_thres=conf_thres,
+                    track_buffer=track_buffer,
+                    frame_rate=frame_rate,
                 )
                 result_path = savetxt_results(
                     eval_results, exp_name, result_root, result_filename
