@@ -370,8 +370,6 @@ class TrackingLearner(object):
         self,
         im_or_video_path: str,
         conf_thres: float = 0.6,
-        det_thres: float = 0.3,
-        nms_thres: float = 0.4,
         track_buffer: int = 30,
         min_box_area: float = 200,
         frame_rate: int = 30,
@@ -383,8 +381,6 @@ class TrackingLearner(object):
             im_or_video_path: path to image(s) or video. Supports jpg, jpeg, png, tif formats for images.
                 Supports mp4, avi formats for video.
             conf_thres: confidence thresh for tracking
-            det_thres: confidence thresh for detection
-            nms_thres: iou thresh for nms
             track_buffer: tracking buffer
             min_box_area: filter out tiny boxes
             frame_rate: frame rate
@@ -394,8 +390,6 @@ class TrackingLearner(object):
         Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
         """
         self.opt.conf_thres = conf_thres
-        self.opt.det_thres = det_thres
-        self.opt.nms_thres = nms_thres
         self.opt.track_buffer = track_buffer
         self.opt.min_box_area = min_box_area
         opt = deepcopy(self.opt)  #to avoid fairMOT over-writing opt
