@@ -83,7 +83,7 @@ class LoadImages:  # for inference
 
 
 class LoadVideo:  # for inference
-    def __init__(self, path, img_size=(1088, 608)):
+    def __init__(self, path, img_size=(1088, 608)): 
         self.cap = cv2.VideoCapture(path)
         self.frame_rate = int(round(self.cap.get(cv2.CAP_PROP_FPS)))
         self.vw = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -94,8 +94,8 @@ class LoadVideo:  # for inference
         self.height = img_size[1]
         self.count = 0
 
-        self.w, self.h = self.width, self.height # EDITED
-        print('Lenth of the video: {:d} frames'.format(self.vn))
+        # self.w, self.h = 1920, 1080 EDITED
+        # print('Lenth of the video: {:d} frames'.format(self.vn)) EDITED
 
     def get_size(self, vw, vh, dw, dh):
         wa, ha = float(dw) / vw, float(dh) / vh
@@ -113,7 +113,7 @@ class LoadVideo:  # for inference
         # Read image
         res, img0 = self.cap.read()  # BGR
         assert img0 is not None, 'Failed to load frame {:d}'.format(self.count)
-        img0 = cv2.resize(img0, (self.w, self.h))
+        img0 = cv2.resize(img0, (self.vw, self.vh)) # EDITED
 
         # Padded resize
         img, _, _, _ = letterbox(img0, height=self.height, width=self.width)
@@ -399,13 +399,13 @@ class JointDataset(LoadImagesAndLabels):  # for training
         self.augment = augment
         self.transforms = transforms
 
-        print('=' * 80)
-        print('dataset summary')
-        print(self.tid_num)
-        print('total # identities:', self.nID)
-        print('start index')
-        print(self.tid_start_index)
-        print('=' * 80)
+#         print('=' * 80)
+#         print('dataset summary')
+#         print(self.tid_num)
+#         print('total # identities:', self.nID)
+#         print('start index')
+#         print(self.tid_start_index)
+#         print('=' * 80)
 
     def __getitem__(self, files_index):
 

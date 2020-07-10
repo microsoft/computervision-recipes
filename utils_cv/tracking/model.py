@@ -1,27 +1,26 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import argparse
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from copy import deepcopy
 import glob
-import requests
 import os
 import os.path as osp
-import tempfile #KIP
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
+import cv2
+import matplotlib.pyplot as plt
+import motmetrics as mm
+import numpy as np
 
 import torch
 import torch.cuda as cuda
-import torch.nn as nn
 from torch.utils.data import DataLoader
 
-import cv2
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import motmetrics as mm
+from .bbox import TrackingBbox
+from ..common.gpu import torch_device
+from .dataset import TrackingDataset, boxes_to_mot
+from .opts import opts
 
 from .references.fairmot.datasets.dataset.jde import LoadImages, LoadVideo
 from .references.fairmot.models.model import (
@@ -33,54 +32,6 @@ from .references.fairmot.tracker.multitracker import JDETracker
 from .references.fairmot.tracking_utils.evaluation import Evaluator
 from .references.fairmot.trains.train_factory import train_factory
 
-from .bbox import TrackingBbox
-from .dataset import TrackingDataset, boxes_to_mot
-from .opts import opts
-from .plot import draw_boxes, assign_colors
-from ..common.gpu import torch_device
-
-BASELINE_URL = (
-    "https://drive.google.com/open?id=1udpOPum8fJdoEQm6n0jsIgMMViOMFinu"
-)
-
-
-def _download_baseline(url, destination) -> None:
-    """
-    Download the baseline model .pth file to the destination.
-
-    Args:
-        url: a Google Drive url of the form "https://drive.google.com/open?id={id}"
-        destination: path to save the model to
-
-    Implementation based on https://stackoverflow.com/questions/38511444/python-download-files-from-google-drive-using-url
-    """
-
-    def get_confirm_token(response):
-        for key, value in response.cookies.items():
-            if key.startswith("download_warning"):
-                return value
-
-        return None
-
-    def save_response_content(response, destination):
-        CHUNK_SIZE = 32768
-
-        with open(destination, "wb") as f:
-            for chunk in response.iter_content(CHUNK_SIZE):
-                if chunk:  # filter out keep-alive new chunks
-                    f.write(chunk)
-
-    session = requests.Session()
-    id = url.split("id=")[-1]
-    response = session.get(url, params={"id": id}, stream=True)
-    token = get_confirm_token(response)
-    if token:
-        response = session.get(
-            url, params={"id": id, "confirm": token}, stream=True
-        )
-
-    save_response_content(response, destination)
-
 
 def _get_gpu_str():
     if cuda.is_available():
@@ -90,47 +41,80 @@ def _get_gpu_str():
         return "-1"  # cpu
 
 
-def write_video(
-    results: Dict[int, List[TrackingBbox]], input_video: str, output_video: str
-) -> None:
-    """ 
-    Plot the predicted tracks on the input video. Write the output to {output_path}.
-
-    Args:
-        results: dictionary mapping frame id to a list of predicted TrackingBboxes
-        input_video: path to the input video
-        output_video: path to write out the output video
-    """
-    results = OrderedDict(sorted(results.items()))
-    # read video and initialize new tracking video
+def _get_frame(input_video: str, frame_id: int):
     video = cv2.VideoCapture()
     video.open(input_video)
+    video.set(cv2.CAP_PROP_POS_FRAMES, frame_id)
+    _, im = video.read()
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+    return im
 
-    image_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-    image_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fourcc = cv2.VideoWriter_fourcc(*"MP4V")
-    frame_rate = int(video.get(cv2.CAP_PROP_FPS))
-    writer = cv2.VideoWriter(
-        output_video, fourcc, frame_rate, (image_width, image_height)
+
+def savetxt_results(
+    results: Dict[int, List[TrackingBbox]],
+    exp_name: str,
+    root_path: str,
+    result_filename: str,
+) -> str:
+    """Save tracking results to txt in provided path.
+
+    Args:
+        results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]]
+        exp_name: subfolder for each experiment
+        root_path: root path for results saved
+        result_filename: saved prediction results txt file; end with '.txt'
+    Returns:
+        result_path: saved prediction results txt file path
+    """
+
+    # Convert prediction results to mot format
+    bboxes_mot = boxes_to_mot(results)
+
+    # Save results
+    result_path = osp.join(root_path, exp_name, result_filename)
+    np.savetxt(result_path, bboxes_mot, delimiter=",", fmt="%s")
+
+    return result_path
+
+
+def evaluate_mot(gt_root_path: str, exp_name: str, result_path: str) -> object:
+    """ eval code that calls on 'motmetrics' package in referenced FairMOT script, to produce MOT metrics on inference, given ground-truth.
+    Args:
+        gt_root_path: path of dataset containing GT annotations in MOTchallenge format (xywh)
+        exp_name: subfolder for each experiment
+        result_path: saved prediction results txt file path
+    Returns:
+        mot_accumulator: MOTAccumulator object from pymotmetrics package
+    """
+    # Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
+    evaluator = Evaluator(gt_root_path, exp_name, "mot")
+
+    # Run evaluation using pymotmetrics package
+    mot_accumulator = evaluator.eval_file(result_path)
+
+    return mot_accumulator
+
+
+def mot_summary(accumulators: list, exp_names: list) -> str:
+    """Given a list of MOTAccumulators, get total summary by method in 'motmetrics', containing metrics scores
+
+    Args:
+        accumulators: list of MOTAccumulators
+        exp_names: list of experiment names (str) corresponds to MOTAccumulators
+    Returns:
+        strsummary: str output by method in 'motmetrics', containing metrics scores
+    """
+    metrics = mm.metrics.motchallenge_metrics
+    mh = mm.metrics.create()
+
+    summary = Evaluator.get_summary(accumulators, exp_names, metrics)
+    strsummary = mm.io.render_summary(
+        summary,
+        formatters=mh.formatters,
+        namemap=mm.io.motchallenge_metric_names,
     )
 
-    # assign bbox color per id
-    unique_ids = list(
-        set([bb.track_id for frame in results.values() for bb in frame])
-    )
-    color_map = assign_colors(unique_ids)
-
-    # create images and add to video writer, adapted from https://github.com/ZQPei/deep_sort_pytorch
-    frame_idx = 0
-    while video.grab():
-        _, cur_image = video.retrieve()
-        cur_tracks = results[frame_idx]
-        if len(cur_tracks) > 0:
-            cur_image = draw_boxes(cur_image, cur_tracks, color_map)
-        writer.write(cur_image)
-        frame_idx += 1
-
-    print(f"Output saved to {output_video}.")
+    return strsummary
 
 
 class TrackingLearner(object):
@@ -138,10 +122,10 @@ class TrackingLearner(object):
 
     def __init__(
         self,
-        dataset: TrackingDataset,
-        model_path: str,
+        dataset: Optional[TrackingDataset] = None,
+        model_path: Optional[str] = None,
         arch: str = "dla_34",
-        head_conv: int = None,
+        head_conv: int = -1,
     ) -> None:
         """
         Initialize learner object.
@@ -149,8 +133,8 @@ class TrackingLearner(object):
         Defaults to the FairMOT model.
 
         Args:
-            dataset: the dataset
-            model_path: path to save model
+            dataset: optional dataset (required for training)
+            model_path: optional path to pretrained model (defaults to all_dla34.pth)
             arch: the model architecture
                 Supported architectures: resdcn_34, resdcn_50, resfpndcn_34, dla_34, hrnet_32
             head_conv: conv layer channels for output head. None maps to the default setting.
@@ -158,25 +142,27 @@ class TrackingLearner(object):
         """
         self.opt = opts()
         self.opt.arch = arch
-        self.opt.head_conv = head_conv if head_conv else -1
-        self.opt.gpus = _get_gpu_str()
+        self.opt.set_head_conv(head_conv)
+        self.opt.set_gpus(_get_gpu_str())
         self.opt.device = torch_device()
-
         self.dataset = dataset
-        self.model = self.init_model()
-        self.model_path = model_path
+        self.model = None
+        self._init_model(model_path)
 
-    def init_model(self) -> nn.Module:
+    def _init_model(self, model_path) -> None:
         """
-        Download and initialize the baseline FairMOT model.
-        """
-        model_dir = osp.join(self.opt.root_dir, "models")
-        baseline_path = osp.join(model_dir, "all_dla34.pth")
-        #         os.makedirs(model_dir, exist_ok=True)
-        #         _download_baseline(BASELINE_URL, baseline_path)
-        self.opt.load_model = baseline_path
+        Initialize the model.
 
-        return create_model(self.opt.arch, self.opt.heads, self.opt.head_conv)
+        Args:
+            model_path: optional path to pretrained model (defaults to all_dla34.pth)
+        """
+        if not model_path:
+            model_path = osp.join(self.opt.root_dir, "models", "all_dla34.pth")
+        assert osp.isfile(
+            model_path
+        ), f"Model weights not found at {model_path}"
+
+        self.opt.load_model = model_path
 
     def fit(
         self, lr: float = 1e-4, lr_step: str = "20,27", num_epochs: int = 30
@@ -191,87 +177,91 @@ class TrackingLearner(object):
 
         Raise:
             Exception if dataset is undefined
-        
+
         Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/train.py
         """
         if not self.dataset:
             raise Exception("No dataset provided")
+        if type(lr_step) is not list:
+            lr_step = [lr_step]
+        lr_step = [int(x) for x in lr_step]
 
-        opt_fit = deepcopy(self.opt)  # copy opt to avoid bug
-        opt_fit.lr = lr
-        opt_fit.lr_step = lr_step
-        opt_fit.num_epochs = num_epochs
+        # update parameters
+        self.opt.lr = lr
+        self.opt.lr_step = lr_step
+        self.opt.num_epochs = num_epochs
+        opt = deepcopy(self.opt)  #to avoid fairMOT over-writing opt
 
         # update dataset options
-        opt_fit.update_dataset_info_and_set_heads(self.dataset.train_data)
+        opt.update_dataset_info_and_set_heads(self.dataset.train_data)
 
         # initialize dataloader
         train_loader = self.dataset.train_dl
-
-        self.optimizer = torch.optim.Adam(self.model.parameters(), opt_fit.lr)
+        self.model = create_model(
+            opt.arch, opt.heads, opt.head_conv
+        )
+        self.model = load_model(self.model, opt.load_model)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), opt.lr)
         start_epoch = 0
-        print(f"Loading {opt_fit.load_model}")
-        self.model = load_model(self.model, opt_fit.load_model)
 
-        Trainer = train_factory[opt_fit.task]
-        trainer = Trainer(opt_fit.opt, self.model, self.optimizer)
-        trainer.set_device(opt_fit.gpus, opt_fit.chunk_sizes, opt_fit.device)
-        
+        Trainer = train_factory[opt.task]
+        trainer = Trainer(opt, self.model, self.optimizer)
+        trainer.set_device(opt.gpus, opt.chunk_sizes, opt.device)
+
         # initialize loss vars
         self.losses_dict = defaultdict(list)
-        
+
         # training loop
         for epoch in range(
-            start_epoch + 1, start_epoch + opt_fit.num_epochs + 1
+            start_epoch + 1, start_epoch + opt.num_epochs + 1
         ):
             print(
                 "=" * 5,
-                f" Epoch: {epoch}/{start_epoch + opt_fit.num_epochs} ",
+                f" Epoch: {epoch}/{start_epoch + opt.num_epochs} ",
                 "=" * 5,
             )
             self.epoch = epoch
             log_dict_train, _ = trainer.train(epoch, train_loader)
             for k, v in log_dict_train.items():
-                print(f"{k}: {v}")
-            if epoch in opt_fit.lr_step:
-                lr = opt_fit.lr * (0.1 ** (opt_fit.lr_step.index(epoch) + 1))
-                for param_group in optimizer.param_groups:
+                if k == "time":
+                    print(f"{k}:{v} min")
+                else:
+                    print(f"{k}: {v}")
+            if epoch in opt.lr_step:
+                lr = opt.lr * (0.1 ** (opt.lr_step.index(epoch) + 1))
+                for param_group in self.optimizer.param_groups:
                     param_group["lr"] = lr
-                    
-            # store losses in each epoch                   
+
+            # store losses in each epoch
             for k, v in log_dict_train.items():
-                if k in ['loss', 'hm_loss', 'wh_loss', 'off_loss', 'id_loss']:
+                if k in ["loss", "hm_loss", "wh_loss", "off_loss", "id_loss"]:
                     self.losses_dict[k].append(v)
 
-        # save after training because at inference-time FairMOT src reads model weights from disk
-        self.save(self.model_path)
+    def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5)) -> None:
+        """
+        Plot training loss.
 
-    def plot_training_losses(self, figsize: Tuple[int, int] = (10, 5))->None: 
-        '''
-        Plots training loss from calling `fit`  
-        
         Args:
             figsize (optional): width and height wanted for figure of training-loss plot
-        
-        '''
+
+        """
         fig = plt.figure(figsize=figsize)
         ax1 = fig.add_subplot(1, 1, 1)
-        
-        ax1.set_xlim([0, len(self.losses_dict['loss']) - 1])
-        ax1.set_xticks(range(0, len(self.losses_dict['loss'])))        
+
+        ax1.set_xlim([0, len(self.losses_dict["loss"]) - 1])
+        ax1.set_xticks(range(0, len(self.losses_dict["loss"])))
         ax1.set_xlabel("epochs")
         ax1.set_ylabel("losses")
-        
-        ax1.plot(self.losses_dict['loss'], c="r", label='loss')
-        ax1.plot(self.losses_dict['hm_loss'], c="y", label='hm_loss')
-        ax1.plot(self.losses_dict['wh_loss'], c="g", label='wh_loss')
-        ax1.plot(self.losses_dict['off_loss'], c="b", label='off_loss')
-        ax1.plot(self.losses_dict['id_loss'], c="m", label='id_loss')
 
-        plt.legend(loc='upper right')
+        ax1.plot(self.losses_dict["loss"], c="r", label="loss")
+        ax1.plot(self.losses_dict["hm_loss"], c="y", label="hm_loss")
+        ax1.plot(self.losses_dict["wh_loss"], c="g", label="wh_loss")
+        ax1.plot(self.losses_dict["off_loss"], c="b", label="off_loss")
+        ax1.plot(self.losses_dict["id_loss"], c="m", label="id_loss")
+
+        plt.legend(loc="upper right")
         fig.suptitle("Training losses over epochs")
-        
-    
+
     def save(self, path) -> None:
         """
         Save the model to a specified path.
@@ -282,95 +272,134 @@ class TrackingLearner(object):
         save_model(path, self.epoch, self.model, self.optimizer)
         print(f"Model saved to {path}")
 
-    def evaluate(self,
-                 results: Dict[int, List[TrackingBbox]],
-                 gt_root_path: str) -> str:
-        
-        """ eval code that calls on 'motmetrics' package in referenced FairMOT script, to produce MOT metrics on inference, given ground-truth.
+    def evaluate(
+        self, results: Dict[int, List[TrackingBbox]], gt_root_path: str
+    ) -> str:
+
+        """
+        Evaluate performance wrt MOTA, MOTP, track quality measures, global ID measures, and more,
+        as computed by py-motmetrics on a single experiment. By default, use 'single_vid' as exp_name.
+
         Args:
-            results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]] 
+            results: prediction results from predict() function, i.e. Dict[int, List[TrackingBbox]]
             gt_root_path: path of dataset containing GT annotations in MOTchallenge format (xywh)
         Returns:
-            strsummary: str output by method in 'motmetrics' package, containing metrics scores        
+            strsummary: str output by method in 'motmetrics' package, containing metrics scores
         """
-       
-        #Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
-        evaluator = Evaluator(gt_root_path, "single_vid", "mot")
-        
-        with tempfile.TemporaryDirectory() as tmpdir1:
-            os.makedirs(osp.join(tmpdir1,'results'))
-            result_filename = osp.join(tmpdir1,'results', 'results.txt')
-          
-            # Save results im MOT format for evaluation            
-            bboxes_mot = boxes_to_mot(results)            
-            np.savetxt(result_filename, bboxes_mot, delimiter=",", fmt="%s")
 
-            # Run evaluation using pymotmetrics package
-            accs=[evaluator.eval_file(result_filename)]
-                           
-        # get summary
-        metrics = mm.metrics.motchallenge_metrics
-        mh = mm.metrics.create()
-       
-        summary = Evaluator.get_summary(accs, ("single_vid",), metrics)
-        strsummary = mm.io.render_summary(
-            summary,
-            formatters=mh.formatters,
-            namemap=mm.io.motchallenge_metric_names
+        # Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
+        result_path = savetxt_results(
+            results, "single_vid", gt_root_path, "results.txt"
         )
-        print(strsummary)        
-        
+        # Save tracking results in tmp
+        mot_accumulator = evaluate_mot(gt_root_path, "single_vid", result_path)
+        strsummary = mot_summary([mot_accumulator], ("single_vid",))
         return strsummary
-    
+
+    def eval_mot(
+        self,
+        conf_thres: float,
+        track_buffer: int,
+        data_root: str,
+        seqs: list,
+        result_root: str,
+        exp_name: str,
+        run_eval: bool = True,
+    ) -> str:
+        """
+        Call the prediction function, saves the tracking results to txt file and provides the evaluation results with motmetrics format.
+        Args:
+            conf_thres: confidence thresh for tracking
+            track_buffer: tracking buffer
+            data_root: data root path
+            seqs: list of video sequences subfolder names under MOT challenge data
+            result_root: tracking result path
+            exp_name: experiment name
+            run_eval: if we evaluate on provided data
+        Returns:
+            strsummary: str output by method in 'motmetrics' package, containing metrics scores
+        """
+        accumulators = []
+        eval_path = osp.join(result_root, exp_name)
+        if not osp.exists(eval_path):
+            os.makedirs(eval_path)
+
+        # Loop over all video sequences
+        for seq in seqs:
+            result_filename = "{}.txt".format(seq)
+            im_path = osp.join(data_root, seq, "img1")
+            result_path = osp.join(result_root, exp_name, result_filename)
+            with open(osp.join(data_root, seq, "seqinfo.ini")) as seqinfo_file:
+                meta_info = seqinfo_file.read()
+
+            # frame_rate is set from seqinfo.ini by frameRate
+            frame_rate = int(
+                meta_info[
+                    meta_info.find("frameRate")
+                    + 10 : meta_info.find("\nseqLength")
+                ]
+            )
+
+            # Run model inference
+            if not osp.exists(result_path):
+                eval_results = self.predict(
+                    im_or_video_path=im_path,
+                    conf_thres=conf_thres,
+                    track_buffer=track_buffer,
+                    frame_rate=frame_rate,
+                )
+                result_path = savetxt_results(
+                    eval_results, exp_name, result_root, result_filename
+                )
+                print(f"Saved tracking results to {result_path}")
+            else:
+                print(f"Loaded tracking results from {result_path}")
+
+            # Run evaluation
+            if run_eval:
+                print(f"Evaluate seq: {seq}")
+                mot_accumulator = evaluate_mot(data_root, seq, result_path)
+                accumulators.append(mot_accumulator)
+
+        if run_eval:
+            strsummary = mot_summary(accumulators, seqs)
+            return strsummary
+        else:
+            return None
+
     def predict(
         self,
         im_or_video_path: str,
         conf_thres: float = 0.6,
-        det_thres: float = 0.3,
-        nms_thres: float = 0.4,
         track_buffer: int = 30,
         min_box_area: float = 200,
-        im_size: Tuple[float, float] = (None, None),
         frame_rate: int = 30,
     ) -> Dict[int, List[TrackingBbox]]:
         """
-        Performs inferencing on an image or video path.
+        Run inference on an image or video path.
 
         Args:
             im_or_video_path: path to image(s) or video. Supports jpg, jpeg, png, tif formats for images.
-                Supports mp4, avi formats for video. 
+                Supports mp4, avi formats for video.
             conf_thres: confidence thresh for tracking
-            det_thres: confidence thresh for detection
-            nms_thres: iou thresh for nms
             track_buffer: tracking buffer
             min_box_area: filter out tiny boxes
-            im_size: (input height, input_weight)
             frame_rate: frame rate
 
         Returns a list of TrackingBboxes
 
         Implementation inspired from code found here: https://github.com/ifzhang/FairMOT/blob/master/src/track.py
         """
-        opt_pred = deepcopy(self.opt)  # copy opt to avoid bug
-        opt_pred.conf_thres = conf_thres
-        opt_pred.det_thres = det_thres
-        opt_pred.nms_thres = nms_thres
-        opt_pred.track_buffer = track_buffer
-        opt_pred.min_box_area = min_box_area
-
-        input_h, input_w = im_size
-        input_height = input_h if input_h else -1
-        input_width = input_w if input_w else -1
-        opt_pred.update_dataset_res(input_height, input_width)
+        self.opt.conf_thres = conf_thres
+        self.opt.track_buffer = track_buffer
+        self.opt.min_box_area = min_box_area
+        opt = deepcopy(self.opt)  #to avoid fairMOT over-writing opt
 
         # initialize tracker
-        opt_pred.load_model = self.model_path
-        tracker = JDETracker(opt_pred.opt, frame_rate=frame_rate)
+        tracker = JDETracker(opt, frame_rate=frame_rate, model=self.model)
 
         # initialize dataloader
-        dataloader = self._get_dataloader(
-            im_or_video_path, opt_pred.input_h, opt_pred.input_w
-        )
+        dataloader = self._get_dataloader(im_or_video_path)
 
         frame_id = 0
         out = {}
@@ -384,9 +413,9 @@ class TrackingLearner(object):
                 tlbr = t.tlbr
                 tid = t.track_id
                 vertical = tlwh[2] / tlwh[3] > 1.6
-                if tlwh[2] * tlwh[3] > opt_pred.min_box_area and not vertical:
+                if tlwh[2] * tlwh[3] > opt.min_box_area and not vertical:
                     bb = TrackingBbox(
-                        tlbr[1], tlbr[0], tlbr[3], tlbr[2], frame_id, tid
+                        tlbr[0], tlbr[1], tlbr[2], tlbr[3], frame_id, tid
                     )
                     online_bboxes.append(bb)
             out[frame_id] = online_bboxes
@@ -394,11 +423,9 @@ class TrackingLearner(object):
 
         return out
 
-    def _get_dataloader(
-        self, im_or_video_path: str, input_h, input_w
-    ) -> DataLoader:
+    def _get_dataloader(self, im_or_video_path: str) -> DataLoader:
         """
-        Creates a dataloader from images or video in the given path.
+        Create a dataloader from images or video in the given path.
 
         Args:
             im_or_video_path: path to a root directory of images, or single video or image file.
@@ -429,18 +456,18 @@ class TrackingLearner(object):
             )
             > 0
         ):
-            return LoadImages(im_or_video_path, img_size=(input_w, input_h))
+            return LoadImages(im_or_video_path)
         # if path is to a single video file
         elif (
             osp.isfile(im_or_video_path)
             and osp.splitext(im_or_video_path)[1] in video_format
         ):
-            return LoadVideo(im_or_video_path, img_size=(input_w, input_h))
+            return LoadVideo(im_or_video_path)
         # if path is to a single image file
         elif (
             osp.isfile(im_or_video_path)
             and osp.splitext(im_or_video_path)[1] in im_format
         ):
-            return LoadImages(im_or_video_path, img_size=(input_w, input_h))
+            return LoadImages(im_or_video_path)
         else:
             raise Exception("Image or video format not supported")
