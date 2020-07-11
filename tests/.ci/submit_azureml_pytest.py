@@ -46,6 +46,7 @@ from azureml.core.script_run_config import ScriptRunConfig
 from azureml.core.compute import ComputeTarget, AmlCompute
 from azureml.core.compute_target import ComputeTargetException
 from azureml.core.workspace import WorkspaceException
+import azureml._restclient.snapshots_client
 
 
 def setup_workspace(
@@ -384,6 +385,9 @@ if __name__ == "__main__":
     logger.setLevel(logging.INFO)
     # logging.basicConfig(level=logging.DEBUG)
     args = create_arg_parser()
+    
+    # Allow snapshots of more than 300MB
+    azureml._restclient.snapshots_client. SNAPSHOT_MAX_SIZE_BYTES = 1000*(1024*1024)
 
     if args.dockerproc == "cpu":
         from azureml.core.runconfig import DEFAULT_CPU_IMAGE
