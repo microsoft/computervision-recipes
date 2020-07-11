@@ -6,11 +6,13 @@ from urllib.parse import urljoin
 
 
 class Urls:
-    base = "https://cvbp.blob.core.windows.net/public/datasets/tracking/"
+    datasets_base = "https://cvbp.blob.core.windows.net/public/datasets/tracking/"
+    models_base = "https://cvbp.blob.core.windows.net/public/models/tracking/"
 
-    cans_path = urljoin(base, "cans.zip")
-    fridge_objects_path = urljoin(base, "odFridgeObjects_FairMOT-Format.zip")
-    carcans_annotations_path = urljoin(base, "carcans_vott-csv-export.zip")
+    cans_path = urljoin(datasets_base, "cans.zip")
+    fridge_objects_path = urljoin(datasets_base, "odFridgeObjects_FairMOT-Format.zip")
+    carcans_annotations_path = urljoin(datasets_base, "carcans_vott-csv-export.zip")
+    baseline_models_path = urljoin(models_base, "baselines.zip")
 
     @classmethod
     def all(cls) -> List[str]:
