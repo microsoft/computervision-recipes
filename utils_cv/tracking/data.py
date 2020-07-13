@@ -12,6 +12,7 @@ class Urls:
     cans_path = urljoin(datasets_base, "cans.zip")
     fridge_objects_path = urljoin(datasets_base, "odFridgeObjects_FairMOT-Format.zip")
     carcans_annotations_path = urljoin(datasets_base, "carcans_vott-csv-export.zip")
+    mot_challenge_path = urljoin(datasets_base, "MOT17.zip")
     baseline_models_path = urljoin(models_base, "baselines.zip")
 
     @classmethod
