@@ -273,7 +273,7 @@ class VideoLearner(object):
                 self.save(
                     os.path.join(
                         model_dir,
-                        "{model_name}_{self.epoch}.pt".format(
+                        "{model_name}_{epoch}.pt".format(
                             model_name=model_name, epoch=str(e).zfill(3),
                         ),
                     )
