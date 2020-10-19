@@ -16,20 +16,22 @@ def SauvolaModBinarization(image,n1=51,n2=51,k1=0.3,k2=0.3,default=True):
 	 Binarization using Sauvola's algorithm
 		@name : SauvolaModBinarization
 	 parameters
-		@param image: color or gray scale image
+		@param image (numpy array of shape (3/1) of type np.uint8): color or gray scale image
 	 optional parameters
-		@param n1 : window size for running sauvola during the first pass
-		@param n2 : window size for running sauvola during the second pass
-		@param k1 : k value corresponding to sauvola during the first pass
-		@param k2 : k value corresponding to sauvola during the second pass
-		@param default : bollean variable to set the above parameter as default. 
+		@param n1 (int) : window size for running sauvola during the first pass
+		@param n2 (int): window size for running sauvola during the second pass
+		@param k1 (float): k value corresponding to sauvola during the first pass
+		@param k2 (float): k value corresponding to sauvola during the second pass
+		@param default (bool) : bollean variable to set the above parameter as default. 
 
 			@param default is set to True : thus default values of the above optional parameters (n1,n2,k1,k2) are set to
 				n1 = 5 % of min(image height, image width)
 				n2 = 10 % of min(image height, image width)
 				k1 = 0.5
 				k2 = 0.5
-		@return A binary image of same size as @param image
+		Returns
+			@return A binary image of same size as @param image
+		
 		@cite https://drive.google.com/file/d/1D3CyI5vtodPJeZaD2UV5wdcaIMtkBbdZ/view?usp=sharing
     '''
 
