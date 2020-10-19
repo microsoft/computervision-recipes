@@ -30,6 +30,7 @@ def SauvolaModBinarization(image,n1=51,n2=51,k1=0.3,k2=0.3,default=True):
 				k1 = 0.5
 				k2 = 0.5
 		@return A binary image of same size as @param image
+		@cite https://drive.google.com/file/d/1D3CyI5vtodPJeZaD2UV5wdcaIMtkBbdZ/view?usp=sharing
     '''
 
     if(default):
