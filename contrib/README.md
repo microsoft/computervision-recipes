@@ -10,7 +10,7 @@ Each project should live in its own subdirectory ```/contrib/<project>``` and co
 |---|---|---|
 | [Crowd counting](crowd_counting) | Counting the number of people in low-crowd-density (e.g. less than 10 people) and high-crowd-density (e.g. thousands of people) scenarios. | [![Build Status](https://dev.azure.com/team-sharat/crowd-counting/_apis/build/status/lixzhang.cnt?branchName=lixzhang%2Fsubmodule-rev3)](https://dev.azure.com/team-sharat/crowd-counting/_build/latest?definitionId=49&branchName=lixzhang%2Fsubmodule-rev3)|
 | [Action Recognition with I3D](action_recognition) | Action recognition to identify video/webcam footage from what actions are performed (e.g. "running", "opening a bottle") and at what respective start/end times. Please note, that we also have a R(2+1)D implementation of action recognition that you can find under [scenarios](../sceanrios).| |
-| [Document Image Binarization](binarization) | Binarization is a technique to segment foreground from the background pixels. A simple technique for binarization is thresholding of gray-level or color document scanned images. [scenarios](../sceanrios).| |
+| [Document Image Binarization](binarization) | Binarization is a technique to segment foreground from the background pixels. A simple technique for binarization is thresholding of gray-level or color document scanned images.| |
 
 ## Tools
 | Directory | Project description | Build status (optional) |
