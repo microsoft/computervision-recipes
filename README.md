@@ -1,9 +1,5 @@
 <img src="scenarios/media/logo_cvbp.png" align="right" alt="" width="300"/>
 
-```diff
-+ Update July: Added support for action recognition and tracking
-+              in the new release v1.2.
-```
 
 # Computer Vision
 
