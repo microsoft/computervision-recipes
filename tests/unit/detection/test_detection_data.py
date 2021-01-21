@@ -49,9 +49,9 @@ def test_coco_labels():
 def test_coco2voc(coco_sample_path):
     output_dir = "coco2voc_output"
     coco2voc(
-        anno_path = coco_sample_path,
-        output_dir = output_dir,
-        download_images = False
+        anno_path=coco_sample_path,
+        output_dir=output_dir,
+        download_images=False,
     )
     filenames = os.listdir(os.path.join(output_dir, "annotations"))
     assert len(filenames) == 3
@@ -168,11 +168,11 @@ def labelbox_export_data(tmp_session):
          "objects": [
              {
                  "value": "carton",
-                 "instanceURI": "https://cvbp.blob.core.windows.net/public/datasets/object_detection/labelbox_test_dummy_carton_mask.png"
+                 "instanceURI": "https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/labelbox_test_dummy_carton_mask.png"
              },
              {
                  "value": "milk_bottle",
-                 "instanceURI": "https://cvbp.blob.core.windows.net/public/datasets/object_detection/labelbox_test_dummy_milk_bottle_mask.png"
+                 "instanceURI": "https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/labelbox_test_dummy_milk_bottle_mask.png"
              }
          ]
      },
