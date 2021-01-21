@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 
 
 class Urls:
-    base = "https://cvbp.blob.core.windows.net/public/datasets/tracking/"
+    base = "https://cvbp-secondary.z19.web.core.windows.net/datasets/tracking/"
 
     cans_path = urljoin(base, "cans.zip")
     fridge_objects_path = urljoin(base, "odFridgeObjects_FairMOT-Format.zip")

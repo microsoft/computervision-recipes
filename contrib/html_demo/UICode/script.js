@@ -47,8 +47,7 @@ function populateTable(i, tableData) {
     var item = document.createElement('div');
     item.classList.add("item");
     var img = document.createElement('img');
-    img.src = 'https://cvbp.blob.core.windows.net/public/html_demo/small-150/' + rowData[0];
-    //img.src = 'small-150/' + rowData[0];
+    img.src = 'https://cvbp-secondary.z19.web.core.windows.net/html_demo/small-150/' + rowData[0];
     var txt = document.createElement('p');
     txt.innerHTML = rowData[0] + "<br/><i>Dist.: " + rowData[1] + "</i>";
     item.appendChild(img);
@@ -77,8 +76,7 @@ function calcSimilar(top, queryFeatures, simType) {
   if (!queryFeatures) {
     var queryRow = Math.floor(Math.random() * (rows - 0 + 1) + 0);
     var queryimg = ref_array[queryRow];
-    retImg = 'https://cvbp.blob.core.windows.net/public/html_demo/small-150/' + fn_array[queryRow];
-    //retImg = 'small-150/' + fn_array[queryRow];
+    retImg = 'https://cvbp-secondary.z19.web.core.windows.net/html_demo/small-150/' + fn_array[queryRow];
   } else {
     var queryimg = queryFeatures;
   }
@@ -103,8 +101,7 @@ async function parseSimFileNames(fileType) {
     new JSZip.external.Promise(function (resolve, reject) {
       zipFile_fn = 'data/ref_filenames.zip';
       if (fileType == "example") 
-        zipFile_fn = 'https://cvbp.blob.core.windows.net/public/html_demo/data/ref_filenames.zip';
-      //JSZipUtils.getBinaryContent('data/ref_filenames.zip', function(err, data) {
+        zipFile_fn = 'https://cvbp-secondary.z19.web.core.windows.net/html_demo/data/ref_filenames.zip';
       JSZipUtils.getBinaryContent(zipFile_fn, function(err, data) {
           if (err) {
             reject(err);
@@ -137,8 +134,7 @@ async function parseSimFileFeatures(fileType) {
     new JSZip.external.Promise(function (resolve, reject) {
       zipFile_ref = 'data/ref_features.zip';
       if (fileType == "example") 
-        zipFile_ref = 'https://cvbp.blob.core.windows.net/public/html_demo/data/ref_features.zip';
-      // JSZipUtils.getBinaryContent('data/ref_features.zip', function(err, data) {
+        zipFile_ref = 'https://cvbp-secondary.z19.web.core.windows.net/html_demo/data/ref_features.zip';
       JSZipUtils.getBinaryContent(zipFile_ref, function(err, data) {
           if (err) {
               reject(err);
@@ -319,7 +315,7 @@ $('#multiCollapseWebcam').on('shown.bs.collapse', function () {
 
 $('#multiCollapseSample').on('hidden.bs.collapse', function () {
   document.getElementById("btnSample").classList.remove("active");
-  document.getElementById("btnSample").innerText = "Samples";
+  document.getElementById("btnSample").innerText = "Choose From Samples";
 })
 
 $('#multiCollapseSample').on('shown.bs.collapse', function () {
@@ -556,7 +552,7 @@ async function jsonParser(jString, ovr) {
   if (Array.isArray(resp[0])) {
     if (resp[0][0].hasOwnProperty("top")) {
       // "[[top: #, ]]"
-      //will need to target a different feature if another scenario ends up doing rectangle boxes
+      // will need to target a different feature if another scenario ends up doing rectangle boxes
       for (let i in resp) {
         let j = i
         if (ovr) {
@@ -600,7 +596,11 @@ async function jsonParser(jString, ovr) {
       }
       await renderImage(j);
       let features = resp[i].features;
-      imgsimilarity(j, 5, features);
+
+      // parse the json into an array
+      let featuresArray = JSON.parse(features)
+
+      imgsimilarity(j, 5, featuresArray);
     }
     return "similarity"
   }
@@ -618,8 +618,7 @@ function APIRequest() {
   uplBtn.disabled = "true";
   uplStatus.classList.remove("hide");
   uplStatus.innerHTML = 'Loading... <div class="spinner-border ml-auto spinner-border-sm" role="status" aria-hidden="true"></div>';
-  //console.log(url);
-  //console.log(JSON.stringify({data: b64o}));
+
   let xhr = new XMLHttpRequest();
 
   xhr.onload = function() {

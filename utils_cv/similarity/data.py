@@ -12,12 +12,16 @@ from utils_cv.similarity.metrics import vector_distance
 
 
 class Urls:
-    # base url 
-    base = "https://cvbp.blob.core.windows.net/public/datasets/image_similarity/"
+    # base url
+    base = "https://cvbp-secondary.z19.web.core.windows.net/datasets/image_similarity/"
 
     # traditional datasets
-    fridge_objects_retrieval_path = urljoin(base, "fridgeObjectsImageRetrieval.zip")
-    fridge_objects_retrieval_tiny_path = urljoin(base, "fridgeObjectsImageRetrievalTiny.zip")
+    fridge_objects_retrieval_path = urljoin(
+        base, "fridgeObjectsImageRetrieval.zip"
+    )
+    fridge_objects_retrieval_tiny_path = urljoin(
+        base, "fridgeObjectsImageRetrievalTiny.zip"
+    )
 
     @classmethod
     def all(cls) -> List[str]:

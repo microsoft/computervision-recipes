@@ -42,7 +42,7 @@ class _DatasetSpec:
 
 class Urls:
     # base url
-    base = "https://cvbp.blob.core.windows.net/public/datasets/action_recognition/"
+    base = "https://cvbp-secondary.z19.web.core.windows.net/datasets/action_recognition/"
 
     # label maps
     kinetics_label_map = "https://github.com/microsoft/ComputerVision/files/3746975/kinetics400_lable_map.txt"
@@ -75,9 +75,9 @@ class Urls:
 
 
 KINETICS = _DatasetSpec(
-    Urls.kinetics_label_map, 400, os.path.join("data", "kinetics400"),
+    Urls.kinetics_label_map, 400, os.path.join("data", "kinetics400")
 )
 
 HMDB51 = _DatasetSpec(
-    Urls.hmdb51_label_map, 51, os.path.join("data", "hmdb51"),
+    Urls.hmdb51_label_map, 51, os.path.join("data", "hmdb51")
 )

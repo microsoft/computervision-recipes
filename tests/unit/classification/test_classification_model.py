@@ -77,7 +77,9 @@ def test_model_to_learner(tmp):
     assert isinstance(learn.model, models.ResNet)
 
     # Test if model can predict very simple image
-    IM_URL = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup.jpg"
+    IM_URL = (
+        "https://cvbp-secondary.z19.web.core.windows.net/images/cvbp_cup.jpg"
+    )
     imagefile = os.path.join(tmp, "cvbp_cup.jpg")
     urllib.request.urlretrieve(IM_URL, imagefile)
 
