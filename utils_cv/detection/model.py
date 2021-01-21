@@ -340,6 +340,8 @@ def ims_eval_detections(
     score_thresholds: List[float] = np.linspace(0, 1, 51),
 ):
     """ Count number of wrong detections and number of missed objects for multiple image """
+    score_thresholds = [int(f) for f in score_thresholds]
+
     # get detection bounding boxes and corresponding ground truth for all images
     det_bboxes_list = [d["det_bboxes"] for d in detections]
     gt_bboxes_list = [

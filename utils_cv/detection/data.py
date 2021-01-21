@@ -14,11 +14,10 @@ import xml.etree.ElementTree as ET
 
 from .references.anno_coco2voc import coco2voc_main
 
+
 class Urls:
     # for now hardcoding base url into Urls class
-    base = (
-        "https://cvbp.blob.core.windows.net/public/datasets/object_detection/"
-    )
+    base = "https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/"
 
     # traditional datasets
     fridge_objects_path = urljoin(base, "odFridgeObjects.zip")
@@ -163,7 +162,7 @@ def coco2voc(
     anno_path: str,
     output_dir: str,
     anno_type: str = "instance",
-    download_images: bool = False
+    download_images: bool = False,
 ) -> None:
     """ Convert COCO annotation (single .json file) to Pascal VOC annotations
         (multiple .xml files).
@@ -191,7 +190,7 @@ def extract_masks_from_labelbox_json(
     mask into a directory called "segmentation-masks".
 
     The annotation files in
-    [odFridgeObjects](https://cvbp.blob.core.windows.net/public/datasets/object_detection/odFridgeObjects.zip)
+    [odFridgeObjects](https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjects.zip)
     are in the format of PASCAL VOC shown in our
     [01 notebook](../../scenarios/detection/01_training_introduction.ipynb).
 
@@ -230,7 +229,7 @@ def extract_masks_from_labelbox_json(
       binary mask of the object, with 0 as background, 255 as the object.
 
     Take the
-    [`odFridgeObjects`](https://cvbp.blob.core.windows.net/public/datasets/object_detection/odFridgeObjects.zip)
+    [`odFridgeObjects`](https://cvbp-secondary.z19.web.core.windows.net/datasets/object_detection/odFridgeObjects.zip)
     dataset as an example.  Here the XML annotations are in the
     `odFridgeObjects/annotations` folder and the original images are in
     the `odFridgeObjects/images` folder.  For an arbitrary image

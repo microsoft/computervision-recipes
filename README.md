@@ -5,7 +5,7 @@
 
 In recent years, we've see an extra-ordinary growth in Computer Vision, with applications in face recognition, image understanding, search, drones, mapping, semi-autonomous and autonomous vehicles. A key part to many of these applications are visual recognition tasks such as image classification, object detection and image similarity.
 
-This repository provides examples and best practice guidelines for building computer vision systems. The goal of this repository is to build a comprehensive set of tools and examples that leverage recent advances in Computer Vision algorithms, neural architectures, and operationalizing such systems. Rather than creating implementions from scratch, we draw from existing state-of-the-art libraries and build additional utility around loading image data, optimizing and evaluating models, and scaling up to the cloud. In addition, having worked in this space for many years, we aim to answer common questions, point out frequently observed pitfalls, and show how to use the cloud for training and deployment.
+This repository provides examples and best practice guidelines for building computer vision systems. The goal of this repository is to build a comprehensive set of tools and examples that leverage recent advances in Computer Vision algorithms, neural architectures, and operationalizing such systems. Rather than creating implementations from scratch, we draw from existing state-of-the-art libraries and build additional utility around loading image data, optimizing and evaluating models, and scaling up to the cloud. In addition, having worked in this space for many years, we aim to answer common questions, point out frequently observed pitfalls, and show how to use the cloud for training and deployment.
 
 We hope that these examples and utilities can significantly reduce the “time to market” by simplifying the experience from defining the business problem to development of solution by orders of magnitude. In addition, the example notebooks would serve as guidelines and showcase best practices and usage of the tools in a wide variety of languages.
 
@@ -37,7 +37,7 @@ notebooks in this repo. Once your environment is setup, navigate to the
 
 Alternatively, we support Binder
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/PatrickBue/computervision-recipes/master?filepath=scenarios%2Fclassification%2F01_training_introduction_BINDER.ipynb)
-which makes it easy to try one of our notebooks in a web-browser simply by following this link. However, Binder is free, and as as result only comes with limited CPU compute power and without GPU support. Expect the notebook to run very slowly (this is somewhat improved by reducing image resolution to e.g. 60 pixels but at the cost of low accuracies).
+which makes it easy to try one of our notebooks in a web-browser simply by following this link. However, Binder is free, and as a result only comes with limited CPU compute power and without GPU support. Expect the notebook to run very slowly (this is somewhat improved by reducing image resolution to e.g. 60 pixels but at the cost of low accuracies).
 
 ## Scenarios
 
