@@ -441,7 +441,7 @@ def testing_databunch(tmp_session):
 @pytest.fixture(scope="session")
 def od_cup_path(tmp_session) -> str:
     """ Returns the path to the downloaded cup image. """
-    im_url = os.path.join(storage_url, "/images/cvbp_cup.jpg")
+    im_url = storage_url + "images/cvbp_cup.jpg"
     im_path = os.path.join(tmp_session, "example.jpg")
     urllib.request.urlretrieve(im_url, im_path)
     return im_path
@@ -450,7 +450,7 @@ def od_cup_path(tmp_session) -> str:
 @pytest.fixture(scope="session")
 def od_cup_mask_path(tmp_session) -> str:
     """ Returns the path to the downloaded cup mask image. """
-    im_url = os.path.join(storage_url, "/images/cvbp_cup_mask.png")d
+    im_url = storage_url + "images/cvbp_cup_mask.png"
     im_path = os.path.join(tmp_session, "example_mask.png")
     urllib.request.urlretrieve(im_url, im_path)
     return im_path
