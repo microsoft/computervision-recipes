@@ -62,6 +62,9 @@ from utils_cv.action_recognition.dataset import (
     get_default_tfms_config
 )
 
+storage_url = "https://cvbp-secondary.z19.web.core.windows.net/"
+
+
 def path_classification_notebooks():
     """ Returns the path of the classification notebooks folder. """
     return os.path.abspath(
@@ -438,18 +441,16 @@ def testing_databunch(tmp_session):
 @pytest.fixture(scope="session")
 def od_cup_path(tmp_session) -> str:
     """ Returns the path to the downloaded cup image. """
-    IM_URL = "https://cvbp.blob.core.windows.net/public/images/cvbp_cup.jpg"
+    im_url = storage_url + "images/cvbp_cup.jpg"
     im_path = os.path.join(tmp_session, "example.jpg")
-    urllib.request.urlretrieve(IM_URL, im_path)
+    urllib.request.urlretrieve(im_url, im_path)
     return im_path
 
 
 @pytest.fixture(scope="session")
 def od_cup_mask_path(tmp_session) -> str:
     """ Returns the path to the downloaded cup mask image. """
-    im_url = (
-        "https://cvbp.blob.core.windows.net/public/images/cvbp_cup_mask.png"
-    )
+    im_url = storage_url + "images/cvbp_cup_mask.png"
     im_path = os.path.join(tmp_session, "example_mask.png")
     urllib.request.urlretrieve(im_url, im_path)
     return im_path

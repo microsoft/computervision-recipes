@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 class Urls:
     # for now hardcoding base url into Urls class
-    base = "https://cvbp.blob.core.windows.net/public/datasets/image_classification/"
+    base = "https://cvbp-secondary.z19.web.core.windows.net/datasets/image_classification/"
 
     # ImageNet labels Keras is using
     imagenet_labels_json = "https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json"
