@@ -1,0 +1,295 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<i>Copyright (c) Microsoft Corporation. All rights reserved.</i>\n",
+    "\n",
+    "<i>Licensed under the MIT License.</i>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Submit an Existing Notebook to AzureML\n",
+    "In this noteboook we provide a scaffold to directly submit an existing notebook to the AzureML compute targets. Now we don't need to rewrite the training script, instead, we can now take the same notebook we ran on our local machine (01_training_introduction.ipynb), send it to the AzureML platform, and have it run over there. \n",
+    "        In a couple of minutes, this process generates a copy of our notebook with the results of each cell, that we can download on our machine. This is convenient especially when the computations we want to execute require a lot of memory or even GPUs.\n",
+    "\n",
+    "No changes to our existing notebook are required. Now, if we want to be able to track some metrics on the Azure portal, the only thing we need to do is to add \"papermill.record() or scrapbook.glue()\" to our notebook \n",
+    "\n",
+    "For example, we can add pm.record('training_loss', training_losses) in our training notebook to log training_loss"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Advantages of using AzureML\n",
+    "AzureML lets us:\n",
+    "- Manage cloud resources for monitoring, logging, and organizing our machine learning experiments\n",
+    "- Train models either locally or by using cloud resources, including GPU-accelerated model training\n",
+    "- Scale out easily when dataset grows by just creating and pointing to new compute target\n",
+    "\n",
+    "### Prerequisities\n",
+    "For this notebook to run properly on our machine, we will need to have an Azure workspace. If we have not done so yet, we can run through the short [20_azure_workspace_setup.ipynb](https://github.com/microsoft/ComputerVision/blob/master/classification/notebooks/20_azure_workspace_setup.ipynb) notebook to create one.\n",
+    "\n",
+    "# Setup environment\n",
+    "\n",
+    "### Install azure.contrib.notebook package\n",
+    "We need notebook_run_config from azureml.contrib.notebook to run this notebook. Since azureml.contrib.notebook contains experimental components, it's not included in environment.yml file by default."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# pip install \"azureml.contrib.notebook>=1.0.21.1\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "azureml.core version: 1.0.33\n"
+     ]
+    }
+   ],
+   "source": [
+    "import azureml.core\n",
+    "from azureml.contrib.notebook.notebook_run_config import NotebookRunConfig\n",
+    "from azureml.core import Workspace, Experiment\n",
+    "from azureml.core.compute import ComputeTarget, AmlCompute\n",
+    "from azureml.core.conda_dependencies import CondaDependencies\n",
+    "from azureml.core.runconfig import DEFAULT_GPU_IMAGE\n",
+    "from azureml.core.runconfig import RunConfiguration\n",
+    "\n",
+    "import azureml.widgets as widgets\n",
+    "\n",
+    "print(\"azureml.core version: {}\".format(azureml.core.VERSION))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Connect to an AzureML workspace\n",
+    "\n",
+    "An [AzureML Workspace](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.workspace.workspace?view=azure-ml-py) is an Azure resource that organizes and coordinates the actions of many other Azure resources to assist in executing and sharing machine learning workflows. In particular, an Azure ML Workspace coordinates storage, databases, and compute resources providing added functionality for machine learning experimentation, deployment, inferencing, and the monitoring of deployed models.\n",
+    "\n",
+    "If we already have a configuration file, setup() extracts the information it needs from it. If we don't, setup() enters an interactive mode and asks for the following pieces of information:\n",
+    "- <b>subscription ID:</b> the ID of the Azure subscription we are using\n",
+    "- <b>resource group:</b> the name of the resource group in which our workspace resides\n",
+    "- <b>workspace region:</b> the geographical area in which our workspace resides (e.g. \"eastus2\" -- other examples are available [here](https://azure.microsoft.com/en-us/global-infrastructure/geographies/) <i>-- note the lack of spaces</i>)\n",
+    "- <b>workspace name:</b> the name of the workspace we want to create or retrieve.\n",
+    "\n",
+    "\n",
+    "<i><b>Note:</b> The first time we use this functionality, a webbrowser page may get triggered, on which we will need to choose the email we want to use to connect to our Azure account.</i>"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ws = Workspace.setup()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Create or Attach Azure Machine Learning Compute \n",
+    "\n",
+    "To be able to run our notebook remotely, we need to determine on which machine(s) it will run. For this, we create or retrieve computational resources. This is typically a cluster of CPUs or a cluster of GPUs. Such cluster is also called a [compute target](https://docs.microsoft.com/en-us/azure/machine-learning/service/how-to-set-up-training-targets). In the example below, we spin up a GPU cluster with up to 2 nodes. We use [Standard NC6](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu) machines, which have 1 GPU each. If a cluster with the same name already exists in your workspace, the script loads it instead"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Found existing compute target\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Remote compute (cluster) configuration.\n",
+    "VM_SIZE = 'STANDARD_NC6'\n",
+    "# Cluster nodes\n",
+    "MIN_NODES = 0\n",
+    "MAX_NODES = 2\n",
+    "\n",
+    "CLUSTER_NAME = 'gpuclusternc6'\n",
+    "\n",
+    "try:\n",
+    "    # Retrieve an already existing cluster associated with this workspace\n",
+    "    compute_target = ComputeTarget(workspace=ws, name=CLUSTER_NAME)\n",
+    "    print(\"Found existing compute target\")\n",
+    "except:\n",
+    "    print(\"Creating a new compute target...\")\n",
+    "    # Specify the configuration for the new cluster\n",
+    "    compute_config = AmlCompute.provisioning_configuration(\n",
+    "        vm_size=VM_SIZE,\n",
+    "        min_nodes=MIN_NODES,\n",
+    "        max_nodes=MAX_NODES\n",
+    "    )\n",
+    "    # Create the cluster with the specified name and configuration\n",
+    "    compute_target = ComputeTarget.create(ws, CLUSTER_NAME, compute_config)\n",
+    "    # Wait for the cluster creation to complete, show the output log\n",
+    "    compute_target.wait_for_completion(show_output=True, min_node_count=None, timeout_in_minutes=20)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The notebook here will run in a container, the Docker image is the default setting for Azure GPU. We install the necessary conda dependencies through a RunConfiguration to run this notebook sucessfully.  \n",
+    "\n",
+    "<b>IMPORTANT</b>: You must have Docker engine installed locally in order to use this execution mode. If your kernel is already running in a Docker container, such as Azure Notebooks, this mode will NOT work."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "NOTEBOOK_NAME = '01_training_introduction.ipynb' # notebook we want to run on AzureML\n",
+    "\n",
+    "run_config = RunConfiguration()\n",
+    "run_config.target = \"gpuclusternc6\"\n",
+    "run_config.environment.docker.enabled = True\n",
+    "run_config.environment.docker.base_image = DEFAULT_GPU_IMAGE # depending on the machine used to create the cluster, we will need to use the DEFAULT_GPU_IMAGE or DEFAULT_CPU_IMAGE -- otherwise the deployment may fail\n",
+    "run_config.environment.python.user_managed_dependencies = False\n",
+    "run_config.auto_prepare_environment = True\n",
+    "run_config.environment.python.conda_dependencies = CondaDependencies.create('python_version=3.6.2', pip_packages=['matplotlib', 'scrapbook', 'fastai','sklearn','scikit-learn','bqplot','torch','azureml-sdk'])\n",
+    "\n",
+    "cfg = NotebookRunConfig(source_directory='../../',\n",
+    "                        notebook='classification/notebooks/' + NOTEBOOK_NAME, # pass in the path of notebook we want to run\n",
+    "                        output_notebook='outputs/out.ipynb', # pass in the output notebook path and name\n",
+    "                        run_config=run_config)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Here we create an experiment which takes in our workspace and experiment name as inputs. We start a run by submitting the run configuration that we created above. This means that the following code will trigger running our notebook '01_training_introduction.ipynb'.\n",
+    "\n",
+    "An experiment contains a series of trials called Runs. A run typically contains some tasks, such as training a model, etc. Through a run's methods, we can log several metrics such as training and test loss and accuracy, and even tag our run. The full description of the run class is available [here](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.run.run?view=azure-ml-py).\n",
+    "\n",
+    "`exp.submit()` will submit source_directory folder and designate notebook to run"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "application/vnd.jupyter.widget-view+json": {
+       "model_id": "29d6d1da93b6435cb7abffc0d71037dc",
+       "version_major": 2,
+       "version_minor": 0
+      },
+      "text/plain": [
+       "_UserRunWidget(widget_settings={'childWidgetDisplay': 'popup', 'send_telemetry': False, 'log_level': 'INFO', '…"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "experiment_name = NOTEBOOK_NAME.strip(\".ipynb\")\n",
+    "exp = Experiment(workspace=ws, name=experiment_name)\n",
+    "\n",
+    "run = exp.submit(cfg)\n",
+    "widgets.RunDetails(run).show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Here's how the widget shows the run details. We'll be able to see the logged metrics and charts automatically generated from the metrics by 01_training_intoduction.ipynb - Accuracy on validation, training accuracy and training loss. It will also give us a link to the portal at the end so we can view the results over there as well.\n",
+    "\n",
+    "<img src=\"media/widget.png\" width=\"800\" alt=\"Widget results for papermill notebook run\">\n",
+    "\n",
+    "The output.ipynb notebook can be seen by clicking on the Outputs tab on our Azure portal\n",
+    "\n",
+    "<img src=\"media/output.PNG\" width=\"800\" alt=\"Output.ipynb generated for papermill notebook run\">"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# run below after run is complete, otherwise metrics is empty\n",
+    "metrics = run.get_metrics() # get all metrics logged in the run\n",
+    "print(metrics)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Deprovision compute resource\n",
+    "To avoid unnecessary charges, if you created compute target that doesn't scale down to 0, make sure the compute target is deprovisioned after use.\n",
+    "If this notebook took 10 min to run --> cost is less than $10. Refer to the calculator [here](https://azure.microsoft.com/en-us/pricing/calculator/?service=virtual-machines)\n",
+    "\n",
+    "The cell below allows us to deprovision and delete the AmlCompute target by using delete() function.   \n",
+    "<b>Note:</b> Do not run below cell before experiment completes."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# compute_target.delete()\n",
+    "\n",
+    "# deletion will take a few minutes. You can check progress in Azure Portal / Computing tab"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python (cvbp)",
+   "language": "python",
+   "name": "cvbp"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.7"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
