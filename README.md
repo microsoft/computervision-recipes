@@ -3,7 +3,7 @@
 
 # Computer Vision
 
-In recent years, we've see an extra-ordinary growth in Computer Vision, with applications in face recognition, image understanding, search, drones, mapping, semi-autonomous and autonomous vehicles. A key part to many of these applications are visual recognition tasks such as image classification, object detection and image similarity.
+In recent years, we've seen an extra-ordinary growth in Computer Vision, with applications in face recognition, image understanding, search, drones, mapping, semi-autonomous and autonomous vehicles. A key part to many of these applications are visual recognition tasks such as image classification, object detection and image similarity.
 
 This repository provides examples and best practice guidelines for building computer vision systems. The goal of this repository is to build a comprehensive set of tools and examples that leverage recent advances in Computer Vision algorithms, neural architectures, and operationalizing such systems. Rather than creating implementations from scratch, we draw from existing state-of-the-art libraries and build additional utility around loading image data, optimizing and evaluating models, and scaling up to the cloud. In addition, having worked in this space for many years, we aim to answer common questions, point out frequently observed pitfalls, and show how to use the cloud for training and deployment.
 
