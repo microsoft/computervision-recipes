@@ -17,6 +17,7 @@ channels:
 dependencies:
 - python==3.7.6
 - pytorch==1.2.0
+- pandas==1.0.3
 # pinning pillow to 6.1 to fix issue: https://github.com/python-pillow/Pillow/issues/4130
 - pillow==6.1 
 - torchvision==0.4.0
