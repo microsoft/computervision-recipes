@@ -17,7 +17,7 @@ from .dataset import load_im
 def ratio_correct(void_id, input, target):
     """ Helper function to compute the ratio of correctly classified pixels. """
     target = target.squeeze(1)
-    if void_id:
+    if void_id != None:
         mask = target != void_id
         ratio_correct = (
             (input.argmax(dim=1)[mask] == target[mask]).float().mean()
