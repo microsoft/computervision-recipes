@@ -57,6 +57,7 @@ def plot_segmentation(
     show: bool = True,
     figsize: Tuple[int, int] = (16, 4),
     cmap: ListedColormap = cm.get_cmap("Set3"),
+    ignore_background_label = True
 ) -> None:
     """ Plot an image, its predicted mask with associated scores, and optionally the ground truth mask.
 
@@ -68,10 +69,15 @@ def plot_segmentation(
         show: set to true to call matplotlib's show()
         figsize: figure size
         cmap: mask color map.
+        ignore_background_label: set to True to ignore the 0 label.
     """
     im = load_im(im_or_path)
     pred_mask = pil2tensor(pred_mask, np.float32)
-    max_scores = np.max(np.array(pred_scores[1:]), axis=0)
+    if ignore_background_label:
+        start_label = 1
+    else:
+        start_label = 0
+    max_scores = np.max(np.array(pred_scores[start_label:]), axis=0)
     max_scores = pil2tensor(max_scores, np.float32)
 
     # Plot groud truth mask if provided
