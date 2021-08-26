@@ -1,0 +1,21 @@
+albumentations
+azure-storage-blob
+azureml-sdk
+click
+ipyplot
+jupyter
+jupytext
+matplotlib
+# Change to numpy C-api in versions >=1.20.0 are currently incompatible with some libraries
+# pycocotools (any version) is currently one known issue
+# https://numpy.org/doc/stable/release/1.20.0-notes.html#size-of-np-ndarray-and-np-void-changed
+numpy>=1.20
+pandas
+pycocotools
+python-dotenv
+scikit-learn
+seaborn
+segmentation-models-pytorch
+torch
+torchmetrics
+torchvision

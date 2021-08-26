@@ -1,0 +1,9 @@
+-c requirements.txt
+black
+flake8
+isort
+pip-tools
+pre-commit
+pytest
+pytest-cov
+pytest-mock
