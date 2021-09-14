@@ -1,4 +1,4 @@
-# Binarization
+# Document Image Cleanup
 Given an input noisy document image, the aim of document image cleanup is to improve its readability and visibility by removing the noisy elements.
 
 ### Noisy input images
