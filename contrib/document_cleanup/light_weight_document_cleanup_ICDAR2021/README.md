@@ -21,5 +21,5 @@ https://link.springer.com/chapter/10.1007/978-3-030-86334-0_16
 ### cleanup images
 
 <img src="./sample_input_output/book_dnn.jpg" width="33%"> </img>
-<img src="./sample_input_output/pres1_dnn.png" width="33%"> </img>
-<img src="./sample_input_output/bill_dnn.png" width="33%"> </img>
+<img src="./sample_input_output/pres1_dnn.jpg" width="33%"> </img>
+<img src="./sample_input_output/bill_dnn.jpg" width="33%"> </img>
