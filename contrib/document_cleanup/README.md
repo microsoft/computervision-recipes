@@ -13,4 +13,4 @@ Given an input noisy document image, the aim of document image cleanup is to imp
 
 <img src="./light_weight_document_cleanup_ICDAR2021/sample_input_output/book_dnn.jpg" width="33%"> </img>
 <img src="./light_weight_document_cleanup_ICDAR2021/sample_input_output/writing_dnn.jpg" width="33%"> </img>
-<img src="./lconfidence_based_Sauvola_binarization/results/2_bin_new.png" width="33%"> </img>
+<img src="./confidence_based_Sauvola_binarization/results/2_bin_new.png" width="33%"> </img>
