@@ -27,7 +27,8 @@ def getListOfFiles(dirName):
 def GetOverlappingBlocks(im,M=256,N=256,Part=8):
     tiles = []
     tile = np.zeros((M,N,3),dtype=np.uint8)
-    tile[:,:,:] = 255
+    #tile[:,:,2] = 255
+    
     x = 0 
     y = 0
     x_start = 0
@@ -39,27 +40,30 @@ def GetOverlappingBlocks(im,M=256,N=256,Part=8):
             if(y!=0):
                 y_start = y - int(M/Part)
             if(y_start+M>im.shape[0]):
-                break
                 if(x_start+N>im.shape[1]):
                     tile[0:im.shape[0]-y_start,0:im.shape[1]-x_start,:] = im[y_start:im.shape[0],x_start:im.shape[1],:]
                 else:
                     tile[0:im.shape[0]-y_start,0:N,:] = im[y_start:im.shape[0],x_start:x_start+N,:]
             else:
                 if(x_start+N>im.shape[1]):
-                    break
                     tile[0:M,0:im.shape[1]-x_start,:] = im[y_start:y_start+M,x_start:im.shape[1],:]
                 else:
                     tile[0:M,0:N,:] = im[y_start:y_start+M,x_start:x_start+N,:]
+            
+            
+            #pre_tile = cv2.cvtColor(PreProcessInput(cv2.cvtColor(tile, cv2.COLOR_RGB2BGR)), cv2.COLOR_BGR2RGB)
+            #tiles.append(load_tf_img(pre_tile,M))
+            
+            #tiles.append(load_tf_img(tile,M))
             tiles.append(tile)
-            #print(y,x,im.shape)
+
             tile = np.zeros((M,N,3),dtype=np.uint8)
-            tile[:,:,:] = 255
+            #tile[:,:,2] = 255
             x = x_start + N
         y = y_start + M
         x = 0
         x_start = 0
     return tiles
-
 
 
 def CombineToImage(imgs,h,w,ch,Part=8):
@@ -96,7 +100,6 @@ def CombineToImage(imgs,h,w,ch,Part=8):
             i = min(h-1,i + hh - int(hh/Part))
     Image = Image*255.0
     return Image.astype(np.uint8)
-
 
 def load_tf_img(img,max_dim=256):
   img = tf.convert_to_tensor(img)

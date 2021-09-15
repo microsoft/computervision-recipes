@@ -109,10 +109,12 @@ def train(data_folder,gt_folder,dataset_path='dataset',checkpoint='checkpoints',
 	my_training_batch_generator = My_Custom_Generator(X_train_filenames, train_path, train_batch_size)
 	my_validation_batch_generator = My_Custom_Generator(X_val_filenames, train_path, train_batch_size)
 	in_imgs, gt_imgs = GetData(train_image_names[:2],train_path)
+	#print(IlluminationLoss(gt_imgs[0][tf.newaxis, :],in_imgs[0][tf.newaxis, :],style_weight=1e-1,content_weight=1e1,gray_flag=gray_flag))
+
 	if(gray_flag):
-		print(IlluminationLoss(gt_imgs[0][tf.newaxis, :],tf.image.rgb_to_grayscale(in_imgs[0][tf.newaxis, :]),style_weight=1e-1,content_weight=1e1))
+		print(IlluminationLoss(gt_imgs[0][tf.newaxis, :],tf.image.rgb_to_grayscale(in_imgs[0][tf.newaxis, :]),style_weight=1e-1,content_weight=1e1,gray_flag=gray_flag))
 	else:
-		print(IlluminationLoss(gt_imgs[0][tf.newaxis, :],in_imgs[0][tf.newaxis, :],style_weight=1e-1,content_weight=1e1))
+		print(IlluminationLoss(gt_imgs[0][tf.newaxis, :],in_imgs[0][tf.newaxis, :],style_weight=1e-1,content_weight=1e1,gray_flag=gray_flag ))
 	
 	#logdir = "logs/scalars/" + datetime.now().strftime("%Y%m%d-%H%M%S")
 	logdir = os.path.join('logs','scalars')
@@ -127,7 +129,7 @@ def train(data_folder,gt_folder,dataset_path='dataset',checkpoint='checkpoints',
 	
 	#Initialize model with pre-trained weights
 	if(pretrain_flag):
-		Illumodel.load_weights(pretrain_model_weight_path)
+		model.load_weights(pretrain_model_weight_path)
 	
 	#Saving Model file to checkpoint folder
 	Illumodel_json = model.to_json()
