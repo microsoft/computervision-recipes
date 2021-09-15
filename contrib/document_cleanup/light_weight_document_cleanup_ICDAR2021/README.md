@@ -23,3 +23,20 @@ https://link.springer.com/chapter/10.1007/978-3-030-86334-0_16
 <img src="./sample_input_output/book_dnn.jpg" width="33%"> </img>
 <img src="./sample_input_output/pres1_dnn.jpg" width="33%"> </img>
 <img src="./sample_input_output/bill_dnn.jpg" width="33%"> </img>
+
+## Setup
+
+### Dependencies
+- python 3.7
+- numpy 1.16
+- opencv 4.2
+- skimage 0.17
+- tensorflow 2.4
+- albumentations
+- tqdm
+- scikit-learn
+
+
+### Example
+
+Sample example of the usage (training and testing) of the proposed cleanup technique [notebook](./DocumentCleanup_ICDAR2021.ipynb).
