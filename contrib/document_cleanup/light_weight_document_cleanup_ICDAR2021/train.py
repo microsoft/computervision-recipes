@@ -94,7 +94,7 @@ class My_Custom_Generator(tf.keras.utils.Sequence) :
         gt_imgs.append(gt_image)
     return tf.convert_to_tensor(in_imgs), tf.convert_to_tensor(gt_imgs)
 
-def train(data_folder,gt_folder,dataset_path='dataset',checkpoint='checkpoints',pretrain_flag=False,pretrain_model_weight_path=None,model_name='M32',gray_flag=True,block_size=(256,256),train_batch_size=1):
+def train(data_folder,gt_folder,dataset_path='dataset',checkpoint='checkpoints',epochs=10,pretrain_flag=False,pretrain_model_weight_path=None,model_name='M32',gray_flag=True,block_size=(256,256),train_batch_size=1):
 	block_height = block_size[0]
 	block_width = block_size[1]
 	print(block_height,block_width)
@@ -157,7 +157,7 @@ def train(data_folder,gt_folder,dataset_path='dataset',checkpoint='checkpoints',
 	callbacks_list = [tensorboard_callback, model_checkpoint]
 	
 	training_history = model.fit(my_training_batch_generator,
-											epochs = 10, verbose=1, workers = 21, use_multiprocessing = False,
+											epochs = epochs, verbose=1, workers = 21, use_multiprocessing = False,
 											validation_data = my_validation_batch_generator,     
 											callbacks=callbacks_list)
 	
