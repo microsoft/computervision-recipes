@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+name: semantic-segmentation
+version: 1
+docker:
+  image: mcr.microsoft.com/azureml/openmpi3.1.2-ubuntu18.04
+conda_file: file:conda_envs/conda_env.yml

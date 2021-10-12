@@ -1,0 +1,25 @@
+name: conda-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - pip
+  - pip:
+      - albumentations
+      - azure-storage-blob
+      - azureml-sdk
+      - click
+      - ipyplot
+      - jupyter
+      - jupytext
+      - matplotlib
+      - numpy>=1.20
+      - pandas
+      - pycocotools
+      - python-dotenv
+      - scikit-learn
+      - seaborn
+      - segmentation-models-pytorch
+      - torch
+      - torchmetrics
+      - torchvision
