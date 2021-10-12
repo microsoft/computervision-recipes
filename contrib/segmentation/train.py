@@ -16,7 +16,7 @@ import torch.nn as nn
 from torch.utils.data.dataloader import DataLoader
 
 from src.datasets.semantic_segmentation import (
-    SemanticSegmentationDataset,
+    SemanticSegmentationPyTorchDataset,
     SemanticSegmentationStochasticPatchingDataset,
     ToySemanticSegmentationDataset,
 )
@@ -151,7 +151,7 @@ if __name__ == "__main__":
         default="",
     )
     parser.add_argument("--toy", type=bool, required=False, default=False)
-    parser.add_argument("--classes", type=str, default="1, 2, 3, 4")
+    parser.add_argument("--classes", type=str, default="1, 2")
     parser.add_argument(
         "--log-file", type=str, required=False, default="train.log"
     )
@@ -195,7 +195,7 @@ if __name__ == "__main__":
         "--class-balance", type=str2bool, required=False, default=False
     )
     parser.add_argument(
-        "--cache-strategy", type=str, required=False, default="memory"
+        "--cache-strategy", type=str, required=False, default="none"
     )
     args = parser.parse_args()
 
@@ -204,8 +204,8 @@ if __name__ == "__main__":
 
     train_dir = str(args.train_dir)
     val_dir = str(args.val_dir)
-    experiment_dir = str(uuid.uuid4())
-    model_dir = join(train_dir, experiment_dir)
+
+    model_dir = join("outputs", "models")
     Path(model_dir).mkdir(parents=True, exist_ok=True)
 
     if args.cache_dir is not None:
@@ -285,7 +285,7 @@ if __name__ == "__main__":
     )
     # Toy Dataset for Integration Testing Purposes
     Dataset = (
-        SemanticSegmentationDataset
+        SemanticSegmentationPyTorchDataset
         if not is_toy
         else ToySemanticSegmentationDataset
     )
@@ -355,14 +355,18 @@ if __name__ == "__main__":
         f"Validation dataset number of images: {dataset_val_len} | Batch size: {batch_size} | Expected number of batches: {tot_validation_batches}"
     )
 
-    num_classes: int = classes[-1] + 1  # Plus 1 for background
-    classes = [class_id_to_class_name[i] for i in range(num_classes)]
+    num_classes: int = len(classes) + 1  # Plus 1 for background
 
     # define training and validation data loaders
     # drop_last True to avoid single instances which throw an error on batch norm layers
 
     # Maxing the num_workers at 8 due to shared memory limitations
-    num_workers = min(int(round(multiprocessing.cpu_count() * 2 / 3)), 8)
+    num_workers = min(
+        # Preferably use 2/3's of total cpus. If the cpu count is 1, it will be set to 0 which will result
+        # in dataloader using the main thread
+        int(round(multiprocessing.cpu_count() * 2 / 3)),
+        8,
+    )
 
     dataloader = DataLoader(
         dataset,
@@ -386,7 +390,9 @@ if __name__ == "__main__":
         model = get_fcn_resnet50(num_classes, pretrained=pretrained)
     elif model_name == "deeplab":
         model = DeepLabModelWrapper(
-            num_classes, pretrained=pretrained
+            num_classes,
+            pretrained=pretrained,
+            is_feature_extracting=pretrained,
         )  # get_deeplabv3(num_classes, is_feature_extracting=pretrained)
     else:
         raise ValueError(

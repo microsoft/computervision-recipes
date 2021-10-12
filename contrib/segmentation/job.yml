@@ -1,0 +1,23 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+code:
+  local_path: .
+command: >-
+  python train.py
+  --train-dir {inputs.dummy}
+  --val-dir {inputs.dummy}
+  --patch-dim "256, 256"
+inputs:
+  dummy:
+    data:
+      local_path: data/train
+    mode: mount
+compute:
+  target: azureml:cpu-cluster
+  instance_count: 1
+# distribution:
+#   type: pytorch
+#   process_count: 2
+# azureml:<environment-name>:<version>
+environment: azureml:semantic-segmentation:1
+experiment_name: pytorch-semantic-segmentation
+description: Train a Semantic Segmentation Model on the Semantic Segmentation Drone Dataset

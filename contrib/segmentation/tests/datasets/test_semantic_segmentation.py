@@ -5,7 +5,7 @@ import pytest
 from PIL import Image
 
 from src.datasets.semantic_segmentation import (
-    SemanticSegmentationDataset,
+    SemanticSegmentationPyTorchDataset,
 )
 
 
@@ -53,7 +53,7 @@ def test_semantic_segmentation_dataset(
         "src.datasets.semantic_segmentation.Image.open",
         return_value=high_resolution_image,
     )
-    dataset = SemanticSegmentationDataset(
+    dataset = SemanticSegmentationPyTorchDataset(
         standard_labels_filepath,
         root_dir="data",
         classes=classes,

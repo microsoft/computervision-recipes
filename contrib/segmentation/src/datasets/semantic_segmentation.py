@@ -9,6 +9,7 @@ import albumentations as A
 import numpy as np
 import torch
 from PIL import Image
+from torch.utils.data.dataset import Dataset
 
 from .coco import CocoDataset
 
@@ -398,14 +399,14 @@ class SemanticSegmentationDatasetFullCoverage:
         return self.length
 
 
-class SemanticSegmentationDataset(torch.utils.data.Dataset):
+class SemanticSegmentationPyTorchDataset(torch.utils.data.Dataset):
 
     _available_patch_strategies = set(
         ["resize", "deterministic_center_crop", "crop_all"]
     )
 
     # NC24sv3 Azure VMs have 440GiB of RAM
-    # This allows the SemanticSegmentationDataset to be stored in memory
+    # This allows the SemanticSegmentationPyTorchDataset to be stored in memory
     # However, when multiple workers are used in PyTorch Dataloader,
     # a separate deepcopy of the dataset is made per instance
     # Thus, disk is currently the only shared memory pool between processes
@@ -413,6 +414,7 @@ class SemanticSegmentationDataset(torch.utils.data.Dataset):
 
     def __init__(
         self,
+        dataset: Dataset,
         labels_filepath: str,
         classes: List[int],
         annotation_format: str,
@@ -427,7 +429,7 @@ class SemanticSegmentationDataset(torch.utils.data.Dataset):
     ):
         if (
             patch_strategy
-            not in SemanticSegmentationDataset._available_patch_strategies
+            not in SemanticSegmentationPyTorchDataset._available_patch_strategies
         ):
             raise ValueError(
                 f"Parameter `patch_strategy` must be one of {self._available_patch_strategies}"
@@ -435,7 +437,7 @@ class SemanticSegmentationDataset(torch.utils.data.Dataset):
 
         if (
             cache_strategy
-            not in SemanticSegmentationDataset._available_cache_strategies
+            not in SemanticSegmentationPyTorchDataset._available_cache_strategies
         ):
             raise ValueError(
                 f"Parameter `cache_strategy` must be one of {self._available_cache_strategies}"
@@ -456,24 +458,19 @@ class SemanticSegmentationDataset(torch.utils.data.Dataset):
                 'Parameter `patch_dim` must not be None if `patch_strategy is "crop_all"'
             )
 
-        coco = CocoDataset(
-            labels_filepath=labels_filepath,
-            root_dir=root_dir,
-            classes=classes,
-            annotation_format=annotation_format,
-        )
-
         if patch_strategy == "resize":
-            self.dataset = SemanticSegmentationResizeDataset(coco, resize_dim)
+            self.dataset = SemanticSegmentationResizeDataset(
+                dataset, resize_dim
+            )
         elif patch_strategy == "deterministic_center_crop":
             self.dataset = (
                 SemanticSegmentationWithDeterministicPatchingDataset(
-                    coco, patch_dim
+                    dataset, patch_dim
                 )
             )
         elif patch_strategy == "crop_all":
             self.dataset = SemanticSegmentationDatasetFullCoverage(
-                coco, patch_dim
+                dataset, patch_dim
             )
 
         self.root_dir = root_dir
@@ -570,7 +567,7 @@ class ToySemanticSegmentationDataset(torch.utils.data.Dataset):
     """Toy semantic segmentation dataset for integration testing purposes"""
 
     def __init__(self, *args, **kwargs):
-        self._dataset = SemanticSegmentationDataset(*args, **kwargs)
+        self._dataset = SemanticSegmentationPyTorchDataset(*args, **kwargs)
 
     def __getitem__(self, idx):
         return self._dataset[idx]
