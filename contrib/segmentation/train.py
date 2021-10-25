@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data.dataloader import DataLoader
 
+from config.augmentation import preprocessing, augmentation
 from src.datasets.semantic_segmentation import (
     SemanticSegmentationPyTorchDataset,
     SemanticSegmentationStochasticPatchingDataset,
@@ -25,73 +26,9 @@ from src.metrics.metrics import get_semantic_segmentation_metrics, log_metrics
 from src.models.deeplabv3 import get_deeplabv3
 from src.models.fcn_resnet50 import get_fcn_resnet50
 
+
 log = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-
-
-def get_augmentation_for_erosion(patch_dim: Tuple[int, int] = (512, 512)):
-    transform = A.Compose(
-        [
-            # This allows meaningful yet stochastic cropped views
-            A.CropNonEmptyMaskIfExists(patch_dim[0], patch_dim[1], p=1),
-            A.RandomRotate90(p=0.5),
-            A.HorizontalFlip(p=0.5),
-            A.VerticalFlip(p=0.5),
-            A.Blur(p=0.25),
-            A.ColorJitter(p=0.25),
-            A.GaussNoise(p=0.25),
-            A.Cutout(p=0.5, num_holes=64, max_h_size=8, max_w_size=8),
-            A.RandomBrightnessContrast(p=0.25),
-        ],
-    )
-    return transform
-
-
-def get_validation_preprocessing(patch_dim: Tuple[int, int] = (512, 512)):
-    """Due to the image size being too large, to get some idea of the validation
-    performance without needlessly running through the full high resolution images
-    we take a cropped view of the masks
-    """
-    transform = A.Compose(
-        [
-            # This allows meaningful yet stochastic cropped views
-            A.CropNonEmptyMaskIfExists(patch_dim[0], patch_dim[1], p=1),
-        ],
-    )
-    return transform
-
-
-def get_preprocessing(
-    p_hflip=0.5,
-    p_random_rotate=0.5,
-    p_vflip=0.5,
-    p_blur=0.5,
-    p_jitter=0.5,
-    p_gauss_noise=0.5,
-    p_cutout=0.5,
-    p_random_brightness=0.5,
-    p_random_sun_flare=0.5,
-    p_transform=1,
-):
-    transform = A.Compose(
-        [
-            A.OneOf(
-                [
-                    A.HorizontalFlip(p=p_hflip),
-                    A.RandomRotate90(p=p_random_rotate),
-                    A.VerticalFlip(p=p_vflip),
-                    A.Blur(p=p_blur),
-                    A.ColorJitter(p=p_jitter),
-                    A.GaussNoise(p=p_gauss_noise),
-                    A.Cutout(p=p_cutout),
-                    A.RandomBrightnessContrast(p=p_random_brightness),
-                    A.RandomSunFlare(p=p_random_sun_flare),
-                ],
-                p=p_transform,
-            )
-        ]
-    )
-    return transform
 
 
 def str2bool(v):
@@ -157,30 +94,6 @@ if __name__ == "__main__":
     )
     parser.add_argument("--p-hflip", type=float, required=False, default=0.5)
     parser.add_argument(
-        "--p-random_rotate", type=float, required=False, default=0.5
-    )
-    parser.add_argument("--p-vflip", type=float, required=False, default=0.5)
-    parser.add_argument("--p-blur", type=float, required=False, default=0.5)
-    parser.add_argument("--p-jitter", type=float, required=False, default=0.5)
-    parser.add_argument(
-        "--p-gauss_noise", type=float, required=False, default=0.5
-    )
-    parser.add_argument(
-        "--p-random_brightness", type=float, required=False, default=0.5
-    )
-    parser.add_argument(
-        "--p-random_sun_flare", type=float, required=False, default=0.5
-    )
-    parser.add_argument("--p-cutout", type=float, required=False, default=0.5)
-    parser.add_argument(
-        "--p-random-sun-flare", type=float, required=False, default=0.5
-    )
-    parser.add_argument(
-        "--p-random-brightness", type=float, required=False, default=0.5
-    )
-    parser.add_argument("--p-transform", type=float, required=False, default=1)
-
-    parser.add_argument(
         "--batch-validation-perc", type=float, required=False, default=1.0
     )
     parser.add_argument("--patch-dim", type=str, default="512, 512")
@@ -237,17 +150,6 @@ if __name__ == "__main__":
     )
     iou_thresholds = [float(x) for x in args.iou_thresholds.split(",")]
 
-    p_hflip = float(args.p_hflip)
-    p_random_rotate = float(args.p_random_rotate)
-    p_vflip = float(args.p_vflip)
-    p_blur = float(args.p_blur)
-    p_jitter = float(args.p_jitter)
-    p_gauss_noise = float(args.p_gauss_noise)
-    p_cutout = float(args.p_cutout)
-    p_random_brightness = float(args.p_random_brightness)
-    p_random_sun_flare = float(args.p_random_sun_flare)
-    p_transform = float(args.p_transform)
-
     # train on the GPU or on the CPU, if a GPU is not available
     device = (
         torch.device("cuda")
@@ -271,18 +173,6 @@ if __name__ == "__main__":
     train_labels_filepath = join(train_dir, "train.json")
     val_labels_filepath = join(val_dir, "val.json")
 
-    preprocessing = get_preprocessing(
-        p_hflip,
-        p_random_rotate,
-        p_vflip,
-        p_blur,
-        p_jitter,
-        p_gauss_noise,
-        p_cutout,
-        p_random_brightness,
-        p_random_sun_flare,
-        p_transform,
-    )
     # Toy Dataset for Integration Testing Purposes
     Dataset = (
         SemanticSegmentationPyTorchDataset
@@ -308,12 +198,6 @@ if __name__ == "__main__":
             f"{val_dir}/mask",
             augmentation=preprocessing,
         )
-    else:
-        if patch_strategy == "resize":
-            augmentation = get_augmentation_for_erosion()
-        else:
-            # TODO: Potential different augmentation strategy for non-resize
-            augmentation = get_augmentation_for_erosion()
 
         dataset = Dataset(
             labels_filepath=train_labels_filepath,
