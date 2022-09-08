@@ -15,7 +15,7 @@ This directory contains a few helper notebooks that upload files and deploy mode
 ### Requirements
 
 To run the code in the [2_upload_ui.ipynb](2_upload_ui.ipynb) notebook, you must first: 
-1. Install the [https://pypi.org/project/azure-storage-blob/](Azure Storage Blobs client library for Python)
+1. Install the [Azure Storage Blobs client library for Python](https://pypi.org/project/azure-storage-blob/)
 2. Have (or create) an Azure account with a Blob storage container where you would like to store the UI files
 3. Note your Blob stoarge credentials to upload files programmatically; you will need: 
 	a. Azure Account Name

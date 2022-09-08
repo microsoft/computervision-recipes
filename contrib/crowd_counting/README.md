@@ -12,7 +12,7 @@ While there's a wide range of crowd counting models, two practical matters need 
 - Speed. To support near real time reporting, the model should run fast enough. 
 - Crowd density. We need to allow for both high-density and low-density scenarios for the same camera. Most crowd counting models were trained using high density datasets and they tend not to work well for low density scenarios. On the other hand, models like Faster-RCNN work well for low density crowd but not so much for high density scenarios. 
 
-Based on evaluation of multiple implementations of Crowd Counting models on our propietary dataset, we narrowed down the models to two options: the Multi Column CNN model (MCNN) from [this repo](https://github.com/svishwa/crowdcount-mcnn) and the OpenPose model from [this repo](https://github.com/ildoonet/tf-pose-estimation). Both models met our speed requirements. 
+Based on evaluation of multiple implementations of Crowd Counting models on our propietary dataset, we narrowed down the models to two options: the Multi Column CNN model (MCNN) from [this repo](https://github.com/svishwa/crowdcount-mcnn) and the OpenPose model from [this repo](https://github.com/jiajunhua/ildoonet-tf-pose-estimation). Both models met our speed requirements. 
 - For high density crowd images, the MCNN model delivered good results. 
 - For low density scenarios, OpenPose performed well. 
 - When crowd density if unknown beforehand, we use a heuristic approach: the prediction from MCNN is used if the following conditions are met: OpenPose prediction is above 20 and MCNN is above 50. Otherwise, the OpenPose prediction used. The thresholds for the models can be changed depending on your scenario.
