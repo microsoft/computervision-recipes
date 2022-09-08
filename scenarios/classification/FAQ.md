@@ -91,12 +91,12 @@ The test set should contain images which resemble the population the model will 
 
 ### How to speed up training?
  - All images can be stored on a local SSD device, since HDD or network access times can dominate the training time.
- - High-resolution images can slow down training due to JPEG decoding becoming the bottleneck (>10x performance penalty). See the [02_training_accuracy_vs_speed.ipynb](02_training_accuracy_vs_speed.ipynb) notebook for more information.
+ - High-resolution images can slow down training due to JPEG decoding becoming the bottleneck (>10x performance penalty). See the [03_training_accuracy_vs_speed.ipynb](03_training_accuracy_vs_speed.ipynb) notebook for more information.
  - Very high-resolution images (>4 Mega Pixels) can be downsized before DNN training..
 
 
 ### How to improve accuracy or inference speed?
-See the [02_training_accuracy_vs_speed.ipynb](02_training_accuracy_vs_speed.ipynb) notebook for a discussion around which parameters are important, and strategies to select a model optimized for faster inferencing speed.
+See the [03_training_accuracy_vs_speed.ipynb](03_training_accuracy_vs_speed.ipynb) notebook for a discussion around which parameters are important, and strategies to select a model optimized for faster inferencing speed.
 
 
 ### How to monitor GPU usage during training?
