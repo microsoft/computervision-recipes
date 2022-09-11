@@ -132,7 +132,7 @@ class LoadVideo:  # for inference
 
 class LoadImagesAndLabels:  # for training
     def __init__(self, path, img_size=(1088, 608), augment=False, transforms=None):
-        with open(path, 'r') as file:
+        with open(path, encoding='utf_8') as file:
             self.img_files = file.readlines()
             self.img_files = [x.replace('\n', '') for x in self.img_files]
             self.img_files = list(filter(lambda x: len(x) > 0, self.img_files))
@@ -361,7 +361,7 @@ class JointDataset(LoadImagesAndLabels):  # for training
         self.num_classes = 1
 
         for ds, path in paths.items():
-            with open(path, 'r') as file:
+            with open(path, encoding='utf_8') as file:
                 self.img_files[ds] = file.readlines()
                 self.img_files[ds] = [osp.join(root, x.strip()) for x in self.img_files[ds]]
                 self.img_files[ds] = list(filter(lambda x: len(x) > 0, self.img_files[ds]))
@@ -472,7 +472,7 @@ class DetDataset(LoadImagesAndLabels):  # for training
         self.tid_num = OrderedDict()
         self.tid_start_index = OrderedDict()
         for ds, path in paths.items():
-            with open(path, 'r') as file:
+            with open(path, encoding='utf_8') as file:
                 self.img_files[ds] = file.readlines()
                 self.img_files[ds] = [osp.join(root, x.strip()) for x in self.img_files[ds]]
                 self.img_files[ds] = list(filter(lambda x: len(x) > 0, self.img_files[ds]))

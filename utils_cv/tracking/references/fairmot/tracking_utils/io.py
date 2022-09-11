@@ -66,7 +66,7 @@ def read_mot_results(filename, is_gt, is_ignore):
     ignore_labels = {2, 7, 8, 12}
     results_dict = dict()
     if os.path.isfile(filename):        
-        with open(filename, 'r') as f:            
+        with open(filename, encoding='utf_8') as f:            
             for line in f.readlines():                
                 linelist = line.split(',')                
                 if len(linelist) < 7:                   

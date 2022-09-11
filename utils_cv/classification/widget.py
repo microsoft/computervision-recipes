@@ -70,7 +70,7 @@ class AnnotationWidget(object):
                 )
         if os.path.exists(self.anno_path):
             print(f"Loading existing annotation from {self.anno_path}.")
-            with open(self.anno_path, "r") as f:
+            with open(self.anno_path, encoding='utf_8') as f:
                 for line in f.readlines()[1:]:
                     vec = line.strip().split("\t")
                     im_filename = vec[0]
