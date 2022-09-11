@@ -149,11 +149,11 @@ def plot_sweeper_df(
     cols = list(df.columns.values) if show_cols is None else show_cols
 
     if not set(cols) <= set(list(df.columns.values)):
-        raise ValueError("values of {show_cols} is not found {df}.")
+        raise ValueError(f"values of {show_cols} is not found {df}.")
 
     if sort_by is not None and sort_by not in cols:
         raise ValueError(
-            "{sort_by} must be in {show_cols} if {show_cols} is used."
+            f"{sort_by} must be in {show_cols} if {show_cols} is used."
         )
 
     if sort_by:
