@@ -576,7 +576,7 @@ def extract_sampled_negative_clips(
             video_path,
             os.path.join(clip_dir, clip_subdir_fname + "." + clip_format),
         )
-        with open(label_filepath, "a") as f:
+        with open(label_filepath, "a", encoding="utf_8") as f:
             f.write(
                 '"'
                 + clip_subdir_fname

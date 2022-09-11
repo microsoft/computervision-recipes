@@ -105,7 +105,7 @@ def labelbox_export_data(tmp_session):
     </object>
 </annotation>
 """
-        with open(anno_dir / f"{i}.xml", "w") as f:
+        with open(anno_dir / f"{i}.xml", "w", encoding="utf_8") as f:
             f.write(anno_xml)
 
     # generate Labelbox keypoint JSON file
@@ -152,7 +152,7 @@ def labelbox_export_data(tmp_session):
             },
         },
     }
-    with open(keypoint_json_path, "w") as f:
+    with open(keypoint_json_path, "w", encoding="utf_8") as f:
         f.write(keypoint_json)
 
     # generate Labelbox mask JSON file
@@ -179,7 +179,7 @@ def labelbox_export_data(tmp_session):
      "External ID": "1.jpg"}
 ]
 """
-    with open(mask_json_path, "w") as f:
+    with open(mask_json_path, "w", encoding="utf_8") as f:
         f.write(mask_json)
 
     return data_dir, mask_json_path, keypoint_json_path, keypoint_truth_dict

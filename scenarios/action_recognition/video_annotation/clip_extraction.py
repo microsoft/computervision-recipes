@@ -125,7 +125,7 @@ def main(
                     skip_clip_length=negative_clip_margin,
                 )
                 negative_sample_info_df = negative_sample_info_df.append(res_df)
-            with open(label_filepath, 'a') as f:
+            with open(label_filepath, 'a', encoding="utf_8") as f:
                 for index, row in negative_sample_info_df.iterrows():
                     f.write("\""+row.negative_clip_file_name+"\""+" "+str(classes[no_action_class])+"\n")
         

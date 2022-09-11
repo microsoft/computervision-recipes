@@ -14,7 +14,7 @@ import math
 import csv
 
 def output_split(labels_list, output_file):
-    with open(output_file, 'a') as f:
+    with open(output_file, 'a', encoding="utf_8") as f:
         for label in labels_list:
             f.write("\""+label[0]+"\""+" "+label[1]+"\n")
 

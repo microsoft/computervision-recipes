@@ -145,7 +145,7 @@ def train(data_folder,gt_folder,dataset_path='dataset',checkpoint='checkpoints',
 	#print(checkpoint)
 	save_model_path = os.path.join(checkpoint, save_model_name)
 	print(save_model_path)
-	with open(save_model_path, "w") as json_file:
+	with open(save_model_path, "w", encoding="utf_8") as json_file:
 		json_file.write(Illumodel_json)
 		json_file.close()
 	# checkpoint

@@ -19,7 +19,7 @@ def write_results(filename, results_dict: Dict, data_type: str):
     else:
         raise ValueError(data_type)
 
-    with open(filename, 'w') as f:
+    with open(filename, 'w', encoding="utf_8") as f:
         for frame_id, frame_data in results_dict.items():
             if data_type == 'kitti':
                 frame_id -= 1

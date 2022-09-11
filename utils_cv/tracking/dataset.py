@@ -151,7 +151,7 @@ class TrackingDataset:
                 fairmot_annos_dir, filename[:-4] + ".txt"
             )
 
-            with open(fairmot_anno_path, "w") as f:
+            with open(fairmot_anno_path, "w", encoding="utf_8") as f:
                 for bbox in bboxes:
                     tid_curr = bbox.label_idx - 1
                     x = round(bbox.left + bbox.width() / 2.0)
@@ -172,7 +172,7 @@ class TrackingDataset:
         self.fairmot_imlist_path = osp.join(
             self.root, "{}.train".format(self.name)
         )
-        with open(self.fairmot_imlist_path, "w") as f:
+        with open(self.fairmot_imlist_path, "w", encoding="utf_8") as f:
             for im_filename in sorted(self.im_filenames):
                 f.write(osp.join(self.im_dir, im_filename) + "\n")
 

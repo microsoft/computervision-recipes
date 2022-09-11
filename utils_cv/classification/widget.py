@@ -183,7 +183,7 @@ class AnnotationWidget(object):
                 self.annos[im_filename].exclude = self.exclude_widget.value
 
                 # Write to disk as tab-separated file.
-                with open(self.anno_path, "w") as f:
+                with open(self.anno_path, "w", encoding="utf_8") as f:
                     f.write(
                         "{}\t{}\t{}\n".format(
                             "IM_FILENAME", "EXCLUDE", "LABELS"

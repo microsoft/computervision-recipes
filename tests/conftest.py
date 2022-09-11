@@ -925,7 +925,7 @@ def tiny_seg_data_path(tmp_session, seg_classes) -> str:
         exist_ok=True,
     )
     classes_path = Path(path) / "classes.txt"
-    with open(classes_path, "w") as f:
+    with open(classes_path, "w", encoding="utf_8") as f:
         for c in seg_classes:
             f.write(c + "\n")
     return path

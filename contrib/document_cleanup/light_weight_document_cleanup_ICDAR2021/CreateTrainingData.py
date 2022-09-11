@@ -41,7 +41,7 @@ def GenerateTrainingBlocks(data_folder,gt_folder,dataset_path='./dataset',M=256,
 
 
 	train_filenames = train_path + '/train_block_names.txt'
-	f = open(train_filenames, 'w')
+	f = open(train_filenames, 'w', encoding="utf_8")
 	
 	data_path = dataset_path + '/' + data_folder
 	gt_path = dataset_path + '/' + gt_folder
