@@ -32,7 +32,7 @@ def generate_yaml(
     """
 
     with open(os.path.join(directory, ref_filename), "r") as f:
-        yaml_content = yaml.load(f, Loader=yaml.FullLoader)
+        yaml_content = yaml.load(f, Loader=yaml.SafeLoader)
 
     # Extract libraries to be installed using conda
     extracted_libraries = [
