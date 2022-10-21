@@ -1,0 +1,45 @@
+# To create the conda environment:
+# $ conda env create -f environment.yml
+# 
+# To update the conda environment:
+# $ conda env update -f environment.yml
+# 
+# To register the conda environment in Jupyter:
+# $ conda activate cv
+# $ python -m ipykernel install --user --name cv
+# 
+name: cv
+channels:
+- defaults
+- conda-forge
+- pytorch
+- fastai
+dependencies:
+- python==3.7.6
+- pytorch==1.2.0
+# pinning pillow to 6.1 to fix issue: https://github.com/python-pillow/Pillow/issues/4130
+- pillow==6.1 
+- torchvision==0.4.0
+- fastai==1.0.57
+- ipykernel>=4.6.1
+- jupyter>=1.0.0
+- pytest>=3.6.4
+- bqplot
+- scikit-learn>=0.19.1
+- pip>=19.0.3
+- cython>=0.29.1
+- papermill==1.2.0
+- black>=18.6b4
+- ipywebrtc 
+- lxml>=4.3.2
+- pre-commit>=1.14.4
+- pyyaml>=5.1.2
+- requests>=2.22.0
+- einops==0.1.0
+- cytoolz
+- pip:
+  - decord==0.3.5
+  - nvidia-ml-py3
+  - nteract-scrapbook
+  - azureml-sdk[notebooks,contrib]>=1.0.30
+  - git+https://github.com/youngpark/cocoapi.git#subdirectory=PythonAPI
