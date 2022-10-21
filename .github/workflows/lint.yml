@@ -45,7 +45,7 @@ jobs:
           PYTHON_BLACK_CONFIG_FILE: black.toml
           PYTHON_FLAKE8_CONFIG_FILE: tox.ini
           PYTHON_PYLINT_CONFIG_FILE: .pylintrc
-          FILTER_REGEX_INCLUDE: .*src/.*
+          FILTER_REGEX_INCLUDE: .*scenarios/.*
           FILTER_REGEX_EXCLUDE: .*tests/.*
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
