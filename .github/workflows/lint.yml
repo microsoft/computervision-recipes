@@ -20,9 +20,8 @@ on: [ push, pull_request, workflow_dispatch ]
 # Set the Job #
 ###############
 jobs:
-  build:
-    # Name the Job
-    name: Lint Code Base
+  # Name the Job
+  Lint Code Base:
     # Set the agent to run on
     runs-on: ubuntu-latest
 
@@ -54,3 +53,51 @@ jobs:
       #   uses: jpetrucciani/bandit-check@master
       #   with:
       #     bandit_flags: '-c .bandit'
+
+  Test Code Base:
+    # Set the agent to run on
+    runs-on: ubuntu-latest
+
+    ##################
+    # Unit and integration test steps #
+    ##################
+    steps:
+
+      - name: Add Conda to PATH
+        run: |
+          echo "##vso[task.prependpath]/data/anaconda/bin"
+
+      - name: 'Remove conda env in case it was not created correctly'
+        run: |
+          rm -rf /data/anaconda/envs/cv
+        
+
+      - name: 'Create and activate conda environment'
+        run: |
+          conda env create -f environment.yml
+          source activate cv
+          conda env list
+
+      - name: 'Run unit and (only on Linux GPU) integration tests'
+        run: |
+          source activate cv
+          # python -m ipykernel install --user --name cv --display-name "cv"
+          pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"
+
+      - name: 'Cleanup Task'
+        run: |
+            echo Remove Conda Environment
+            conda remove -n cv --all -q --force -y
+            conda env list
+            echo Done Cleanup
+
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFiles: '**/test-unitttest.xml'
+          testRunTitle: 'Test results for PyTest'
+
+      - task: ComponentGovernanceComponentDetection@0
+        inputs:
+          scanType: 'Register'
+          verbosity: 'Verbose'
+          alertWarningLevel: 'High'
