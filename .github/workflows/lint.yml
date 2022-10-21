@@ -61,8 +61,9 @@ jobs:
     ##################
     # Unit and integration test steps #
     ##################
-    steps:
-
+    steps:      
+      - name: Checkout Code
+        uses: actions/checkout@v3
       - name: Add Conda to PATH
         run: |
           echo "##vso[task.prependpath]/data/anaconda/bin"
