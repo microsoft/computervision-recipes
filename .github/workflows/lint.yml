@@ -21,7 +21,7 @@ on: [ push, pull_request, workflow_dispatch ]
 ###############
 jobs:
   # Name the Job
-  Lint Code Base:
+  lint_code_base:
     # Set the agent to run on
     runs-on: ubuntu-latest
 
@@ -54,7 +54,7 @@ jobs:
       #   with:
       #     bandit_flags: '-c .bandit'
 
-  Test Code Base:
+  test_code_base:
     # Set the agent to run on
     runs-on: ubuntu-latest
 
