@@ -1,7 +1,11 @@
-# This build definition runs unit test across Linux and Windows GPU Hosted agents.
-# We need this file to make sure our code works across windows and linux and identifies
-# any platform breaking changes that gets introduced.
-# Pull request against these pipelines will trigger this build
+###########################
+###########################
+## Test GitHub Actions ##
+###########################
+###########################
+
+name: Tests
+
 on: [ push, pull_request, workflow_dispatch ]
 
 
