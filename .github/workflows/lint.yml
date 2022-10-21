@@ -74,6 +74,7 @@ jobs:
 
       - name: 'Create and activate conda environment'
         run: |
+          ls
           conda env create -f environment.yml
           source activate cv
           conda env list
