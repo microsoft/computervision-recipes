@@ -1,0 +1,56 @@
+---
+###########################
+###########################
+## Linter GitHub Actions ##
+###########################
+###########################
+name: lint
+
+#
+# Documentation:
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+#
+
+#############################
+# Start the job on all push #
+#############################
+on: [ push, pull_request, workflow_dispatch ]
+
+###############
+# Set the Job #
+###############
+jobs:
+  build:
+    # Name the Job
+    name: Lint Code Base
+    # Set the agent to run on
+    runs-on: ubuntu-latest
+
+    ##################
+    # Load all steps #
+    ##################
+    steps:
+      ##########################
+      # Checkout the code base #
+      ##########################
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Lint Code Base
+        uses: github/super-linter@v4.8.4
+        env:
+          VALIDATE_PYTHON_BLACK: true
+          VALIDATE_PYTHON_FLAKE8: true
+          VALIDATE_PYTHON_PYLINT: true
+          PYTHON_BLACK_CONFIG_FILE: black.toml
+          PYTHON_FLAKE8_CONFIG_FILE: tox.ini
+          PYTHON_PYLINT_CONFIG_FILE: .pylintrc
+          FILTER_REGEX_INCLUDE: .*src/.*
+          FILTER_REGEX_EXCLUDE: .*tests/.*
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Bandit Security Linter
+      #   uses: jpetrucciani/bandit-check@master
+      #   with:
+      #     bandit_flags: '-c .bandit'
