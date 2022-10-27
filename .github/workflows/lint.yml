@@ -46,7 +46,7 @@ jobs:
           PYTHON_FLAKE8_CONFIG_FILE: tox.ini
           PYTHON_PYLINT_CONFIG_FILE: .pylintrc
           FILTER_REGEX_INCLUDE: .*scenarios/.*
-          FILTER_REGEX_EXCLUDE: .*tests/.*
+          FILTER_REGEX_EXCLUDE: .*tests/.*|.*scenarios/action_recognition/.*|.*scenarios/classification/tools/sweep.py*
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # - name: Bandit Security Linter
