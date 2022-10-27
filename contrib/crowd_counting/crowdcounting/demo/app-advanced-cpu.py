@@ -93,7 +93,8 @@ def use_site_file():
     target = os.path.join(APP_ROOT, "images")
     result = request.form["fileindex"]
 
-    local_image = "/".join([target, result])
+    # local_image = "/".join([target, result])
+    local_image = f"{target}/{result}"
 
     with open(local_image, "rb") as f:
         file_bytes = f.read()
