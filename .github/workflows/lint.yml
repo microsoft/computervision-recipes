@@ -54,39 +54,39 @@ jobs:
       #   with:
       #     bandit_flags: '-c .bandit'
 
-  test_code_base:
-    # Set the agent to run on
-    runs-on: ubuntu-latest
+  # test_code_base:
+  #   # Set the agent to run on
+  #   runs-on: ubuntu-latest
 
-    ##################
-    # Unit and integration test steps #
-    ##################
-    steps:      
-      - name: Checkout Code
-        uses: actions/checkout@v3
-      - name: Add Conda to PATH
-        run: |
-          echo "##vso[task.prependpath]/data/anaconda/bin"
+  #   ##################
+  #   # Unit and integration test steps #
+  #   ##################
+  #   steps:      
+  #     - name: Checkout Code
+  #       uses: actions/checkout@v3
+  #     - name: Add Conda to PATH
+  #       run: |
+  #         echo "##vso[task.prependpath]/data/anaconda/bin"
 
-      - name: 'Remove conda env in case it was not created correctly'
-        run: |
-          rm -rf /data/anaconda/envs/cv
+  #     - name: 'Remove conda env in case it was not created correctly'
+  #       run: |
+  #         rm -rf /data/anaconda/envs/cv
         
-      - name: 'Create and activate conda environment'
-        run: |
-          conda env create -f environment.yml
-          source activate cv
-          conda env list
+  #     - name: 'Create and activate conda environment'
+  #       run: |
+  #         conda env create -f environment.yml
+  #         source activate cv
+  #         conda env list
 
-      - name: 'Run unit and (only on Linux GPU) integration tests'
-        run: |
-          source activate cv
-          # python -m ipykernel install --user --name cv --display-name "cv"
-          pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"
+  #     - name: 'Run unit and (only on Linux GPU) integration tests'
+  #       run: |
+  #         source activate cv
+  #         # python -m ipykernel install --user --name cv --display-name "cv"
+  #         pytest --durations 100 tests --junitxml=junit/test-unitttest.xml -m "not azuremlnotebooks and not linuxgpu"
 
-      - name: 'Cleanup Task'
-        run: |
-            echo Remove Conda Environment
-            conda remove -n cv --all -q --force -y
-            conda env list
-            echo Done Cleanup
+  #     - name: 'Cleanup Task'
+  #       run: |
+  #           echo Remove Conda Environment
+  #           conda remove -n cv --all -q --force -y
+  #           conda env list
+  #           echo Done Cleanup
