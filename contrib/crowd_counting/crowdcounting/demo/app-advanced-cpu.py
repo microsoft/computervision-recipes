@@ -1,6 +1,7 @@
 import os
 import sys
 from crowdcounting import CrowdCountModelPose, CrowdCountModelMCNN, Router
+from werkzeug.utils import secure_filename
 
 from flask import (
     Flask,
@@ -94,6 +95,7 @@ def use_site_file():
     result = request.form["fileindex"]
 
     local_image = "/".join([target, result])
+    local_image = secure_filename(local_image)
 
     with open(local_image, "rb") as f:
         file_bytes = f.read()
