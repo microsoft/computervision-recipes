@@ -8,25 +8,18 @@
 # $ conda activate cv
 # $ python -m ipykernel install --user --name cv
 # 
-name: cv
+name: cv-org
 channels:
-- defaults
 - pytorch
-- nvidia
-- fastchan
+- fastai
+- defaults
 - conda-forge
 dependencies:
-- python==3.7.7
-- pytorch==1.12.0
-- torchvision==0.13.0
-- fastai
-- ipykernel
-- jupyter
-- pytest
-- scikit-learn
-- pip
-- cython
-- ipywebrtc 
-- requests
-- pip:
-  - azureml-sdk[notebooks,contrib]
+- python==3.7.6
+- pytorch==1.2.0
+# pinning pillow to 6.1 to fix issue: https://github.com/python-pillow/Pillow/issues/4130
+- pillow==6.1 
+- torchvision==0.4.0
+- fastai==1.0.57
+- ipykernel>=4.6.1
+- jupyter>=1.0.0
