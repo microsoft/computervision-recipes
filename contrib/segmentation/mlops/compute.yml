@@ -1,0 +1,6 @@
+$schema: https://azuremlschemas.azureedge.net/latest/compute.schema.json
+name: gpu-cluster
+type: amlcompute
+size: Standard_NC24s_v3
+min_instances: 0
+max_instances: 2

@@ -1,0 +1,5 @@
+$schema: https://azuremlschemas.azureedge.net/latest/dataset.schema.json
+name: drone-dataset
+version: 1
+datastore: azureml:workspaceblobstore
+local_path: <path-to-local-dataset>
