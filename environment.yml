@@ -6,14 +6,14 @@
 # 
 # To register the conda environment in Jupyter:
 # $ conda activate cv
-# $ python -m ipykernel install --user --name cv
-# 
+# $ python -m ipykernel install --user --name cv --displayname "Python (cv)"
+#
 name: cv
 channels:
+- fastai
+- pytorch
 - defaults
 - conda-forge
-- pytorch
-- fastai
 dependencies:
 - python==3.7.6
 - pytorch==1.2.0
@@ -43,3 +43,4 @@ dependencies:
   - nteract-scrapbook
   - azureml-sdk[notebooks,contrib]>=1.0.30
   - git+https://github.com/youngpark/cocoapi.git#subdirectory=PythonAPI
+channel_priority: strict
