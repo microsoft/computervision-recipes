@@ -8,6 +8,10 @@
 # $ conda activate cv
 # $ python -m ipykernel install --user --name cv --displayname "Python (cv)"
 #
+# If conda takes forever to solve environment, run following before try again.
+# (See more at: https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-channels.html#strict-channel-priority)
+# $ conda config --describe channel_priority
+#
 name: cv
 channels:
 - fastai
@@ -43,4 +47,3 @@ dependencies:
   - nteract-scrapbook
   - azureml-sdk[notebooks,contrib]>=1.0.30
   - git+https://github.com/youngpark/cocoapi.git#subdirectory=PythonAPI
-channel_priority: strict
