@@ -10,7 +10,7 @@
 #
 # If conda takes forever to solve environment, run following before try again.
 # (See more at: https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-channels.html#strict-channel-priority)
-# $ conda config --describe channel_priority
+# $ conda config --set channel_priority strict
 #
 name: cv
 channels:
