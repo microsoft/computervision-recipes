@@ -184,13 +184,13 @@ def plot_confusion_matrix(
         figsize: figure size
     """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
-    ConfusionMatrixDisplay(cmat, classes).plot(
+    ConfusionMatrixDisplay(confusion_matrix=cmat, display_labels=classes).plot(
         ax=ax1,
         cmap=cm.get_cmap("Blues"),
         xticks_rotation="vertical",
         values_format="d",
     )
-    ConfusionMatrixDisplay(cmat_norm, classes).plot(
+    ConfusionMatrixDisplay(confusion_matrix=cmat_norm, display_labels=classes).plot(
         ax=ax2, cmap=cm.get_cmap("Blues"), xticks_rotation="vertical"
     )
     ax1.set_title("Confusion matrix")
