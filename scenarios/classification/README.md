@@ -24,7 +24,7 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 
 | Notebook name | Description |
 | --- | --- |
-
+| [04_image_classification_using_transformer.ipynb](04_image_classification_using_transformer.ipynb)| Demonstrates inference of image classification using vision transformer using a pretrained ImageNet model.
 | [00_webcam.ipynb](00_webcam.ipynb)| Demonstrates inference on an image from your computer's webcam using a pre-trained model.
 | [01_training_introduction.ipynb](01_training_introduction.ipynb)| Introduces some of the basic concepts around model training and evaluation.|
 | [02_multilabel_classification.ipynb](02_multilabel_classification.ipynb)| Introduces multi-label classification and introduces key differences between training a multi-label and single-label classification models.|
