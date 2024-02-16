@@ -29,6 +29,7 @@ We have also found that some browsers do not render Jupyter widgets correctly. I
 | [01_training_introduction.ipynb](01_training_introduction.ipynb)| Introduces some of the basic concepts around model training and evaluation.|
 | [02_multilabel_classification.ipynb](02_multilabel_classification.ipynb)| Introduces multi-label classification and introduces key differences between training a multi-label and single-label classification models.|
 | [03_training_accuracy_vs_speed.ipynb](03_training_accuracy_vs_speed.ipynb)| Trains a model with high accuracy vs one with a fast inferencing speed. *<font color="orange"> Use this to train on your own datasets! </font>* |
+| [04_image_classification_using_transformer.ipynb](04_image_classification_using_transformer.ipynb)| Inference code for image classification using transformer (DeIT) |
 | [10_image_annotation.ipynb](10_image_annotation.ipynb)| A simple UI to annotate images. |
 | [11_exploring_hyperparameters.ipynb](11_exploring_hyperparameters.ipynb)| Finds optimal model parameters using grid search. |
 | [12_hard_negative_sampling.ipynb](12_hard_negative_sampling.ipynb)| Demonstrated how to use hard negatives to improve your model performance.  |
