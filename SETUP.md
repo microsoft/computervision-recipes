@@ -1,6 +1,6 @@
 # Setup Guide
 
-This document describes how to setup all the dependencies, and optionally create a virtual machine,
+This document describes how to set up all the dependencies and optionally create a virtual machine,
 to run the notebooks in this repository.
 
 
@@ -13,7 +13,7 @@ to run the notebooks in this repository.
 
 ## Installation
 
-To install the repository and its dependencies follow these simple steps:  
+To install the repository and its dependencies follow these steps:  
 
 1. (optional) Install Anaconda with Python >= 3.6. [Miniconda](https://conda.io/miniconda.html). This step can be skipped if working on a Data Science Virtual Machine (see the compute environment section).
 
@@ -70,7 +70,7 @@ If you don't have CUDA Toolkit or don't have the right version, please download 
 
 ## Compute Environments
 
-Many computer visions scenarios are extremely computationally heavy. Training a model often requires a machine that has a strong GPU, and would otherwise be too slow.
+Many computer vision scenarios are extremely computationally intensive. Training a model often requires a machine that has a strong GPU, and would otherwise be too slow.
 
 The easiest way to get started is to use the [Azure Data Science Virtual Machine (DSVM)](https://azure.microsoft.com/en-us/services/virtual-machines/data-science-virtual-machines/). This VM will come installed with all the system requirements that are needed to run the notebooks in this repository. If you choose this option, you can skip the [System Requirements](#system-requirements) step in this guide as those requirements come pre-installed on the DSVM.
 
@@ -105,7 +105,7 @@ $ssh -L local_port:remote_address:remote_port  <username>@<server-ip>
 ```
 
 For example, if I want to run `jupyter notebook --port 8888` on my VM and I
-wish to run the Jupyter notebooks on my local broswer on `localhost:9999`, I
+wish to run the Jupyter notebooks on my local browser on `localhost:9999`, I
 would ssh into my VM using the following command:
 
 ```
