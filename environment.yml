@@ -1,13 +1,13 @@
 # To create the conda environment:
 # $ conda env create -f environment.yml
-# 
+#
 # To update the conda environment:
 # $ conda env update -f environment.yml
-# 
+#
 # To register the conda environment in Jupyter:
 # $ conda activate cv
 # $ python -m ipykernel install --user --name cv
-# 
+#
 name: cv
 channels:
 - defaults
@@ -18,7 +18,7 @@ dependencies:
 - python==3.7.6
 - pytorch==1.2.0
 # pinning pillow to 6.1 to fix issue: https://github.com/python-pillow/Pillow/issues/4130
-- pillow==6.1 
+- pillow==6.1
 - torchvision==0.4.0
 - fastai==1.0.57
 - ipykernel>=4.6.1
@@ -30,7 +30,7 @@ dependencies:
 - cython>=0.29.1
 - papermill==1.2.0
 - black>=18.6b4
-- ipywebrtc 
+- ipywebrtc
 - lxml>=4.3.2
 - pre-commit>=1.14.4
 - pyyaml>=5.1.2

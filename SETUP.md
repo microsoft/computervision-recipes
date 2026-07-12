@@ -13,7 +13,7 @@ to run the notebooks in this repository.
 
 ## Installation
 
-To install the repository and its dependencies follow these simple steps:  
+To install the repository and its dependencies follow these simple steps:
 
 1. (optional) Install Anaconda with Python >= 3.6. [Miniconda](https://conda.io/miniconda.html). This step can be skipped if working on a Data Science Virtual Machine (see the compute environment section).
 

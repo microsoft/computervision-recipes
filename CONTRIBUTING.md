@@ -29,10 +29,10 @@ Here are the basic steps to get started with your first contribution. Please rea
 1. Ensure unit tests pass and code style / formatting is consistent, and follows the [Zen of Python](https://github.com/Microsoft/Recommenders/wiki/Coding-Guidelines#the-zen-of-python).
 1. We use [pre-commit](https://pre-commit.com/) package to run our pre-commit hooks. We use black formatter and flake8 linting on each commit. In order to set up pre-commit on your machine, follow the steps here, please note that you only need to run these steps the first time you use pre-commit for this project.
 
-   * Update your conda environment, pre-commit is part of the yaml file or just do    
+   * Update your conda environment, pre-commit is part of the yaml file or just do
    ```
     $ pip install pre-commit
-   ```    
+   ```
    * Set up pre-commit by running following command, this will put pre-commit under your .git/hooks directory.
    ```
    $ pre-commit install
